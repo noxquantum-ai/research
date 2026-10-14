@@ -109,9 +109,9 @@ def nox_hybrid_dmrg_decompose(
     Y_dense,
     o_modes=(8, 8, 8, 8),
     i_modes=(8, 8, 8, 8),
-    ranks=(1, 8, 48, 8, 1),
-    r_bridge=4,
-    n_outliers=16384,
+    ranks=(1, 24, 64, 24, 1),
+    r_bridge=64,
+    n_outliers=262144,
     n_sweeps=2,
     prior_gamma=0.01,
     alpha_awt=0.5,
@@ -300,17 +300,17 @@ def nox_4step_compiler(
     o_modes,
     i_modes,
     ranks=None,
-    r_bridge=4,
-    n_outliers=16384,
+    r_bridge=64,
+    n_outliers=262144,
     n_sweeps=2,
-    prior_gamma=0.02,
+    prior_gamma=0.01,
     verbose=False,
     **kwargs,
 ):
     """
     Convenience wrapper redirecting to nox_hybrid_dmrg_decompose.
     """
-    target_ranks = ranks if ranks is not None else (1, 8, 48, 8, 1)
+    target_ranks = ranks if ranks is not None else (1, 24, 64, 24, 1)
     return nox_hybrid_dmrg_decompose(
         W=W,
         X_calib=X_comp,

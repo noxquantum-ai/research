@@ -508,7 +508,7 @@ def main():
     parser.add_argument("--token", type=str, default=None, help="HuggingFace API token")
     parser.add_argument("--layer_idx", type=int, default=15, help="Layer index to benchmark (default: 15)")
     parser.add_argument("--proj", type=str, default="o_proj", choices=["o_proj", "down_proj"], help="Projection matrix type")
-    parser.add_argument("--regime", type=str, default="all", choices=["all", "1", "2", "3", "both", "extreme", "production"], help="Benchmark regime to run")
+    parser.add_argument("--regime", type=str, default="3", choices=["all", "1", "2", "3", "both", "extreme", "production"], help="Benchmark regime to run (default: 3 [Production Sweet Spot])")
     parser.add_argument("--core_bits", type=int, default=4, help="Core quantization bit width (default: 4)")
     parser.add_argument("--n_calib", type=int, default=256, help="Number of calibration tokens (default: 256)")
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")

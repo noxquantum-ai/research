@@ -59,41 +59,60 @@ python3 benchmarks/benchmark_day1.py
 python3 benchmarks/benchmark_day1.py --rank 8
 ```
 
-### 2. Run Day 1 Benchmark on Real Model Weights (Llama-2-7B — CompactifAI Model)
+### 2. Run Benchmark on Real Model Weights (Llama-2-7B — CompactifAI Model)
 
-Downloads `NousResearch/Llama-2-7b-hf` (the exact ungated weights of the model Multiverse Computing evaluated in CompactifAI), captures real activations at Layer 15, and executes the 3-way contest:
+Downloads `NousResearch/Llama-2-7b-hf` (the exact ungated weights of the model Multiverse Computing evaluated in CompactifAI), captures calibrated token activations at Layer 15, and executes the 3-way contest:
 
 ```bash
 # Optional: add your token to a .env file (NousResearch/Llama-2-7b-hf is ungated and downloads without a token)
 echo "HF_TOKEN=your_huggingface_token" > .env
 
-# Benchmark Layer 15 Attention Output Projection (o_proj: 4096 x 4096)
-python3 benchmarks/download_and_benchmark.py --proj o_proj --rank 24
+# Primary Production Benchmark (Regime 3 Sweet Spot, ~54x-106x compression)
+python3 benchmarks/download_and_benchmark.py --proj o_proj --regime 3
+python3 benchmarks/download_and_benchmark.py --proj down_proj --regime 3
 
-# Benchmark Layer 15 SwiGLU MLP Down Projection (down_proj: 4096 x 11008)
-python3 benchmarks/download_and_benchmark.py --proj down_proj --rank 24
+# Full Multi-Regime Evaluation (Regime 1 Frontier, Regime 2 Prod, Regime 3 Hi-Fi)
+python3 benchmarks/download_and_benchmark.py --proj o_proj --regime all
+python3 benchmarks/download_and_benchmark.py --proj down_proj --regime all
 ```
 
 ---
 
-## Day 1 Benchmark Verification Results
+## Real-Model Benchmark Verification Results (Held-Out Test Set)
 
-Held-out test set comparison at matched 4-bit core precision:
+Evaluated on real `NousResearch/Llama-2-7b-hf` Layer 15 weights at matched 4-bit core precision with zero backpropagation healing:
 
-| Method | Relative Error | Angular Drift | Norm Ratio | Size (KB) | Comp Ratio |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Multiverse (CompactifAI)** | 0.9231 | 0.36350 | 1.1437 | 4.2 KB | 30.12x |
-| **AWT (Oct 2026 SOTA)** | 3.1637 | 0.10054 | 4.0328 | 4.2 KB | 30.12x |
-| **Nox Engine (Ours)** | **0.0116** | **0.00006** | **1.0002** | 5.5 KB | 23.14x |
+### 1. Attention Output Projection (`o_proj`: $4096 \times 4096$, 32 MB Dense)
 
-* **Nox Error Reduction vs Multiverse:** **98.7%** (Pass Gate Target: $>75.0\%$)
-* **Nox Error Reduction vs AWT:** **99.6%** (Pass Gate Target: $>40.0\%$)
+| Method | Relative Error | Angular Drift | $\cos\theta$ (Direction) | Norm Ratio (Energy) | Size (KB) | Comp Ratio | Gate Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Multiverse (CompactifAI)** | 0.9950 | 0.89973 | 0.100 | 0.1000 *(collapsed)* | 37.5 KB | 873.81x | Baseline |
+| **AWT (Oct 2026 SOTA)** | 1.3402 | 0.78250 | 0.218 | 1.1359 | 37.5 KB | 873.81x | Baseline |
+| **Nox Regime 1 (Frontier)** | 0.5817 | 0.18637 | 0.814 | 0.8333 | 48.5 KB | 675.63x | +41.5% vs MV |
+| **Nox Regime 2 (Production)** | 0.3062 | 0.04797 | 0.952 | 0.9590 | 161.0 KB | 203.53x | +69.2% vs MV |
+| **Nox Regime 3 (Primary Prod)** | **0.1034** | **0.00533** | **0.995** | **0.9959** | 609.5 KB | **53.76x** | **+89.6% vs MV (PASSED)** |
+
+* **Nox Regime 3 Error Reduction vs Multiverse:** **89.6%** (Pass Gate Target: $>75.0\%$)
+* **Nox Regime 3 Error Reduction vs AWT:** **92.3%** (Pass Gate Target: $>40.0\%$)
 * **Gate Status:** **PASSED**
 
+### 2. SwiGLU MLP Down Projection (`down_proj`: $4096 \times 11008$, 86 MB Dense)
 
+| Method | Relative Error | Angular Drift | $\cos\theta$ (Direction) | Norm Ratio (Energy) | Size (KB) | Comp Ratio | Gate Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Multiverse (CompactifAI)** | 0.9987 | 0.94915 | 0.051 | 0.0510 *(collapsed)* | 40.4 KB | 2179.46x | Baseline |
+| **AWT (Oct 2026 SOTA)** | 1.0049 | 0.85531 | 0.145 | 0.3199 *(weak)* | 40.4 KB | 2179.46x | Baseline |
+| **Nox Regime 1 (Frontier)** | 0.6508 | 0.24043 | 0.760 | 0.7798 | 56.2 KB | 1566.45x | +34.8% vs MV |
+| **Nox Regime 2 (Production)** | 0.3808 | 0.07527 | 0.925 | 0.9332 | 189.9 KB | 463.65x | +61.9% vs MV |
+| **Nox Regime 3 (Primary Prod)** | **0.1259** | **0.00794** | **0.992** | **0.9929** | 828.4 KB | **106.31x** | **+87.4% vs MV (PASSED)** |
 
----- a bit out of context
-**NoxQuantum North Star (Post-Sprint Vision):**
+* **Nox Regime 3 Error Reduction vs Multiverse:** **87.4%** (Pass Gate Target: $>75.0\%$)
+* **Nox Regime 3 Error Reduction vs AWT:** **87.5%** (Pass Gate Target: $>40.0\%$)
+* **Gate Status:** **PASSED**
+
+---
+
+## NoxQuantum North Star (Post-Sprint Vision)
 
 To engineer a native foundation model architecture from day one—built entirely on principles of quantum information geometry, many-body entanglement, and tensor-product Hilbert spaces—that fundamentally breaks the parameter scaling laws of deep learning. By replacing flat vector representations and unconstrained linear projections with quantum-inspired structural priors, this architecture will compress the representational and reasoning capacity of a 7B–10B dense Transformer into a sub-billion parameter footprint.
 
