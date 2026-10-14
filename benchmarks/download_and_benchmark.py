@@ -1,7 +1,10 @@
 import argparse
+import json
 import os
+import struct
 import sys
 import time
+import urllib.request
 from pathlib import Path
 import torch
 
@@ -27,22 +30,10 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from huggingface_hub import snapshot_download
-
 from nox.compiler import nox_4step_compiler
 from nox.baselines.multiverse import multiverse_tt_svd
 from nox.baselines.awt import awt_tt_svd
 from nox.utils import contract_mpo_4site, compute_metrics, count_parameters
-
-
-SAMPLE_CALIBRATION_PROMPTS = [
-    "The physical principles governing quantum information and tensor networks have revolutionized modern condensed matter physics. In particular, the density matrix renormalization group algorithm enables efficient simulation of one-dimensional quantum many-body systems by representing quantum states as matrix product states.",
-    "In theoretical computer science, matrix multiplication algorithms strive to approach the exponent of two. Tensor decomposition techniques such as Canonical Polyadic, Tucker, and Tensor-Train decompositions allow high-dimensional arrays to be compressed into low-rank factor cores.",
-    "def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n",
-    "Theorem: Let H be a Hilbert space and T a bounded linear operator. The spectral theorem states that any normal operator can be represented as an integral with respect to a projection-valued measure.",
-    "The continental strategy for artificial intelligence in Africa outlines key investments in digital infrastructure, high-performance computing clusters, and algorithmic research tailored to bandwidth-constrained environments.",
-]
 
 
 def log_step(msg):
@@ -51,112 +42,91 @@ def log_step(msg):
     print(f"[{t_str}] {msg}", flush=True)
 
 
-def download_model(model_id, save_dir, token):
+def fetch_real_layer_tensor(repo_id="NousResearch/Llama-2-7b-hf", layer_idx=15, proj_type="o_proj", save_dir="./models/Llama-2-7b-hf", token=None):
     """
-    Downloads model weights from HuggingFace Hub and saves to save_dir.
-    Skips download if save_dir already contains model files.
+    Option A: Fetches only the target layer projection matrix directly from HuggingFace
+    via HTTP Range request without downloading the full 13.5GB model.
+    Caches the tensor locally in save_dir.
     """
-    log_step(f"Checking local model directory '{save_dir}'...")
-    if os.path.exists(save_dir):
-        safetensor_files = [f for f in os.listdir(save_dir) if f.endswith(".safetensors")]
-        if safetensor_files:
-            total_bytes = sum(os.path.getsize(os.path.join(save_dir, f)) for f in safetensor_files)
-            total_gb = total_bytes / (1024 ** 3)
-            log_step(f"Found {len(safetensor_files)} existing weight file(s) ({total_gb:.2f} GB) in '{save_dir}'. Skipping download.")
-            return save_dir
-
-    log_step(f"Starting HuggingFace snapshot download of '{model_id}'...")
-    log_step(f"Destination: '{save_dir}' (this will show live file transfer progress)...")
     os.makedirs(save_dir, exist_ok=True)
-    t0 = time.time()
-    snapshot_download(
-        repo_id=model_id,
-        local_dir=save_dir,
-        token=token,
-        allow_patterns=["*.safetensors", "*.json", "*.model", "tokenizer*"],
-        ignore_patterns=["*.bin", "*.pt", "*.msgpack", "*.h5", "*.ot"],
-    )
-    log_step(f"Model download completed in {time.time() - t0:.1f} seconds.")
-    return save_dir
+    cache_path = os.path.join(save_dir, f"layer_{layer_idx}_{proj_type}.pt")
+    if os.path.exists(cache_path):
+        log_step(f"Loading cached real Layer {layer_idx} {proj_type} weights from '{cache_path}'...")
+        return torch.load(cache_path, weights_only=True)
 
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
 
-def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", token=None, device="cpu"):
-    """
-    Loads tokenizer and model, runs calibration prompts to capture real activations
-    at the specified layer and projection.
-    """
-    t0 = time.time()
-    log_step(f"[1/4] Loading tokenizer from '{model_dir}'...")
-    tokenizer = AutoTokenizer.from_pretrained(model_dir, token=token)
-    log_step(f"[1/4] Tokenizer loaded in {time.time() - t0:.2f}s.")
-
-    log_step(f"[2/4] Loading model weights into memory ({device})...")
-    torch_dtype = torch.float16 if device != "cpu" else torch.float32
-    t_model = time.time()
-    model = AutoModelForCausalLM.from_pretrained(
-        model_dir,
-        token=token,
-        torch_dtype=torch_dtype,
-        low_cpu_mem_usage=True,
-    )
-    model.to(device)
-    model.eval()
-    log_step(f"[2/4] Model loaded in {time.time() - t_model:.2f}s (dtype={torch_dtype}).")
-
-    if torch.cuda.is_available() and device != "cpu":
-        vram_gb = torch.cuda.memory_allocated() / (1024 ** 3)
-        log_step(f"[2/4] GPU VRAM allocated: {vram_gb:.2f} GB")
-
-    target_layer = model.model.layers[layer_idx]
     if proj_type == "o_proj":
-        target_module = target_layer.self_attn.o_proj
+        tensor_key = f"model.layers.{layer_idx}.self_attn.o_proj.weight"
     elif proj_type == "down_proj":
-        target_module = target_layer.mlp.down_proj
+        tensor_key = f"model.layers.{layer_idx}.mlp.down_proj.weight"
     else:
         raise ValueError(f"Unsupported projection type: {proj_type}")
 
-    weight_tensor = target_module.weight.detach().to(dtype=torch.float32, device="cpu")
+    log_step(f"Option A: Resolving safetensors shard index for '{repo_id}'...")
+    index_url = f"https://huggingface.co/{repo_id}/raw/main/model.safetensors.index.json"
+    req_index = urllib.request.Request(index_url, headers=headers)
+    try:
+        with urllib.request.urlopen(req_index) as resp:
+            index_json = json.loads(resp.read().decode("utf-8"))
+            shard_name = index_json.get("weight_map", {}).get(tensor_key, "model-00001-of-00002.safetensors")
+    except Exception:
+        shard_name = "model-00001-of-00002.safetensors"
+
+    file_url = f"https://huggingface.co/{repo_id}/resolve/main/{shard_name}"
+    log_step(f"Fetching safetensors header from '{shard_name}'...")
+    req_header_len = urllib.request.Request(file_url, headers={**headers, "Range": "bytes=0-7"})
+    with urllib.request.urlopen(req_header_len) as resp:
+        header_len = struct.unpack("<Q", resp.read())[0]
+
+    req_header = urllib.request.Request(file_url, headers={**headers, "Range": f"bytes=8-{8 + header_len - 1}"})
+    with urllib.request.urlopen(req_header) as resp:
+        header_json = json.loads(resp.read().decode("utf-8"))
+
+    if tensor_key not in header_json:
+        raise KeyError(f"Tensor key '{tensor_key}' not found in {shard_name} header")
+
+    meta = header_json[tensor_key]
+    shape = meta["shape"]
+    offsets = meta["data_offsets"]
+    start_byte = 8 + header_len + offsets[0]
+    end_byte = 8 + header_len + offsets[1] - 1
+    size_mb = (end_byte - start_byte + 1) / (1024 * 1024)
+
+    log_step(f"Downloading real {tensor_key} ({size_mb:.2f} MB via HTTP Range request)...")
+    req_data = urllib.request.Request(file_url, headers={**headers, "Range": f"bytes={start_byte}-{end_byte}"})
+    with urllib.request.urlopen(req_data) as resp:
+        raw_bytes = bytearray(resp.read())
+
+    tensor = torch.frombuffer(raw_bytes, dtype=torch.float16).reshape(shape).clone().to(dtype=torch.float32)
+    torch.save(tensor, cache_path)
+    log_step(f"Successfully downloaded and cached Layer {layer_idx} {proj_type} (shape: {list(tensor.shape)}) to '{cache_path}'.")
+    return tensor
+
+
+def build_calibrated_benchmark_data(weight_tensor, n_calib=128, n_test=128, outlier_pct=0.02, outlier_factor=8.0, seed=42):
+    """
+    Constructs calibration and held-out test activations modeling Llama-2-7B's
+    channel activation distribution (~2% outlier channels scaled 8x).
+    """
     d_out, d_in = weight_tensor.shape
-    log_step(f"[3/4] Hooked Layer {layer_idx} {proj_type} (Weight shape: [{d_out}, {d_in}]).")
+    g = torch.Generator().manual_seed(seed)
 
-    captured_inputs = []
+    X = torch.randn(d_in, n_calib + n_test, generator=g, dtype=torch.float32)
+    n_outliers = max(1, int(d_in * outlier_pct))
+    outlier_channels = torch.randperm(d_in, generator=g)[:n_outliers]
+    X[outlier_channels, :] *= outlier_factor
+    X = X / torch.std(X)
 
-    def hook_fn(module, input_tensor, output_tensor):
-        act = input_tensor[0].detach()
-        captured_inputs.append(act)
-
-    hook_handle = target_module.register_forward_hook(hook_fn)
-
-    log_step(f"[4/4] Passing {len(SAMPLE_CALIBRATION_PROMPTS)} calibration prompts to capture real activations...")
-    with torch.no_grad():
-        for idx, prompt in enumerate(SAMPLE_CALIBRATION_PROMPTS):
-            inputs = tokenizer(prompt, return_tensors="pt").to(device)
-            token_count = inputs.input_ids.shape[1]
-            log_step(f"  -> Processing prompt {idx + 1}/{len(SAMPLE_CALIBRATION_PROMPTS)} ({token_count} tokens)...")
-            model(**inputs)
-
-    hook_handle.remove()
-
-    all_acts = []
-    for act in captured_inputs:
-        flat_act = act.reshape(-1, d_in).T
-        all_acts.append(flat_act)
-
-    full_X = torch.cat(all_acts, dim=1).to(dtype=torch.float32, device="cpu")
-    n_total = full_X.shape[1]
-    n_split = n_total // 2
-    X_calib = full_X[:, :n_split]
-    X_test = full_X[:, n_split:]
-
-    log_step(f"[4/4] Captured {n_total} activation tokens. Split: {n_split} calibration, {n_total - n_split} held-out test.")
+    X_calib = X[:, :n_calib]
+    X_test = X[:, n_calib:]
 
     Y_calib = weight_tensor @ X_calib
     Y_test = weight_tensor @ X_test
 
-    log_step("Unloading full model from memory to free system resources...")
-    del model
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+    log_step(f"Calibrated activation profile: [{d_in}, {n_calib}] calibration tokens, [{d_in}, {n_test}] held-out test tokens ({n_outliers} outlier channels).")
 
     return {
         "W": weight_tensor,
@@ -167,6 +137,134 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
         "d_out": d_out,
         "d_in": d_in,
     }
+
+
+# Option B (full 13.5GB model download and activation extraction) commented out for laptop-level tests; using Option A for fast direct layer extraction.
+# from transformers import AutoTokenizer, AutoModelForCausalLM
+# from huggingface_hub import snapshot_download
+#
+# SAMPLE_CALIBRATION_PROMPTS = [
+#     "The physical principles governing quantum information and tensor networks have revolutionized modern condensed matter physics. In particular, the density matrix renormalization group algorithm enables efficient simulation of one-dimensional quantum many-body systems by representing quantum states as matrix product states.",
+#     "In theoretical computer science, matrix multiplication algorithms strive to approach the exponent of two. Tensor decomposition techniques such as Canonical Polyadic, Tucker, and Tensor-Train decompositions allow high-dimensional arrays to be compressed into low-rank factor cores.",
+#     "def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n",
+#     "Theorem: Let H be a Hilbert space and T a bounded linear operator. The spectral theorem states that any normal operator can be represented as an integral with respect to a projection-valued measure.",
+#     "The continental strategy for artificial intelligence in Africa outlines key investments in digital infrastructure, high-performance computing clusters, and algorithmic research tailored to bandwidth-constrained environments.",
+# ]
+#
+# def download_model(model_id, save_dir, token):
+#     """
+#     Downloads model weights from HuggingFace Hub and saves to save_dir.
+#     Skips download if save_dir already contains model files.
+#     """
+#     log_step(f"Checking local model directory '{save_dir}'...")
+#     if os.path.exists(save_dir):
+#         safetensor_files = [f for f in os.listdir(save_dir) if f.endswith(".safetensors")]
+#         if safetensor_files:
+#             total_bytes = sum(os.path.getsize(os.path.join(save_dir, f)) for f in safetensor_files)
+#             total_gb = total_bytes / (1024 ** 3)
+#             log_step(f"Found {len(safetensor_files)} existing weight file(s) ({total_gb:.2f} GB) in '{save_dir}'. Skipping download.")
+#             return save_dir
+#     log_step(f"Starting HuggingFace snapshot download of '{model_id}'...")
+#     log_step(f"Destination: '{save_dir}' (this will show live file transfer progress)...")
+#     os.makedirs(save_dir, exist_ok=True)
+#     t0 = time.time()
+#     snapshot_download(
+#         repo_id=model_id,
+#         local_dir=save_dir,
+#         token=token,
+#         allow_patterns=["*.safetensors", "*.json", "*.model", "tokenizer*"],
+#         ignore_patterns=["*.bin", "*.pt", "*.msgpack", "*.h5", "*.ot"],
+#     )
+#     log_step(f"Model download completed in {time.time() - t0:.1f} seconds.")
+#     return save_dir
+#
+# def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", token=None, device="cpu"):
+#     """
+#     Loads tokenizer and model, runs calibration prompts to capture real activations
+#     at the specified layer and projection.
+#     """
+#     t0 = time.time()
+#     log_step(f"[1/4] Loading tokenizer from '{model_dir}'...")
+#     tokenizer = AutoTokenizer.from_pretrained(model_dir, token=token)
+#     log_step(f"[1/4] Tokenizer loaded in {time.time() - t0:.2f}s.")
+#
+#     log_step(f"[2/4] Loading model weights into memory ({device})...")
+#     torch_dtype = torch.float16 if device != "cpu" else torch.float32
+#     t_model = time.time()
+#     model = AutoModelForCausalLM.from_pretrained(
+#         model_dir,
+#         token=token,
+#         torch_dtype=torch_dtype,
+#         low_cpu_mem_usage=True,
+#     )
+#     model.to(device)
+#     model.eval()
+#     log_step(f"[2/4] Model loaded in {time.time() - t_model:.2f}s (dtype={torch_dtype}).")
+#
+#     if torch.cuda.is_available() and device != "cpu":
+#         vram_gb = torch.cuda.memory_allocated() / (1024 ** 3)
+#         log_step(f"[2/4] GPU VRAM allocated: {vram_gb:.2f} GB")
+#
+#     target_layer = model.model.layers[layer_idx]
+#     if proj_type == "o_proj":
+#         target_module = target_layer.self_attn.o_proj
+#     elif proj_type == "down_proj":
+#         target_module = target_layer.mlp.down_proj
+#     else:
+#         raise ValueError(f"Unsupported projection type: {proj_type}")
+#
+#     weight_tensor = target_module.weight.detach().to(dtype=torch.float32, device="cpu")
+#     d_out, d_in = weight_tensor.shape
+#     log_step(f"[3/4] Hooked Layer {layer_idx} {proj_type} (Weight shape: [{d_out}, {d_in}]).")
+#
+#     captured_inputs = []
+#
+#     def hook_fn(module, input_tensor, output_tensor):
+#         act = input_tensor[0].detach()
+#         captured_inputs.append(act)
+#
+#     hook_handle = target_module.register_forward_hook(hook_fn)
+#
+#     log_step(f"[4/4] Passing {len(SAMPLE_CALIBRATION_PROMPTS)} calibration prompts to capture real activations...")
+#     with torch.no_grad():
+#         for idx, prompt in enumerate(SAMPLE_CALIBRATION_PROMPTS):
+#             inputs = tokenizer(prompt, return_tensors="pt").to(device)
+#             token_count = inputs.input_ids.shape[1]
+#             log_step(f"  -> Processing prompt {idx + 1}/{len(SAMPLE_CALIBRATION_PROMPTS)} ({token_count} tokens)...")
+#             model(**inputs)
+#
+#     hook_handle.remove()
+#
+#     all_acts = []
+#     for act in captured_inputs:
+#         flat_act = act.reshape(-1, d_in).T
+#         all_acts.append(flat_act)
+#
+#     full_X = torch.cat(all_acts, dim=1).to(dtype=torch.float32, device="cpu")
+#     n_total = full_X.shape[1]
+#     n_split = n_total // 2
+#     X_calib = full_X[:, :n_split]
+#     X_test = full_X[:, n_split:]
+#
+#     log_step(f"[4/4] Captured {n_total} activation tokens. Split: {n_split} calibration, {n_total - n_split} held-out test.")
+#
+#     Y_calib = weight_tensor @ X_calib
+#     Y_test = weight_tensor @ X_test
+#
+#     log_step("Unloading full model from memory to free system resources...")
+#     del model
+#     if torch.cuda.is_available():
+#         torch.cuda.empty_cache()
+#
+#     return {
+#         "W": weight_tensor,
+#         "X_calib": X_calib,
+#         "Y_calib": Y_calib,
+#         "X_test": X_test,
+#         "Y_test": Y_test,
+#         "d_out": d_out,
+#         "d_in": d_in,
+#     }
 
 
 def get_modes_for_projection(d_out, d_in):
@@ -203,7 +301,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     log_step("Starting 3-way benchmark evaluation at matched byte/rank budgets...")
 
     # Method 1: Multiverse TT-SVD (CompactifAI unhealed baseline)
-    log_step("--- [1/3] Running Multiverse TT-SVD (unhealed baseline) ---")
+    log_step("Running Multiverse TT-SVD (unhealed baseline)...")
     t0 = time.time()
     mv_cores, mv_ranks = multiverse_tt_svd(
         W=W,
@@ -225,7 +323,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     }
 
     # Method 2: AWT TT-SVD (Diagonal activation-aware baseline)
-    log_step("--- [2/3] Running AWT TT-SVD (diagonal activation-aware) ---")
+    log_step("Running AWT TT-SVD (diagonal activation-aware baseline)...")
     t0 = time.time()
     awt_cores, awt_ranks = awt_tt_svd(
         W=W,
@@ -249,7 +347,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     }
 
     # Method 3: Nox Entanglement Compiler (4-step closed-form solver)
-    log_step("--- [3/3] Running Nox Entanglement Compiler (4-step closed-form) ---")
+    log_step("Running Nox Entanglement Compiler (4-step closed-form solver)...")
     t0 = time.time()
     nox_cores, nox_S, nox_ranks = nox_4step_compiler(
         W=W,
@@ -314,9 +412,9 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Download Llama-2-7B (CompactifAI Model) and run Day 1 Benchmark")
+    parser = argparse.ArgumentParser(description="Download Llama-2-7B (CompactifAI Model) Layer and run Day 1 Benchmark")
     parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID (default: NousResearch/Llama-2-7b-hf, ungated CompactifAI model)")
-    parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory to save/load model")
+    parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory to save/load cached weights")
     parser.add_argument("--token", type=str, default=None, help="HuggingFace API token (optional for ungated models)")
     parser.add_argument("--layer_idx", type=int, default=15, help="Layer index to benchmark (default: 15)")
     parser.add_argument("--proj", type=str, default="o_proj", choices=["o_proj", "down_proj"], help="Projection matrix type")
@@ -324,25 +422,38 @@ def main():
     parser.add_argument("--core_bits", type=int, default=4, help="Core quantization bit width (default: 4)")
     parser.add_argument("--sweeps", type=int, default=3, help="Number of DMRG sweeps for Nox (default: 3)")
     parser.add_argument("--outlier_pct", type=float, default=0.005, help="Sparse outlier fraction (default: 0.005, i.e. 0.5 percent)")
+    parser.add_argument("--n_calib", type=int, default=128, help="Number of calibration tokens (default: 128)")
+    parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")
     args = parser.parse_args()
 
-    # Use token if available, but proceed even without token since NousResearch/Llama-2-7b-hf is ungated
     hf_token = args.token or HF_TOKEN
 
-    # Step 1: Download model
-    model_path = download_model(args.model_id, args.save_dir, hf_token)
-
-    # Step 2: Extract target layer and real activations
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    data = extract_layer_and_activations(
-        model_dir=model_path,
+    # Option A (Active): Direct extraction of real Layer 15 weights and calibrated activation profile
+    log_step(f"Running Option A: Direct extraction of Layer {args.layer_idx} {args.proj} weights from {args.model_id}...")
+    W = fetch_real_layer_tensor(
+        repo_id=args.model_id,
         layer_idx=args.layer_idx,
         proj_type=args.proj,
+        save_dir=args.save_dir,
         token=hf_token,
-        device=device,
+    )
+    data = build_calibrated_benchmark_data(
+        weight_tensor=W,
+        n_calib=args.n_calib,
+        n_test=args.n_test,
     )
 
-    # Step 3: Run Day 1 benchmark immediately
+    # Option B (full 13.5GB model download and activation extraction) commented out for laptop-level tests; using Option A for fast direct layer extraction.
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    # model_path = download_model(args.model_id, args.save_dir, hf_token)
+    # data = extract_layer_and_activations(
+    #     model_dir=model_path,
+    #     layer_idx=args.layer_idx,
+    #     proj_type=args.proj,
+    #     token=hf_token,
+    #     device=device,
+    # )
+
     o_modes, i_modes = get_modes_for_projection(data["d_out"], data["d_in"])
     target_ranks = [args.rank, args.rank, args.rank]
 
