@@ -2,7 +2,7 @@
 
 from nox.compiler import (
     nox_4step_compiler,
-    nox_stabilized_decompose,
+    nox_hybrid_dmrg_decompose,
     adaptive_tt_svd_4site,
     local_ridge_solve,
     solve_site_anchored,
@@ -19,7 +19,7 @@ from nox.utils import (
 
 __all__ = [
     "nox_4step_compiler",
-    "nox_stabilized_decompose",
+    "nox_hybrid_dmrg_decompose",
     "adaptive_tt_svd_4site",
     "local_ridge_solve",
     "solve_site_anchored",
