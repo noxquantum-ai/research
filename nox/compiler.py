@@ -182,12 +182,13 @@ def nox_hybrid_dmrg_decompose(
     Y_target = Y_dense - (S_total @ X_calib)
 
     U_x, S_x, Vh_x = torch.linalg.svd(X_cond, full_matrices=False)
-    r_cov = S_x.shape[0]
+    max_mode = max(o0, o1, o2, o3)
+    r_cov = min(48 if max_mode > 16 else 64, S_x.shape[0])
     X_red = (U_x[:, :r_cov] * S_x[:r_cov].unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
     Y_red = (Y_target @ Vh_x[:r_cov, :].T).reshape(o0, o1, o2, o3, r_cov)
 
     if verbose:
-        print(f"    [Nox Step 2] Exact AWT preconditioning applied; keeping all r={r_cov} calibration modes", flush=True)
+        print(f"    [Nox Step 2] Exact AWT preconditioning applied; keeping active r={r_cov} calibration modes", flush=True)
 
     # Step 3: Exact AWT TT-SVD Warm-Start on W_cond
     bond_ranks = ranks[1:4] if len(ranks) == 5 else ranks

@@ -405,9 +405,18 @@ def main():
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")
     parser.add_argument("--r_bridge", type=int, default=64, help="Bridge rank for Nox decomposition (default: 64)")
     parser.add_argument("--n_outliers", type=int, default=262144, help="Number of outliers for outlier shield (default: 262144)")
+    parser.add_argument("--device", type=str, default=None, help="Device to execute benchmark on (default: auto-detect cuda, else cpu)")
     args = parser.parse_args()
 
     hf_token = args.token or HF_TOKEN
+    device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+
+    if str(device).startswith("cuda"):
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        log_step(f"NVIDIA GPU Acceleration enabled: {torch.cuda.get_device_name(0)} (TF32 Tensor Cores active).")
+    else:
+        log_step(f"Executing on {device.upper()}.")
 
     if args.synthetic:
         log_step("Running in synthetic benchmark mode...")
@@ -421,11 +430,15 @@ def main():
             token=hf_token,
         )
 
+    weights = {k: v.to(device) for k, v in weights.items()}
+
     X_calib, X_test = build_calibrated_layer_input(
         d_model=weights["q_proj"].shape[1],
         n_calib=args.n_calib,
         n_test=args.n_test,
     )
+    X_calib = X_calib.to(device)
+    X_test = X_test.to(device)
 
     run_day2_benchmark(
         layer_weights=weights,
