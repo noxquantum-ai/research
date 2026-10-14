@@ -15,6 +15,16 @@ from nox.utils import (
     mpo_to_dense,
     count_parameters,
     compute_metrics,
+    get_modes_for_projection,
+)
+from nox.block_compiler import (
+    RMSNorm,
+    scaled_dot_product_attention_2d,
+    compile_attention_block,
+    compile_mlp_block,
+    compile_transformer_block,
+    compile_multiverse_block,
+    evaluate_compiled_block,
 )
 
 __all__ = [
@@ -30,4 +40,12 @@ __all__ = [
     "mpo_to_dense",
     "count_parameters",
     "compute_metrics",
+    "get_modes_for_projection",
+    "RMSNorm",
+    "scaled_dot_product_attention_2d",
+    "compile_attention_block",
+    "compile_mlp_block",
+    "compile_transformer_block",
+    "compile_multiverse_block",
+    "evaluate_compiled_block",
 ]

@@ -76,6 +76,18 @@ python3 benchmarks/download_and_benchmark.py --proj o_proj --regime all
 python3 benchmarks/download_and_benchmark.py --proj down_proj --regime all
 ```
 
+### 3. Run Day 2 Single-Block Causal Healing Test (Full Layer 15: Attention + SwiGLU MLP)
+
+Executes Causal Intra-Block Propagation (Step 4.2) across all 7 projections in Layer 15, verifying that downstream projections ($W_o$ and $W_{\text{down}}$) conditioned on upstream corrupted activations absorb attention distortion and SwiGLU Hadamard non-linear noise:
+
+```bash
+# Full Layer 15 Single-Block Benchmark on Real Llama-2-7B weights
+python3 benchmarks/benchmark_day2_block.py --layer_idx 15
+
+# Fast synthetic smoke-test verification
+python3 benchmarks/benchmark_day2_block.py --synthetic
+```
+
 ---
 
 ## Real-Model Benchmark Verification Results (Held-Out Test Set)

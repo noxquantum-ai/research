@@ -50,7 +50,7 @@ def multiverse_tt_svd(
         U, S, Vh = torch.linalg.svd(t, full_matrices=False)
 
         if ranks is not None and m < len(ranks):
-            r_next = ranks[m]
+            r_next = min(ranks[m], S.shape[0])
         else:
             energy = S ** 2
             total_energy = torch.sum(energy) + 1e-12

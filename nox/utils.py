@@ -194,3 +194,39 @@ def compute_metrics(Y_true, Y_pred):
         "norm_ratio": norm_ratio,
         "cosine_similarity": cos_sim,
     }
+
+
+def get_modes_for_projection(d_out, d_in):
+    """
+    Determines 4-mode factorizations placing larger factors adjacent to the central bond cut.
+    Supports Llama-2-7B, Llama-3-8B, and arbitrary generic matrices.
+    """
+    if d_out == 4096 and d_in == 4096:
+        return (8, 8, 8, 8), (8, 8, 8, 8)
+    elif d_out == 4096 and d_in == 11008:
+        return (8, 8, 8, 8), (4, 8, 8, 43)
+    elif d_out == 11008 and d_in == 4096:
+        return (4, 8, 8, 43), (8, 8, 8, 8)
+    elif d_out == 4096 and d_in == 14336:
+        return (8, 8, 8, 8), (8, 16, 14, 8)
+    elif d_out == 14336 and d_in == 4096:
+        return (8, 16, 14, 8), (8, 8, 8, 8)
+    else:
+        def factor4(n):
+            factors = []
+            d = 2
+            curr = n
+            while d * d <= curr:
+                while curr % d == 0:
+                    factors.append(d)
+                    curr //= d
+                d += 1
+            if curr > 1:
+                factors.append(curr)
+            while len(factors) < 4:
+                factors.append(1)
+            while len(factors) > 4:
+                factors.sort()
+                factors[1] *= factors.pop(0)
+            return tuple(factors)
+        return factor4(d_out), factor4(d_in)
