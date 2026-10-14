@@ -137,17 +137,21 @@ def compile_attention_block(
 
     if causal_healing:
         if verbose:
-            print("  [Attention Sub-Block] Causal Healing active: Solving W_o on corrupted context A_comp...", flush=True)
+            print(f"  [Attention Sub-Block] Causal Healing active: Solving W_o on corrupted context A_comp (dynamic bridge: r={r_bridge * 2}, n_outliers=0)...", flush=True)
         X_o_calib = A_comp
+        r_bridge_o = r_bridge * 2
+        n_outliers_o = 0
     else:
         if verbose:
             print("  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...", flush=True)
         X_o_calib = A_dense
+        r_bridge_o = r_bridge
+        n_outliers_o = n_outliers
 
     gamma_o = 0.002 if causal_healing else 0.01
     W_hat_o, kb_o, cores_o, _ = nox_hybrid_dmrg_decompose(
         W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_dense, o_modes=o_modes, i_modes=i_modes,
-        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, prior_gamma=gamma_o, verbose=False,
+        ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, verbose=False,
     )
     if torch.cuda.is_available():
         gc.collect()
@@ -224,17 +228,21 @@ def compile_mlp_block(
 
     if causal_healing:
         if verbose:
-            print("  [SwiGLU MLP Sub-Block] Causal Healing active: Solving W_down on corrupted activation H_swiglu_comp...", flush=True)
+            print(f"  [SwiGLU MLP Sub-Block] Causal Healing active: Solving W_down on corrupted activation H_swiglu_comp (dynamic bridge: r={r_bridge * 2}, n_outliers=0)...", flush=True)
         X_down_calib = H_swiglu_comp
+        r_bridge_down = r_bridge * 2
+        n_outliers_down = 0
     else:
         if verbose:
             print("  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...", flush=True)
         X_down_calib = H_swiglu_dense
+        r_bridge_down = r_bridge
+        n_outliers_down = n_outliers
 
     gamma_down = 0.002 if causal_healing else 0.01
     W_hat_down, kb_down, cores_down, _ = nox_hybrid_dmrg_decompose(
         W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_dense, o_modes=o_modes_down, i_modes=i_modes_down,
-        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, prior_gamma=gamma_down, verbose=False,
+        ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, verbose=False,
     )
     if torch.cuda.is_available():
         gc.collect()
@@ -327,7 +335,11 @@ def compile_transformer_block(
     total_time = time.time() - t_start
     total_kb = attn_res["total_kb"] + mlp_res["total_kb"]
 
+    Delta_dense = attn_res["Y_attn_dense"] + mlp_res["Y_mlp_dense"]
+    Delta_comp = attn_res["Y_attn_comp"] + mlp_res["Y_mlp_comp"]
+
     block_metrics = compute_metrics(X_out_dense, X_out_comp)
+    transform_metrics = compute_metrics(Delta_dense, Delta_comp)
     attn_metrics = compute_metrics(attn_res["Y_attn_dense"], attn_res["Y_attn_comp"])
     mlp_metrics = compute_metrics(mlp_res["Y_mlp_dense"], mlp_res["Y_mlp_comp"])
 
@@ -344,6 +356,7 @@ def compile_transformer_block(
         "X_out_comp": X_out_comp,
         "X_out_dense": X_out_dense,
         "block_metrics": block_metrics,
+        "transform_metrics": transform_metrics,
         "attn_metrics": attn_metrics,
         "mlp_metrics": mlp_metrics,
         "total_kb": total_kb,
@@ -395,9 +408,12 @@ def evaluate_compiled_block(compiled_weights, layer_weights, X_test, n_heads=32,
     H_sw_c = F.silu(H_g_c) * H_u_c
     Y_mlp_c = cw["down_proj"] @ H_sw_c
     X_out_comp = X_res1_c + Y_mlp_c
+    Delta_dense = Y_attn_d + Y_mlp_d
+    Delta_comp = Y_attn_c + Y_mlp_c
 
     return {
         "block_metrics": compute_metrics(X_out_dense, X_out_comp),
+        "transform_metrics": compute_metrics(Delta_dense, Delta_comp),
         "attn_metrics": compute_metrics(Y_attn_d, Y_attn_c),
         "mlp_metrics": compute_metrics(Y_mlp_d, Y_mlp_c),
     }
