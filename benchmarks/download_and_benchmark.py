@@ -170,11 +170,15 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
 
 def get_modes_for_projection(d_out, d_in):
     """
-    Determines 4-mode factorizations for Llama-3.1-8B projections.
+    Determines 4-mode factorizations for Llama-2-7B (CompactifAI) and Llama-3-8B projections.
     """
     if d_out == 4096 and d_in == 4096:
         return (8, 8, 8, 8), (8, 8, 8, 8)
+    elif d_out == 4096 and d_in == 11008:
+        # Llama-2-7B MLP down_proj: 4096 x 11008 (8 * 11 * 8 * 16 = 11008)
+        return (8, 8, 8, 8), (8, 11, 8, 16)
     elif d_out == 4096 and d_in == 14336:
+        # Llama-3-8B MLP down_proj: 4096 x 14336 (8 * 14 * 8 * 16 = 14336)
         return (8, 8, 8, 8), (8, 14, 8, 16)
     else:
         m_out = int(d_out ** 0.25)
@@ -272,7 +276,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     }
 
     print("\n" + "=" * 94)
-    print(f" LLAMA-3.1-8B LAYER 15 BENCHMARK RESULTS (Held-Out Test Set, Core Precision: {core_bits}-bit)")
+    print(f" LLAMA-2-7B (COMPACTIFAI EXACT MODEL) BENCHMARK RESULTS (Held-Out Test Set, Core Precision: {core_bits}-bit)")
     print("=" * 94)
     print(f"{'Method':<25} | {'Rel Error':<10} | {'Angular Drift':<14} | {'Norm Ratio':<10} | {'Size (KB)':<10} | {'Comp Ratio':<10}")
     print("-" * 94)
@@ -309,10 +313,10 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Download Llama-3.1-8B and run Day 1 Benchmark")
-    parser.add_argument("--model_id", type=str, default="meta-llama/Llama-3.1-8B", help="HuggingFace model ID")
-    parser.add_argument("--save_dir", type=str, default="./models/Llama-3.1-8B", help="Local directory to save/load model")
-    parser.add_argument("--token", type=str, default=None, help="HuggingFace API token (defaults to HF_TOKEN env var)")
+    parser = argparse.ArgumentParser(description="Download Llama-2-7B (CompactifAI Model) and run Day 1 Benchmark")
+    parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID (default: NousResearch/Llama-2-7b-hf, ungated CompactifAI model)")
+    parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory to save/load model")
+    parser.add_argument("--token", type=str, default=None, help="HuggingFace API token (optional for ungated models)")
     parser.add_argument("--layer_idx", type=int, default=15, help="Layer index to benchmark (default: 15)")
     parser.add_argument("--proj", type=str, default="o_proj", choices=["o_proj", "down_proj"], help="Projection matrix type")
     parser.add_argument("--rank", type=int, default=24, help="Target bond dimension (default: 24)")
@@ -321,11 +325,8 @@ def main():
     parser.add_argument("--outlier_pct", type=float, default=0.005, help="Sparse outlier fraction (default: 0.005, i.e. 0.5 percent)")
     args = parser.parse_args()
 
+    # Use token if available, but proceed even without token since NousResearch/Llama-2-7b-hf is ungated
     hf_token = args.token or HF_TOKEN
-    if not hf_token and not (os.path.exists(args.save_dir) and any(f.endswith(".safetensors") for f in os.listdir(args.save_dir))):
-        print("Error: HF_TOKEN is not found in .env, environment, or --token.")
-        print("Please add HF_TOKEN='your_token' to your .env file or pass --token.")
-        sys.exit(1)
 
     # Step 1: Download model
     model_path = download_model(args.model_id, args.save_dir, hf_token)
