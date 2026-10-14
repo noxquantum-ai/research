@@ -1,7 +1,7 @@
 """Activation-Aware Weight Tensorization (AWT) baseline (Beatini et al., arXiv:2610.10085)."""
 
 import torch
-from utils import quantize_dequantize_groupwise
+from nox.utils import quantize_dequantize_groupwise
 
 
 def awt_tt_svd(

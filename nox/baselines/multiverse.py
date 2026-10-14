@@ -1,7 +1,7 @@
 """Multiverse baseline: Data-blind Frobenius TT-SVD (CompactifAI unhealed baseline)."""
 
 import torch
-from utils import quantize_dequantize_groupwise
+from nox.utils import quantize_dequantize_groupwise
 
 
 def multiverse_tt_svd(
