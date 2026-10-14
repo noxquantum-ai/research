@@ -81,6 +81,7 @@ def nox_4step_compiler(
     n_sweeps=3,
     core_bits=4,
     ridge=1e-4,
+    verbose=False,
 ):
     """
     Complete 4-Step Nox Entanglement Compiler for a 2D linear weight matrix:
@@ -128,12 +129,16 @@ def nox_4step_compiler(
         W_core = W.clone()
 
     Y_target = Y_dense - (S_sparse @ X_comp)
+    if verbose:
+        print(f"    [Nox Step 1] Decoupled {k_outliers} outliers ({outlier_pct*100:.2f}%) into sparse CSR buffer", flush=True)
 
     # Step 2: Low-Rank Activation Density Projection
     U_x, S_x, Vh_x = torch.linalg.svd(X_comp, full_matrices=False)
     r = min(r_subspace, S_x.shape[0])
     X_tilde = (U_x[:, :r] * S_x[:r].unsqueeze(0)).reshape(i0, i1, i2, i3, r)
     Y_tilde = (Y_target @ Vh_x[:r, :].T).reshape(o0, o1, o2, o3, r)
+    if verbose:
+        print(f"    [Nox Step 2] Projected activation density to r={r} principal subspace", flush=True)
 
     # Step 3.1: AWT Warm-Start + Dynamic Bond Sizing
     d_scale = (act_l2 / (X_comp.shape[1] ** 0.5)) ** 0.5
@@ -159,10 +164,15 @@ def nox_4step_compiler(
     c1 = cores[1]
     c2 = cores[2]
     c3 = cores[3].squeeze(-1)
+    if verbose:
+        print(f"    [Nox Step 3.1] Bond dimensions initialized: [1, {c1.shape[0]}, {c2.shape[0]}, {c3.shape[0]}, 1]", flush=True)
 
     # Step 3.2 & Step 4.1: DMRG Sweeps with QR Gauge Fixing and Final-Pass Quantization
     for sweep in range(n_sweeps):
         is_final_sweep = (sweep == n_sweeps - 1)
+        if verbose:
+            sweep_mode = "Final Pass (in-loop 4-bit quantization)" if is_final_sweep else "QR isometric gauge-fixing"
+            print(f"    [Nox Step 3.2] Starting DMRG Sweep {sweep+1}/{n_sweeps} [{sweep_mode}]...", flush=True)
 
         # Site 0: c0 (o0, i0, r1)
         r1 = c1.shape[0]
