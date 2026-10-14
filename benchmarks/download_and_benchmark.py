@@ -10,6 +10,11 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from huggingface_hub import snapshot_download
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nox.compiler import nox_4step_compiler
@@ -270,10 +275,27 @@ def main():
     parser.add_argument("--outlier_pct", type=float, default=0.005, help="Sparse outlier fraction (default: 0.005, i.e. 0.5 percent)")
     args = parser.parse_args()
 
+    # Load environment variables from .env file
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if not env_file.exists():
+        env_file = Path(".env")
+    if load_dotenv is not None and env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+    elif env_file.exists():
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#") and "=" in stripped:
+                    k, v = stripped.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip("'\"")
+                    if k and k not in os.environ:
+                        os.environ[k] = v
+
     hf_token = args.token or os.environ.get("HF_TOKEN")
     if not hf_token and not (os.path.exists(args.save_dir) and any(f.endswith(".safetensors") for f in os.listdir(args.save_dir))):
-        print("Error: HF_TOKEN is not set in environment or passed via --token.")
-        print("Please export HF_TOKEN='your_token_here' or pass --token.")
+        print("Error: HF_TOKEN is not found in .env, environment, or --token.")
+        print("Please add HF_TOKEN='your_token' to your .env file or pass --token.")
         sys.exit(1)
 
     # Step 1: Download model
