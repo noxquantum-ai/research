@@ -339,7 +339,7 @@ def nox_4step_compiler(
 
         # --- Site 0: c0 (o0, i0, r1) ---
         r1 = c1.shape[0]
-        Z0 = torch.einsum("bcjd,deke,elg,ijklr->cegrbi", c1, c2, c3, X_tilde).reshape(-1, r1 * i0)
+        Z0 = torch.einsum("bcjd,dekf,fgl,ijklr->cegrbi", c1, c2, c3, X_tilde).reshape(-1, r1 * i0)
         Y0 = Y_tilde.permute(1, 2, 3, 4, 0).reshape(-1, o0)
         c0 = local_ridge_solve(Z0, Y0, o0, r1 * i0).reshape(o0, r1, i0).permute(0, 2, 1).contiguous()
         if is_final_sweep:
@@ -351,7 +351,7 @@ def nox_4step_compiler(
 
         # --- Site 1: c1 (r1, o1, i1, r2) ---
         r1, _, _, r2 = c1.shape
-        Z1 = torch.einsum("aib,deke,elg,ijklr->aegrbdj", c0, c2, c3, X_tilde).reshape(-1, r1 * r2 * i1)
+        Z1 = torch.einsum("aib,dekf,fgl,ijklr->aegrbdj", c0, c2, c3, X_tilde).reshape(-1, r1 * r2 * i1)
         Y1 = Y_tilde.permute(0, 2, 3, 4, 1).reshape(-1, o1)
         c1 = local_ridge_solve(Z1, Y1, o1, r1 * r2 * i1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
         if is_final_sweep:
@@ -363,7 +363,7 @@ def nox_4step_compiler(
 
         # --- Site 2: c2 (r2, o2, i2, r3) ---
         r2, _, _, r3 = c2.shape
-        Z2 = torch.einsum("aib,bcjd,elg,ijklr->acgrdek", c0, c1, c3, X_tilde).reshape(-1, r2 * r3 * i2)
+        Z2 = torch.einsum("aib,bcjd,fgl,ijklr->acgrdfk", c0, c1, c3, X_tilde).reshape(-1, r2 * r3 * i2)
         Y2 = Y_tilde.permute(0, 1, 3, 4, 2).reshape(-1, o2)
         c2 = local_ridge_solve(Z2, Y2, o2, r2 * r3 * i2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
         if is_final_sweep:
@@ -375,7 +375,7 @@ def nox_4step_compiler(
 
         # --- Site 3: c3 (r3, o3, i3) ---
         r3 = c3.shape[0]
-        Z3 = torch.einsum("aib,bcjd,deuf,ijklr->acegrfl", c0, c1, c2, X_tilde).reshape(-1, r3 * i3)
+        Z3 = torch.einsum("aib,bcjd,dekf,ijklr->acerfl", c0, c1, c2, X_tilde).reshape(-1, r3 * i3)
         Y3 = Y_tilde.permute(0, 1, 2, 4, 3).reshape(-1, o3)
         c3 = local_ridge_solve(Z3, Y3, o3, r3 * i3).reshape(o3, r3, i3).permute(1, 0, 2).contiguous()
         if is_final_sweep:
@@ -384,4 +384,35 @@ def nox_4step_compiler(
     final_cores = [c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]
     chosen_ranks = [1, c1.shape[0], c2.shape[0], c3.shape[0], 1]
     return final_cores, S_sparse, chosen_ranks
+
+def contract_mpo_4site(cores, X):
+    """
+    Contract 4-site MPO cores with input X [d_in, N].
+    cores: [c0 [1, o0, i0, r1], c1 [r1, o1, i1, r2], c2 [r2, o2, i2, r3], c3 [r3, o3, i3, 1]]
+    """
+    c0 = cores[0].squeeze(0)
+    c1 = cores[1]
+    c2 = cores[2]
+    c3 = cores[3].squeeze(-1)
+    o0, i0, _ = c0.shape
+    _, o1, i1, _ = c1.shape
+    _, o2, i2, _ = c2.shape
+    _, o3, i3 = c3.shape
+    N = X.shape[1]
+    X_reshaped = X.reshape(i0, i1, i2, i3, N)
+    Y = torch.einsum("aib,bcjd,dekf,fgl,ijklN->acegN", c0, c1, c2, c3, X_reshaped)
+    return Y.reshape(o0 * o1 * o2 * o3, N)
+
+def mpo_to_dense(cores):
+    """Reconstruct 2D dense matrix [d_out, d_in] from 4-site MPO cores."""
+    c0 = cores[0].squeeze(0)
+    c1 = cores[1]
+    c2 = cores[2]
+    c3 = cores[3].squeeze(-1)
+    o0, i0, _ = c0.shape
+    _, o1, i1, _ = c1.shape
+    _, o2, i2, _ = c2.shape
+    _, o3, i3 = c3.shape
+    T = torch.einsum("aib,bcjd,dekf,fgl->acegijkl", c0, c1, c2, c3)
+    return T.permute(0, 1, 2, 3, 4, 5, 6, 7).reshape(o0 * o1 * o2 * o3, i0 * i1 * i2 * i3)
 ```
