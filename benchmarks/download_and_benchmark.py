@@ -30,7 +30,7 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from nox.compiler import nox_4step_compiler, nox_extreme_800x_decompose
+from nox.compiler import nox_stabilized_decompose
 from nox.baselines.multiverse import multiverse_tt_svd
 from nox.baselines.awt import awt_tt_svd
 from nox.utils import contract_mpo_4site, evaluate_nox_prediction, compute_metrics, count_parameters
@@ -283,13 +283,13 @@ def get_modes_for_projection(d_out, d_in):
         return (m_out, m_out, m_out, m_out), (m_in, m_in, m_in, m_in)
 
 
-def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4, n_sweeps=3):
+def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4):
     """
     Executes the 3-way contest on real weights:
       - Multiverse TT-SVD (unhealed baseline)
       - AWT TT-SVD (diagonal activation-aware baseline)
       - Nox Regime 1: Ultra-Extreme Frontier (809x compression, [1, 8, 48, 8, 1], r_bridge=4)
-      - Nox Regime 2: Production Sweet Spot (127x compression, [1, 32, 96, 32, 1], r_bridge=16)
+      - Nox Regime 2: Fast Production (~295x-337x compression, [1, 16, 48, 16, 1], r_bridge=12)
     """
     W = data["W"]
     X_calib = data["X_calib"]
@@ -348,20 +348,20 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4, n_sweeps=3
         "time_sec": awt_time,
     }
 
-    # Method 3: Nox Regime 1: Ultra-Extreme 809x Frontier
+    # Method 3: Nox Regime 1: Ultra-Extreme 809x Frontier (40.5 KB)
     if regime in ("both", "extreme"):
-        log_step("Running Nox Regime 1 (Ultra-Extreme 809x Frontier: [1, 8, 48, 8, 1], r_bridge=4)...")
+        log_step("Running Nox Regime 1 (Ultra-Extreme 809x Frontier: [1, 8, 48, 8, 1], r_bridge=4, gamma=0.20)...")
         t0 = time.time()
-        nox1_cores, nox1_bridge, nox1_perm, nox1_ranks = nox_extreme_800x_decompose(
+        nox1_cores, nox1_bridge, nox1_ranks = nox_stabilized_decompose(
             W=W,
-            X_comp=X_calib,
+            X_calib=X_calib,
             Y_dense=Y_calib,
             o_modes=o_modes,
             i_modes=i_modes,
             ranks=(1, 8, 48, 8, 1),
             r_bridge=4,
-            n_sweeps=n_sweeps,
-            core_bits=core_bits,
+            n_sweeps=2,
+            prior_gamma=0.20,
             verbose=True,
         )
         nox1_time = time.time() - t0
@@ -369,7 +369,6 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4, n_sweeps=3
         nox1_Y_pred = evaluate_nox_prediction(
             cores=nox1_cores,
             bridge=nox1_bridge,
-            perm_info=nox1_perm,
             X=X_test,
         )
         nox1_metrics = compute_metrics(Y_test, nox1_Y_pred)
@@ -381,20 +380,20 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4, n_sweeps=3
             "time_sec": nox1_time,
         }
 
-    # Method 4: Nox Regime 2: Production Sweet Spot
+    # Method 4: Nox Regime 2: Fast Production (~97 KB / 338x Compression)
     if regime in ("both", "production"):
-        log_step("Running Nox Regime 2 (Production Sweet Spot: [1, 32, 96, 32, 1], r_bridge=16)...")
+        log_step("Running Nox Regime 2 (Fast Production: [1, 16, 48, 16, 1], r_bridge=12, gamma=0.15)...")
         t0 = time.time()
-        nox2_cores, nox2_bridge, nox2_perm, nox2_ranks = nox_extreme_800x_decompose(
+        nox2_cores, nox2_bridge, nox2_ranks = nox_stabilized_decompose(
             W=W,
-            X_comp=X_calib,
+            X_calib=X_calib,
             Y_dense=Y_calib,
             o_modes=o_modes,
             i_modes=i_modes,
-            ranks=(1, 32, 96, 32, 1),
-            r_bridge=16,
-            n_sweeps=n_sweeps,
-            core_bits=core_bits,
+            ranks=(1, 16, 48, 16, 1),
+            r_bridge=12,
+            n_sweeps=2,
+            prior_gamma=0.15,
             verbose=True,
         )
         nox2_time = time.time() - t0
@@ -402,7 +401,6 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4, n_sweeps=3
         nox2_Y_pred = evaluate_nox_prediction(
             cores=nox2_cores,
             bridge=nox2_bridge,
-            perm_info=nox2_perm,
             X=X_test,
         )
         nox2_metrics = compute_metrics(Y_test, nox2_Y_pred)
@@ -454,7 +452,6 @@ def main():
     parser.add_argument("--proj", type=str, default="o_proj", choices=["o_proj", "down_proj"], help="Projection matrix type")
     parser.add_argument("--regime", type=str, default="both", choices=["both", "extreme", "production"], help="Benchmark regime to run")
     parser.add_argument("--core_bits", type=int, default=4, help="Core quantization bit width (default: 4)")
-    parser.add_argument("--sweeps", type=int, default=3, help="Number of DMRG sweeps for Nox (default: 3)")
     parser.add_argument("--n_calib", type=int, default=128, help="Number of calibration tokens (default: 128)")
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")
     args = parser.parse_args()
@@ -494,7 +491,6 @@ def main():
         i_modes=i_modes,
         regime=args.regime,
         core_bits=args.core_bits,
-        n_sweeps=args.sweeps,
     )
 
 
