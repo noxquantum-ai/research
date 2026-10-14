@@ -64,7 +64,8 @@ python3 benchmarks/benchmark_day1.py --rank 8
 Downloads `meta-llama/Llama-3.1-8B` (requires HuggingFace token), captures real activations at Layer 15, and executes the 3-way contest:
 
 ```bash
-export HF_TOKEN="your_huggingface_token"
+# Add your token to a .env file (automatically loaded via load_dotenv)
+echo "HF_TOKEN=your_huggingface_token" > .env
 
 # Benchmark Layer 15 Attention Output Projection (o_proj: 4096 x 4096)
 python3 benchmarks/download_and_benchmark.py --save_dir ./models/Llama-3.1-8B --proj o_proj --rank 24
