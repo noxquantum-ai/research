@@ -30,10 +30,10 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from nox.compiler import nox_stabilized_decompose
+from nox.compiler import nox_hybrid_dmrg_decompose
 from nox.baselines.multiverse import multiverse_tt_svd
 from nox.baselines.awt import awt_tt_svd
-from nox.utils import contract_mpo_4site, evaluate_nox_prediction, compute_metrics, count_parameters
+from nox.utils import contract_mpo_4site, compute_metrics, count_parameters
 
 
 def log_step(msg):
@@ -283,13 +283,14 @@ def get_modes_for_projection(d_out, d_in):
         return (m_out, m_out, m_out, m_out), (m_in, m_in, m_in, m_in)
 
 
-def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4):
+def run_benchmark(data, o_modes, i_modes, regime="all", core_bits=4):
     """
     Executes the 3-way contest on real weights:
       - Multiverse TT-SVD (unhealed baseline)
       - AWT TT-SVD (diagonal activation-aware baseline)
-      - Nox Regime 1: Ultra-Extreme Frontier (809x compression, [1, 8, 48, 8, 1], r_bridge=4)
-      - Nox Regime 2: Fast Production (~295x-337x compression, [1, 16, 48, 16, 1], r_bridge=12)
+      - Nox Regime 1: Ultra-Extreme Frontier (~675x compression, [1, 8, 48, 8, 1], r=2, 16k outliers)
+      - Nox Regime 2: Fast Production (~203x compression, [1, 16, 48, 16, 1], r=8, 81.9k outliers)
+      - Nox Regime 3: High-Fidelity Sweet Spot (~54x compression, [1, 24, 64, 24, 1], r=64, 262k outliers)
     """
     W = data["W"]
     X_calib = data["X_calib"]
@@ -302,7 +303,7 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4):
 
     log_step("Starting 3-way benchmark evaluation on real production weights...")
 
-    # Method 1: Multiverse TT-SVD (CompactifAI unhealed baseline)
+    # Baseline 1: Multiverse TT-SVD (CompactifAI unhealed baseline)
     log_step("Running Multiverse TT-SVD (unhealed baseline)...")
     t0 = time.time()
     mv_cores, mv_ranks = multiverse_tt_svd(
@@ -324,7 +325,7 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4):
         "time_sec": mv_time,
     }
 
-    # Method 2: AWT TT-SVD (Diagonal activation-aware baseline)
+    # Baseline 2: AWT TT-SVD (Diagonal activation-aware baseline)
     log_step("Running AWT TT-SVD (diagonal activation-aware baseline)...")
     t0 = time.time()
     awt_cores, awt_ranks = awt_tt_svd(
@@ -348,68 +349,92 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4):
         "time_sec": awt_time,
     }
 
-    # Method 3: Nox Regime 1: Ultra-Extreme 809x Frontier (40.5 KB)
-    if regime in ("both", "extreme"):
-        log_step("Running Nox Regime 1 (Ultra-Extreme 809x Frontier: [1, 8, 48, 8, 1], r_bridge=4, gamma=0.20)...")
+    run_reg1 = regime in ("all", "1", "both", "extreme")
+    run_reg2 = regime in ("all", "2", "both", "production")
+    run_reg3 = regime in ("all", "3")
+
+    # Nox Regime 1: Ultra-Extreme ~675x Frontier (48.5 KB)
+    if run_reg1:
+        log_step("Running Nox Regime 1 (Ultra-Extreme ~675x: [1, 8, 48, 8, 1], r_b=2, 16k outliers)...")
         t0 = time.time()
-        nox1_cores, nox1_bridge, nox1_ranks = nox_stabilized_decompose(
+        w_hat1, kb1, cores1, ranks1 = nox_hybrid_dmrg_decompose(
             W=W,
             X_calib=X_calib,
             Y_dense=Y_calib,
             o_modes=o_modes,
             i_modes=i_modes,
             ranks=(1, 8, 48, 8, 1),
-            r_bridge=4,
+            r_bridge=2,
+            n_outliers=16384,
             n_sweeps=2,
-            prior_gamma=0.20,
+            prior_gamma=0.02,
             verbose=True,
         )
-        nox1_time = time.time() - t0
-        log_step(f"Nox Regime 1 completed in {nox1_time:.2f}s (ranks: {nox1_ranks}). Evaluating...")
-        nox1_Y_pred = evaluate_nox_prediction(
-            cores=nox1_cores,
-            bridge=nox1_bridge,
-            X=X_test,
-        )
-        nox1_metrics = compute_metrics(Y_test, nox1_Y_pred)
-        nox1_footprint = count_parameters(cores=nox1_cores, bridge=nox1_bridge, bits=core_bits)
-        results["Nox Regime 1 (809x Frontier)"] = {
-            "metrics": nox1_metrics,
-            "footprint": nox1_footprint,
-            "ranks": nox1_ranks,
-            "time_sec": nox1_time,
+        t_reg1 = time.time() - t0
+        log_step(f"Nox Regime 1 completed in {t_reg1:.2f}s. Evaluating...")
+        y_pred1 = w_hat1 @ X_test
+        m1 = compute_metrics(Y_test, y_pred1)
+        results["Nox Regime 1 (675x Frontier)"] = {
+            "metrics": m1,
+            "footprint": {"total_bytes": kb1 * 1024.0, "total_kb": kb1},
+            "ranks": ranks1,
+            "time_sec": t_reg1,
         }
 
-    # Method 4: Nox Regime 2: Fast Production (~97 KB / 338x Compression)
-    if regime in ("both", "production"):
-        log_step("Running Nox Regime 2 (Fast Production: [1, 16, 48, 16, 1], r_bridge=12, gamma=0.15)...")
+    # Nox Regime 2: Fast Production ~203x Frontier (161.0 KB)
+    if run_reg2:
+        log_step("Running Nox Regime 2 (Fast Production ~203x: [1, 16, 48, 16, 1], r_b=8, 81.9k outliers)...")
         t0 = time.time()
-        nox2_cores, nox2_bridge, nox2_ranks = nox_stabilized_decompose(
+        w_hat2, kb2, cores2, ranks2 = nox_hybrid_dmrg_decompose(
             W=W,
             X_calib=X_calib,
             Y_dense=Y_calib,
             o_modes=o_modes,
             i_modes=i_modes,
             ranks=(1, 16, 48, 16, 1),
-            r_bridge=12,
+            r_bridge=8,
+            n_outliers=81920,
             n_sweeps=2,
-            prior_gamma=0.15,
+            prior_gamma=0.02,
             verbose=True,
         )
-        nox2_time = time.time() - t0
-        log_step(f"Nox Regime 2 completed in {nox2_time:.2f}s (ranks: {nox2_ranks}). Evaluating...")
-        nox2_Y_pred = evaluate_nox_prediction(
-            cores=nox2_cores,
-            bridge=nox2_bridge,
-            X=X_test,
+        t_reg2 = time.time() - t0
+        log_step(f"Nox Regime 2 completed in {t_reg2:.2f}s. Evaluating...")
+        y_pred2 = w_hat2 @ X_test
+        m2 = compute_metrics(Y_test, y_pred2)
+        results["Nox Regime 2 (203x Prod)"] = {
+            "metrics": m2,
+            "footprint": {"total_bytes": kb2 * 1024.0, "total_kb": kb2},
+            "ranks": ranks2,
+            "time_sec": t_reg2,
+        }
+
+    # Nox Regime 3: High-Fidelity ~54x Compression (609.5 KB)
+    if run_reg3:
+        log_step("Running Nox Regime 3 (High-Fidelity ~54x: [1, 24, 64, 24, 1], r_b=64, 262k outliers)...")
+        t0 = time.time()
+        w_hat3, kb3, cores3, ranks3 = nox_hybrid_dmrg_decompose(
+            W=W,
+            X_calib=X_calib,
+            Y_dense=Y_calib,
+            o_modes=o_modes,
+            i_modes=i_modes,
+            ranks=(1, 24, 64, 24, 1),
+            r_bridge=64,
+            n_outliers=262144,
+            n_sweeps=2,
+            prior_gamma=0.02,
+            verbose=True,
         )
-        nox2_metrics = compute_metrics(Y_test, nox2_Y_pred)
-        nox2_footprint = count_parameters(cores=nox2_cores, bridge=nox2_bridge, bits=core_bits)
-        results["Nox Regime 2 (Production)"] = {
-            "metrics": nox2_metrics,
-            "footprint": nox2_footprint,
-            "ranks": nox2_ranks,
-            "time_sec": nox2_time,
+        t_reg3 = time.time() - t0
+        log_step(f"Nox Regime 3 completed in {t_reg3:.2f}s. Evaluating...")
+        y_pred3 = w_hat3 @ X_test
+        m3 = compute_metrics(Y_test, y_pred3)
+        results["Nox Regime 3 (54x Hi-Fi)"] = {
+            "metrics": m3,
+            "footprint": {"total_bytes": kb3 * 1024.0, "total_kb": kb3},
+            "ranks": ranks3,
+            "time_sec": t_reg3,
         }
 
     print("\n" + "=" * 98)
@@ -431,7 +456,7 @@ def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4):
     mv_err = results["Multiverse (CompactifAI)"]["metrics"]["relative_error"]
     awt_err = results["AWT (Oct 2026 SOTA)"]["metrics"]["relative_error"]
 
-    for name in ["Nox Regime 1 (809x Frontier)", "Nox Regime 2 (Production)"]:
+    for name in ["Nox Regime 1 (675x Frontier)", "Nox Regime 2 (203x Prod)", "Nox Regime 3 (54x Hi-Fi)"]:
         if name in results:
             nox_err = results[name]["metrics"]["relative_error"]
             err_red_vs_mv = (1.0 - (nox_err / (mv_err + 1e-12))) * 100.0
@@ -450,7 +475,7 @@ def main():
     parser.add_argument("--token", type=str, default=None, help="HuggingFace API token")
     parser.add_argument("--layer_idx", type=int, default=15, help="Layer index to benchmark (default: 15)")
     parser.add_argument("--proj", type=str, default="o_proj", choices=["o_proj", "down_proj"], help="Projection matrix type")
-    parser.add_argument("--regime", type=str, default="both", choices=["both", "extreme", "production"], help="Benchmark regime to run")
+    parser.add_argument("--regime", type=str, default="all", choices=["all", "1", "2", "3", "both", "extreme", "production"], help="Benchmark regime to run")
     parser.add_argument("--core_bits", type=int, default=4, help="Core quantization bit width (default: 4)")
     parser.add_argument("--n_calib", type=int, default=128, help="Number of calibration tokens (default: 128)")
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")
