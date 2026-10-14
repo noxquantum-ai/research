@@ -8,6 +8,7 @@ output drift compared to both independent matrix compression and unhealed Multiv
 import argparse
 import json
 import os
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 import struct
 import sys
 import time

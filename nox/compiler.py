@@ -87,6 +87,7 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
     H_reg = H + reg_scale * torch.eye(D, device=device)
     rhs = (Z_env.T @ Y_site) + reg_scale * C_prior
     sol = torch.linalg.solve(H_reg, rhs)
+    del H, H_reg, rhs
     return sol.T
 
 
@@ -230,10 +231,18 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 0
         r1 = c1.shape[0]
-        Z0 = torch.einsum("bcjd,dekf,fgl,ijklr->cegrbi", c1, c2, c3, X_red).reshape(-1, r1 * i0)
+        R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
+        R123 = torch.einsum("bcjd,degkl->bcejkgl", c1, R23)
+        del R23
+        Z0 = torch.einsum("bcejkgl,ijklr->cegrbi", R123, X_red).reshape(-1, r1 * i0)
+        del R123
         Y0 = Y_red.permute(1, 2, 3, 4, 0).reshape(-1, o0)
         c0_prior = c0.permute(2, 1, 0).reshape(r1 * i0, o0)
         c0 = solve_site_anchored(Z0, Y0, c0_prior, cur_gamma, device=device).reshape(o0, r1, i0).permute(0, 2, 1).contiguous()
+        del Z0
+        if str(device).startswith("cuda"):
+            torch.cuda.empty_cache()
+
         if is_final:
             c0 = quantize_4bit_grouped(c0)
         else:
@@ -243,10 +252,17 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 1
         r1, _, _, r2 = c1.shape
-        Z1 = torch.einsum("aib,dekf,fgl,ijklr->aegrbdj", c0, c2, c3, X_red).reshape(-1, r1 * r2 * i1)
+        L0 = torch.einsum("aib,ijklr->abjklr", c0, X_red)
+        R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
+        Z1 = torch.einsum("abjklr,degkl->aegrbdj", L0, R23).reshape(-1, r1 * r2 * i1)
+        del L0, R23
         Y1 = Y_red.permute(0, 2, 3, 4, 1).reshape(-1, o1)
         c1_prior = c1.permute(0, 3, 2, 1).reshape(r1 * r2 * i1, o1)
         c1 = solve_site_anchored(Z1, Y1, c1_prior, cur_gamma, device=device).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
+        del Z1
+        if str(device).startswith("cuda"):
+            torch.cuda.empty_cache()
+
         if is_final:
             c1 = quantize_4bit_grouped(c1)
         else:
@@ -256,10 +272,18 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 2
         r2, _, _, r3 = c2.shape
-        Z2 = torch.einsum("aib,bcjd,fgl,ijklr->acgrdfk", c0, c1, c3, X_red).reshape(-1, r2 * r3 * i2)
+        L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
+        L01_X = torch.einsum("acijd,ijklr->acdkrl", L01, X_red)
+        del L01
+        Z2 = torch.einsum("acdkrl,fgl->acgrdfk", L01_X, c3).reshape(-1, r2 * r3 * i2)
+        del L01_X
         Y2 = Y_red.permute(0, 1, 3, 4, 2).reshape(-1, o2)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(r2 * r3 * i2, o2)
         c2 = solve_site_anchored(Z2, Y2, c2_prior, cur_gamma, device=device).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
+        del Z2
+        if str(device).startswith("cuda"):
+            torch.cuda.empty_cache()
+
         if is_final:
             c2 = quantize_4bit_grouped(c2)
         else:
@@ -269,10 +293,18 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 3
         r3 = c3.shape[0]
-        Z3 = torch.einsum("aib,bcjd,dekf,ijklr->acerfl", c0, c1, c2, X_red).reshape(-1, r3 * i3)
+        L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
+        L012 = torch.einsum("acijd,dekf->aceijkf", L01, c2)
+        del L01
+        Z3 = torch.einsum("aceijkf,ijklr->acerfl", L012, X_red).reshape(-1, r3 * i3)
+        del L012
         Y3 = Y_red.permute(0, 1, 2, 4, 3).reshape(-1, o3)
         c3_prior = c3.permute(0, 2, 1).reshape(r3 * i3, o3)
         c3 = solve_site_anchored(Z3, Y3, c3_prior, cur_gamma, device=device).reshape(o3, r3, i3).permute(1, 0, 2).contiguous()
+        del Z3
+        if str(device).startswith("cuda"):
+            torch.cuda.empty_cache()
+
         if is_final:
             c3 = quantize_4bit_grouped(c3)
         else:
