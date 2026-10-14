@@ -1,5 +1,4 @@
-"""Nox Entanglement Compiler (NEC): 4-step closed-form MPO solver with zero backpropagation."""
-
+import gc
 import torch
 from nox.utils import quantize_dequantize_groupwise, quantize_4bit_per_channel, mpo_to_dense
 
@@ -83,11 +82,12 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
     if device is None:
         device = Z_env.device
     H = Z_env.T @ Z_env
+    rhs = Z_env.T @ Y_site
     reg_scale = gamma * (torch.trace(H) / D + 1e-6)
-    H_reg = H + reg_scale * torch.eye(D, device=device)
-    rhs = (Z_env.T @ Y_site) + reg_scale * C_prior
-    sol = torch.linalg.solve(H_reg, rhs)
-    del H, H_reg, rhs
+    H.diagonal().add_(reg_scale)
+    rhs.add_(reg_scale * C_prior)
+    sol = torch.linalg.solve(H, rhs)
+    del H, rhs
     return sol.T
 
 
@@ -104,6 +104,7 @@ def local_ridge_solve(Z_env, Y_site, o_m, dim_param, ridge=1e-4, device=None):
     return torch.linalg.solve(H + reg, B).T
 
 
+@torch.no_grad()
 def nox_hybrid_dmrg_decompose(
     W,
     X_calib,
@@ -131,6 +132,10 @@ def nox_hybrid_dmrg_decompose(
     device = W.device
     o0, o1, o2, o3 = o_modes
     i0, i1, i2, i3 = i_modes
+
+    if str(device).startswith("cuda"):
+        gc.collect()
+        torch.cuda.empty_cache()
 
     # Step 1A: Exact Operator-Norm Sparse Outlier Shield (1.0 Byte/Outlier Packed)
     ch_rms = torch.sqrt(torch.mean(X_calib ** 2, dim=1) + 1e-8)
@@ -183,10 +188,10 @@ def nox_hybrid_dmrg_decompose(
     Y_target = Y_dense - (S_total @ X_calib)
 
     U_x, S_x, Vh_x = torch.linalg.svd(X_cond, full_matrices=False)
-    max_mode = max(o0, o1, o2, o3)
-    r_cov = min(48 if max_mode > 16 else 64, S_x.shape[0])
+    r_cov = min(32, S_x.shape[0])
     X_red = (U_x[:, :r_cov] * S_x[:r_cov].unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
     Y_red = (Y_target @ Vh_x[:r_cov, :].T).reshape(o0, o1, o2, o3, r_cov)
+    del U_x, S_x, Vh_x, Y_target, X_cond, W_core
 
     if verbose:
         print(f"    [Nox Step 2] Exact AWT preconditioning applied; keeping active r={r_cov} calibration modes", flush=True)
@@ -194,6 +199,9 @@ def nox_hybrid_dmrg_decompose(
     # Step 3: Exact AWT TT-SVD Warm-Start on W_cond
     bond_ranks = ranks[1:4] if len(ranks) == 5 else ranks
     cores = adaptive_tt_svd_4site(W_cond, o_modes, i_modes, ranks=bond_ranks)
+    del W_cond
+    if str(device).startswith("cuda"):
+        torch.cuda.empty_cache()
     c0 = cores[0].squeeze(0)
     c1 = cores[1]
     c2 = cores[2]
@@ -315,6 +323,10 @@ def nox_hybrid_dmrg_decompose(
     # Reconstruct W_hat = (mpo_to_dense(cores) / d_awt) + S_total
     W_mpo = mpo_to_dense(final_cores) / d_awt.unsqueeze(0)
     W_hat = W_mpo + S_total
+    del W_mpo, S_total, X_red, Y_red, d_awt
+    if str(device).startswith("cuda"):
+        gc.collect()
+        torch.cuda.empty_cache()
 
     # Byte accounting:
     mpo_bytes = sum(c.numel() for c in final_cores) * 0.5

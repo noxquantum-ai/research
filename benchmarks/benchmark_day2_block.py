@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+import gc
 import struct
 import sys
 import time
@@ -275,6 +276,10 @@ def run_day2_benchmark(
         f"Drift={mv_eval['block_metrics']['angular_drift']:.5f}, "
         f"Norm={mv_eval['block_metrics']['norm_ratio']:.4f} in {mv_block['time_sec']:.2f}s."
     )
+    del mv_block, mv_eval
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     log_step("Compiling Baseline 2: Nox Independent Block (causal_healing=False)...")
     nox_indep_block = compile_transformer_block(
@@ -309,6 +314,10 @@ def run_day2_benchmark(
         f"Drift={nox_indep_eval['block_metrics']['angular_drift']:.5f}, "
         f"Norm={nox_indep_eval['block_metrics']['norm_ratio']:.4f} in {nox_indep_block['time_sec']:.2f}s."
     )
+    del nox_indep_block, nox_indep_eval
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     log_step("Compiling Method 3: Nox Causally-Healed Block (Step 4.2 Causal Intra-Block Propagation)...")
     nox_healed_block = compile_transformer_block(
@@ -343,6 +352,10 @@ def run_day2_benchmark(
         f"Drift={nox_healed_eval['block_metrics']['angular_drift']:.5f}, "
         f"Norm={nox_healed_eval['block_metrics']['norm_ratio']:.4f} in {nox_healed_block['time_sec']:.2f}s."
     )
+    del nox_healed_block, nox_healed_eval
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     print("\n" + "=" * 104)
     print(" DAY 2 BENCHMARK: FULL TRANSFORMER BLOCK (LAYER 15) SCORECARD (HELD-OUT TEST SET)")
@@ -441,14 +454,15 @@ def main():
     X_calib = X_calib.to(device)
     X_test = X_test.to(device)
 
-    run_day2_benchmark(
-        layer_weights=weights,
-        X_calib=X_calib,
-        X_test=X_test,
-        ranks=(1, 24, 64, 24, 1),
-        r_bridge=args.r_bridge,
-        n_outliers=args.n_outliers,
-    )
+    with torch.inference_mode():
+        run_day2_benchmark(
+            layer_weights=weights,
+            X_calib=X_calib,
+            X_test=X_test,
+            ranks=(1, 24, 64, 24, 1),
+            r_bridge=args.r_bridge,
+            n_outliers=args.n_outliers,
+        )
 
 
 if __name__ == "__main__":

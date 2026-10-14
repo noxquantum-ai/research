@@ -1,5 +1,4 @@
-"""Causal intra-block compiler for full Transformer layers (Step 4.2)."""
-
+import gc
 import time
 import torch
 import torch.nn.functional as F
@@ -74,6 +73,7 @@ def scaled_dot_product_attention_2d(Q, K, V, n_heads=32, n_kv_heads=32, seq_len=
     return context_2d
 
 
+@torch.no_grad()
 def compile_attention_block(
     weights,
     X_in,
@@ -110,14 +110,25 @@ def compile_attention_block(
         W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
     W_hat_k, kb_k, cores_k, _ = nox_hybrid_dmrg_decompose(
         W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
     W_hat_v, kb_v, cores_v, _ = nox_hybrid_dmrg_decompose(
         W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     Q_comp = W_hat_q @ X_in
     K_comp = W_hat_k @ X_in
@@ -137,6 +148,9 @@ def compile_attention_block(
         W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_dense, o_modes=o_modes, i_modes=i_modes,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     Y_attn_comp = W_hat_o @ A_comp
     total_kb = kb_q + kb_k + kb_v + kb_o
@@ -154,6 +168,7 @@ def compile_attention_block(
     }
 
 
+@torch.no_grad()
 def compile_mlp_block(
     weights,
     M_in,
@@ -190,10 +205,17 @@ def compile_mlp_block(
         W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
     W_hat_up, kb_up, cores_up, _ = nox_hybrid_dmrg_decompose(
         W=W_up, X_calib=M_in, Y_dense=H_up_dense, o_modes=o_modes_up, i_modes=i_modes_up,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     H_gate_comp = W_hat_gate @ M_in
     H_up_comp = W_hat_up @ M_in
@@ -212,6 +234,9 @@ def compile_mlp_block(
         W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_dense, o_modes=o_modes_down, i_modes=i_modes_down,
         ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
 
     Y_mlp_comp = W_hat_down @ H_swiglu_comp
     total_kb = kb_gate + kb_up + kb_down
@@ -228,6 +253,7 @@ def compile_mlp_block(
     }
 
 
+@torch.no_grad()
 def compile_transformer_block(
     layer_weights,
     X_calib,
@@ -324,6 +350,7 @@ def compile_transformer_block(
     }
 
 
+@torch.no_grad()
 def evaluate_compiled_block(compiled_weights, layer_weights, X_test, n_heads=32, n_kv_heads=32, seq_len=128):
     """
     Evaluates a compiled Transformer block on unseen held-out test tokens.
@@ -374,6 +401,7 @@ def evaluate_compiled_block(compiled_weights, layer_weights, X_test, n_heads=32,
     }
 
 
+@torch.no_grad()
 def compile_multiverse_block(
     layer_weights,
     ranks=(24, 24, 24),
