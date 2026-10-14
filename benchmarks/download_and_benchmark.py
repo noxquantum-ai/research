@@ -32,24 +32,37 @@ SAMPLE_CALIBRATION_PROMPTS = [
 ]
 
 
+def log_step(msg):
+    """Prints timestamped progress log with immediate stdout flush."""
+    t_str = time.strftime("%H:%M:%S")
+    print(f"[{t_str}] {msg}", flush=True)
+
+
 def download_model(model_id, save_dir, token):
     """
     Downloads model weights from HuggingFace Hub and saves to save_dir.
     Skips download if save_dir already contains model files.
     """
-    if os.path.exists(save_dir) and any(f.endswith(".safetensors") for f in os.listdir(save_dir)):
-        print(f"Model directory '{save_dir}' already exists with weights. Skipping download.")
-        return save_dir
+    log_step(f"Checking local model directory '{save_dir}'...")
+    if os.path.exists(save_dir):
+        safetensor_files = [f for f in os.listdir(save_dir) if f.endswith(".safetensors")]
+        if safetensor_files:
+            total_bytes = sum(os.path.getsize(os.path.join(save_dir, f)) for f in safetensor_files)
+            total_gb = total_bytes / (1024 ** 3)
+            log_step(f"Found {len(safetensor_files)} existing weight file(s) ({total_gb:.2f} GB) in '{save_dir}'. Skipping download.")
+            return save_dir
 
-    print(f"Starting download of '{model_id}' to '{save_dir}'...")
+    log_step(f"Starting HuggingFace snapshot download of '{model_id}'...")
+    log_step(f"Destination: '{save_dir}' (this will show live file transfer progress)...")
     os.makedirs(save_dir, exist_ok=True)
+    t0 = time.time()
     snapshot_download(
         repo_id=model_id,
         local_dir=save_dir,
         token=token,
         ignore_patterns=["*.msgpack", "*.h5", "*.ot"],
     )
-    print(f"Model successfully downloaded to '{save_dir}'.")
+    log_step(f"Model download completed in {time.time() - t0:.1f} seconds.")
     return save_dir
 
 
@@ -58,11 +71,14 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
     Loads tokenizer and model, runs calibration prompts to capture real activations
     at the specified layer and projection.
     """
-    print(f"Loading tokenizer from '{model_dir}'...")
+    t0 = time.time()
+    log_step(f"[1/4] Loading tokenizer from '{model_dir}'...")
     tokenizer = AutoTokenizer.from_pretrained(model_dir, token=token)
+    log_step(f"[1/4] Tokenizer loaded in {time.time() - t0:.2f}s.")
 
-    print(f"Loading model on {device} (float16)...")
+    log_step(f"[2/4] Loading model weights into memory ({device})...")
     torch_dtype = torch.float16 if device != "cpu" else torch.float32
+    t_model = time.time()
     model = AutoModelForCausalLM.from_pretrained(
         model_dir,
         token=token,
@@ -71,6 +87,11 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
     )
     model.to(device)
     model.eval()
+    log_step(f"[2/4] Model loaded in {time.time() - t_model:.2f}s (dtype={torch_dtype}).")
+
+    if torch.cuda.is_available() and device != "cpu":
+        vram_gb = torch.cuda.memory_allocated() / (1024 ** 3)
+        log_step(f"[2/4] GPU VRAM allocated: {vram_gb:.2f} GB")
 
     target_layer = model.model.layers[layer_idx]
     if proj_type == "o_proj":
@@ -82,7 +103,7 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
 
     weight_tensor = target_module.weight.detach().to(dtype=torch.float32, device="cpu")
     d_out, d_in = weight_tensor.shape
-    print(f"Extracted Layer {layer_idx} {proj_type} weight matrix: shape [{d_out}, {d_in}]")
+    log_step(f"[3/4] Hooked Layer {layer_idx} {proj_type} (Weight shape: [{d_out}, {d_in}]).")
 
     captured_inputs = []
 
@@ -92,10 +113,12 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
 
     hook_handle = target_module.register_forward_hook(hook_fn)
 
-    print("Running forward pass with calibration prompts to capture real activations...")
+    log_step(f"[4/4] Passing {len(SAMPLE_CALIBRATION_PROMPTS)} calibration prompts to capture real activations...")
     with torch.no_grad():
-        for prompt in SAMPLE_CALIBRATION_PROMPTS:
+        for idx, prompt in enumerate(SAMPLE_CALIBRATION_PROMPTS):
             inputs = tokenizer(prompt, return_tensors="pt").to(device)
+            token_count = inputs.input_ids.shape[1]
+            log_step(f"  -> Processing prompt {idx + 1}/{len(SAMPLE_CALIBRATION_PROMPTS)} ({token_count} tokens)...")
             model(**inputs)
 
     hook_handle.remove()
@@ -107,15 +130,16 @@ def extract_layer_and_activations(model_dir, layer_idx=15, proj_type="o_proj", t
 
     full_X = torch.cat(all_acts, dim=1).to(dtype=torch.float32, device="cpu")
     n_total = full_X.shape[1]
-    print(f"Captured {n_total} activation tokens.")
-
     n_split = n_total // 2
     X_calib = full_X[:, :n_split]
     X_test = full_X[:, n_split:]
 
+    log_step(f"[4/4] Captured {n_total} activation tokens. Split: {n_split} calibration, {n_total - n_split} held-out test.")
+
     Y_calib = weight_tensor @ X_calib
     Y_test = weight_tensor @ X_test
 
+    log_step("Unloading full model from memory to free system resources...")
     del model
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -158,7 +182,10 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     dense_bytes = W.numel() * 2.0
     results = {}
 
-    print("\nRunning Multiverse TT-SVD (unhealed)...")
+    log_step("Starting 3-way benchmark evaluation at matched byte/rank budgets...")
+
+    # Method 1: Multiverse TT-SVD (CompactifAI unhealed baseline)
+    log_step("--- [1/3] Running Multiverse TT-SVD (unhealed baseline) ---")
     t0 = time.time()
     mv_cores, mv_ranks = multiverse_tt_svd(
         W=W,
@@ -168,6 +195,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         core_bits=core_bits,
     )
     mv_time = time.time() - t0
+    log_step(f"Multiverse TT-SVD completed in {mv_time:.2f}s (ranks: {mv_ranks}). Evaluating...")
     mv_Y_pred = contract_mpo_4site(mv_cores, X_test)
     mv_metrics = compute_metrics(Y_test, mv_Y_pred)
     mv_footprint = count_parameters(mv_cores, S_sparse=None, bits=core_bits)
@@ -178,7 +206,8 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         "time_sec": mv_time,
     }
 
-    print("Running AWT TT-SVD (diagonal activation-aware)...")
+    # Method 2: AWT TT-SVD (Diagonal activation-aware baseline)
+    log_step("--- [2/3] Running AWT TT-SVD (diagonal activation-aware) ---")
     t0 = time.time()
     awt_cores, awt_ranks = awt_tt_svd(
         W=W,
@@ -190,6 +219,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         core_bits=core_bits,
     )
     awt_time = time.time() - t0
+    log_step(f"AWT TT-SVD completed in {awt_time:.2f}s (ranks: {awt_ranks}). Evaluating...")
     awt_Y_pred = contract_mpo_4site(awt_cores, X_test)
     awt_metrics = compute_metrics(Y_test, awt_Y_pred)
     awt_footprint = count_parameters(awt_cores, S_sparse=None, bits=core_bits)
@@ -200,7 +230,8 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         "time_sec": awt_time,
     }
 
-    print("Running Nox Entanglement Compiler (4-step closed form)...")
+    # Method 3: Nox Entanglement Compiler (4-step closed-form solver)
+    log_step("--- [3/3] Running Nox Entanglement Compiler (4-step closed-form) ---")
     t0 = time.time()
     nox_cores, nox_S, nox_ranks = nox_4step_compiler(
         W=W,
@@ -213,8 +244,10 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         r_subspace=128,
         n_sweeps=n_sweeps,
         core_bits=core_bits,
+        verbose=True,
     )
     nox_time = time.time() - t0
+    log_step(f"Nox compiler completed in {nox_time:.2f}s (ranks: {nox_ranks}). Evaluating with sparse CSR add...")
     nox_Y_pred = contract_mpo_4site(nox_cores, X_test) + (nox_S @ X_test)
     nox_metrics = compute_metrics(Y_test, nox_Y_pred)
     nox_footprint = count_parameters(nox_cores, S_sparse=nox_S, bits=core_bits)
