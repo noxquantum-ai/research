@@ -90,6 +90,19 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
     return sol.T
 
 
+def local_ridge_solve(Z_env, Y_site, o_m, dim_param, ridge=1e-4, device=None):
+    """
+    Solves local site ridge regression: G_m* = Y_site @ Z_env (Z_env^T Z_env + lambda I)^(-1).
+    Runs in milliseconds for small local dimensions.
+    """
+    if device is None:
+        device = Z_env.device
+    H = Z_env.T @ Z_env
+    reg = ridge * (torch.trace(H) / H.shape[0] + 1e-8) * torch.eye(dim_param, device=device)
+    B = Z_env.T @ Y_site
+    return torch.linalg.solve(H + reg, B).T
+
+
 def nox_stabilized_decompose(
     W,
     X_calib,
