@@ -61,40 +61,61 @@ Nox Regime 3 (54x Hi-Fi)     | 0.7852     | 0.33051        | 0.9239     | 609.5 
 
 
 
-venv) toheeb.ogunade@MPT-H203453J3K research % python3 benchmarks/download_and_benchmark.py --proj down_proj --regime all
-[20:48:02] Running Option A: Direct extraction of Layer 15 down_proj weights from NousResearch/Llama-2-7b-hf...
-[20:48:02] Option A: Resolving safetensors shard index for 'NousResearch/Llama-2-7b-hf'...
-[20:48:03] Fetching safetensors header from 'model-00001-of-00002.safetensors'...
-[20:48:07] Downloading real model.layers.15.mlp.down_proj.weight (86.00 MB via HTTP Range request)...
-[20:49:07] Successfully downloaded and cached Layer 15 down_proj (shape: [4096, 11008]) to './models/Llama-2-7b-hf/layer_15_down_proj.pt'.
-[20:49:07] Calibrated activation profile: [11008, 128] calibration tokens, [11008, 128] held-out test tokens (220 outlier channels).
-[20:49:07] Starting 3-way benchmark evaluation on real production weights...
-[20:49:07] Running Multiverse TT-SVD (unhealed baseline)...
-Traceback (most recent call last):
-  File "/Users/toheeb.ogunade/Workspace/research/benchmarks/download_and_benchmark.py", line 523, in <module>
-    main()
-    ~~~~^^
-  File "/Users/toheeb.ogunade/Workspace/research/benchmarks/download_and_benchmark.py", line 513, in main
-    run_benchmark(
-    ~~~~~~~~~~~~~^
-        data=data,
-        ^^^^^^^^^^
-    ...<3 lines>...
-        core_bits=args.core_bits,
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/Users/toheeb.ogunade/Workspace/research/benchmarks/download_and_benchmark.py", line 309, in run_benchmark
-    mv_cores, mv_ranks = multiverse_tt_svd(
-                         ~~~~~~~~~~~~~~~~~^
-        W=W,
-        ^^^^
-    ...<3 lines>...
-        core_bits=core_bits,
-        ^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/Users/toheeb.ogunade/Workspace/research/nox/baselines/multiverse.py", line 41, in multiverse_tt_svd
-    tensor_w = W.reshape(o0, o1, o2, o3, i0, i1, i2, i3)
-RuntimeError: shape '[8, 8, 8, 8, 8, 11, 8, 16]' is invalid for input of size 45088768
+(venv) toheeb.ogunade@MPT-H203453J3K research % python3 benchmarks/download_and_benchmark.py --proj down_proj --regime all                 
+[21:02:34] Running Option A: Direct extraction of Layer 15 down_proj weights from NousResearch/Llama-2-7b-hf...
+[21:02:34] Loading cached real Layer 15 down_proj weights from './models/Llama-2-7b-hf/layer_15_down_proj.pt'...
+[21:02:34] Calibrated activation profile: [11008, 128] calibration tokens, [11008, 128] held-out test tokens (220 outlier channels).
+[21:02:34] Starting 3-way benchmark evaluation on real production weights...
+[21:02:34] Running Multiverse TT-SVD (unhealed baseline)...
+[21:02:37] Multiverse TT-SVD completed in 2.76s (ranks: [1, 24, 24, 24, 1]). Evaluating...
+[21:02:37] Running AWT TT-SVD (diagonal activation-aware baseline)...
+[21:02:40] AWT TT-SVD completed in 2.68s (ranks: [1, 24, 24, 24, 1]). Evaluating...
+[21:02:40] Running Nox Regime 1 (Ultra-Extreme ~675x: [1, 8, 48, 8, 1], r_b=2, 16k outliers)...
+    [Nox Step 1A] Bit-Packed Sparse Outlier Shield (16384 entries = 16.0 KB)
+    [Nox Step 1B] Activation-Weighted SVD Bridge (r=2, 30208 params = 14.8 KB)
+    [Nox Step 2] Exact AWT preconditioning applied; keeping all r=128 calibration modes
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 8, 48, 8, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final Pass (in-loop 4-bit quantization)]...
+[21:02:49] Nox Regime 1 completed in 9.32s. Evaluating...
+[21:02:49] Running Nox Regime 2 (Fast Production ~203x: [1, 16, 48, 16, 1], r_b=8, 81.9k outliers)...
+    [Nox Step 1A] Bit-Packed Sparse Outlier Shield (81920 entries = 80.0 KB)
+    [Nox Step 1B] Activation-Weighted SVD Bridge (r=8, 120832 params = 59.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied; keeping all r=128 calibration modes
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 16, 48, 16, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final Pass (in-loop 4-bit quantization)]...
+[21:03:20] Nox Regime 2 completed in 30.95s. Evaluating...
+[21:03:20] Running Nox Regime 3 (High-Fidelity ~54x: [1, 24, 64, 24, 1], r_b=64, 262k outliers)...
+    [Nox Step 1A] Bit-Packed Sparse Outlier Shield (262144 entries = 256.0 KB)
+    [Nox Step 1B] Activation-Weighted SVD Bridge (r=64, 966656 params = 472.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied; keeping all r=128 calibration modes
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 24, 64, 24, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final Pass (in-loop 4-bit quantization)]...
+[21:07:26] Nox Regime 3 completed in 246.03s. Evaluating...
+
+==================================================================================================
+ LLAMA-2-7B (COMPACTIFAI EXACT MODEL) BENCHMARK RESULTS (Held-Out Test Set, Core: 4-bit)
+==================================================================================================
+Method                       | Rel Error  | Angular Drift  | Norm Ratio | Size (KB)  | Comp Ratio
+--------------------------------------------------------------------------------------------------
+Multiverse (CompactifAI)     | 0.9992     | 0.95943        | 0.0441     | 31.8 KB    | 2770.94x  
+AWT (Oct 2026 SOTA)          | 0.9954     | 0.90046        | 0.1253     | 31.8 KB    | 2770.94x  
+Nox Regime 1 (675x Frontier) | 0.9995     | 0.78424        | 0.4290     | 50.3 KB    | 1749.25x  
+Nox Regime 2 (203x Prod)     | 0.9474     | 0.59654        | 0.6489     | 178.2 KB   | 494.22x   
+Nox Regime 3 (54x Hi-Fi)     | 0.8563     | 0.41552        | 0.8582     | 804.8 KB   | 109.43x   
+--------------------------------------------------------------------------------------------------
+
+[Nox Regime 1 (675x Frontier)]
+  Error Reduction vs Multiverse: -0.0% (Gate Target: >75.0%)
+  Error Reduction vs AWT:        -0.4% (Gate Target: >40.0%)
+
+[Nox Regime 2 (203x Prod)]
+  Error Reduction vs Multiverse: 5.2% (Gate Target: >75.0%)
+  Error Reduction vs AWT:        4.8% (Gate Target: >40.0%)
+
+[Nox Regime 3 (54x Hi-Fi)]
+  Error Reduction vs Multiverse: 14.3% (Gate Target: >75.0%)
+  Error Reduction vs AWT:        14.0% (Gate Target: >40.0%)
 (venv) toheeb.ogunade@MPT-H203453J3K research % 
