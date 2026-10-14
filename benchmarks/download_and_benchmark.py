@@ -73,7 +73,8 @@ def download_model(model_id, save_dir, token):
         repo_id=model_id,
         local_dir=save_dir,
         token=token,
-        ignore_patterns=["*.msgpack", "*.h5", "*.ot"],
+        allow_patterns=["*.safetensors", "*.json", "*.model", "tokenizer*"],
+        ignore_patterns=["*.bin", "*.pt", "*.msgpack", "*.h5", "*.ot"],
     )
     log_step(f"Model download completed in {time.time() - t0:.1f} seconds.")
     return save_dir
