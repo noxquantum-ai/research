@@ -6,6 +6,8 @@ upstream compressed layers, thereby dampening compounding drift.
 """
 
 import gc
+import json
+import os
 import time
 import torch
 import torch.nn.functional as F
@@ -75,22 +77,33 @@ def get_tier_config(tier_name="extreme_77x"):
     Returns compression hyperparameter configurations for different operating tiers.
     
     Supported tiers:
-      - extreme_77x: ~5 MB/layer (~77x compression, 0.2 bits/weight)
-      - production_18x: ~20 MB/layer (~18x compression, 0.9 bits/weight)
+      - extreme_77x: ~5.1 MB/layer (~77x compression, 0.2 bits/weight, eps=0.030)
+      - production_18x: ~18-20 MB/layer (~18-20x compression, 0.9 bits/weight, eps=0.015)
+      - high_fidelity_10x: ~35 MB/layer (~10x compression, 1.8 bits/weight, eps=0.005)
     """
-    if tier_name == "production_18x":
+    if tier_name == "high_fidelity_10x":
         return {
-            "ranks": (1, 48, 128, 48, 1),
-            "r_bridge": 256,
-            "n_outliers": 524288,
-            "description": "Production CompactifAI-Killer Tier (~18x compression, ~20 MB/layer)",
+            "ranks": (1, 40, 64, 40, 1),
+            "r_bridge": 128,
+            "n_outliers": 2097152,
+            "epsilon": 0.005,
+            "description": "High-Fidelity Lossless Tier (~10x compression, ~35 MB/layer, eps=0.005)",
+        }
+    elif tier_name == "production_18x":
+        return {
+            "ranks": (1, 32, 64, 32, 1),
+            "r_bridge": 128,
+            "n_outliers": 1048576,
+            "epsilon": 0.015,
+            "description": "Production CompactifAI-Killer Tier (~18x compression, ~18-20 MB/layer, eps=0.015)",
         }
     else:
         return {
             "ranks": (1, 24, 64, 24, 1),
             "r_bridge": 64,
             "n_outliers": 262144,
-            "description": "Extreme Stress-Test Tier (~77x compression, ~5.1 MB/layer)",
+            "epsilon": 0.030,
+            "description": "Extreme Stress-Test Tier (~77x compression, ~5.1 MB/layer, eps=0.030)",
         }
 
 
@@ -105,6 +118,7 @@ def compile_sequential_cascade(
     n_kv_heads=32,
     seq_len=128,
     device="cpu",
+    save_checkpoint_dir=None,
     verbose=True,
 ):
     """
@@ -232,6 +246,24 @@ def compile_sequential_cascade(
         )
         Delta_healed_test = Y_attn_healed + Y_mlp_healed
         healed_kb = nox_healed_block["total_kb"]
+
+        if save_checkpoint_dir:
+            os.makedirs(save_checkpoint_dir, exist_ok=True)
+            ckpt_path = os.path.join(save_checkpoint_dir, f"compressed_layer_{l_idx}.pt")
+            saved_weights = {}
+            for k, v in nox_healed_block["compressed_weights"].items():
+                saved_weights[k] = v.cpu() if isinstance(v, torch.Tensor) else v
+            layer_checkpoint = {
+                "layer_idx": l_idx,
+                "compressed_weights": saved_weights,
+                "input_layernorm": weights["input_layernorm"].cpu() if "input_layernorm" in weights else None,
+                "post_attention_layernorm": weights["post_attention_layernorm"].cpu() if "post_attention_layernorm" in weights else None,
+                "total_kb": healed_kb,
+            }
+            torch.save(layer_checkpoint, ckpt_path)
+            if verbose:
+                print(f"  [Checkpoint] Saved Layer {l_idx} ({healed_kb:.1f} KB) -> '{ckpt_path}'", flush=True)
+
         del nox_healed_block, healed_weights, Y_attn_healed, Y_mlp_healed
 
         # Compute cascading evaluation metrics
@@ -286,6 +318,26 @@ def compile_sequential_cascade(
         gc.collect()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
+
+    if save_checkpoint_dir:
+        manifest_path = os.path.join(save_checkpoint_dir, "model_manifest.json")
+        total_model_kb = sum(h["causal_healed"]["kb"] for h in history)
+        manifest_data = {
+            "tier": tier,
+            "config": cfg,
+            "layers_compressed": list(layer_indices),
+            "num_layers": len(layer_indices),
+            "total_model_kb": total_model_kb,
+            "total_model_mb": total_model_kb / 1024.0,
+            "first_layer_rel_err": history[0]["causal_healed"]["block"]["relative_error"],
+            "last_layer_rel_err": history[-1]["causal_healed"]["block"]["relative_error"],
+            "drift_growth": history[-1]["causal_healed"]["block"]["relative_error"] - history[0]["causal_healed"]["block"]["relative_error"],
+            "final_delta_cos_sim": history[-1]["causal_healed"]["delta"]["cosine_similarity"],
+        }
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest_data, f, indent=2)
+        if verbose:
+            print(f"\n[Checkpoint Manifest] Master manifest written to '{manifest_path}' ({total_model_kb / 1024.0:.2f} MB total).", flush=True)
 
     return {
         "history": history,

@@ -185,7 +185,9 @@ def main():
     parser.add_argument("--start_layer", type=int, default=15, help="Starting layer index (default: 15)")
     parser.add_argument("--end_layer", type=int, default=18, help="Ending layer index inclusive (default: 18)")
     parser.add_argument("--full_model", action="store_true", help="Run full 32 layers (0 to 31)")
-    parser.add_argument("--tier", type=str, choices=["extreme_77x", "production_18x"], default="extreme_77x", help="Compression tier")
+    parser.add_argument("--tier", type=str, choices=["extreme_77x", "production_18x", "high_fidelity_10x"], default="extreme_77x", help="Compression tier")
+    parser.add_argument("--sweep_cliff", action="store_true", help="Sweep across all 3 tiers to map the Entanglement Cliff")
+    parser.add_argument("--save_checkpoint_dir", type=str, default=None, help="Directory to save compressed checkpoints")
     parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID")
     parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory for cached weights")
     parser.add_argument("--token", type=str, default=None, help="HuggingFace API token")
@@ -228,75 +230,109 @@ def main():
             token=hf_token,
         )
 
-    with torch.inference_mode():
-        cascade_res = compile_sequential_cascade(
-            fetch_layer_fn=fetcher,
-            layer_indices=layer_indices,
-            X_calib_init=X_calib,
-            X_test_init=X_test,
-            tier=args.tier,
-            n_heads=32,
-            n_kv_heads=32,
-            seq_len=128,
-            device=device,
-            verbose=True,
+    tiers_to_execute = ["extreme_77x", "production_18x", "high_fidelity_10x"] if args.sweep_cliff else [args.tier]
+    sweep_results = []
+
+    for curr_tier in tiers_to_execute:
+        tier_save_dir = (
+            os.path.join(args.save_checkpoint_dir, curr_tier)
+            if args.save_checkpoint_dir and args.sweep_cliff
+            else args.save_checkpoint_dir
         )
+        with torch.inference_mode():
+            cascade_res = compile_sequential_cascade(
+                fetch_layer_fn=fetcher,
+                layer_indices=layer_indices,
+                X_calib_init=X_calib,
+                X_test_init=X_test,
+                tier=curr_tier,
+                n_heads=32,
+                n_kv_heads=32,
+                seq_len=128,
+                device=device,
+                save_checkpoint_dir=tier_save_dir,
+                verbose=True,
+            )
 
-    history = cascade_res["history"]
-    cfg = cascade_res["config"]
+        history = cascade_res["history"]
+        cfg = cascade_res["config"]
 
-    print("\n" + "=" * 110)
-    print(f" DAY 3 BENCHMARK: SEQUENTIAL CASCADE SCORECARD (LAYERS {start_l} -> {end_l})")
-    print(f" Tier: {cfg['description']}")
-    print("=" * 110)
-    print(f"{'Layer':<8} | {'MV RelErr':<11} | {'Indep RelErr':<14} | {'Healed RelErr':<15} | {'Healed Drift':<14} | {'Healed CosSim':<14} | {'Healed Norm':<11}")
-    print("-" * 110)
+        print("\n" + "=" * 110)
+        print(f" DAY 3 BENCHMARK: SEQUENTIAL CASCADE SCORECARD (LAYERS {start_l} -> {end_l})")
+        print(f" Tier: {cfg['description']}")
+        print("=" * 110)
+        print(f"{'Layer':<8} | {'MV RelErr':<11} | {'Indep RelErr':<14} | {'Healed RelErr':<15} | {'Healed Drift':<14} | {'Healed CosSim':<14} | {'Healed Norm':<11}")
+        print("-" * 110)
 
-    for h in history:
-        l_idx = h["layer_idx"]
-        mv_err = f"{h['multiverse']['block']['relative_error']:.4f}"
-        indep_err = f"{h['independent']['block']['relative_error']:.4f}"
-        healed_err = f"{h['causal_healed']['block']['relative_error']:.4f}"
-        healed_drift = f"{h['causal_healed']['block']['angular_drift']:.5f}"
-        healed_cos = f"{h['causal_healed']['block']['cosine_similarity']:.4f}"
-        healed_norm = f"{h['causal_healed']['block']['norm_ratio']:.4f}"
-        print(f"Layer {l_idx:<2} | {mv_err:<11} | {indep_err:<14} | {healed_err:<15} | {healed_drift:<14} | {healed_cos:<14} | {healed_norm:<11}")
+        for h in history:
+            l_idx = h["layer_idx"]
+            mv_err = f"{h['multiverse']['block']['relative_error']:.4f}"
+            indep_err = f"{h['independent']['block']['relative_error']:.4f}"
+            healed_err = f"{h['causal_healed']['block']['relative_error']:.4f}"
+            healed_drift = f"{h['causal_healed']['block']['angular_drift']:.5f}"
+            healed_cos = f"{h['causal_healed']['block']['cosine_similarity']:.4f}"
+            healed_norm = f"{h['causal_healed']['block']['norm_ratio']:.4f}"
+            print(f"Layer {l_idx:<2} | {mv_err:<11} | {indep_err:<14} | {healed_err:<15} | {healed_drift:<14} | {healed_cos:<14} | {healed_norm:<11}")
 
-    print("-" * 110)
+        print("-" * 110)
 
-    print("\n" + "=" * 110)
-    print(f" BLOCK TRANSFORMATION DELTA (Delta_block) LAYER-BY-LAYER FIDELITY")
-    print("=" * 110)
-    print(f"{'Layer':<8} | {'MV Delta RelErr':<16} | {'Indep Delta RelErr':<19} | {'Healed Delta RelErr':<20} | {'Healed Delta CosSim':<20}")
-    print("-" * 110)
+        print("\n" + "=" * 110)
+        print(f" BLOCK TRANSFORMATION DELTA (Delta_block) LAYER-BY-LAYER FIDELITY")
+        print("=" * 110)
+        print(f"{'Layer':<8} | {'MV Delta RelErr':<16} | {'Indep Delta RelErr':<19} | {'Healed Delta RelErr':<20} | {'Healed Delta CosSim':<20}")
+        print("-" * 110)
 
-    for h in history:
-        l_idx = h["layer_idx"]
-        mv_d_err = f"{h['multiverse']['delta']['relative_error']:.4f}"
-        indep_d_err = f"{h['independent']['delta']['relative_error']:.4f}"
-        healed_d_err = f"{h['causal_healed']['delta']['relative_error']:.4f}"
-        healed_d_cos = f"{h['causal_healed']['delta']['cosine_similarity']:.4f}"
-        print(f"Layer {l_idx:<2} | {mv_d_err:<16} | {indep_d_err:<19} | {healed_d_err:<20} | {healed_d_cos:<20}")
+        for h in history:
+            l_idx = h["layer_idx"]
+            mv_d_err = f"{h['multiverse']['delta']['relative_error']:.4f}"
+            indep_d_err = f"{h['independent']['delta']['relative_error']:.4f}"
+            healed_d_err = f"{h['causal_healed']['delta']['relative_error']:.4f}"
+            healed_d_cos = f"{h['causal_healed']['delta']['cosine_similarity']:.4f}"
+            print(f"Layer {l_idx:<2} | {mv_d_err:<16} | {indep_d_err:<19} | {healed_d_err:<20} | {healed_d_cos:<20}")
 
-    print("-" * 110)
+        print("-" * 110)
 
-    # Exit stream evaluation
-    first_layer_healed_err = history[0]["causal_healed"]["block"]["relative_error"]
-    last_layer_healed_err = history[-1]["causal_healed"]["block"]["relative_error"]
-    first_layer_indep_err = history[0]["independent"]["block"]["relative_error"]
-    last_layer_indep_err = history[-1]["independent"]["block"]["relative_error"]
+        first_layer_healed_err = history[0]["causal_healed"]["block"]["relative_error"]
+        last_layer_healed_err = history[-1]["causal_healed"]["block"]["relative_error"]
+        first_layer_indep_err = history[0]["independent"]["block"]["relative_error"]
+        last_layer_indep_err = history[-1]["independent"]["block"]["relative_error"]
 
-    healed_drift_growth = (last_layer_healed_err - first_layer_healed_err)
-    indep_drift_growth = (last_layer_indep_err - first_layer_indep_err)
+        healed_drift_growth = (last_layer_healed_err - first_layer_healed_err)
+        indep_drift_growth = (last_layer_indep_err - first_layer_indep_err)
+        final_delta_cos = history[-1]["causal_healed"]["delta"]["cosine_similarity"]
+        avg_layer_kb = sum(h["causal_healed"]["kb"] for h in history) / len(history)
+        total_mb = (avg_layer_kb * len(history)) / 1024.0
 
-    print("\n[Step 4.2 Inter-Layer Causal Healing Verification]")
-    print(f"  First Layer RelErr (Layer {start_l}): Healed = {first_layer_healed_err:.4f} | Independent = {first_layer_indep_err:.4f}")
-    print(f"  Last Layer RelErr  (Layer {end_l}): Healed = {last_layer_healed_err:.4f} | Independent = {last_layer_indep_err:.4f}")
-    print(f"  Residual Drift Growth across {len(layer_indices)} layers: Healed = {healed_drift_growth:+.4f} | Independent = {indep_drift_growth:+.4f}")
-    if abs(healed_drift_growth) <= abs(indep_drift_growth):
-        print("  Status: PASSED (Inter-layer causal healing bounded compounding drift).")
-    else:
-        print("  Status: PENDING REVIEW.")
+        sweep_results.append({
+            "tier": curr_tier,
+            "epsilon": cfg.get("epsilon", "N/A"),
+            "desc": cfg["description"],
+            "avg_layer_mb": avg_layer_kb / 1024.0,
+            "total_mb": total_mb,
+            "first_err": first_layer_healed_err,
+            "last_err": last_layer_healed_err,
+            "drift_growth": healed_drift_growth,
+            "final_delta_cos": final_delta_cos,
+        })
+
+        print("\n[Step 4.2 Inter-Layer Causal Healing Verification]")
+        print(f"  First Layer RelErr (Layer {start_l}): Healed = {first_layer_healed_err:.4f} | Independent = {first_layer_indep_err:.4f}")
+        print(f"  Last Layer RelErr  (Layer {end_l}): Healed = {last_layer_healed_err:.4f} | Independent = {last_layer_indep_err:.4f}")
+        print(f"  Residual Drift Growth across {len(layer_indices)} layers: Healed = {healed_drift_growth:+.4f} | Independent = {indep_drift_growth:+.4f}")
+        if abs(healed_drift_growth) <= abs(indep_drift_growth):
+            print("  Status: PASSED (Inter-layer causal healing bounded compounding drift).")
+        else:
+            print("  Status: PENDING REVIEW.")
+
+    if args.sweep_cliff and len(sweep_results) > 1:
+        print("\n" + "=" * 125)
+        print(f" DAY 3-4 MASTER ENTANGLEMENT CLIFF & PARETO TRADEOFF SWEEP (LAYERS {start_l} -> {end_l})")
+        print("=" * 125)
+        print(f"{'Tier':<22} | {'Epsilon':<8} | {'Layer MB':<10} | {'Total MB':<10} | {'First Err':<10} | {'Final Err':<10} | {'Drift Growth':<13} | {'Delta CosSim':<12}")
+        print("-" * 125)
+        for r in sweep_results:
+            print(f"{r['tier']:<22} | {str(r['epsilon']):<8} | {r['avg_layer_mb']:<10.2f} | {r['total_mb']:<10.2f} | {r['first_err']:<10.4f} | {r['last_err']:<10.4f} | {r['drift_growth']:<+13.4f} | {r['final_delta_cos']:<12.4f}")
+        print("-" * 125)
 
 
 if __name__ == "__main__":
