@@ -4,15 +4,18 @@ import argparse
 import os
 import sys
 import time
+from pathlib import Path
 import torch
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from huggingface_hub import snapshot_download
 
-from multiverse import multiverse_tt_svd
-from awt import awt_tt_svd
-from nox_compiler import nox_4step_compiler
-from utils import contract_mpo_4site, compute_metrics, count_parameters
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from nox.compiler import nox_4step_compiler
+from nox.baselines.multiverse import multiverse_tt_svd
+from nox.baselines.awt import awt_tt_svd
+from nox.utils import contract_mpo_4site, compute_metrics, count_parameters
 
 
 SAMPLE_CALIBRATION_PROMPTS = [

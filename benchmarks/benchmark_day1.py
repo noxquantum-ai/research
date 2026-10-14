@@ -1,13 +1,17 @@
 """Day 1 benchmark: 3-way contest between Multiverse, AWT, and Nox on synthetic and real weights."""
 
 import argparse
+import sys
 import time
+from pathlib import Path
 import torch
 
-from multiverse import multiverse_tt_svd
-from awt import awt_tt_svd
-from nox_compiler import nox_4step_compiler
-from utils import contract_mpo_4site, compute_metrics, count_parameters
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from nox.compiler import nox_4step_compiler
+from nox.baselines.multiverse import multiverse_tt_svd
+from nox.baselines.awt import awt_tt_svd
+from nox.utils import contract_mpo_4site, compute_metrics, count_parameters
 
 
 def generate_synthetic_benchmark_data(
