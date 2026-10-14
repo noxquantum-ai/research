@@ -59,19 +59,19 @@ python3 benchmarks/benchmark_day1.py
 python3 benchmarks/benchmark_day1.py --rank 8
 ```
 
-### 2. Run Day 1 Benchmark on Real Llama-3.1-8B Weights
+### 2. Run Day 1 Benchmark on Real Model Weights (Llama-2-7B — CompactifAI Model)
 
-Downloads `meta-llama/Llama-3.1-8B` (requires HuggingFace token), captures real activations at Layer 15, and executes the 3-way contest:
+Downloads `NousResearch/Llama-2-7b-hf` (the exact ungated weights of the model Multiverse Computing evaluated in CompactifAI), captures real activations at Layer 15, and executes the 3-way contest:
 
 ```bash
-# Add your token to a .env file (automatically loaded via load_dotenv)
+# Optional: add your token to a .env file (NousResearch/Llama-2-7b-hf is ungated and downloads without a token)
 echo "HF_TOKEN=your_huggingface_token" > .env
 
 # Benchmark Layer 15 Attention Output Projection (o_proj: 4096 x 4096)
-python3 benchmarks/download_and_benchmark.py --save_dir ./models/Llama-3.1-8B --proj o_proj --rank 24
+python3 benchmarks/download_and_benchmark.py --proj o_proj --rank 24
 
-# Benchmark Layer 15 SwiGLU MLP Down Projection (down_proj: 4096 x 14336)
-python3 benchmarks/download_and_benchmark.py --save_dir ./models/Llama-3.1-8B --proj down_proj --rank 24
+# Benchmark Layer 15 SwiGLU MLP Down Projection (down_proj: 4096 x 11008)
+python3 benchmarks/download_and_benchmark.py --proj down_proj --rank 24
 ```
 
 ---
