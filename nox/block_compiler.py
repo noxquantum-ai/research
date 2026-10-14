@@ -157,17 +157,7 @@ def compile_attention_block(
         gc.collect()
         torch.cuda.empty_cache()
 
-    if causal_healing:
-        Y_attn_comp_raw = W_hat_o @ A_comp
-        alpha_attn = (torch.sum(Y_attn_dense * Y_attn_comp_raw) / (torch.sum(Y_attn_comp_raw ** 2) + 1e-8)).item()
-        alpha_attn = max(0.8, min(1.3, alpha_attn))
-        W_hat_o = W_hat_o * alpha_attn
-        if verbose:
-            print(f"  [Attention Sub-Block] Energy calibration factor alpha_o = {alpha_attn:.4f}", flush=True)
-        Y_attn_comp = W_hat_o @ A_comp
-    else:
-        Y_attn_comp = W_hat_o @ A_comp
-
+    Y_attn_comp = W_hat_o @ A_comp
     total_kb = kb_q + kb_k + kb_v + kb_o
 
     return {
@@ -213,57 +203,28 @@ def compile_mlp_block(
     H_swiglu_dense = F.silu(H_gate_dense) * H_up_dense
     Y_mlp_dense = W_down @ H_swiglu_dense
 
-    if causal_healing:
-        r_bridge_gate = r_bridge * 2
-        n_outliers_gate = 0
-        r_bridge_up = r_bridge * 2
-        n_outliers_up = 0
-    else:
-        r_bridge_gate = r_bridge
-        n_outliers_gate = n_outliers
-        r_bridge_up = r_bridge
-        n_outliers_up = n_outliers
-
     if verbose:
-        print(f"  [SwiGLU MLP Sub-Block] Compressing Gate projection (bridge: r={r_bridge_gate}, outliers={n_outliers_gate})...", flush=True)
+        print("  [SwiGLU MLP Sub-Block] Compressing Gate and Up projections...", flush=True)
 
     W_hat_gate, kb_gate, cores_gate, _ = nox_hybrid_dmrg_decompose(
         W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-        ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, verbose=False,
+        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+    )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
+    W_hat_up, kb_up, cores_up, _ = nox_hybrid_dmrg_decompose(
+        W=W_up, X_calib=M_in, Y_dense=H_up_dense, o_modes=o_modes_up, i_modes=i_modes_up,
+        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
     )
     if torch.cuda.is_available():
         gc.collect()
         torch.cuda.empty_cache()
 
     H_gate_comp = W_hat_gate @ M_in
-    silu_gate_comp = F.silu(H_gate_comp)
-
-    if causal_healing:
-        if verbose:
-            print("  [SwiGLU MLP Sub-Block] Causal Healing active: Coupling W_up target to cancel SiLU gate residual...", flush=True)
-        silu_gate_dense = F.silu(H_gate_dense)
-        gate_residual = (silu_gate_dense - silu_gate_comp) * H_up_dense
-        eps = 0.1 * torch.sqrt(torch.mean(silu_gate_comp ** 2) + 1e-8)
-        delta_H_up = (gate_residual * silu_gate_comp) / (silu_gate_comp ** 2 + eps ** 2)
-        max_delta = 0.5 * torch.abs(H_up_dense)
-        delta_H_up = torch.clamp(delta_H_up, min=-max_delta, max=max_delta)
-        H_up_target = H_up_dense + delta_H_up
-    else:
-        H_up_target = H_up_dense
-
-    if verbose:
-        print(f"  [SwiGLU MLP Sub-Block] Compressing Up projection (bridge: r={r_bridge_up}, outliers={n_outliers_up})...", flush=True)
-
-    W_hat_up, kb_up, cores_up, _ = nox_hybrid_dmrg_decompose(
-        W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
-        ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, verbose=False,
-    )
-    if torch.cuda.is_available():
-        gc.collect()
-        torch.cuda.empty_cache()
-
     H_up_comp = W_hat_up @ M_in
-    H_swiglu_comp = silu_gate_comp * H_up_comp
+    H_swiglu_comp = F.silu(H_gate_comp) * H_up_comp
 
     if causal_healing:
         if verbose:
@@ -287,17 +248,7 @@ def compile_mlp_block(
         gc.collect()
         torch.cuda.empty_cache()
 
-    if causal_healing:
-        Y_mlp_comp_raw = W_hat_down @ H_swiglu_comp
-        alpha_mlp = (torch.sum(Y_mlp_dense * Y_mlp_comp_raw) / (torch.sum(Y_mlp_comp_raw ** 2) + 1e-8)).item()
-        alpha_mlp = max(0.8, min(1.3, alpha_mlp))
-        W_hat_down = W_hat_down * alpha_mlp
-        if verbose:
-            print(f"  [SwiGLU MLP Sub-Block] Energy calibration factor alpha_down = {alpha_mlp:.4f}", flush=True)
-        Y_mlp_comp = W_hat_down @ H_swiglu_comp
-    else:
-        Y_mlp_comp = W_hat_down @ H_swiglu_comp
-
+    Y_mlp_comp = W_hat_down @ H_swiglu_comp
     total_kb = kb_gate + kb_up + kb_down
 
     return {
