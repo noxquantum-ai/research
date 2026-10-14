@@ -1,7 +1,7 @@
 """Nox Entanglement Compiler (NEC): 4-step closed-form MPO solver with zero backpropagation."""
 
 import torch
-from utils import quantize_dequantize_groupwise
+from nox.utils import quantize_dequantize_groupwise
 
 
 def adaptive_tt_svd_4site(
