@@ -274,9 +274,13 @@ def get_modes_for_projection(d_out, d_in):
     if d_out == 4096 and d_in == 4096:
         return (8, 8, 8, 8), (8, 8, 8, 8)
     elif d_out == 4096 and d_in == 11008:
-        return (8, 8, 8, 8), (8, 11, 8, 16)
+        return (8, 8, 8, 8), (8, 8, 4, 43)
+    elif d_out == 11008 and d_in == 4096:
+        return (8, 8, 4, 43), (8, 8, 8, 8)
     elif d_out == 4096 and d_in == 14336:
         return (8, 8, 8, 8), (8, 14, 8, 16)
+    elif d_out == 14336 and d_in == 4096:
+        return (8, 14, 8, 16), (8, 8, 8, 8)
     else:
         m_out = int(d_out ** 0.25)
         m_in = int(d_in ** 0.25)
