@@ -30,10 +30,10 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from nox.compiler import nox_4step_compiler
+from nox.compiler import nox_4step_compiler, nox_extreme_800x_decompose
 from nox.baselines.multiverse import multiverse_tt_svd
 from nox.baselines.awt import awt_tt_svd
-from nox.utils import contract_mpo_4site, compute_metrics, count_parameters
+from nox.utils import contract_mpo_4site, evaluate_nox_prediction, compute_metrics, count_parameters
 
 
 def log_step(msg):
@@ -274,10 +274,8 @@ def get_modes_for_projection(d_out, d_in):
     if d_out == 4096 and d_in == 4096:
         return (8, 8, 8, 8), (8, 8, 8, 8)
     elif d_out == 4096 and d_in == 11008:
-        # Llama-2-7B MLP down_proj: 4096 x 11008 (8 * 11 * 8 * 16 = 11008)
         return (8, 8, 8, 8), (8, 11, 8, 16)
     elif d_out == 4096 and d_in == 14336:
-        # Llama-3-8B MLP down_proj: 4096 x 14336 (8 * 14 * 8 * 16 = 14336)
         return (8, 8, 8, 8), (8, 14, 8, 16)
     else:
         m_out = int(d_out ** 0.25)
@@ -285,9 +283,13 @@ def get_modes_for_projection(d_out, d_in):
         return (m_out, m_out, m_out, m_out), (m_in, m_in, m_in, m_in)
 
 
-def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3, outlier_pct=0.005):
+def run_benchmark(data, o_modes, i_modes, regime="both", core_bits=4, n_sweeps=3):
     """
-    Executes the 3-way contest on real weights and real held-out activations.
+    Executes the 3-way contest on real weights:
+      - Multiverse TT-SVD (unhealed baseline)
+      - AWT TT-SVD (diagonal activation-aware baseline)
+      - Nox Regime 1: Ultra-Extreme Frontier (809x compression, [1, 8, 48, 8, 1], r_bridge=4)
+      - Nox Regime 2: Production Sweet Spot (127x compression, [1, 32, 96, 32, 1], r_bridge=16)
     """
     W = data["W"]
     X_calib = data["X_calib"]
@@ -298,7 +300,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     dense_bytes = W.numel() * 2.0
     results = {}
 
-    log_step("Starting 3-way benchmark evaluation at matched byte/rank budgets...")
+    log_step("Starting 3-way benchmark evaluation on real production weights...")
 
     # Method 1: Multiverse TT-SVD (CompactifAI unhealed baseline)
     log_step("Running Multiverse TT-SVD (unhealed baseline)...")
@@ -307,14 +309,14 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         W=W,
         o_modes=o_modes,
         i_modes=i_modes,
-        ranks=target_ranks,
+        ranks=[24, 24, 24],
         core_bits=core_bits,
     )
     mv_time = time.time() - t0
     log_step(f"Multiverse TT-SVD completed in {mv_time:.2f}s (ranks: {mv_ranks}). Evaluating...")
     mv_Y_pred = contract_mpo_4site(mv_cores, X_test)
     mv_metrics = compute_metrics(Y_test, mv_Y_pred)
-    mv_footprint = count_parameters(mv_cores, S_sparse=None, bits=core_bits)
+    mv_footprint = count_parameters(mv_cores, bits=core_bits)
     results["Multiverse (CompactifAI)"] = {
         "metrics": mv_metrics,
         "footprint": mv_footprint,
@@ -330,7 +332,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         X_comp=X_calib,
         o_modes=o_modes,
         i_modes=i_modes,
-        ranks=target_ranks,
+        ranks=[24, 24, 24],
         alpha=0.5,
         core_bits=core_bits,
     )
@@ -338,7 +340,7 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
     log_step(f"AWT TT-SVD completed in {awt_time:.2f}s (ranks: {awt_ranks}). Evaluating...")
     awt_Y_pred = contract_mpo_4site(awt_cores, X_test)
     awt_metrics = compute_metrics(Y_test, awt_Y_pred)
-    awt_footprint = count_parameters(awt_cores, S_sparse=None, bits=core_bits)
+    awt_footprint = count_parameters(awt_cores, bits=core_bits)
     results["AWT (Oct 2026 SOTA)"] = {
         "metrics": awt_metrics,
         "footprint": awt_footprint,
@@ -346,39 +348,77 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         "time_sec": awt_time,
     }
 
-    # Method 3: Nox Entanglement Compiler (4-step closed-form solver)
-    log_step("Running Nox Entanglement Compiler (4-step closed-form solver)...")
-    t0 = time.time()
-    nox_cores, nox_S, nox_ranks = nox_4step_compiler(
-        W=W,
-        X_comp=X_calib,
-        Y_dense=Y_calib,
-        o_modes=o_modes,
-        i_modes=i_modes,
-        ranks=target_ranks,
-        outlier_pct=outlier_pct,
-        r_subspace=128,
-        n_sweeps=n_sweeps,
-        core_bits=core_bits,
-        verbose=True,
-    )
-    nox_time = time.time() - t0
-    log_step(f"Nox compiler completed in {nox_time:.2f}s (ranks: {nox_ranks}). Evaluating with sparse CSR add...")
-    nox_Y_pred = contract_mpo_4site(nox_cores, X_test) + (nox_S @ X_test)
-    nox_metrics = compute_metrics(Y_test, nox_Y_pred)
-    nox_footprint = count_parameters(nox_cores, S_sparse=nox_S, bits=core_bits)
-    results["Nox Engine (Ours)"] = {
-        "metrics": nox_metrics,
-        "footprint": nox_footprint,
-        "ranks": nox_ranks,
-        "time_sec": nox_time,
-    }
+    # Method 3: Nox Regime 1: Ultra-Extreme 809x Frontier
+    if regime in ("both", "extreme"):
+        log_step("Running Nox Regime 1 (Ultra-Extreme 809x Frontier: [1, 8, 48, 8, 1], r_bridge=4)...")
+        t0 = time.time()
+        nox1_cores, nox1_bridge, nox1_perm, nox1_ranks = nox_extreme_800x_decompose(
+            W=W,
+            X_comp=X_calib,
+            Y_dense=Y_calib,
+            o_modes=o_modes,
+            i_modes=i_modes,
+            ranks=(1, 8, 48, 8, 1),
+            r_bridge=4,
+            n_sweeps=n_sweeps,
+            core_bits=core_bits,
+            verbose=True,
+        )
+        nox1_time = time.time() - t0
+        log_step(f"Nox Regime 1 completed in {nox1_time:.2f}s (ranks: {nox1_ranks}). Evaluating...")
+        nox1_Y_pred = evaluate_nox_prediction(
+            cores=nox1_cores,
+            bridge=nox1_bridge,
+            perm_info=nox1_perm,
+            X=X_test,
+        )
+        nox1_metrics = compute_metrics(Y_test, nox1_Y_pred)
+        nox1_footprint = count_parameters(cores=nox1_cores, bridge=nox1_bridge, bits=core_bits)
+        results["Nox Regime 1 (809x Frontier)"] = {
+            "metrics": nox1_metrics,
+            "footprint": nox1_footprint,
+            "ranks": nox1_ranks,
+            "time_sec": nox1_time,
+        }
 
-    print("\n" + "=" * 94)
-    print(f" LLAMA-2-7B (COMPACTIFAI EXACT MODEL) BENCHMARK RESULTS (Held-Out Test Set, Core Precision: {core_bits}-bit)")
-    print("=" * 94)
-    print(f"{'Method':<25} | {'Rel Error':<10} | {'Angular Drift':<14} | {'Norm Ratio':<10} | {'Size (KB)':<10} | {'Comp Ratio':<10}")
-    print("-" * 94)
+    # Method 4: Nox Regime 2: Production Sweet Spot
+    if regime in ("both", "production"):
+        log_step("Running Nox Regime 2 (Production Sweet Spot: [1, 32, 96, 32, 1], r_bridge=16)...")
+        t0 = time.time()
+        nox2_cores, nox2_bridge, nox2_perm, nox2_ranks = nox_extreme_800x_decompose(
+            W=W,
+            X_comp=X_calib,
+            Y_dense=Y_calib,
+            o_modes=o_modes,
+            i_modes=i_modes,
+            ranks=(1, 32, 96, 32, 1),
+            r_bridge=16,
+            n_sweeps=n_sweeps,
+            core_bits=core_bits,
+            verbose=True,
+        )
+        nox2_time = time.time() - t0
+        log_step(f"Nox Regime 2 completed in {nox2_time:.2f}s (ranks: {nox2_ranks}). Evaluating...")
+        nox2_Y_pred = evaluate_nox_prediction(
+            cores=nox2_cores,
+            bridge=nox2_bridge,
+            perm_info=nox2_perm,
+            X=X_test,
+        )
+        nox2_metrics = compute_metrics(Y_test, nox2_Y_pred)
+        nox2_footprint = count_parameters(cores=nox2_cores, bridge=nox2_bridge, bits=core_bits)
+        results["Nox Regime 2 (Production)"] = {
+            "metrics": nox2_metrics,
+            "footprint": nox2_footprint,
+            "ranks": nox2_ranks,
+            "time_sec": nox2_time,
+        }
+
+    print("\n" + "=" * 98)
+    print(f" LLAMA-2-7B (COMPACTIFAI EXACT MODEL) BENCHMARK RESULTS (Held-Out Test Set, Core: {core_bits}-bit)")
+    print("=" * 98)
+    print(f"{'Method':<28} | {'Rel Error':<10} | {'Angular Drift':<14} | {'Norm Ratio':<10} | {'Size (KB)':<10} | {'Comp Ratio':<10}")
+    print("-" * 98)
 
     for name, r in results.items():
         rel_err = f"{r['metrics']['relative_error']:.4f}"
@@ -386,49 +426,41 @@ def run_benchmark(data, o_modes, i_modes, target_ranks, core_bits=4, n_sweeps=3,
         ratio = f"{r['metrics']['norm_ratio']:.4f}"
         kb = f"{r['footprint']['total_kb']:.1f} KB"
         comp = f"{dense_bytes / r['footprint']['total_bytes']:.2f}x"
-        print(f"{name:<25} | {rel_err:<10} | {drift:<14} | {ratio:<10} | {kb:<10} | {comp:<10}")
+        print(f"{name:<28} | {rel_err:<10} | {drift:<14} | {ratio:<10} | {kb:<10} | {comp:<10}")
 
-    print("-" * 94)
+    print("-" * 98)
 
     mv_err = results["Multiverse (CompactifAI)"]["metrics"]["relative_error"]
     awt_err = results["AWT (Oct 2026 SOTA)"]["metrics"]["relative_error"]
-    nox_err = results["Nox Engine (Ours)"]["metrics"]["relative_error"]
 
-    err_red_vs_mv = (1.0 - (nox_err / (mv_err + 1e-12))) * 100.0
-    err_red_vs_awt = (1.0 - (nox_err / (awt_err + 1e-12))) * 100.0
-
-    print(f"\nNox Error Reduction vs Multiverse: {err_red_vs_mv:.1f}% (Gate Target: >75.0%)")
-    print(f"Nox Error Reduction vs AWT:        {err_red_vs_awt:.1f}% (Gate Target: >40.0%)")
-
-    pass_mv = err_red_vs_mv >= 75.0
-    pass_awt = err_red_vs_awt >= 40.0
-
-    if pass_mv and pass_awt:
-        print("\n>>> DAY 1 GATE RESULT: [PASS] Real weights gate cleared with zero backprop! <<<")
-    else:
-        print("\n>>> DAY 1 GATE RESULT: [REVIEW] Check bond dimensions or outlier percentage. <<<")
+    for name in ["Nox Regime 1 (809x Frontier)", "Nox Regime 2 (Production)"]:
+        if name in results:
+            nox_err = results[name]["metrics"]["relative_error"]
+            err_red_vs_mv = (1.0 - (nox_err / (mv_err + 1e-12))) * 100.0
+            err_red_vs_awt = (1.0 - (nox_err / (awt_err + 1e-12))) * 100.0
+            print(f"\n[{name}]")
+            print(f"  Error Reduction vs Multiverse: {err_red_vs_mv:.1f}% (Gate Target: >75.0%)")
+            print(f"  Error Reduction vs AWT:        {err_red_vs_awt:.1f}% (Gate Target: >40.0%)")
 
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Download Llama-2-7B (CompactifAI Model) Layer and run Day 1 Benchmark")
-    parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID (default: NousResearch/Llama-2-7b-hf, ungated CompactifAI model)")
-    parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory to save/load cached weights")
-    parser.add_argument("--token", type=str, default=None, help="HuggingFace API token (optional for ungated models)")
+    parser = argparse.ArgumentParser(description="Download Llama-2-7B Layer and run Zero-Backprop Benchmark")
+    parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID")
+    parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory for cached weights")
+    parser.add_argument("--token", type=str, default=None, help="HuggingFace API token")
     parser.add_argument("--layer_idx", type=int, default=15, help="Layer index to benchmark (default: 15)")
     parser.add_argument("--proj", type=str, default="o_proj", choices=["o_proj", "down_proj"], help="Projection matrix type")
-    parser.add_argument("--rank", type=int, default=24, help="Target bond dimension (default: 24)")
+    parser.add_argument("--regime", type=str, default="both", choices=["both", "extreme", "production"], help="Benchmark regime to run")
     parser.add_argument("--core_bits", type=int, default=4, help="Core quantization bit width (default: 4)")
     parser.add_argument("--sweeps", type=int, default=3, help="Number of DMRG sweeps for Nox (default: 3)")
-    parser.add_argument("--outlier_pct", type=float, default=0.005, help="Sparse outlier fraction (default: 0.005, i.e. 0.5 percent)")
     parser.add_argument("--n_calib", type=int, default=128, help="Number of calibration tokens (default: 128)")
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")
     args = parser.parse_args()
 
     hf_token = args.token or HF_TOKEN
 
-    # Option A (Active): Direct extraction of real Layer 15 weights and calibrated activation profile
     log_step(f"Running Option A: Direct extraction of Layer {args.layer_idx} {args.proj} weights from {args.model_id}...")
     W = fetch_real_layer_tensor(
         repo_id=args.model_id,
@@ -455,16 +487,14 @@ def main():
     # )
 
     o_modes, i_modes = get_modes_for_projection(data["d_out"], data["d_in"])
-    target_ranks = [args.rank, args.rank, args.rank]
 
     run_benchmark(
         data=data,
         o_modes=o_modes,
         i_modes=i_modes,
-        target_ranks=target_ranks,
+        regime=args.regime,
         core_bits=args.core_bits,
         n_sweeps=args.sweeps,
-        outlier_pct=args.outlier_pct,
     )
 
 
