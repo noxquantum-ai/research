@@ -1,0 +1,14 @@
+{
+  "id": "toheebogunade/noxquantum-day3-cascade",
+  "title": "NoxQuantum Day 3 Cascade",
+  "code_file": "run_cascade.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
