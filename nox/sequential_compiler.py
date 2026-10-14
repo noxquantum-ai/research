@@ -43,6 +43,10 @@ def forward_transformer_block(
         Tuple of (X_out, Y_attn, Y_mlp)
     """
     d_model = X.shape[0]
+    w_dtype = weights["q_proj"].dtype
+    if X.dtype != w_dtype:
+        X = X.to(w_dtype)
+
     norm1 = RMSNorm(d_model, weight=weights.get("input_layernorm", None))
     norm2 = RMSNorm(d_model, weight=weights.get("post_attention_layernorm", None))
 
@@ -152,7 +156,7 @@ def compile_sequential_cascade(
             print(f"\n--- Compiling Cascade Layer {l_idx} ---", flush=True)
 
         weights = fetch_layer_fn(l_idx)
-        weights = {k: v.to(device) for k, v in weights.items()}
+        weights = {k: v.to(device=device, dtype=torch.float32) for k, v in weights.items()}
 
         # 1. Dense Reference forward pass
         X_d_calib_next, Y_attn_d_calib, Y_mlp_d_calib = forward_transformer_block(

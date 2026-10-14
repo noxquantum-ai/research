@@ -81,7 +81,7 @@ def fetch_layer_weights(
         cache_path = os.path.join(save_dir, f"layer_{layer_idx}_{name}.pt")
         if os.path.exists(cache_path):
             log_step(f"Loading cached {name} (Layer {layer_idx}) from '{cache_path}'...")
-            layer_weights[name] = torch.load(cache_path, weights_only=True)
+            layer_weights[name] = torch.load(cache_path, weights_only=True).to(dtype=torch.float32)
         else:
             missing_tensors[name] = tensor_key
 
@@ -146,7 +146,7 @@ def fetch_layer_weights(
             "F32": torch.float32,
         }
         pt_dtype = dtype_map.get(dtype_str, torch.float16)
-        tensor = torch.frombuffer(raw_bytes, dtype=pt_dtype).reshape(shape).clone()
+        tensor = torch.frombuffer(raw_bytes, dtype=pt_dtype).reshape(shape).clone().to(dtype=torch.float32)
         cache_path = os.path.join(save_dir, f"layer_{layer_idx}_{name}.pt")
         torch.save(tensor, cache_path)
         layer_weights[name] = tensor
