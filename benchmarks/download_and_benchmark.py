@@ -1,5 +1,3 @@
-"""Download Llama-3.1-8B and immediately run the Day 1 benchmark on real layer weights."""
-
 import argparse
 import os
 import sys
@@ -7,15 +5,30 @@ import time
 from pathlib import Path
 import torch
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from huggingface_hub import snapshot_download
-
 try:
     from dotenv import load_dotenv
+    load_dotenv()
 except ImportError:
-    load_dotenv = None
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if not env_file.exists():
+        env_file = Path(".env")
+    if env_file.exists():
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#") and "=" in stripped:
+                    k, v = stripped.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip("'\"")
+                    if k and k not in os.environ:
+                        os.environ[k] = v
+
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from huggingface_hub import snapshot_download
 
 from nox.compiler import nox_4step_compiler
 from nox.baselines.multiverse import multiverse_tt_svd
@@ -308,24 +321,7 @@ def main():
     parser.add_argument("--outlier_pct", type=float, default=0.005, help="Sparse outlier fraction (default: 0.005, i.e. 0.5 percent)")
     args = parser.parse_args()
 
-    # Load environment variables from .env file
-    env_file = Path(__file__).resolve().parent.parent / ".env"
-    if not env_file.exists():
-        env_file = Path(".env")
-    if load_dotenv is not None and env_file.exists():
-        load_dotenv(dotenv_path=env_file)
-    elif env_file.exists():
-        with open(env_file, "r", encoding="utf-8") as f:
-            for line in f:
-                stripped = line.strip()
-                if stripped and not stripped.startswith("#") and "=" in stripped:
-                    k, v = stripped.split("=", 1)
-                    k = k.strip()
-                    v = v.strip().strip("'\"")
-                    if k and k not in os.environ:
-                        os.environ[k] = v
-
-    hf_token = args.token or os.environ.get("HF_TOKEN")
+    hf_token = args.token or HF_TOKEN
     if not hf_token and not (os.path.exists(args.save_dir) and any(f.endswith(".safetensors") for f in os.listdir(args.save_dir))):
         print("Error: HF_TOKEN is not found in .env, environment, or --token.")
         print("Please add HF_TOKEN='your_token' to your .env file or pass --token.")
