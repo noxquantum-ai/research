@@ -154,15 +154,17 @@ def nox_hybrid_dmrg_decompose(
 
     # Step 1B: Covariance-Projected Hybrid SVD Bridge (Captures Off-Diagonal Manifold + Outliers)
     if r_bridge > 0:
-        U_xc, S_xc, _ = torch.linalg.svd(X_calib, full_matrices=False)
+        U_xc, S_xc, Vh_xc = torch.linalg.svd(X_calib, full_matrices=False)
         r_act = min(len(S_xc), max(r_bridge * 2, 64))
-        X_basis = U_xc[:, :r_act] * S_xc[:r_act].unsqueeze(0)
-        Y_proj = W_rem @ X_basis
+        Y_rem = Y_dense - (S_sparse @ X_calib)
+        Y_proj = Y_rem @ Vh_xc[:r_act, :].T
         U_y, S_y, Vh_y = torch.linalg.svd(Y_proj, full_matrices=False)
+        del Vh_y, Y_rem
 
         U_r = U_y[:, :r_bridge]
         reg_inv_S = S_xc[:r_act] / (S_xc[:r_act] ** 2 + (0.02 * S_xc[0]) ** 2)
         B_raw = (U_r.T @ Y_proj) * reg_inv_S.unsqueeze(0) @ U_xc[:, :r_act].T
+        del U_y, Y_proj, U_xc, S_xc, Vh_xc
 
         col_norms = torch.sqrt(torch.norm(U_r, dim=0) / (torch.norm(B_raw, dim=1) + 1e-8))
         A_bridge = U_r / col_norms.unsqueeze(0)
@@ -171,6 +173,7 @@ def nox_hybrid_dmrg_decompose(
         A_q = quantize_4bit_grouped(A_bridge, group_size=64)
         B_q = quantize_4bit_grouped(B_bridge, group_size=64)
         S_bridge = A_q @ B_q
+        del A_bridge, B_bridge, A_q, B_q, U_r, B_raw
         if verbose:
             bridge_params = (d_out + d_in) * r_bridge
             print(f"    [Nox Step 1B] Covariance-Projected SVD Bridge (r={r_bridge}, {bridge_params} params = {bridge_params * 0.5 / 1024.0:.1f} KB)", flush=True)

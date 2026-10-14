@@ -144,9 +144,10 @@ def compile_attention_block(
             print("  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...", flush=True)
         X_o_calib = A_dense
 
+    gamma_o = 0.002 if causal_healing else 0.01
     W_hat_o, kb_o, cores_o, _ = nox_hybrid_dmrg_decompose(
         W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_dense, o_modes=o_modes, i_modes=i_modes,
-        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, prior_gamma=gamma_o, verbose=False,
     )
     if torch.cuda.is_available():
         gc.collect()
@@ -230,9 +231,10 @@ def compile_mlp_block(
             print("  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...", flush=True)
         X_down_calib = H_swiglu_dense
 
+    gamma_down = 0.002 if causal_healing else 0.01
     W_hat_down, kb_down, cores_down, _ = nox_hybrid_dmrg_decompose(
         W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_dense, o_modes=o_modes_down, i_modes=i_modes_down,
-        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+        ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, prior_gamma=gamma_down, verbose=False,
     )
     if torch.cuda.is_available():
         gc.collect()
