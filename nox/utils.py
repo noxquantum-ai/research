@@ -114,7 +114,7 @@ def evaluate_nox_prediction(cores, bridge=None, perm_info=None, S_sparse=None, X
 def mpo_to_dense(cores):
     """
     Reconstructs the full 2D dense matrix [d_out, d_in] from 4-site MPO cores.
-    Useful for direct matrix inspection and norm comparisons.
+    Uses pairwise contraction for high speed and minimal memory footprint.
     """
     c0 = cores[0].squeeze(0)
     c1 = cores[1]
@@ -126,7 +126,9 @@ def mpo_to_dense(cores):
     _, o2, i2, _ = c2.shape
     _, o3, i3 = c3.shape
 
-    T = torch.einsum("aib,bcjd,dekf,fgl->acegijkl", c0, c1, c2, c3)
+    T01 = torch.einsum("aib,bcjd->acijd", c0, c1)
+    T23 = torch.einsum("dekf,fgl->degkl", c2, c3)
+    T = torch.einsum("acijd,degkl->acegijkl", T01, T23)
     return T.permute(0, 1, 2, 3, 4, 5, 6, 7).reshape(o0 * o1 * o2 * o3, i0 * i1 * i2 * i3)
 
 
