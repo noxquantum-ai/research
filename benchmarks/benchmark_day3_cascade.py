@@ -257,40 +257,44 @@ def main():
         history = cascade_res["history"]
         cfg = cascade_res["config"]
 
-        print("\n" + "=" * 110)
+        print("\nNote: Compile Time is a one-time offline compression cost (0 GPU fine-tuning epochs). Infer Latency is the live forward-pass execution time.")
+        print("=" * 140)
         print(f" DAY 3 BENCHMARK: SEQUENTIAL CASCADE SCORECARD (LAYERS {start_l} -> {end_l})")
         print(f" Tier: {cfg['description']}")
-        print("=" * 110)
-        print(f"{'Layer':<8} | {'MV RelErr':<11} | {'Indep RelErr':<14} | {'Healed RelErr':<15} | {'Healed Drift':<14} | {'Healed CosSim':<14} | {'Healed Norm':<11}")
-        print("-" * 110)
+        print("=" * 140)
+        print(f"{'Layer':<8} | {'MV RelErr':<11} | {'IsoByte RelErr':<16} | {'Indep RelErr':<14} | {'Healed RelErr':<15} | {'Healed CosSim':<14} | {'Compile Time (1-Time)':<21} | {'Infer Latency (ms)':<18}")
+        print("-" * 140)
 
         for h in history:
             l_idx = h["layer_idx"]
             mv_err = f"{h['multiverse']['block']['relative_error']:.4f}"
+            iso_err = f"{h['multiverse_isobyte']['block']['relative_error']:.4f}" if "multiverse_isobyte" in h else "N/A"
             indep_err = f"{h['independent']['block']['relative_error']:.4f}"
             healed_err = f"{h['causal_healed']['block']['relative_error']:.4f}"
-            healed_drift = f"{h['causal_healed']['block']['angular_drift']:.5f}"
             healed_cos = f"{h['causal_healed']['block']['cosine_similarity']:.4f}"
-            healed_norm = f"{h['causal_healed']['block']['norm_ratio']:.4f}"
-            print(f"Layer {l_idx:<2} | {mv_err:<11} | {indep_err:<14} | {healed_err:<15} | {healed_drift:<14} | {healed_cos:<14} | {healed_norm:<11}")
+            ctime = f"{h.get('compile_time_sec', 0.0):.2f}s"
+            infer = f"{h.get('infer_latency_ms', 0.0):.2f} ms"
+            print(f"Layer {l_idx:<2} | {mv_err:<11} | {iso_err:<16} | {indep_err:<14} | {healed_err:<15} | {healed_cos:<14} | {ctime:<21} | {infer:<18}")
 
-        print("-" * 110)
+        print("-" * 140)
 
-        print("\n" + "=" * 110)
+        print("\n" + "=" * 140)
         print(f" BLOCK TRANSFORMATION DELTA (Delta_block) LAYER-BY-LAYER FIDELITY")
-        print("=" * 110)
-        print(f"{'Layer':<8} | {'MV Delta RelErr':<16} | {'Indep Delta RelErr':<19} | {'Healed Delta RelErr':<20} | {'Healed Delta CosSim':<20}")
-        print("-" * 110)
+        print("=" * 140)
+        print(f"{'Layer':<8} | {'MV Delta RelErr':<16} | {'IsoByte Delta RelErr':<21} | {'Indep Delta RelErr':<19} | {'Healed Delta RelErr':<20} | {'MV Delta CosSim':<16} | {'Healed Delta CosSim':<20}")
+        print("-" * 140)
 
         for h in history:
             l_idx = h["layer_idx"]
             mv_d_err = f"{h['multiverse']['delta']['relative_error']:.4f}"
+            iso_d_err = f"{h['multiverse_isobyte']['delta']['relative_error']:.4f}" if "multiverse_isobyte" in h else "N/A"
             indep_d_err = f"{h['independent']['delta']['relative_error']:.4f}"
             healed_d_err = f"{h['causal_healed']['delta']['relative_error']:.4f}"
+            mv_d_cos = f"{h['multiverse']['delta']['cosine_similarity']:.4f}"
             healed_d_cos = f"{h['causal_healed']['delta']['cosine_similarity']:.4f}"
-            print(f"Layer {l_idx:<2} | {mv_d_err:<16} | {indep_d_err:<19} | {healed_d_err:<20} | {healed_d_cos:<20}")
+            print(f"Layer {l_idx:<2} | {mv_d_err:<16} | {iso_d_err:<21} | {indep_d_err:<19} | {healed_d_err:<20} | {mv_d_cos:<16} | {healed_d_cos:<20}")
 
-        print("-" * 110)
+        print("-" * 140)
 
         first_layer_healed_err = history[0]["causal_healed"]["block"]["relative_error"]
         last_layer_healed_err = history[-1]["causal_healed"]["block"]["relative_error"]

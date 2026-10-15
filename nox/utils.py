@@ -227,6 +227,7 @@ def get_modes_for_projection(d_out, d_in):
                 factors.append(1)
             while len(factors) > 4:
                 factors.sort()
-                factors[1] *= factors.pop(0)
+                p = factors.pop(0)
+                factors[0] *= p
             return tuple(factors)
         return factor4(d_out), factor4(d_in)

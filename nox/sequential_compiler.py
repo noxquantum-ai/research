@@ -83,27 +83,27 @@ def get_tier_config(tier_name="extreme_77x"):
     """
     if tier_name == "high_fidelity_10x":
         return {
-            "ranks": (1, 40, 64, 40, 1),
+            "ranks": (1, 64, 128, 64, 1),
             "r_bridge": 128,
-            "n_outliers": 2097152,
+            "n_outliers": 524288,
             "epsilon": 0.005,
-            "description": "High-Fidelity Lossless Tier (~10x compression, ~35 MB/layer, eps=0.005)",
+            "description": "High-Fidelity Lossless Tier (~10-12x compression, ~32 MB/layer, eps=0.005)",
         }
     elif tier_name == "production_18x":
         return {
-            "ranks": (1, 32, 64, 32, 1),
+            "ranks": (1, 48, 96, 48, 1),
             "r_bridge": 128,
-            "n_outliers": 1048576,
+            "n_outliers": 262144,
             "epsilon": 0.015,
-            "description": "Production CompactifAI-Killer Tier (~18x compression, ~18-20 MB/layer, eps=0.015)",
+            "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)",
         }
     else:
         return {
-            "ranks": (1, 24, 64, 24, 1),
-            "r_bridge": 64,
-            "n_outliers": 262144,
+            "ranks": (1, 32, 80, 32, 1),
+            "r_bridge": 96,
+            "n_outliers": 65536,
             "epsilon": 0.030,
-            "description": "Extreme Stress-Test Tier (~77x compression, ~5.1 MB/layer, eps=0.030)",
+            "description": "Extreme Stress-Test Tier (~77x compression, ~5.0 MB/layer, eps=0.030)",
         }
 
 
@@ -157,6 +157,7 @@ def compile_sequential_cascade(
     X_d_test = X_test_init.clone().to(device)
 
     X_mv_test = X_test_init.clone().to(device)
+    X_mv_iso_test = X_test_init.clone().to(device)
     X_indep_test = X_test_init.clone().to(device)
 
     X_healed_calib = X_calib_init.clone().to(device)
@@ -181,7 +182,7 @@ def compile_sequential_cascade(
         )
         Delta_d_test = Y_attn_d_test + Y_mlp_d_test
 
-        # 2. Multiverse Baseline path
+        # 2. Multiverse Default Baseline path
         mv_ranks = ranks[1:-1] if len(ranks) == 5 else ranks
         mv_block = compile_multiverse_block(
             layer_weights=weights,
@@ -252,6 +253,16 @@ def compile_sequential_cascade(
         Delta_healed_test = Y_attn_healed + Y_mlp_healed
         healed_kb = nox_healed_block["total_kb"]
 
+        # Measure forward inference latency on healed layer
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        t_inf_start = time.perf_counter()
+        for _ in range(3):
+            _ = forward_transformer_block(healed_weights, X_healed_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len)
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        infer_latency_ms = ((time.perf_counter() - t_inf_start) / 3.0) * 1000.0
+
         if save_checkpoint_dir:
             os.makedirs(save_checkpoint_dir, exist_ok=True)
             ckpt_path = os.path.join(save_checkpoint_dir, f"compressed_layer_{l_idx}.pt")
@@ -266,14 +277,32 @@ def compile_sequential_cascade(
             if verbose:
                 print(f"  [Checkpoint] Saved Layer {l_idx} ({healed_kb:.1f} KB compact artifact) -> '{ckpt_path}'", flush=True)
 
+        # 5. Multiverse Iso-Byte Baseline path (matched or greater byte budget than Nox)
+        mv_iso_block = compile_multiverse_block(
+            layer_weights=weights,
+            target_kb=healed_kb,
+            core_bits=4,
+            verbose=False,
+        )
+        mv_iso_weights = dict(weights)
+        mv_iso_weights.update(mv_iso_block["compressed_weights"])
+        X_mv_iso_test_next, Y_attn_mv_iso, Y_mlp_mv_iso = forward_transformer_block(
+            mv_iso_weights, X_mv_iso_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
+        )
+        Delta_mv_iso_test = Y_attn_mv_iso + Y_mlp_mv_iso
+        mv_iso_kb = mv_iso_block["total_kb"]
+        del mv_iso_block, mv_iso_weights, Y_attn_mv_iso, Y_mlp_mv_iso
+
         del nox_healed_block, healed_weights, Y_attn_healed, Y_mlp_healed
 
         # Compute cascading evaluation metrics
         mv_block_m = compute_metrics(X_d_test_next, X_mv_test_next)
+        mv_iso_block_m = compute_metrics(X_d_test_next, X_mv_iso_test_next)
         indep_block_m = compute_metrics(X_d_test_next, X_indep_test_next)
         healed_block_m = compute_metrics(X_d_test_next, X_healed_test_next)
 
         mv_delta_m = compute_metrics(Delta_d_test, Delta_mv_test)
+        mv_iso_delta_m = compute_metrics(Delta_d_test, Delta_mv_iso_test)
         indep_delta_m = compute_metrics(Delta_d_test, Delta_indep_test)
         healed_delta_m = compute_metrics(Delta_d_test, Delta_healed_test)
 
@@ -281,11 +310,17 @@ def compile_sequential_cascade(
 
         layer_summary = {
             "layer_idx": l_idx,
-            "time_sec": step_time,
+            "compile_time_sec": step_time,
+            "infer_latency_ms": infer_latency_ms,
             "multiverse": {
                 "block": mv_block_m,
                 "delta": mv_delta_m,
                 "kb": mv_kb,
+            },
+            "multiverse_isobyte": {
+                "block": mv_iso_block_m,
+                "delta": mv_iso_delta_m,
+                "kb": mv_iso_kb,
             },
             "independent": {
                 "block": indep_block_m,
@@ -301,15 +336,16 @@ def compile_sequential_cascade(
         history.append(layer_summary)
 
         if verbose:
-            print(f"Layer {l_idx} compiled in {step_time:.2f}s:")
-            print(f"  [Full Residual X_out] Multiverse RelErr: {mv_block_m['relative_error']:.4f} | Indep: {indep_block_m['relative_error']:.4f} | Healed: {healed_block_m['relative_error']:.4f}")
-            print(f"  [Delta_block]         Multiverse RelErr: {mv_delta_m['relative_error']:.4f} | Indep: {indep_delta_m['relative_error']:.4f} | Healed: {healed_delta_m['relative_error']:.4f}")
-            print(f"  [Delta Cosine Sim]    Multiverse: {mv_delta_m['cosine_similarity']:.4f} | Indep: {indep_delta_m['cosine_similarity']:.4f} | Healed: {healed_delta_m['cosine_similarity']:.4f}")
+            print(f"Layer {l_idx} compiled in {step_time:.2f}s (Infer: {infer_latency_ms:.2f}ms):")
+            print(f"  [Full Residual X_out] MV Default RelErr: {mv_block_m['relative_error']:.4f} | MV IsoByte: {mv_iso_block_m['relative_error']:.4f} | Healed: {healed_block_m['relative_error']:.4f}")
+            print(f"  [Delta_block]         MV Default RelErr: {mv_delta_m['relative_error']:.4f} | MV IsoByte: {mv_iso_delta_m['relative_error']:.4f} | Healed: {healed_delta_m['relative_error']:.4f}")
+            print(f"  [Delta Cosine Sim]    MV Default: {mv_delta_m['cosine_similarity']:.4f} | MV IsoByte: {mv_iso_delta_m['cosine_similarity']:.4f} | Healed: {healed_delta_m['cosine_similarity']:.4f}")
 
         # Update streaming activation tensors
         X_d_calib = X_d_calib_next
         X_d_test = X_d_test_next
         X_mv_test = X_mv_test_next
+        X_mv_iso_test = X_mv_iso_test_next
         X_indep_test = X_indep_test_next
         X_healed_calib = X_healed_calib_next
         X_healed_test = X_healed_test_next

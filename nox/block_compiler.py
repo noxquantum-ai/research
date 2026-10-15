@@ -161,7 +161,7 @@ def compile_attention_block(
 
     if causal_healing:
         X_o_calib = A_comp
-        r_bridge_o = min(r_bridge + 32, max(32, X_in.shape[1] // 2))
+        r_bridge_o = min(int(r_bridge * 1.5), max(64, int(X_in.shape[1] * 0.6)))
         n_outliers_o = n_outliers // 2
         if residual_drift is not None:
             Y_attn_target = Y_attn_dense + alpha_heal * residual_drift
@@ -287,7 +287,7 @@ def compile_mlp_block(
 
     if causal_healing:
         X_down_calib = H_swiglu_comp
-        r_bridge_down = min(r_bridge + 32, max(32, H_swiglu_comp.shape[1] // 2))
+        r_bridge_down = min(int(r_bridge * 1.5), max(64, int(H_swiglu_comp.shape[1] * 0.6)))
         n_outliers_down = n_outliers // 2
         if residual_drift is not None:
             Y_mlp_target = Y_mlp_dense + alpha_heal * residual_drift
@@ -522,17 +522,37 @@ def evaluate_compiled_block(compiled_weights, layer_weights, X_test, n_heads=32,
     }
 
 
+def compute_isobyte_multiverse_ranks(target_kb, core_bits=4):
+    """
+    Computes MPO bond ranks [r, r_mid, r] such that the unhealed Multiverse baseline
+    has an equal or slightly larger KB footprint than Nox (Iso-Byte fairness).
+    """
+    for r in range(16, 256, 4):
+        r_mid = int(r * 1.67)
+        bytes_attn = (128 * r + 128 * r * r_mid) * (core_bits / 8.0)
+        bytes_mlp = (376 * r + 128 * r * r_mid) * (core_bits / 8.0)
+        total_kb = (4 * bytes_attn + 3 * bytes_mlp) / 1024.0
+        if total_kb >= target_kb:
+            return (r, r_mid, r)
+    return (96, 160, 96)
+
+
 @torch.no_grad()
 def compile_multiverse_block(
     layer_weights,
     ranks=(24, 24, 24),
+    target_kb=None,
     core_bits=4,
     verbose=False,
 ):
     """
     Compiles an entire Transformer layer using the Multiverse (CompactifAI) TT-SVD baseline.
     All 7 projections are decomposed independently with pure Frobenius SVD and post-hoc core quantization.
+    If target_kb is provided, automatically uses Iso-Byte bond ranks.
     """
+    if target_kb is not None:
+        ranks = compute_isobyte_multiverse_ranks(target_kb, core_bits=core_bits)
+
     t_start = time.time()
     compressed_weights = {}
     total_bytes = 0.0
@@ -561,4 +581,5 @@ def compile_multiverse_block(
         "total_kb": total_bytes / 1024.0,
         "total_bytes": total_bytes,
         "time_sec": total_time,
+        "ranks": tuple(ranks),
     }

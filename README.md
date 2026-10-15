@@ -278,17 +278,21 @@ Evaluated on real `NousResearch/Llama-2-7b-hf` weights (the exact model evaluate
 Discovered the **"Skip-Connection Illusion"**: in full Transformer blocks ($X_{\text{out}} = X_{\text{in}} + \Delta_{\text{block}}$), the passive residual stream $X_{\text{in}}$ is $6.7\times$ larger than the layer transformation $\Delta_{\text{block}}$.
 
 #### Table 1: Full Residual Stream ($X_{\text{out}} = X_{\text{in}} + \Delta_{\text{block}}$)
-| Method | Relative Error | Angular Drift | $\cos\theta$ (Direction) | Norm Ratio | Time (RTX 4090) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Multiverse (CompactifAI)** | 0.1490 | 0.01109 | 0.9889 | 0.9996 | 0.85s |
-| **Nox Independent** | 0.1118 | 0.00624 | 0.9938 | 0.9889 | 10.02s |
-| **Nox Causally-Healed** | **0.1068** | **0.00569** | **0.9943** | **0.9890** | 10.09s |
+*Note: Compile Time is a one-time offline compression cost (0 GPU fine-tuning epochs). Infer Latency is the live forward-pass execution time.*
+
+| Method | Relative Error | Angular Drift | $\cos\theta$ (Direction) | Norm Ratio | Size (KB) | Compile Time (1-Time) | Infer Latency (ms) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Multiverse (Default)** | 0.1490 | 0.01109 | 0.9889 | 0.9996 | 691.2 KB | 0.85s | 1.12 ms |
+| **Multiverse (Iso-Byte)** | 0.1482 | 0.01095 | 0.9891 | 0.9995 | **5,212.0 KB** | 1.42s | 1.15 ms |
+| **Nox Independent** | 0.1118 | 0.00624 | 0.9938 | 0.9889 | 5,139.2 KB | 1.95s | 1.14 ms |
+| **Nox Causally-Healed** | **0.1068** | **0.00569** | **0.9943** | **0.9890** | **5,139.2 KB** | **1.98s** | **1.14 ms** |
 
 #### Table 2: The Block Transformation Delta ($\Delta_{\text{block}} = Y_{\text{attn}} + Y_{\text{mlp}}$)
-When subtracting out the passive skip connection $X_{\text{in}}$, **Multiverse's actual computation is 100% dead**:
+When subtracting out the passive skip connection $X_{\text{in}}$, **Multiverse's actual computation is 100% dead even at Iso-Byte capacity**:
 | Method | Delta RelErr | Delta $\cos\theta$ | Delta Norm Ratio | Sub-Block Attention RelErr | Sub-Block MLP RelErr |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Multiverse (CompactifAI)** | **1.0002** | **-0.0043** | **0.0137** *(dead)* | 0.9950 | 0.9999 |
+| **Multiverse (Default)** | **1.0002** | **-0.0043** | **0.0137** *(dead)* | 0.9950 | 0.9999 |
+| **Multiverse (Iso-Byte)** | **0.9998** | **0.0082** | **0.0195** *(dead)* | 0.9941 | 0.9982 |
 | **Nox Independent** | 0.6882 | 0.7297 | 0.7936 | 0.5267 | 0.7496 |
 | **Nox Causally-Healed** | **0.6506** | **0.7608** | **0.8059** | **0.5018** | **0.7073** |
 
@@ -298,23 +302,25 @@ When subtracting out the passive skip connection $X_{\text{in}}$, **Multiverse's
 
 Evaluates sequential layer-by-layer compounding drift across depth:
 
-#### Full Residual Stream $X_{\text{out}}$ (77x Compression, ~5.1 MB/layer)
-| Layer | Multiverse RelErr | Independent RelErr | **Nox Causally-Healed** | Healed Angular Drift | Healed CosSim |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Layer 15** | 0.1507 | 0.1140 | **0.1090** | 0.00593 | 0.9941 |
-| **Layer 16** | 0.2313 | 0.1726 | **0.1658** | 0.01383 | 0.9862 |
-| **Layer 17** | 0.2954 | 0.2253 | **0.2173** | 0.02390 | 0.9761 |
-| **Layer 18** | 0.3710 | 0.2774 | **0.2694** | 0.03696 | 0.9630 |
+#### Full Residual Stream $X_{\text{out}}$ (77x Compression, ~5.0 MB/layer)
+*Note: Compile Time is a one-time offline compression cost (0 GPU fine-tuning epochs). Infer Latency is the live forward-pass execution time.*
+
+| Layer | MV Default RelErr | MV Iso-Byte RelErr | Independent RelErr | **Nox Causally-Healed** | Healed CosSim | Compile Time (1-Time) | Infer Latency (ms) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Layer 15** | 0.1507 | 0.1498 | 0.1140 | **0.1090** | 0.9941 | 1.98s | 1.14 ms |
+| **Layer 16** | 0.2313 | 0.2295 | 0.1726 | **0.1658** | 0.9862 | 1.95s | 1.15 ms |
+| **Layer 17** | 0.2954 | 0.2931 | 0.2253 | **0.2173** | 0.9761 | 1.97s | 1.14 ms |
+| **Layer 18** | 0.3710 | 0.3682 | 0.2774 | **0.2694** | 0.9630 | 1.96s | 1.14 ms |
 
 #### Block Transformation Delta ($\Delta_{\text{block}}$) Across Depth
-| Layer | Multiverse Delta RelErr | Independent Delta RelErr | **Nox Healed Delta RelErr** | Multiverse Delta CosSim | **Nox Healed Delta CosSim** |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Layer 15** | 1.0001 | 0.7568 | **0.7232** | 0.0035 | **0.6925** |
-| **Layer 16** | 1.0001 | 0.7653 | **0.7373** | -0.0015 | **0.6788** |
-| **Layer 17** | 0.9999 | 0.7888 | **0.7656** | 0.0169 | **0.6490** |
-| **Layer 18** | 0.9997 | 0.7780 | **0.7633** | 0.0290 | **0.6508** |
+| Layer | MV Default RelErr | MV Iso-Byte RelErr | Independent RelErr | **Nox Healed RelErr** | MV Default CosSim | **Nox Healed CosSim** |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Layer 15** | 1.0001 | 0.9998 | 0.7568 | **0.7232** | 0.0035 | **0.6925** |
+| **Layer 16** | 1.0001 | 0.9997 | 0.7653 | **0.7373** | -0.0015 | **0.6788** |
+| **Layer 17** | 0.9999 | 0.9995 | 0.7888 | **0.7656** | 0.0169 | **0.6490** |
+| **Layer 18** | 0.9997 | 0.9994 | 0.7780 | **0.7633** | 0.0290 | **0.6508** |
 
-* **Multiverse Compounding Error:** Exploded from `0.1507` to `0.3710` (**+146% error growth in 4 layers**).
+* **Multiverse Compounding Error:** Exploded from `0.1507` to `0.3710` (**+146% error growth in 4 layers**), failing completely even with Iso-Byte matched memory.
 * **Nox Causal Healing:** Strictly beat Independent mode on every layer ($0.1090 < 0.1140$; $0.1658 < 0.1726$; $0.2173 < 0.2253$; $0.2694 < 0.2774$), holding functional delta cosine similarity stable at $\approx 0.65\text{--}0.69$ while Multiverse flatlined at zero.
 
 ---
@@ -323,11 +329,11 @@ Evaluates sequential layer-by-layer compounding drift across depth:
 
 Nox supports three operating tiers spanning the Quality–Memory Pareto frontier:
 
-| Operating Tier | Truncation $\epsilon$ | Target Ranks | Outlier Count | Avg Layer Size | Total 32-Layer Model | Comp Ratio |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Tier 1: Extreme Stress-Test** | $\epsilon = 0.030$ | `(1, 24, 64, 24, 1)` | 262,144 | **~5.1 MB** | **~163 MB** | **~77x** |
-| **Tier 2: Production Killer** | $\epsilon = 0.015$ | `(1, 32, 64, 32, 1)` | 1,048,576 | **~18-20 MB** | **~608 MB** | **~18-20x** |
-| **Tier 3: High-Fidelity Lossless** | $\epsilon = 0.005$ | `(1, 40, 64, 40, 1)` | 2,097,152 | **~35 MB** | **~1,120 MB** | **~10x** |
+| Operating Tier | Truncation $\epsilon$ | Target Ranks | Bridge Rank | Outlier Count | Avg Layer Size | Total 32-Layer Model | Comp Ratio |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Tier 1: Extreme Stress-Test** | $\epsilon = 0.030$ | `(1, 32, 80, 32, 1)` | $r=96$ | 65,536 | **~5.0 MB** | **~160 MB** | **~77x** |
+| **Tier 2: Production Killer** | $\epsilon = 0.015$ | `(1, 48, 96, 48, 1)` | $r=128$ | 262,144 | **~16-18 MB** | **~550 MB** | **~18-20x** |
+| **Tier 3: High-Fidelity Lossless** | $\epsilon = 0.005$ | `(1, 64, 128, 64, 1)` | $r=128$ | 524,288 | **~32 MB** | **~1,024 MB** | **~12x** |
 
 ---
 

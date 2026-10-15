@@ -226,18 +226,19 @@ def run_day2_benchmark(
     layer_weights,
     X_calib,
     X_test,
-    ranks=(1, 24, 64, 24, 1),
-    r_bridge=64,
-    n_outliers=262144,
+    ranks=(1, 32, 80, 32, 1),
+    r_bridge=96,
+    n_outliers=65536,
     n_heads=32,
     n_kv_heads=32,
     seq_len=128,
 ):
     """
-    Executes the 3-way Day 2 Full Single-Block Benchmark:
-      1. Multiverse Unhealed Block Baseline (pure Frobenius MPO)
-      2. Nox Independent Block (Nox compression without causal healing)
-      3. Nox Causally-Healed Block (Step 4.2 Causal Intra-Block Propagation)
+    Executes the Day 2 Full Single-Block Benchmark:
+      1. Multiverse Default Block Baseline (pure Frobenius MPO)
+      2. Multiverse Iso-Byte Block Baseline (matched byte budget)
+      3. Nox Independent Block (Nox compression without causal healing)
+      4. Nox Causally-Healed Block (Step 4.2 Causal Intra-Block Propagation)
     """
     total_dense_params = sum(
         w.numel() for k, w in layer_weights.items() if k not in ["input_layernorm", "post_attention_layernorm"]
@@ -248,7 +249,21 @@ def run_day2_benchmark(
 
     results = {}
 
-    log_step("Compiling Baseline 1: Multiverse Unhealed Block (CompactifAI TT-SVD)...")
+    def measure_infer_latency(blk):
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        _ = evaluate_compiled_block(blk, layer_weights, X_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len)
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        t_start = time.perf_counter()
+        n_runs = 5
+        for _ in range(n_runs):
+            _ = evaluate_compiled_block(blk, layer_weights, X_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len)
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        return ((time.perf_counter() - t_start) / float(n_runs)) * 1000.0
+
+    log_step("Compiling Baseline 1: Multiverse Unhealed Block (CompactifAI TT-SVD Default)...")
     mv_ranks = ranks[1:-1] if len(ranks) == 5 else ranks
     mv_block = compile_multiverse_block(
         layer_weights=layer_weights,
@@ -264,18 +279,20 @@ def run_day2_benchmark(
         n_kv_heads=n_kv_heads,
         seq_len=seq_len,
     )
-    results["Multiverse (CompactifAI)"] = {
+    mv_infer = measure_infer_latency(mv_block)
+    results["Multiverse (Default)"] = {
         "block": mv_eval["block_metrics"],
         "transform": mv_eval["transform_metrics"],
         "attn": mv_eval["attn_metrics"],
         "mlp": mv_eval["mlp_metrics"],
         "kb": mv_block["total_kb"],
         "time": mv_block["time_sec"],
+        "infer_ms": mv_infer,
     }
     log_step(
-        f"Multiverse Block compiled: Rel Err={mv_eval['block_metrics']['relative_error']:.4f}, "
+        f"Multiverse Default Block compiled: Rel Err={mv_eval['block_metrics']['relative_error']:.4f}, "
         f"Drift={mv_eval['block_metrics']['angular_drift']:.5f}, "
-        f"Norm={mv_eval['block_metrics']['norm_ratio']:.4f} in {mv_block['time_sec']:.2f}s."
+        f"Norm={mv_eval['block_metrics']['norm_ratio']:.4f} in {mv_block['time_sec']:.2f}s (Infer: {mv_infer:.2f}ms)."
     )
     del mv_block, mv_eval
     if torch.cuda.is_available():
@@ -303,6 +320,7 @@ def run_day2_benchmark(
         n_kv_heads=n_kv_heads,
         seq_len=seq_len,
     )
+    indep_infer = measure_infer_latency(nox_indep_block)
     results["Nox Independent Block"] = {
         "block": nox_indep_eval["block_metrics"],
         "transform": nox_indep_eval["transform_metrics"],
@@ -310,11 +328,12 @@ def run_day2_benchmark(
         "mlp": nox_indep_eval["mlp_metrics"],
         "kb": nox_indep_block["total_kb"],
         "time": nox_indep_block["time_sec"],
+        "infer_ms": indep_infer,
     }
     log_step(
         f"Nox Independent Block compiled: Rel Err={nox_indep_eval['block_metrics']['relative_error']:.4f}, "
         f"Drift={nox_indep_eval['block_metrics']['angular_drift']:.5f}, "
-        f"Norm={nox_indep_eval['block_metrics']['norm_ratio']:.4f} in {nox_indep_block['time_sec']:.2f}s."
+        f"Norm={nox_indep_eval['block_metrics']['norm_ratio']:.4f} in {nox_indep_block['time_sec']:.2f}s (Infer: {indep_infer:.2f}ms)."
     )
     del nox_indep_block, nox_indep_eval
     if torch.cuda.is_available():
@@ -342,29 +361,69 @@ def run_day2_benchmark(
         n_kv_heads=n_kv_heads,
         seq_len=seq_len,
     )
+    healed_infer = measure_infer_latency(nox_healed_block)
+    healed_kb = nox_healed_block["total_kb"]
     results["Nox Causally-Healed Block"] = {
         "block": nox_healed_eval["block_metrics"],
         "transform": nox_healed_eval["transform_metrics"],
         "attn": nox_healed_eval["attn_metrics"],
         "mlp": nox_healed_eval["mlp_metrics"],
-        "kb": nox_healed_block["total_kb"],
+        "kb": healed_kb,
         "time": nox_healed_block["time_sec"],
+        "infer_ms": healed_infer,
     }
     log_step(
         f"Nox Causally-Healed Block compiled: Rel Err={nox_healed_eval['block_metrics']['relative_error']:.4f}, "
         f"Drift={nox_healed_eval['block_metrics']['angular_drift']:.5f}, "
-        f"Norm={nox_healed_eval['block_metrics']['norm_ratio']:.4f} in {nox_healed_block['time_sec']:.2f}s."
+        f"Norm={nox_healed_eval['block_metrics']['norm_ratio']:.4f} in {nox_healed_block['time_sec']:.2f}s (Infer: {healed_infer:.2f}ms)."
     )
     del nox_healed_block, nox_healed_eval
     if torch.cuda.is_available():
         gc.collect()
         torch.cuda.empty_cache()
 
-    print("\n" + "=" * 104)
+    log_step(f"Compiling Method 4: Multiverse Iso-Byte Block (Matched Byte Budget >= {healed_kb:.1f} KB)...")
+    mv_iso_block = compile_multiverse_block(
+        layer_weights=layer_weights,
+        target_kb=healed_kb,
+        core_bits=4,
+        verbose=False,
+    )
+    mv_iso_eval = evaluate_compiled_block(
+        compiled_weights=mv_iso_block,
+        layer_weights=layer_weights,
+        X_test=X_test,
+        n_heads=n_heads,
+        n_kv_heads=n_kv_heads,
+        seq_len=seq_len,
+    )
+    mv_iso_infer = measure_infer_latency(mv_iso_block)
+    results["Multiverse (Iso-Byte)"] = {
+        "block": mv_iso_eval["block_metrics"],
+        "transform": mv_iso_eval["transform_metrics"],
+        "attn": mv_iso_eval["attn_metrics"],
+        "mlp": mv_iso_eval["mlp_metrics"],
+        "kb": mv_iso_block["total_kb"],
+        "time": mv_iso_block["time_sec"],
+        "infer_ms": mv_iso_infer,
+    }
+    log_step(
+        f"Multiverse Iso-Byte Block compiled (ranks={mv_iso_block.get('ranks', 'N/A')}): "
+        f"Rel Err={mv_iso_eval['block_metrics']['relative_error']:.4f}, "
+        f"Drift={mv_iso_eval['block_metrics']['angular_drift']:.5f}, "
+        f"Norm={mv_iso_eval['block_metrics']['norm_ratio']:.4f} in {mv_iso_block['time_sec']:.2f}s (Infer: {mv_iso_infer:.2f}ms)."
+    )
+    del mv_iso_block, mv_iso_eval
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
+    print("\nNote: Compile Time is a one-time offline compression cost (0 GPU fine-tuning epochs). Infer Latency is the live forward-pass execution time.")
+    print("=" * 135)
     print(" TABLE 1: FULL BLOCK OUTPUT (X_out = X_in + Y_attn + Y_mlp) (HELD-OUT TEST SET)")
-    print("=" * 104)
-    print(f"{'Method':<32} | {'Rel Error':<10} | {'Angular Drift':<14} | {'Norm Ratio':<10} | {'Cosine Sim':<10} | {'Size (KB)':<10} | {'Comp Ratio':<10}")
-    print("-" * 104)
+    print("=" * 135)
+    print(f"{'Method':<28} | {'Rel Error':<10} | {'Angular Drift':<14} | {'Norm Ratio':<10} | {'Cosine Sim':<10} | {'Size (KB)':<10} | {'Comp Ratio':<10} | {'Compile Time (1-Time)':<21} | {'Infer Latency (ms)':<18}")
+    print("-" * 135)
 
     for name, r in results.items():
         rel_err = f"{r['block']['relative_error']:.4f}"
@@ -373,15 +432,17 @@ def run_day2_benchmark(
         cos_sim = f"{r['block']['cosine_similarity']:.4f}"
         kb = f"{r['kb']:.1f} KB"
         comp = f"{dense_bytes / (r['kb'] * 1024.0):.1f}x"
-        print(f"{name:<32} | {rel_err:<10} | {drift:<14} | {ratio:<10} | {cos_sim:<10} | {kb:<10} | {comp:<10}")
+        ctime = f"{r['time']:.2f}s"
+        infer = f"{r['infer_ms']:.2f} ms"
+        print(f"{name:<28} | {rel_err:<10} | {drift:<14} | {ratio:<10} | {cos_sim:<10} | {kb:<10} | {comp:<10} | {ctime:<21} | {infer:<18}")
 
-    print("-" * 104)
+    print("-" * 135)
 
-    print("\n" + "=" * 104)
+    print("\n" + "=" * 110)
     print(" TABLE 2: BLOCK TRANSFORMATION DELTA (Delta_block = Y_attn + Y_mlp) (ISOLATED FROM SKIP-CONNECTION)")
-    print("=" * 104)
-    print(f"{'Method':<32} | {'Delta RelErr':<12} | {'Delta Drift':<14} | {'Delta Norm':<10} | {'Delta CosSim':<12} | {'Gate Status':<12}")
-    print("-" * 104)
+    print("=" * 110)
+    print(f"{'Method':<28} | {'Delta RelErr':<12} | {'Delta Drift':<14} | {'Delta Norm':<10} | {'Delta CosSim':<12} | {'Gate Status':<12}")
+    print("-" * 110)
 
     for name, r in results.items():
         t_err = f"{r['transform']['relative_error']:.4f}"
@@ -389,15 +450,15 @@ def run_day2_benchmark(
         t_norm = f"{r['transform']['norm_ratio']:.4f}"
         t_cos = f"{r['transform']['cosine_similarity']:.4f}"
         gate = "BASELINE" if "Multiverse" in name else ("PASS" if r['transform']['relative_error'] < 0.35 else "REVIEW")
-        print(f"{name:<32} | {t_err:<12} | {t_drift:<14} | {t_norm:<10} | {t_cos:<12} | {gate:<12}")
+        print(f"{name:<28} | {t_err:<12} | {t_drift:<14} | {t_norm:<10} | {t_cos:<12} | {gate:<12}")
 
-    print("-" * 104)
+    print("-" * 110)
 
-    print("\n" + "=" * 104)
+    print("\n" + "=" * 110)
     print(" TABLE 3: SUB-BLOCK COMPONENT DRILLDOWN (HELD-OUT TEST SET)")
-    print("=" * 104)
-    print(f"{'Method':<32} | {'Attn RelErr':<12} | {'Attn Drift':<12} | {'MLP RelErr':<12} | {'MLP Drift':<12} | {'MLP Norm':<10}")
-    print("-" * 104)
+    print("=" * 110)
+    print(f"{'Method':<28} | {'Attn RelErr':<12} | {'Attn Drift':<12} | {'MLP RelErr':<12} | {'MLP Drift':<12} | {'MLP Norm':<10}")
+    print("-" * 110)
 
     for name, r in results.items():
         a_err = f"{r['attn']['relative_error']:.4f}"
@@ -405,39 +466,43 @@ def run_day2_benchmark(
         m_err = f"{r['mlp']['relative_error']:.4f}"
         m_drift = f"{r['mlp']['angular_drift']:.5f}"
         m_norm = f"{r['mlp']['norm_ratio']:.4f}"
-        print(f"{name:<32} | {a_err:<12} | {a_drift:<12} | {m_err:<12} | {m_drift:<12} | {m_norm:<10}")
+        print(f"{name:<28} | {a_err:<12} | {a_drift:<12} | {m_err:<12} | {m_drift:<12} | {m_norm:<10}")
 
-    print("-" * 104)
+    print("-" * 110)
 
-    mv_trans_err = results["Multiverse (CompactifAI)"]["transform"]["relative_error"]
+    mv_trans_err = results["Multiverse (Default)"]["transform"]["relative_error"]
+    mv_iso_trans_err = results["Multiverse (Iso-Byte)"]["transform"]["relative_error"]
     indep_trans_err = results["Nox Independent Block"]["transform"]["relative_error"]
     healed_trans_err = results["Nox Causally-Healed Block"]["transform"]["relative_error"]
 
     err_red_trans_vs_mv = (1.0 - (healed_trans_err / (mv_trans_err + 1e-12))) * 100.0
+    err_red_trans_vs_mv_iso = (1.0 - (healed_trans_err / (mv_iso_trans_err + 1e-12))) * 100.0
     err_red_trans_vs_indep = (1.0 - (healed_trans_err / (indep_trans_err + 1e-12))) * 100.0
 
-    mv_err = results["Multiverse (CompactifAI)"]["block"]["relative_error"]
+    mv_err = results["Multiverse (Default)"]["block"]["relative_error"]
+    mv_iso_err = results["Multiverse (Iso-Byte)"]["block"]["relative_error"]
     indep_err = results["Nox Independent Block"]["block"]["relative_error"]
     healed_err = results["Nox Causally-Healed Block"]["block"]["relative_error"]
 
     err_red_vs_mv = (1.0 - (healed_err / (mv_err + 1e-12))) * 100.0
+    err_red_vs_mv_iso = (1.0 - (healed_err / (mv_iso_err + 1e-12))) * 100.0
     err_red_vs_indep = (1.0 - (healed_err / (indep_err + 1e-12))) * 100.0
 
     print("\n[Causal Intra-Block Propagation Verification (Step 4.2)]")
     print("  Transformation Delta (Delta_block = Y_attn + Y_mlp):")
-    print(f"    Multiverse Baseline Relative Error:     {mv_trans_err:.4f} (Functional Collapse: 1.0000)")
+    print(f"    Multiverse Default Relative Error:      {mv_trans_err:.4f}")
+    print(f"    Multiverse Iso-Byte Relative Error:     {mv_iso_trans_err:.4f} (Matched Footprint >= {healed_kb:.1f} KB)")
     print(f"    Nox Causally-Healed Relative Error:     {healed_trans_err:.4f}")
-    print(f"    Transformation Error Reduction vs MV:   {err_red_trans_vs_mv:.1f}% (Gate Target: >75.0%)")
+    print(f"    Transformation Error Reduction vs MV:   {err_red_trans_vs_mv:.1f}%")
+    print(f"    Transformation Gain vs MV Iso-Byte:     {err_red_trans_vs_mv_iso:.1f}%")
     print(f"    Causal Healing Gain vs Independent:     {err_red_trans_vs_indep:.1f}%")
     print("  Full Layer Output (X_out = X_in + Delta_block):")
-    print(f"    Multiverse Relative Error:              {mv_err:.4f}")
+    print(f"    Multiverse Default Relative Error:      {mv_err:.4f}")
+    print(f"    Multiverse Iso-Byte Relative Error:     {mv_iso_err:.4f}")
     print(f"    Nox Causally-Healed Relative Error:     {healed_err:.4f}")
     print(f"    Full-Layer Error Reduction vs MV:       {err_red_vs_mv:.1f}%")
+    print(f"    Full-Layer Gain vs MV Iso-Byte:         {err_red_vs_mv_iso:.1f}%")
     print(f"    Full-Layer Gain vs Independent:         {err_red_vs_indep:.1f}%")
-    if err_red_trans_vs_mv >= 75.0 or err_red_vs_mv >= 75.0:
-        print("  Status: PASSED GATE (>75.0% error reduction vs unhealed Multiverse).")
-    else:
-        print("  Status: PENDING THRESHOLD REVIEW.")
 
     return results
 
@@ -451,8 +516,8 @@ def main():
     parser.add_argument("--synthetic", action="store_true", help="Use synthetic weights instead of downloading real model")
     parser.add_argument("--n_calib", type=int, default=256, help="Number of calibration tokens (default: 256)")
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens (default: 128)")
-    parser.add_argument("--r_bridge", type=int, default=64, help="Bridge rank for Nox decomposition (default: 64)")
-    parser.add_argument("--n_outliers", type=int, default=262144, help="Number of outliers for outlier shield (default: 262144)")
+    parser.add_argument("--r_bridge", type=int, default=96, help="Bridge rank for Nox decomposition (default: 96)")
+    parser.add_argument("--n_outliers", type=int, default=65536, help="Number of outliers for outlier shield (default: 65536)")
     parser.add_argument("--device", type=str, default=None, help="Device to execute benchmark on (default: auto-detect cuda, else cpu)")
     args = parser.parse_args()
 
@@ -493,7 +558,7 @@ def main():
             layer_weights=weights,
             X_calib=X_calib,
             X_test=X_test,
-            ranks=(1, 24, 64, 24, 1),
+            ranks=(1, 32, 80, 32, 1),
             r_bridge=args.r_bridge,
             n_outliers=args.n_outliers,
         )

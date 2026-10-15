@@ -77,6 +77,7 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
       (Z_env^T Z_env + reg * I) G = Z_env^T Y_site + reg * C_prior
     Fits calibration data along active directions while anchoring nullspace
     directions to the true weight prior to prevent test-set overfitting.
+    Uses Symmetric Positive-Definite Cholesky with automatic fallback.
     """
     D = Z_env.shape[1]
     if device is None:
@@ -86,7 +87,14 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
     reg_scale = gamma * (torch.trace(H) / D + 1e-6)
     H.diagonal().add_(reg_scale)
     rhs.add_(reg_scale * C_prior)
-    sol = torch.linalg.solve(H, rhs)
+    try:
+        L, info = torch.linalg.cholesky_ex(H)
+        if info == 0:
+            sol = torch.cholesky_solve(rhs, L)
+        else:
+            sol = torch.linalg.solve(H, rhs)
+    except Exception:
+        sol = torch.linalg.solve(H, rhs)
     del H, rhs
     return sol.T
 
@@ -94,13 +102,100 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
 def solve_accumulated_system(H, rhs, C_prior, gamma, D):
     """
     Solves (H + reg*I) sol = rhs + reg*C_prior for chunked DMRG site systems.
+    Uses Symmetric Positive-Definite Cholesky with automatic fallback to torch.linalg.solve.
     """
     reg_scale = gamma * (torch.trace(H) / D + 1e-6)
     H.diagonal().add_(reg_scale)
     rhs.add_(reg_scale * C_prior)
-    sol = torch.linalg.solve(H, rhs)
+    try:
+        L, info = torch.linalg.cholesky_ex(H)
+        if info == 0:
+            sol = torch.cholesky_solve(rhs, L)
+        else:
+            sol = torch.linalg.solve(H, rhs)
+    except Exception:
+        sol = torch.linalg.solve(H, rhs)
     del H, rhs
     return sol.T
+
+
+def solve_site_cg_matrix_free(X_red, contract_fn, Y_site, C_prior, gamma, n_iters=6, chunk_size=64):
+    """
+    Solves (Z^T Z + reg * I) X = Z^T Y + reg * C_prior initialized at X_0 = C_prior
+    without ever allocating the D x D matrix H = Z^T Z!
+    Using substitution Delta = X - C_prior:
+      (Z^T Z + reg * I) Delta = Z^T (Y_site - Z @ C_prior)
+    """
+    D, o_m = C_prior.shape
+    r_cov = X_red.shape[-1]
+
+    Z_list, Y_list = [], []
+    trace_H = 0.0
+    for r_start in range(0, r_cov, chunk_size):
+        r_end = min(r_start + chunk_size, r_cov)
+        Z_c = contract_fn(X_red[..., r_start:r_end])
+        Y_c = Y_site[r_start:r_end].reshape(-1, o_m)
+        trace_H += torch.sum(Z_c * Z_c).item()
+        Z_list.append(Z_c)
+        Y_list.append(Y_c)
+
+    reg = gamma * (trace_H / D + 1e-6)
+    total_z_bytes = sum(z.numel() * 4 for z in Z_list)
+
+    if total_z_bytes < 500 * 1024 * 1024:
+        Z_full = torch.cat(Z_list, dim=0)
+        Y_full = torch.cat(Y_list, dim=0)
+        del Z_list, Y_list
+
+        residual_Y = Y_full - (Z_full @ C_prior)
+        R = Z_full.T @ residual_Y
+        P = R.clone()
+        Delta = torch.zeros_like(C_prior)
+        rs_old = torch.sum(R * R, dim=0, keepdim=True)
+
+        for _ in range(n_iters):
+            ZP = Z_full @ P
+            Ap = (Z_full.T @ ZP) + reg * P
+            pAp = torch.sum(P * Ap, dim=0, keepdim=True).clamp(min=1e-12)
+            alpha = rs_old / pAp
+            Delta = Delta + alpha * P
+            R = R - alpha * Ap
+            rs_new = torch.sum(R * R, dim=0, keepdim=True)
+            if torch.max(rs_new).item() < 1e-8:
+                break
+            P = R + (rs_new / rs_old.clamp(min=1e-12)) * P
+            rs_old = rs_new
+
+        del Z_full, Y_full, residual_Y, R, P
+    else:
+        R = torch.zeros_like(C_prior)
+        for Z_c, Y_c in zip(Z_list, Y_list):
+            res_c = Y_c - (Z_c @ C_prior)
+            R.addmm_(Z_c.T, res_c)
+            del res_c
+        P = R.clone()
+        Delta = torch.zeros_like(C_prior)
+        rs_old = torch.sum(R * R, dim=0, keepdim=True)
+
+        for _ in range(n_iters):
+            Ap = reg * P
+            for Z_c in Z_list:
+                ZP_c = Z_c @ P
+                Ap.addmm_(Z_c.T, ZP_c)
+                del ZP_c
+            pAp = torch.sum(P * Ap, dim=0, keepdim=True).clamp(min=1e-12)
+            alpha = rs_old / pAp
+            Delta = Delta + alpha * P
+            R = R - alpha * Ap
+            rs_new = torch.sum(R * R, dim=0, keepdim=True)
+            if torch.max(rs_new).item() < 1e-8:
+                break
+            P = R + (rs_new / rs_old.clamp(min=1e-12)) * P
+            rs_old = rs_new
+
+        del Z_list, Y_list, R, P
+
+    return (C_prior + Delta).T
 
 
 def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
@@ -307,20 +402,33 @@ def nox_hybrid_dmrg_decompose(
         r1, _, _, r2 = c1.shape
         D1 = r1 * r2 * i1
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
-        H1 = torch.zeros((D1, D1), device=device, dtype=torch.float32)
-        rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
-        for r_start in range(0, r_cov, chunk_size):
-            r_end = min(r_start + chunk_size, r_cov)
-            L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
-            Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
-            del L0_c
-            Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
-            H1.addmm_(Z1_c.T, Z1_c)
-            rhs1.addmm_(Z1_c.T, Y1_c)
-            del Z1_c, Y1_c
-        del R23
         c1_prior = c1.permute(0, 3, 2, 1).reshape(D1, o1)
-        c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
+
+        if D1 > 4096:
+            def contract_site1(X_chunk):
+                L0_c = torch.einsum("aib,ijklr->rabjkl", c0, X_chunk)
+                return torch.einsum("rabjkl,degkl->raegbdj", L0_c, R23).reshape(-1, D1)
+
+            Y1_site = Y_red.permute(4, 0, 2, 3, 1).reshape(r_cov, -1, o1)
+            c1_sol = solve_site_cg_matrix_free(
+                X_red, contract_site1, Y1_site, c1_prior, cur_gamma, n_iters=6, chunk_size=chunk_size
+            )
+            del Y1_site
+            c1 = c1_sol.reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
+        else:
+            H1 = torch.zeros((D1, D1), device=device, dtype=torch.float32)
+            rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
+            for r_start in range(0, r_cov, chunk_size):
+                r_end = min(r_start + chunk_size, r_cov)
+                L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
+                Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
+                del L0_c
+                Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
+                H1.addmm_(Z1_c.T, Z1_c)
+                rhs1.addmm_(Z1_c.T, Y1_c)
+                del Z1_c, Y1_c
+            c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
+        del R23
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
@@ -335,20 +443,33 @@ def nox_hybrid_dmrg_decompose(
         r2, _, _, r3 = c2.shape
         D2 = r2 * r3 * i2
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
-        H2 = torch.zeros((D2, D2), device=device, dtype=torch.float32)
-        rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
-        for r_start in range(0, r_cov, chunk_size):
-            r_end = min(r_start + chunk_size, r_cov)
-            L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
-            Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
-            del L01_X_c
-            Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
-            H2.addmm_(Z2_c.T, Z2_c)
-            rhs2.addmm_(Z2_c.T, Y2_c)
-            del Z2_c, Y2_c
-        del L01
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
-        c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
+
+        if D2 > 4096:
+            def contract_site2(X_chunk):
+                L01_X_c = torch.einsum("acijd,ijklr->racdkl", L01, X_chunk)
+                return torch.einsum("racdkl,fgl->racgdfk", L01_X_c, c3).reshape(-1, D2)
+
+            Y2_site = Y_red.permute(4, 0, 1, 3, 2).reshape(r_cov, -1, o2)
+            c2_sol = solve_site_cg_matrix_free(
+                X_red, contract_site2, Y2_site, c2_prior, cur_gamma, n_iters=6, chunk_size=chunk_size
+            )
+            del Y2_site
+            c2 = c2_sol.reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
+        else:
+            H2 = torch.zeros((D2, D2), device=device, dtype=torch.float32)
+            rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
+            for r_start in range(0, r_cov, chunk_size):
+                r_end = min(r_start + chunk_size, r_cov)
+                L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
+                Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
+                del L01_X_c
+                Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
+                H2.addmm_(Z2_c.T, Z2_c)
+                rhs2.addmm_(Z2_c.T, Y2_c)
+                del Z2_c, Y2_c
+            c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
+        del L01
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 

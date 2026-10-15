@@ -6,6 +6,8 @@ from nox.compiler import (
     adaptive_tt_svd_4site,
     local_ridge_solve,
     solve_site_anchored,
+    solve_accumulated_system,
+    solve_site_cg_matrix_free,
 )
 from nox.utils import (
     quantize_dequantize_groupwise,
@@ -24,6 +26,7 @@ from nox.block_compiler import (
     compile_mlp_block,
     compile_transformer_block,
     compile_multiverse_block,
+    compute_isobyte_multiverse_ranks,
     evaluate_compiled_block,
 )
 
@@ -33,6 +36,8 @@ __all__ = [
     "adaptive_tt_svd_4site",
     "local_ridge_solve",
     "solve_site_anchored",
+    "solve_accumulated_system",
+    "solve_site_cg_matrix_free",
     "quantize_dequantize_groupwise",
     "quantize_4bit_per_channel",
     "contract_mpo_4site",
@@ -47,5 +52,6 @@ __all__ = [
     "compile_mlp_block",
     "compile_transformer_block",
     "compile_multiverse_block",
+    "compute_isobyte_multiverse_ranks",
     "evaluate_compiled_block",
 ]
