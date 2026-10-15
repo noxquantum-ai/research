@@ -91,7 +91,7 @@ def get_tier_config(tier_name="extreme_77x"):
         }
     elif tier_name == "production_18x":
         return {
-            "ranks": (1, 48, 96, 48, 1),
+            "ranks": (1, 40, 80, 40, 1),
             "r_bridge": 128,
             "n_outliers": 262144,
             "epsilon": 0.015,
@@ -198,6 +198,9 @@ def compile_sequential_cascade(
         Delta_mv_test = Y_attn_mv + Y_mlp_mv
         mv_kb = mv_block["total_kb"]
         del mv_block, mv_weights, Y_attn_mv, Y_mlp_mv
+        if str(device).startswith("cuda"):
+            gc.collect()
+            torch.cuda.empty_cache()
 
         # 3. Nox Independent path (calibrated on uncorrupted dense stream)
         nox_indep_block = compile_transformer_block(
@@ -222,6 +225,9 @@ def compile_sequential_cascade(
         Delta_indep_test = Y_attn_indep + Y_mlp_indep
         indep_kb = nox_indep_block["total_kb"]
         del nox_indep_block, indep_weights, Y_attn_indep, Y_mlp_indep
+        if str(device).startswith("cuda"):
+            gc.collect()
+            torch.cuda.empty_cache()
 
         # 4. Nox Causally-Healed path (inter-layer: calibrated on corrupted X_healed_calib targeting clean X_d_calib)
         nox_healed_block = compile_transformer_block(
