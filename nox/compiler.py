@@ -360,24 +360,73 @@ def nox_hybrid_dmrg_decompose(
         D1 = r1 * r2 * i1
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
         c1_prior = c1.permute(0, 3, 2, 1).reshape(D1, o1)
-        H1 = torch.zeros((D1, D1), device=device, dtype=torch.float32)
-        rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
         step_chunk1 = 8 if D1 > 4096 else chunk_size
-        for r_start in range(0, r_cov, step_chunk1):
-            r_end = min(r_start + step_chunk1, r_cov)
-            L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
-            Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
-            del L0_c
-            Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
-            if str(device).startswith("cuda"):
-                H1.add_(torch.mm(Z1_c.half().T, Z1_c.half()).float())
-                rhs1.add_(torch.mm(Z1_c.half().T, Y1_c.half()).float())
-            else:
+
+        if D1 > 4096:
+            # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
+            rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
+            sum_frob1 = 0.0
+            for r_start in range(0, r_cov, step_chunk1):
+                r_end = min(r_start + step_chunk1, r_cov)
+                L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
+                Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
+                del L0_c
+                Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
+                rhs1.addmm_(Z1_c.T, Y1_c)
+                sum_frob1 += torch.sum(Z1_c ** 2).item()
+                del Z1_c, Y1_c
+
+            reg_scale1 = cur_gamma * (sum_frob1 / D1 + 1e-6)
+            rhs1.add_(reg_scale1 * c1_prior)
+
+            def matvec1(P_in):
+                HP = reg_scale1 * P_in
+                for r_start in range(0, r_cov, step_chunk1):
+                    r_end = min(r_start + step_chunk1, r_cov)
+                    L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
+                    Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
+                    del L0_c
+                    v = torch.mm(Z1_c, P_in)
+                    HP.addmm_(Z1_c.T, v)
+                    del Z1_c, v
+                return HP
+
+            HC1 = matvec1(c1_prior)
+            R1 = rhs1 - HC1
+            del HC1, rhs1
+            P1 = R1.clone()
+            Delta1 = torch.zeros_like(c1_prior)
+            rs_old1 = torch.sum(R1 * R1, dim=0, keepdim=True)
+            for _ in range(6):
+                HP1 = matvec1(P1)
+                pAp1 = torch.sum(P1 * HP1, dim=0, keepdim=True).clamp(min=1e-12)
+                alpha1 = rs_old1 / pAp1
+                Delta1.addcmul_(alpha1, P1)
+                R1.addcmul_(-alpha1, HP1)
+                del HP1
+                rs_new1 = torch.sum(R1 * R1, dim=0, keepdim=True)
+                if torch.max(rs_new1).item() < 1e-8:
+                    break
+                beta1 = rs_new1 / rs_old1.clamp(min=1e-12)
+                P1 = R1 + beta1 * P1
+                rs_old1 = rs_new1
+            del R1, P1
+            c1 = (c1_prior + Delta1).T.reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
+            del Delta1, c1_prior
+        else:
+            H1 = torch.zeros((D1, D1), device=device, dtype=torch.float32)
+            rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
+            for r_start in range(0, r_cov, step_chunk1):
+                r_end = min(r_start + step_chunk1, r_cov)
+                L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
+                Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
+                del L0_c
+                Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
                 H1.addmm_(Z1_c.T, Z1_c)
                 rhs1.addmm_(Z1_c.T, Y1_c)
-            del Z1_c, Y1_c
+                del Z1_c, Y1_c
+            c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
         del R23
-        c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
@@ -393,24 +442,73 @@ def nox_hybrid_dmrg_decompose(
         D2 = r2 * r3 * i2
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
-        H2 = torch.zeros((D2, D2), device=device, dtype=torch.float32)
-        rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
         step_chunk2 = 8 if D2 > 4096 else chunk_size
-        for r_start in range(0, r_cov, step_chunk2):
-            r_end = min(r_start + step_chunk2, r_cov)
-            L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
-            Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
-            del L01_X_c
-            Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
-            if str(device).startswith("cuda"):
-                H2.add_(torch.mm(Z2_c.half().T, Z2_c.half()).float())
-                rhs2.add_(torch.mm(Z2_c.half().T, Y2_c.half()).float())
-            else:
+
+        if D2 > 4096:
+            # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
+            rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
+            sum_frob2 = 0.0
+            for r_start in range(0, r_cov, step_chunk2):
+                r_end = min(r_start + step_chunk2, r_cov)
+                L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
+                Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
+                del L01_X_c
+                Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
+                rhs2.addmm_(Z2_c.T, Y2_c)
+                sum_frob2 += torch.sum(Z2_c ** 2).item()
+                del Z2_c, Y2_c
+
+            reg_scale2 = cur_gamma * (sum_frob2 / D2 + 1e-6)
+            rhs2.add_(reg_scale2 * c2_prior)
+
+            def matvec2(P_in):
+                HP = reg_scale2 * P_in
+                for r_start in range(0, r_cov, step_chunk2):
+                    r_end = min(r_start + step_chunk2, r_cov)
+                    L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
+                    Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
+                    del L01_X_c
+                    v = torch.mm(Z2_c, P_in)
+                    HP.addmm_(Z2_c.T, v)
+                    del Z2_c, v
+                return HP
+
+            HC2 = matvec2(c2_prior)
+            R2 = rhs2 - HC2
+            del HC2, rhs2
+            P2 = R2.clone()
+            Delta2 = torch.zeros_like(c2_prior)
+            rs_old2 = torch.sum(R2 * R2, dim=0, keepdim=True)
+            for _ in range(6):
+                HP2 = matvec2(P2)
+                pAp2 = torch.sum(P2 * HP2, dim=0, keepdim=True).clamp(min=1e-12)
+                alpha2 = rs_old2 / pAp2
+                Delta2.addcmul_(alpha2, P2)
+                R2.addcmul_(-alpha2, HP2)
+                del HP2
+                rs_new2 = torch.sum(R2 * R2, dim=0, keepdim=True)
+                if torch.max(rs_new2).item() < 1e-8:
+                    break
+                beta2 = rs_new2 / rs_old2.clamp(min=1e-12)
+                P2 = R2 + beta2 * P2
+                rs_old2 = rs_new2
+            del R2, P2
+            c2 = (c2_prior + Delta2).T.reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
+            del Delta2, c2_prior
+        else:
+            H2 = torch.zeros((D2, D2), device=device, dtype=torch.float32)
+            rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
+            for r_start in range(0, r_cov, step_chunk2):
+                r_end = min(r_start + step_chunk2, r_cov)
+                L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
+                Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
+                del L01_X_c
+                Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
                 H2.addmm_(Z2_c.T, Z2_c)
                 rhs2.addmm_(Z2_c.T, Y2_c)
-            del Z2_c, Y2_c
+                del Z2_c, Y2_c
+            c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
         del L01
-        c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
