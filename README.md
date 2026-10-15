@@ -32,9 +32,9 @@ flowchart TD
 ```
 
 ### The 4 Algorithmic Steps:
-1. **Operator-Norm Outlier Decoupling:** Scores entry-wise second moments ($I_{ij} = |W_{ij}| \cdot \|X_{\text{comp}, j}\|_2$) and decouples the top coordinate outliers into a bit-packed sparse shield ($W = S_{\text{sparse}} + S_{\text{bridge}} + W_{\text{core}}$), bounding the spectral norm.
+1. **Operator-Norm Outlier Decoupling:** Scores entry-wise second moments ($I_{ij} = |W_{ij}| \cdot \|X_{\text{comp}, j}\|_2$) and decouples coordinate spikes into a bit-packed sparse shield ($S_{\text{sparse}}$) and a Covariance-Projected SVD Bridge ($S_{\text{bridge}}$), bounding the operator spectral norm ($W = S_{\text{sparse}} + S_{\text{bridge}} + W_{\text{core}}$).
 2. **Low-Rank Activation Density Preconditioning:** Preconditions weight columns by input channel energy ($D_\alpha = \text{diag}(\mu^\alpha)$) and preserves all $r = 256$ principal calibration modes with zero dimensional truncation.
-3. **Chunked Prior-Anchored DMRG Sweeps:** Sweeps each MPO core with QR isometric gauge-fixing ($Q^T Q = I$), accumulating local normal equations $(Z^T Z + \lambda I)$ in memory-safe chunks along the calibration axis to keep peak VRAM strictly below $1.5\text{ GB}$.
+3. **Matrix-Free Prior-Anchored DMRG Sweeps & Cholesky Acceleration:** Sweeps each MPO core with QR isometric gauge-fixing ($Q^T Q = I$). When local parameter dimension $D \le 4096$ (Sites 0 and 3), accelerates normal equation solves via Symmetric Positive-Definite Cholesky factorization. When $D > 4096$ (Sites 1 and 2, where $D \ge 20,480$), solves $(Z^T Z + \lambda I) X = Z^T Y + \lambda C_{\text{prior}}$ via **Prior-Warm-Started Matrix-Free Conjugate Gradient (CG)** directly from $X_0 = C_{\text{prior}}$, doing 260x fewer FLOPs and allocating $0.0\text{ MB}$ of $D \times D$ Gram matrix VRAM.
 4. **In-Loop Quantization & Symmetric Causal Healing:** Quantizes cores in-place to 4-bit during the final forward pass so downstream cores analytically absorb rounding noise. Propagates activations causally through the block and multi-layer cascade, matching true uncorrupted dense reference trajectories.
 
 ---
@@ -127,7 +127,7 @@ flowchart TD
 ```
 
 ### The Empirical Reality:
-* **Multiverse (CompactifAI) Flatlines:** When evaluating solely on $X_{\text{out}}$, Multiverse looked respectable (`RelErr = 0.1490`, `CosSim = 0.9889`). But when isolating $\Delta_{\text{block}}$, **Multiverse's transformation was 100.0% computationally dead** (`Delta RelErr = 1.0002`, `Delta Norm = 0.0137`, `Delta CosSim = -0.0043`)! A zero matrix ($\Delta_{\text{block}} = 0$) achieves `RelErr = 0.1490` purely because $X_{\text{in}}$ passes straight through.
+* **Multiverse (CompactifAI) Flatlines Even at Iso-Byte Capacity:** When evaluating solely on $X_{\text{out}}$, Multiverse looked respectable (`RelErr = 0.1490`, `CosSim = 0.9889`). But when isolating $\Delta_{\text{block}}$, **Multiverse's transformation was 100.0% computationally dead** (`Delta RelErr = 1.0002`, `Delta Norm = 0.0137`, `Delta CosSim = -0.0043`)! Even when granted **Iso-Byte matched memory** ($5,212\text{ KB} \ge \text{Nox}$), Multiverse still fails completely (`Delta RelErr = 0.9998`, $\cos\theta \approx 0.008$) because it lacks outlier shielding, covariance bridges, and causal healing.
 * **Nox Computes the Active Transformation:** Under identical conditions with zero fine-tuning, Nox Causally-Healed computed the actual non-linear transformation (`Delta CosSim = 0.7608`, `Delta Norm = 0.8059`, `Delta RelErr = 0.6506`), beating Independent decomposition across every single sub-block.
 
 ---
