@@ -9,3 +9,4 @@ venv/
 models/
 *.pt
 *.log
+*.pem
