@@ -227,7 +227,7 @@ def compile_sequential_cascade(
             layer_weights=weights,
             X_calib=X_healed_calib,
             X_calib_dense=X_d_calib,
-            alpha_heal=0.5,
+            alpha_heal=0.0,
             ranks=ranks,
             r_bridge=r_bridge,
             n_outliers=n_outliers,
