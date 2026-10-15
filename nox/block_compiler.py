@@ -26,10 +26,43 @@ class RMSNorm(torch.nn.Module):
         return normed
 
 
+def rotate_half(x):
+    """
+    Rotates half the hidden dims of the input for LLaMA RoPE.
+    Matches HuggingFace modeling_llama.py exactly.
+    """
+    x1 = x[..., : x.shape[-1] // 2]
+    x2 = x[..., x.shape[-1] // 2 :]
+    return torch.cat((-x2, x1), dim=-1)
+
+
+def compute_llama2_rotary_emb(dim, seq_len, device, base=10000.0, dtype=torch.float32):
+    """
+    Computes exact non-interleaved LLaMA-2 RoPE cos and sin embeddings.
+    """
+    inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2, dtype=dtype, device=device) / dim))
+    t = torch.arange(seq_len, dtype=dtype, device=device)
+    freqs = torch.outer(t, inv_freq)
+    emb = torch.cat((freqs, freqs), dim=-1)
+    cos = emb.cos().unsqueeze(0).unsqueeze(1)  # [1, 1, seq_len, dim]
+    sin = emb.sin().unsqueeze(0).unsqueeze(1)  # [1, 1, seq_len, dim]
+    return cos, sin
+
+
+def apply_llama2_rope(Q, K, cos, sin):
+    """
+    Applies exact LLaMA-2 Rotary Position Embeddings to Q and K tensors of shape
+    [num_seqs, n_heads, seq_len, d_head].
+    """
+    q_rot = (Q * cos) + (rotate_half(Q) * sin)
+    k_rot = (K * cos) + (rotate_half(K) * sin)
+    return q_rot, k_rot
+
+
 def scaled_dot_product_attention_2d(Q, K, V, n_heads=32, n_kv_heads=32, seq_len=128):
     """
     Computes multi-head / grouped-query scaled dot-product attention
-    for 2D token activation matrices of shape [d_model, N].
+    for 2D token activation matrices of shape [d_model, N] with exact LLaMA-2 RoPE.
     
     Args:
         Q: Queries tensor [d_model, N]
@@ -37,7 +70,7 @@ def scaled_dot_product_attention_2d(Q, K, V, n_heads=32, n_kv_heads=32, seq_len=
         V: Values tensor [d_model, N]
         n_heads: Number of query attention heads
         n_kv_heads: Number of key/value heads (supports GQA)
-        seq_len: Sequence chunk length for attention masking
+        seq_len: Sequence chunk length for attention masking and RoPE positions
         
     Returns:
         Context tensor of shape [d_model, N]
@@ -47,9 +80,14 @@ def scaled_dot_product_attention_2d(Q, K, V, n_heads=32, n_kv_heads=32, seq_len=
     num_seqs = max(1, N // seq_len)
     actual_len = N // num_seqs
 
+    # Reshape to [num_seqs, heads, actual_len, d_head]
     Q_4d = Q[:, :num_seqs * actual_len].reshape(n_heads, d_head, num_seqs, actual_len).permute(2, 0, 3, 1)
     K_4d = K[:, :num_seqs * actual_len].reshape(n_kv_heads, d_head, num_seqs, actual_len).permute(2, 0, 3, 1)
     V_4d = V[:, :num_seqs * actual_len].reshape(n_kv_heads, d_head, num_seqs, actual_len).permute(2, 0, 3, 1)
+
+    # Apply exact LLaMA-2 Rotary Position Embeddings (RoPE) before GQA expansion
+    cos, sin = compute_llama2_rotary_emb(d_head, actual_len, device=Q.device, dtype=Q.dtype)
+    Q_4d, K_4d = apply_llama2_rope(Q_4d, K_4d, cos, sin)
 
     if n_kv_heads < n_heads:
         repeat_factor = n_heads // n_kv_heads

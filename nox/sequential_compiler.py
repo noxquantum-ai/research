@@ -121,6 +121,8 @@ def compile_sequential_cascade(
     save_checkpoint_dir=None,
     skip_independent=False,
     skip_baselines=False,
+    final_norm_weight=None,
+    lm_head_weight=None,
     verbose=True,
 ):
     """
@@ -143,6 +145,8 @@ def compile_sequential_cascade(
         save_checkpoint_dir: Directory to save serialized layer checkpoints.
         skip_independent: Whether to skip compiling Nox Independent baseline.
         skip_baselines: Whether to skip compiling all baselines (Multiverse + Independent) for pure production compression speed.
+        final_norm_weight: Optional model.norm.weight for Layer 31 logit verification.
+        lm_head_weight: Optional lm_head.weight for Layer 31 logit verification.
         verbose: Whether to log step-by-step progress.
         
     Returns:
@@ -175,6 +179,24 @@ def compile_sequential_cascade(
         if verbose:
             print(f"\n--- Compiling Cascade Layer {l_idx} ---", flush=True)
 
+        # Boundary Layer Protection (Layers 0, 1, 30, 31)
+        if l_idx in (0, 1, 30, 31):
+            if tier == "production_18x":
+                boundary_cfg = get_tier_config("high_fidelity_10x")
+            elif tier == "extreme_77x":
+                boundary_cfg = get_tier_config("production_18x")
+            else:
+                boundary_cfg = cfg
+            layer_ranks = boundary_cfg["ranks"]
+            layer_r_bridge = boundary_cfg["r_bridge"]
+            layer_n_outliers = boundary_cfg["n_outliers"]
+            if verbose:
+                print(f"  [Boundary Layer Protection Active for Layer {l_idx}] Upgraded to: {boundary_cfg['description']}", flush=True)
+        else:
+            layer_ranks = ranks
+            layer_r_bridge = r_bridge
+            layer_n_outliers = n_outliers
+
         weights = fetch_layer_fn(l_idx)
         weights = {k: v.to(device=device, dtype=torch.float32) for k, v in weights.items()}
 
@@ -193,7 +215,7 @@ def compile_sequential_cascade(
             Delta_mv_test = Delta_d_test
             mv_kb = 0.0
         else:
-            mv_ranks = ranks[1:-1] if len(ranks) == 5 else ranks
+            mv_ranks = layer_ranks[1:-1] if len(layer_ranks) == 5 else layer_ranks
             mv_block = compile_multiverse_block(
                 layer_weights=weights,
                 ranks=mv_ranks,
@@ -222,9 +244,9 @@ def compile_sequential_cascade(
                 layer_weights=weights,
                 X_calib=X_d_calib,
                 X_calib_dense=X_d_calib,
-                ranks=ranks,
-                r_bridge=r_bridge,
-                n_outliers=n_outliers,
+                ranks=layer_ranks,
+                r_bridge=layer_r_bridge,
+                n_outliers=layer_n_outliers,
                 n_heads=n_heads,
                 n_kv_heads=n_kv_heads,
                 seq_len=seq_len,
@@ -250,9 +272,9 @@ def compile_sequential_cascade(
             X_calib=X_healed_calib,
             X_calib_dense=X_d_calib,
             alpha_heal=0.0,
-            ranks=ranks,
-            r_bridge=r_bridge,
-            n_outliers=n_outliers,
+            ranks=layer_ranks,
+            r_bridge=layer_r_bridge,
+            n_outliers=layer_n_outliers,
             n_heads=n_heads,
             n_kv_heads=n_kv_heads,
             seq_len=seq_len,
@@ -406,6 +428,54 @@ def compile_sequential_cascade(
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
+    final_logit_metrics = None
+    if (31 in layer_indices or len(layer_indices) == 32) and lm_head_weight is not None:
+        if verbose:
+            print("\n" + "=" * 120)
+            print(" FINAL LAYER 31 END-TO-END VOCABULARY & LOGIT VERIFICATION SCORECARD")
+            print("=" * 120)
+
+        d_model = X_d_test.shape[0]
+        norm_layer = RMSNorm(d_model, weight=final_norm_weight.to(device=device, dtype=torch.float32) if final_norm_weight is not None else None)
+        head_w = lm_head_weight.to(device=device, dtype=torch.float32)
+
+        norm_d = norm_layer(X_d_test).T
+        logits_d = norm_d @ head_w.T  # [N, 32000]
+
+        norm_healed = norm_layer(X_healed_test).T
+        logits_healed = norm_healed @ head_w.T  # [N, 32000]
+
+        cos_sim_logits = F.cosine_similarity(logits_d.flatten().unsqueeze(0), logits_healed.flatten().unsqueeze(0)).item()
+
+        top1_dense = logits_d.argmax(dim=-1)
+        top1_healed = logits_healed.argmax(dim=-1)
+        top1_agree = (top1_dense == top1_healed).float().mean().item() * 100.0
+
+        top5_healed = logits_healed.topk(5, dim=-1).indices
+        top5_agree = (top5_healed == top1_dense.unsqueeze(-1)).any(dim=-1).float().mean().item() * 100.0
+
+        loss_dense = F.cross_entropy(logits_d, top1_dense).item()
+        loss_healed = F.cross_entropy(logits_healed, top1_dense).item()
+        ppl_dense = float(torch.exp(torch.tensor(loss_dense)).item())
+        ppl_healed = float(torch.exp(torch.tensor(loss_healed)).item())
+
+        final_logit_metrics = {
+            "logit_cos_sim": cos_sim_logits,
+            "top1_agreement_pct": top1_agree,
+            "top5_agreement_pct": top5_agree,
+            "dense_ppl": ppl_dense,
+            "healed_ppl": ppl_healed,
+        }
+
+        if verbose:
+            print(" Exit Residual Stream -> RMSNorm -> lm_head (32,000 Vocab Logits) across held-out tokens:")
+            print(f"  - Dense Reference Target Perplexity (PPL): {ppl_dense:.2f}")
+            print(f"  - Nox Healed Exit Logit Cosine Sim:        {cos_sim_logits:.4f}")
+            print(f"  - Nox Healed Top-1 Vocab Agreement:        {top1_agree:.2f}%")
+            print(f"  - Nox Healed Top-5 Vocab Agreement:        {top5_agree:.2f}%")
+            print(f"  - Nox Healed Exit Perplexity (PPL):        {ppl_healed:.2f}")
+            print("=" * 120 + "\n")
+
     if save_checkpoint_dir:
         manifest_path = os.path.join(save_checkpoint_dir, "model_manifest.json")
         total_model_kb = sum(h["causal_healed"]["kb"] for h in history)
@@ -420,6 +490,7 @@ def compile_sequential_cascade(
             "last_layer_rel_err": history[-1]["causal_healed"]["block"]["relative_error"],
             "drift_growth": history[-1]["causal_healed"]["block"]["relative_error"] - history[0]["causal_healed"]["block"]["relative_error"],
             "final_delta_cos_sim": history[-1]["causal_healed"]["delta"]["cosine_similarity"],
+            "final_logit_metrics": final_logit_metrics,
         }
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest_data, f, indent=2)
@@ -434,6 +505,7 @@ def compile_sequential_cascade(
             "X_indep_test": X_indep_test,
             "X_healed_test": X_healed_test,
         },
+        "final_logit_metrics": final_logit_metrics,
         "tier": tier,
         "config": cfg,
     }
