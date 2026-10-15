@@ -23,3 +23,7 @@ Standard Transformer evaluations evaluate relative error on the full block outpu
 Nox establishes two rigorous evaluation standards:
 1. **Isolated Block Delta Evaluation ($\Delta_{\text{block}} = Y_{\text{attn}} + Y_{\text{mlp}}$):** Directly measures whether the compressed block performs non-trivial neural computation.
 2. **Iso-Byte Capacity Matching:** Evaluates baseline TT-SVD (CompactifAI) at the exact same physical byte footprint ($\ge 5.2\text{ MB/layer}$) as Nox. Empirical testing on LLaMA-2-7B Layers $15 \to 18$ proves that even with $7.5\times$ more parameters, unshielded TT-SVD remains functionally dead ($\Delta_{\text{block}}$ Relative Error $= 0.9993$, $\cos\theta = 0.012$), whereas Nox preserves active block transformations ($\cos\theta = 0.732$) and cuts compounding multi-layer residual drift without backpropagation.
+
+### 8. Frontier MoE & Ultra-Scale Super-Linear Compression Laws
+For a detailed mathematical treatment of why Nox achieves higher compression efficiency as parameter counts scale into multi-trillion MoE architectures (analyzing subspace sharing across 896 experts, low-entropy bulk separation, and bounded residual drift across 126+ layers), see [Frontier MoE & Ultra-Scale Analysis](docs/FRONTIER_MOE_AND_ULTRA_SCALE_ANALYSIS.md).
+
