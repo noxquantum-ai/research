@@ -46,8 +46,8 @@ def main():
 
     tier_order = [
         ("high_fidelity_10x", "Nox High-Fidelity Lossless", "~1.1 GB", "~12x"),
-        ("production_18x", "Nox Production CompactifAI-Killer", "~600 MB", "~22x"),
-        ("extreme_77x", "Nox Extreme Stress-Test", "184.8 MB", "~73x"),
+        ("production_18x", "Nox Production CompactifAI-Killer", "263.2 MB", "51.3x"),
+        ("extreme_77x", "Nox Extreme Stress-Test", "184.8 MB", "73.1x"),
     ]
 
     for t_id, t_name, size_str, comp_str in tier_order:
@@ -56,6 +56,7 @@ def main():
 
         size_mb = manifest.get("total_model_mb", None)
         actual_size = f"{size_mb:.1f} MB" if size_mb else size_str
+        actual_comp = f"{13500.0 / size_mb:.1f}x" if size_mb else comp_str
         w_ppl = d5.get("wikitext2_ppl", manifest.get("final_logit_metrics", {}).get("dense_ppl", "N/A"))
         c4_ppl = d5.get("c4_ppl", "N/A")
         mmlu = d5.get("mmlu_acc", "N/A")
@@ -65,7 +66,7 @@ def main():
         arc = d5.get("arc_challenge_acc", "N/A")
 
         summary_lines.append(
-            f"| **{t_name}** | **{actual_size}** | **{comp_str}** | {w_ppl} | {mmlu}% | {gsm}% | {hs}% | {boolq}% | {arc}% | **ZERO Fine-Tuning (Closed-Form)** |"
+            f"| **{t_name}** | **{actual_size}** | **{actual_comp}** | {w_ppl} | {mmlu}% | {gsm}% | {hs}% | {boolq}% | {arc}% | **ZERO Fine-Tuning (Closed-Form)** |"
         )
 
     summary_block = "\n".join(summary_lines) + "\n\n"
@@ -76,7 +77,19 @@ def main():
     if readme_path.exists():
         with open(readme_path, "r", encoding="utf-8") as f:
             content = f.read()
-        if "## Verified Multi-Tier Empirical Benchmark Scorecard" not in content:
+        section_header = "## Verified Multi-Tier Empirical Benchmark Scorecard"
+        if section_header in content:
+            pre, post = content.split(section_header, 1)
+            # Find next header or end
+            next_header = post.find("\n## ")
+            if next_header != -1:
+                content = pre + summary_block + post[next_header + 1:]
+            else:
+                content = pre + summary_block
+            with open(readme_path, "w", encoding="utf-8") as f:
+                f.write(content)
+            print("Updated existing benchmark scorecard in README.md.")
+        else:
             with open(readme_path, "a", encoding="utf-8") as f:
                 f.write("\n\n" + summary_block)
             print("Appended results to README.md.")

@@ -6,7 +6,7 @@ set -euo pipefail
 
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/A10-mv9p9tcb_key.pem}"
 REMOTE_HOST="shadeform@129.213.130.107"
-REMOTE_DIR="~/research"
+REMOTE_DIR="/home/shadeform/research"
 LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "=========================================================================="
