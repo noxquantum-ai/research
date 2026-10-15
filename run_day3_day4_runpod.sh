@@ -90,8 +90,41 @@ case "$MODE" in
       --run_generation
     ;;
 
+  the_big_guns)
+    echo "[Execution] LAUNCHING THE BIG GUNS: Full 32-Layer 3-Tier Master Sweep + Multi-Tier Perplexity & Generation"
+    echo "[Execution] Zero shortcuts, all baselines active (Multiverse Default, Multiverse Iso-Byte, Independent, Healed)..."
+
+    # Step 1: Complete 32-layer sweep across all 3 tiers with every baseline computed
+    python3 benchmarks/benchmark_day3_cascade.py \
+      --full_model \
+      --sweep_cliff \
+      --save_checkpoint_dir ./checkpoints/day3_day4_cascade/master_cliff_sweep
+
+    # Step 2: Perplexity & Generation on Tier 2 (Production 18x - Primary CompactifAI Killer)
+    echo ""
+    echo "[The Big Guns] Evaluating WikiText-2 Perplexity on Tier 2 (Production 18x)..."
+    python3 benchmarks/benchmark_day4_perplexity.py \
+      --checkpoint_dir ./checkpoints/day3_day4_cascade/master_cliff_sweep/production_18x \
+      --eval_dense \
+      --run_generation
+
+    # Step 3: Perplexity & Generation on Tier 3 (High-Fidelity 10x - Lossless Tier)
+    echo ""
+    echo "[The Big Guns] Evaluating WikiText-2 Perplexity on Tier 3 (High-Fidelity 10x)..."
+    python3 benchmarks/benchmark_day4_perplexity.py \
+      --checkpoint_dir ./checkpoints/day3_day4_cascade/master_cliff_sweep/high_fidelity_10x \
+      --run_generation
+
+    # Step 4: Perplexity & Generation on Tier 1 (Extreme 77x - Stress Test Tier)
+    echo ""
+    echo "[The Big Guns] Evaluating WikiText-2 Perplexity on Tier 1 (Extreme 77x)..."
+    python3 benchmarks/benchmark_day4_perplexity.py \
+      --checkpoint_dir ./checkpoints/day3_day4_cascade/master_cliff_sweep/extreme_77x \
+      --run_generation
+    ;;
+
   *)
-    echo "Usage: bash run_day3_day4_runpod.sh [test_4_layers | full_32_layers | full_32_layers_fast | sweep_cliff | eval_perplexity | full_pipeline]"
+    echo "Usage: bash run_day3_day4_runpod.sh [test_4_layers | full_32_layers | full_32_layers_fast | sweep_cliff | eval_perplexity | full_pipeline | the_big_guns]"
     exit 1
     ;;
 esac
