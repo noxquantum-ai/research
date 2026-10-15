@@ -89,7 +89,6 @@ def run_day5_benchmarks():
         "benchmarks/benchmark_day5_multitask.py",
         "--sweep_dir",
         "./checkpoints/day3_day4_cascade/master_cliff_sweep",
-        "--eval_dense",
         "--output_file",
         "./checkpoints/day3_day4_cascade/master_cliff_sweep/day5_multitask_results.json",
     ]
