@@ -48,6 +48,15 @@ case "$MODE" in
       --save_checkpoint_dir ./checkpoints/day3_day4_cascade/full_32_layers_prod
     ;;
 
+  full_32_layers_fast)
+    echo "[Execution] Running FULL 32-LAYER pure compression (<6 min on RTX 4090, skipping all baselines)..."
+    python3 benchmarks/benchmark_day3_cascade.py \
+      --full_model \
+      --tier production_18x \
+      --skip_baselines \
+      --save_checkpoint_dir ./checkpoints/day3_day4_cascade/full_32_layers_prod
+    ;;
+
   sweep_cliff)
     echo "[Execution] Running full 32-layer Entanglement Cliff Sweep across all 3 tiers..."
     python3 benchmarks/benchmark_day3_cascade.py \
@@ -57,8 +66,32 @@ case "$MODE" in
       --save_checkpoint_dir ./checkpoints/day3_day4_cascade/entanglement_cliff_sweep
     ;;
 
+  eval_perplexity)
+    echo "[Execution] Evaluating WikiText-2 Perplexity & Autoregressive Generation on checkpoints..."
+    CKPT_DIR="${2:-./checkpoints/day3_day4_cascade/full_32_layers_prod}"
+    python3 benchmarks/benchmark_day4_perplexity.py \
+      --checkpoint_dir "$CKPT_DIR" \
+      --eval_dense \
+      --run_generation
+    ;;
+
+  full_pipeline)
+    echo "[Execution] Running end-to-end: Full 32-layer compression followed by Perplexity evaluation..."
+    python3 benchmarks/benchmark_day3_cascade.py \
+      --full_model \
+      --tier production_18x \
+      --skip_baselines \
+      --save_checkpoint_dir ./checkpoints/day3_day4_cascade/full_32_layers_prod
+
+    echo "[Execution] Starting Day 4-5 Perplexity & Generation Benchmark on 32-layer checkpoint..."
+    python3 benchmarks/benchmark_day4_perplexity.py \
+      --checkpoint_dir ./checkpoints/day3_day4_cascade/full_32_layers_prod \
+      --eval_dense \
+      --run_generation
+    ;;
+
   *)
-    echo "Usage: bash run_day3_day4_runpod.sh [test_4_layers | full_32_layers | sweep_cliff]"
+    echo "Usage: bash run_day3_day4_runpod.sh [test_4_layers | full_32_layers | full_32_layers_fast | sweep_cliff | eval_perplexity | full_pipeline]"
     exit 1
     ;;
 esac

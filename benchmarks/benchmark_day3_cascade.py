@@ -189,6 +189,7 @@ def main():
     parser.add_argument("--sweep_cliff", action="store_true", help="Sweep across all 3 tiers to map the Entanglement Cliff")
     parser.add_argument("--save_checkpoint_dir", type=str, default=None, help="Directory to save compressed checkpoints")
     parser.add_argument("--skip_independent", action="store_true", help="Skip compiling Nox Independent baseline to cut compilation runtime in half")
+    parser.add_argument("--skip_baselines", action="store_true", help="Skip compiling all baselines (Multiverse + Independent) for 4x faster production compression")
     parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID")
     parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory for cached weights")
     parser.add_argument("--token", type=str, default=None, help="HuggingFace API token")
@@ -253,6 +254,7 @@ def main():
                 device=device,
                 save_checkpoint_dir=tier_save_dir,
                 skip_independent=args.skip_independent,
+                skip_baselines=args.skip_baselines,
                 verbose=True,
             )
 
@@ -269,8 +271,10 @@ def main():
 
         for h in history:
             l_idx = h["layer_idx"]
-            mv_err = f"{h['multiverse']['block']['relative_error']:.4f}"
-            iso_err = f"{h['multiverse_isobyte']['block']['relative_error']:.4f}" if "multiverse_isobyte" in h else "N/A"
+            mv_val = h['multiverse']['block']['relative_error']
+            mv_err = "N/A (Skip)" if (mv_val != mv_val) else f"{mv_val:.4f}"
+            iso_val = h['multiverse_isobyte']['block']['relative_error'] if "multiverse_isobyte" in h else float('nan')
+            iso_err = "N/A (Skip)" if (iso_val != iso_val) else f"{iso_val:.4f}"
             indep_val = h['independent']['block']['relative_error']
             indep_err = "N/A (Skip)" if (indep_val != indep_val) else f"{indep_val:.4f}"
             healed_err = f"{h['causal_healed']['block']['relative_error']:.4f}"
@@ -289,12 +293,15 @@ def main():
 
         for h in history:
             l_idx = h["layer_idx"]
-            mv_d_err = f"{h['multiverse']['delta']['relative_error']:.4f}"
-            iso_d_err = f"{h['multiverse_isobyte']['delta']['relative_error']:.4f}" if "multiverse_isobyte" in h else "N/A"
+            mv_d_val = h['multiverse']['delta']['relative_error']
+            mv_d_err = "N/A (Skip)" if (mv_d_val != mv_d_val) else f"{mv_d_val:.4f}"
+            iso_d_val = h['multiverse_isobyte']['delta']['relative_error'] if "multiverse_isobyte" in h else float('nan')
+            iso_d_err = "N/A (Skip)" if (iso_d_val != iso_d_val) else f"{iso_d_val:.4f}"
             indep_d_val = h['independent']['delta']['relative_error']
             indep_d_err = "N/A (Skip)" if (indep_d_val != indep_d_val) else f"{indep_d_val:.4f}"
             healed_d_err = f"{h['causal_healed']['delta']['relative_error']:.4f}"
-            mv_d_cos = f"{h['multiverse']['delta']['cosine_similarity']:.4f}"
+            mv_d_cos_val = h['multiverse']['delta']['cosine_similarity']
+            mv_d_cos = "N/A (Skip)" if (mv_d_cos_val != mv_d_cos_val) else f"{mv_d_cos_val:.4f}"
             healed_d_cos = f"{h['causal_healed']['delta']['cosine_similarity']:.4f}"
             print(f"Layer {l_idx:<2} | {mv_d_err:<16} | {iso_d_err:<21} | {indep_d_err:<19} | {healed_d_err:<20} | {mv_d_cos:<16} | {healed_d_cos:<20}")
 

@@ -120,6 +120,7 @@ def compile_sequential_cascade(
     device="cpu",
     save_checkpoint_dir=None,
     skip_independent=False,
+    skip_baselines=False,
     verbose=True,
 ):
     """
@@ -139,6 +140,9 @@ def compile_sequential_cascade(
         n_kv_heads: Number of key/value heads.
         seq_len: Sequence chunk length.
         device: Device to execute computation on ('cuda' or 'cpu').
+        save_checkpoint_dir: Directory to save serialized layer checkpoints.
+        skip_independent: Whether to skip compiling Nox Independent baseline.
+        skip_baselines: Whether to skip compiling all baselines (Multiverse + Independent) for pure production compression speed.
         verbose: Whether to log step-by-step progress.
         
     Returns:
@@ -184,27 +188,32 @@ def compile_sequential_cascade(
         Delta_d_test = Y_attn_d_test + Y_mlp_d_test
 
         # 2. Multiverse Default Baseline path
-        mv_ranks = ranks[1:-1] if len(ranks) == 5 else ranks
-        mv_block = compile_multiverse_block(
-            layer_weights=weights,
-            ranks=mv_ranks,
-            core_bits=4,
-            verbose=False,
-        )
-        mv_weights = dict(weights)
-        mv_weights.update(mv_block["compressed_weights"])
-        X_mv_test_next, Y_attn_mv, Y_mlp_mv = forward_transformer_block(
-            mv_weights, X_mv_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
-        )
-        Delta_mv_test = Y_attn_mv + Y_mlp_mv
-        mv_kb = mv_block["total_kb"]
-        del mv_block, mv_weights, Y_attn_mv, Y_mlp_mv
-        if str(device).startswith("cuda"):
-            gc.collect()
-            torch.cuda.empty_cache()
+        if skip_baselines:
+            X_mv_test_next = X_mv_test
+            Delta_mv_test = Delta_d_test
+            mv_kb = 0.0
+        else:
+            mv_ranks = ranks[1:-1] if len(ranks) == 5 else ranks
+            mv_block = compile_multiverse_block(
+                layer_weights=weights,
+                ranks=mv_ranks,
+                core_bits=4,
+                verbose=False,
+            )
+            mv_weights = dict(weights)
+            mv_weights.update(mv_block["compressed_weights"])
+            X_mv_test_next, Y_attn_mv, Y_mlp_mv = forward_transformer_block(
+                mv_weights, X_mv_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
+            )
+            Delta_mv_test = Y_attn_mv + Y_mlp_mv
+            mv_kb = mv_block["total_kb"]
+            del mv_block, mv_weights, Y_attn_mv, Y_mlp_mv
+            if str(device).startswith("cuda"):
+                gc.collect()
+                torch.cuda.empty_cache()
 
         # 3. Nox Independent path (calibrated on uncorrupted dense stream)
-        if skip_independent:
+        if skip_independent or skip_baselines:
             X_indep_test_next = X_indep_test
             Delta_indep_test = Delta_d_test
             indep_kb = 0.0
@@ -290,35 +299,58 @@ def compile_sequential_cascade(
                 print(f"  [Checkpoint] Saved Layer {l_idx} ({healed_kb:.1f} KB compact artifact) -> '{ckpt_path}'", flush=True)
 
         # 5. Multiverse Iso-Byte Baseline path (matched or greater byte budget than Nox)
-        mv_iso_block = compile_multiverse_block(
-            layer_weights=weights,
-            target_kb=healed_kb,
-            core_bits=4,
-            verbose=False,
-        )
-        mv_iso_weights = dict(weights)
-        mv_iso_weights.update(mv_iso_block["compressed_weights"])
-        X_mv_iso_test_next, Y_attn_mv_iso, Y_mlp_mv_iso = forward_transformer_block(
-            mv_iso_weights, X_mv_iso_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
-        )
-        Delta_mv_iso_test = Y_attn_mv_iso + Y_mlp_mv_iso
-        mv_iso_kb = mv_iso_block["total_kb"]
-        del mv_iso_block, mv_iso_weights, Y_attn_mv_iso, Y_mlp_mv_iso
+        if skip_baselines:
+            X_mv_iso_test_next = X_mv_iso_test
+            Delta_mv_iso_test = Delta_d_test
+            mv_iso_kb = 0.0
+        else:
+            mv_iso_block = compile_multiverse_block(
+                layer_weights=weights,
+                target_kb=healed_kb,
+                core_bits=4,
+                verbose=False,
+            )
+            mv_iso_weights = dict(weights)
+            mv_iso_weights.update(mv_iso_block["compressed_weights"])
+            X_mv_iso_test_next, Y_attn_mv_iso, Y_mlp_mv_iso = forward_transformer_block(
+                mv_iso_weights, X_mv_iso_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
+            )
+            Delta_mv_iso_test = Y_attn_mv_iso + Y_mlp_mv_iso
+            mv_iso_kb = mv_iso_block["total_kb"]
+            del mv_iso_block, mv_iso_weights, Y_attn_mv_iso, Y_mlp_mv_iso
 
         del nox_healed_block, healed_weights, Y_attn_healed, Y_mlp_healed
 
         indep_block_m = (
             {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
-            if skip_independent
+            if (skip_independent or skip_baselines)
             else compute_metrics(X_d_test_next, X_indep_test_next)
         )
         healed_block_m = compute_metrics(X_d_test_next, X_healed_test_next)
 
-        mv_delta_m = compute_metrics(Delta_d_test, Delta_mv_test)
-        mv_iso_delta_m = compute_metrics(Delta_d_test, Delta_mv_iso_test)
+        mv_block_m = (
+            {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
+            if skip_baselines
+            else compute_metrics(X_d_test_next, X_mv_test_next)
+        )
+        mv_iso_block_m = (
+            {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
+            if skip_baselines
+            else compute_metrics(X_d_test_next, X_mv_iso_test_next)
+        )
+        mv_delta_m = (
+            {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
+            if skip_baselines
+            else compute_metrics(Delta_d_test, Delta_mv_test)
+        )
+        mv_iso_delta_m = (
+            {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
+            if skip_baselines
+            else compute_metrics(Delta_d_test, Delta_mv_iso_test)
+        )
         indep_delta_m = (
             {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
-            if skip_independent
+            if (skip_independent or skip_baselines)
             else compute_metrics(Delta_d_test, Delta_indep_test)
         )
         healed_delta_m = compute_metrics(Delta_d_test, Delta_healed_test)
