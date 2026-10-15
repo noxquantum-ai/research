@@ -4,3 +4,4 @@ huggingface_hub>=0.20.0
 safetensors>=0.4.0
 accelerate>=0.28.0
 python-dotenv>=1.0.0
+pillow>=9.1.0

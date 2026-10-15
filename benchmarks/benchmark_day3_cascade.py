@@ -52,6 +52,110 @@ def log_step(msg):
     print(f"[{t_str}] {msg}", flush=True)
 
 
+def fetch_layer_weights(
+    repo_id="NousResearch/Llama-2-7b-hf",
+    layer_idx=15,
+    save_dir="./models/Llama-2-7b-hf",
+    token=None,
+):
+    """
+    Fetches all 7 projection matrices and 2 layer norms for a single Transformer layer
+    directly via HTTP Range requests without downloading the full model.
+    Caches tensors locally in save_dir.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    tensor_mapping = {
+        "q_proj": f"model.layers.{layer_idx}.self_attn.q_proj.weight",
+        "k_proj": f"model.layers.{layer_idx}.self_attn.k_proj.weight",
+        "v_proj": f"model.layers.{layer_idx}.self_attn.v_proj.weight",
+        "o_proj": f"model.layers.{layer_idx}.self_attn.o_proj.weight",
+        "gate_proj": f"model.layers.{layer_idx}.mlp.gate_proj.weight",
+        "up_proj": f"model.layers.{layer_idx}.mlp.up_proj.weight",
+        "down_proj": f"model.layers.{layer_idx}.mlp.down_proj.weight",
+        "input_layernorm": f"model.layers.{layer_idx}.input_layernorm.weight",
+        "post_attention_layernorm": f"model.layers.{layer_idx}.post_attention_layernorm.weight",
+    }
+
+    layer_weights = {}
+    missing_tensors = {}
+
+    for name, tensor_key in tensor_mapping.items():
+        cache_path = os.path.join(save_dir, f"layer_{layer_idx}_{name}.pt")
+        if os.path.exists(cache_path):
+            log_step(f"Loading cached {name} (Layer {layer_idx}) from '{cache_path}'...")
+            layer_weights[name] = torch.load(cache_path, weights_only=True).to(dtype=torch.float32)
+        else:
+            missing_tensors[name] = tensor_key
+
+    if not missing_tensors:
+        log_step(f"All Layer {layer_idx} weights loaded from local cache.")
+        return layer_weights
+
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; NoxResearch/1.0)"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    log_step(f"Resolving safetensors shard index for '{repo_id}' to fetch missing Layer {layer_idx} tensors...")
+    index_url = f"https://huggingface.co/{repo_id}/raw/main/model.safetensors.index.json"
+    req_index = urllib.request.Request(index_url, headers=headers)
+    with urllib.request.urlopen(req_index) as resp:
+        index_json = json.loads(resp.read().decode("utf-8"))
+    weight_map = index_json.get("weight_map", {})
+
+    shard_headers = {}
+
+    for name, tensor_key in missing_tensors.items():
+        shard_name = weight_map.get(tensor_key, "model-00001-of-00002.safetensors")
+        file_url = f"https://huggingface.co/{repo_id}/resolve/main/{shard_name}"
+
+        if shard_name not in shard_headers:
+            log_step(f"Fetching safetensors header from '{shard_name}'...")
+            req_header_len = urllib.request.Request(file_url, headers={**headers, "Range": "bytes=0-7"})
+            with urllib.request.urlopen(req_header_len) as resp:
+                header_len = struct.unpack("<Q", resp.read())[0]
+
+            req_header = urllib.request.Request(file_url, headers={**headers, "Range": f"bytes=8-{8 + header_len - 1}"})
+            with urllib.request.urlopen(req_header) as resp:
+                shard_headers[shard_name] = (json.loads(resp.read().decode("utf-8")), header_len)
+
+        header_json, header_len = shard_headers[shard_name]
+        if tensor_key not in header_json:
+            raise KeyError(f"Tensor key '{tensor_key}' not found in {shard_name} header")
+
+        meta = header_json[tensor_key]
+        shape = meta["shape"]
+        offsets = meta["data_offsets"]
+        start_byte = 8 + header_len + offsets[0]
+        end_byte = 8 + header_len + offsets[1] - 1
+        total_bytes = end_byte - start_byte + 1
+        size_mb = total_bytes / (1024 * 1024)
+
+        log_step(f"Downloading {tensor_key} ({size_mb:.2f} MB via HTTP Range)...")
+        raw_bytes = bytearray()
+        curr_offset = start_byte
+        chunk_size = 16 * 1024 * 1024
+        while curr_offset <= end_byte:
+            chunk_end = min(curr_offset + chunk_size - 1, end_byte)
+            req_chunk = urllib.request.Request(file_url, headers={**headers, "Range": f"bytes={curr_offset}-{chunk_end}"})
+            with urllib.request.urlopen(req_chunk) as resp:
+                raw_bytes.extend(resp.read())
+            curr_offset = chunk_end + 1
+
+        dtype_str = meta["dtype"]
+        dtype_map = {
+            "F16": torch.float16,
+            "BF16": torch.bfloat16,
+            "F32": torch.float32,
+        }
+        pt_dtype = dtype_map.get(dtype_str, torch.float16)
+        tensor = torch.frombuffer(raw_bytes, dtype=pt_dtype).reshape(shape).clone().to(dtype=torch.float32)
+        cache_path = os.path.join(save_dir, f"layer_{layer_idx}_{name}.pt")
+        torch.save(tensor, cache_path)
+        layer_weights[name] = tensor
+
+    return layer_weights
+
+
 def fetch_named_tensor(repo_id, tensor_key, cache_name, save_dir, token=None):
     """
     Fetches a specific named tensor (e.g. embed_tokens, norm, lm_head) via HTTP Range.
