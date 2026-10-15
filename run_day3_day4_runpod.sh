@@ -121,10 +121,28 @@ case "$MODE" in
     python3 benchmarks/benchmark_day4_perplexity.py \
       --checkpoint_dir ./checkpoints/day3_day4_cascade/master_cliff_sweep/extreme_77x \
       --run_generation
+
+    # Step 5: Automatically package checkpoints for export
+    echo ""
+    echo "[The Big Guns] Packaging checkpoints for export..."
+    python3 scripts/export_checkpoints.py \
+      --checkpoint_dir ./checkpoints/day3_day4_cascade/master_cliff_sweep \
+      --method all
+    ;;
+
+  export)
+    CKPT_DIR="${2:-./checkpoints/day3_day4_cascade/master_cliff_sweep}"
+    HF_REPO="${3:-}"
+    echo "[Export] Packaging and exporting checkpoints from '$CKPT_DIR'..."
+    if [ -n "$HF_REPO" ]; then
+      python3 scripts/export_checkpoints.py --checkpoint_dir "$CKPT_DIR" --method all --hf_repo "$HF_REPO"
+    else
+      python3 scripts/export_checkpoints.py --checkpoint_dir "$CKPT_DIR" --method all
+    fi
     ;;
 
   *)
-    echo "Usage: bash run_day3_day4_runpod.sh [test_4_layers | full_32_layers | full_32_layers_fast | sweep_cliff | eval_perplexity | full_pipeline | the_big_guns]"
+    echo "Usage: bash run_day3_day4_runpod.sh [test_4_layers | full_32_layers | full_32_layers_fast | sweep_cliff | eval_perplexity | full_pipeline | the_big_guns | export]"
     exit 1
     ;;
 esac
