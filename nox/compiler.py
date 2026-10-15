@@ -333,8 +333,12 @@ def nox_hybrid_dmrg_decompose(
             r_end = min(r_start + chunk_size, r_cov)
             Z0_c = torch.einsum("bcejkgl,ijklr->cegrbi", R123, X_red[..., r_start:r_end]).reshape(-1, D0)
             Y0_c = Y_red[..., r_start:r_end].permute(1, 2, 3, 4, 0).reshape(-1, o0)
-            H0.addmm_(Z0_c.T, Z0_c)
-            rhs0.addmm_(Z0_c.T, Y0_c)
+            if str(device).startswith("cuda"):
+                H0.add_(torch.mm(Z0_c.half().T, Z0_c.half()).float())
+                rhs0.add_(torch.mm(Z0_c.half().T, Y0_c.half()).float())
+            else:
+                H0.addmm_(Z0_c.T, Z0_c)
+                rhs0.addmm_(Z0_c.T, Y0_c)
             del Z0_c, Y0_c
         del R123
         c0_prior = c0.permute(2, 1, 0).reshape(D0, o0)
@@ -363,8 +367,12 @@ def nox_hybrid_dmrg_decompose(
             Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
             del L0_c
             Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
-            H1.addmm_(Z1_c.T, Z1_c)
-            rhs1.addmm_(Z1_c.T, Y1_c)
+            if str(device).startswith("cuda"):
+                H1.add_(torch.mm(Z1_c.half().T, Z1_c.half()).float())
+                rhs1.add_(torch.mm(Z1_c.half().T, Y1_c.half()).float())
+            else:
+                H1.addmm_(Z1_c.T, Z1_c)
+                rhs1.addmm_(Z1_c.T, Y1_c)
             del Z1_c, Y1_c
         del R23
         c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
@@ -392,8 +400,12 @@ def nox_hybrid_dmrg_decompose(
             Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
             del L01_X_c
             Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
-            H2.addmm_(Z2_c.T, Z2_c)
-            rhs2.addmm_(Z2_c.T, Y2_c)
+            if str(device).startswith("cuda"):
+                H2.add_(torch.mm(Z2_c.half().T, Z2_c.half()).float())
+                rhs2.add_(torch.mm(Z2_c.half().T, Y2_c.half()).float())
+            else:
+                H2.addmm_(Z2_c.T, Z2_c)
+                rhs2.addmm_(Z2_c.T, Y2_c)
             del Z2_c, Y2_c
         del L01
         c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
@@ -419,8 +431,12 @@ def nox_hybrid_dmrg_decompose(
             r_end = min(r_start + chunk_size, r_cov)
             Z3_c = torch.einsum("aceijkf,ijklr->acerfl", L012, X_red[..., r_start:r_end]).reshape(-1, D3)
             Y3_c = Y_red[..., r_start:r_end].permute(0, 1, 2, 4, 3).reshape(-1, o3)
-            H3.addmm_(Z3_c.T, Z3_c)
-            rhs3.addmm_(Z3_c.T, Y3_c)
+            if str(device).startswith("cuda"):
+                H3.add_(torch.mm(Z3_c.half().T, Z3_c.half()).float())
+                rhs3.add_(torch.mm(Z3_c.half().T, Y3_c.half()).float())
+            else:
+                H3.addmm_(Z3_c.T, Z3_c)
+                rhs3.addmm_(Z3_c.T, Y3_c)
             del Z3_c, Y3_c
         del L012
         c3_prior = c3.permute(0, 2, 1).reshape(D3, o3)

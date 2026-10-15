@@ -204,9 +204,9 @@ def get_modes_for_projection(d_out, d_in):
     if d_out == 4096 and d_in == 4096:
         return (8, 8, 8, 8), (8, 8, 8, 8)
     elif d_out == 4096 and d_in == 11008:
-        return (8, 8, 8, 8), (4, 8, 8, 43)
+        return (8, 8, 8, 8), (43, 4, 8, 8)
     elif d_out == 11008 and d_in == 4096:
-        return (4, 8, 8, 43), (8, 8, 8, 8)
+        return (43, 4, 8, 8), (8, 8, 8, 8)
     elif d_out == 4096 and d_in == 14336:
         return (8, 8, 8, 8), (8, 16, 14, 8)
     elif d_out == 14336 and d_in == 4096:

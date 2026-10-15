@@ -44,6 +44,7 @@ case "$MODE" in
     python3 benchmarks/benchmark_day3_cascade.py \
       --full_model \
       --tier production_18x \
+      --skip_independent \
       --save_checkpoint_dir ./checkpoints/day3_day4_cascade/full_32_layers_prod
     ;;
 
@@ -52,6 +53,7 @@ case "$MODE" in
     python3 benchmarks/benchmark_day3_cascade.py \
       --full_model \
       --sweep_cliff \
+      --skip_independent \
       --save_checkpoint_dir ./checkpoints/day3_day4_cascade/entanglement_cliff_sweep
     ;;
 

@@ -119,6 +119,7 @@ def compile_sequential_cascade(
     seq_len=128,
     device="cpu",
     save_checkpoint_dir=None,
+    skip_independent=False,
     verbose=True,
 ):
     """
@@ -203,31 +204,36 @@ def compile_sequential_cascade(
             torch.cuda.empty_cache()
 
         # 3. Nox Independent path (calibrated on uncorrupted dense stream)
-        nox_indep_block = compile_transformer_block(
-            layer_weights=weights,
-            X_calib=X_d_calib,
-            X_calib_dense=X_d_calib,
-            ranks=ranks,
-            r_bridge=r_bridge,
-            n_outliers=n_outliers,
-            n_heads=n_heads,
-            n_kv_heads=n_kv_heads,
-            seq_len=seq_len,
-            causal_healing=False,
-            return_artifacts=False,
-            verbose=False,
-        )
-        indep_weights = dict(weights)
-        indep_weights.update(nox_indep_block["compressed_weights"])
-        X_indep_test_next, Y_attn_indep, Y_mlp_indep = forward_transformer_block(
-            indep_weights, X_indep_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
-        )
-        Delta_indep_test = Y_attn_indep + Y_mlp_indep
-        indep_kb = nox_indep_block["total_kb"]
-        del nox_indep_block, indep_weights, Y_attn_indep, Y_mlp_indep
-        if str(device).startswith("cuda"):
-            gc.collect()
-            torch.cuda.empty_cache()
+        if skip_independent:
+            X_indep_test_next = X_indep_test
+            Delta_indep_test = Delta_d_test
+            indep_kb = 0.0
+        else:
+            nox_indep_block = compile_transformer_block(
+                layer_weights=weights,
+                X_calib=X_d_calib,
+                X_calib_dense=X_d_calib,
+                ranks=ranks,
+                r_bridge=r_bridge,
+                n_outliers=n_outliers,
+                n_heads=n_heads,
+                n_kv_heads=n_kv_heads,
+                seq_len=seq_len,
+                causal_healing=False,
+                return_artifacts=False,
+                verbose=False,
+            )
+            indep_weights = dict(weights)
+            indep_weights.update(nox_indep_block["compressed_weights"])
+            X_indep_test_next, Y_attn_indep, Y_mlp_indep = forward_transformer_block(
+                indep_weights, X_indep_test, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
+            )
+            Delta_indep_test = Y_attn_indep + Y_mlp_indep
+            indep_kb = nox_indep_block["total_kb"]
+            del nox_indep_block, indep_weights, Y_attn_indep, Y_mlp_indep
+            if str(device).startswith("cuda"):
+                gc.collect()
+                torch.cuda.empty_cache()
 
         # 4. Nox Causally-Healed path (inter-layer: calibrated on corrupted X_healed_calib targeting clean X_d_calib)
         nox_healed_block = compile_transformer_block(
@@ -301,15 +307,20 @@ def compile_sequential_cascade(
 
         del nox_healed_block, healed_weights, Y_attn_healed, Y_mlp_healed
 
-        # Compute cascading evaluation metrics
-        mv_block_m = compute_metrics(X_d_test_next, X_mv_test_next)
-        mv_iso_block_m = compute_metrics(X_d_test_next, X_mv_iso_test_next)
-        indep_block_m = compute_metrics(X_d_test_next, X_indep_test_next)
+        indep_block_m = (
+            {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
+            if skip_independent
+            else compute_metrics(X_d_test_next, X_indep_test_next)
+        )
         healed_block_m = compute_metrics(X_d_test_next, X_healed_test_next)
 
         mv_delta_m = compute_metrics(Delta_d_test, Delta_mv_test)
         mv_iso_delta_m = compute_metrics(Delta_d_test, Delta_mv_iso_test)
-        indep_delta_m = compute_metrics(Delta_d_test, Delta_indep_test)
+        indep_delta_m = (
+            {"relative_error": float('nan'), "cosine_similarity": float('nan'), "angular_drift": float('nan'), "norm_ratio": float('nan')}
+            if skip_independent
+            else compute_metrics(Delta_d_test, Delta_indep_test)
+        )
         healed_delta_m = compute_metrics(Delta_d_test, Delta_healed_test)
 
         step_time = time.time() - t0
