@@ -3,6 +3,7 @@
 # Full 32-Layer Sequential Model Compression & Entanglement Cliff Sweep
 
 set -euo pipefail
+export PYTHONUNBUFFERED=1
 
 echo "=========================================================================="
 echo " NoxQuantum Day 3-4 Execution: Full 32-Layer Sequential Cascade on RTX 4090"
