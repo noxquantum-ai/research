@@ -7,7 +7,6 @@ from nox.compiler import (
     local_ridge_solve,
     solve_site_anchored,
     solve_accumulated_system,
-    solve_site_cg_matrix_free,
 )
 from nox.utils import (
     quantize_dequantize_groupwise,
@@ -37,7 +36,6 @@ __all__ = [
     "local_ridge_solve",
     "solve_site_anchored",
     "solve_accumulated_system",
-    "solve_site_cg_matrix_free",
     "quantize_dequantize_groupwise",
     "quantize_4bit_per_channel",
     "contract_mpo_4site",

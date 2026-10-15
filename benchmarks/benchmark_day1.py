@@ -140,7 +140,7 @@ def run_benchmark(
 
     # Method 3: Nox Entanglement Compiler (Outliers + Subspace Projection + 1-Site DMRG + In-Loop Quant)
     t0 = time.time()
-    nox_cores, nox_S, nox_ranks = nox_4step_compiler(
+    W_hat, nox_kb, nox_cores, nox_ranks = nox_4step_compiler(
         W=W,
         X_comp=X_calib,
         Y_dense=Y_calib,
@@ -154,9 +154,14 @@ def run_benchmark(
         core_bits=core_bits,
     )
     nox_time = time.time() - t0
-    nox_Y_pred = contract_mpo_4site(nox_cores, X_test) + (nox_S @ X_test)
+    nox_Y_pred = W_hat @ X_test
     nox_metrics = compute_metrics(Y_test, nox_Y_pred)
-    nox_footprint = count_parameters(nox_cores, S_sparse=nox_S, bits=core_bits)
+    nox_footprint = {
+        "total_kb": nox_kb,
+        "total_bytes": nox_kb * 1024.0,
+        "compression_ratio": (dense_bytes / 1024.0) / max(nox_kb, 1e-6),
+        "bpa": (nox_kb * 1024.0 * 8.0) / max(W.numel(), 1),
+    }
     results["Nox Engine (Ours)"] = {
         "metrics": nox_metrics,
         "footprint": nox_footprint,
