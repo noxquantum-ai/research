@@ -410,6 +410,17 @@ def main():
             if args.save_checkpoint_dir and args.sweep_cliff
             else args.save_checkpoint_dir
         )
+        if tier_save_dir and os.path.exists(os.path.join(tier_save_dir, "model_manifest.json")):
+            manifest_path = os.path.join(tier_save_dir, "model_manifest.json")
+            try:
+                with open(manifest_path, "r") as mf:
+                    manifest_data = json.load(mf)
+                if len(manifest_data.get("layers", {})) == len(layer_indices):
+                    log_step(f"Tier '{curr_tier}' already 100% compiled ({len(layer_indices)} layers verified in {tier_save_dir}). Skipping to next tier...")
+                    continue
+            except Exception as e:
+                log_step(f"Could not read existing manifest for '{curr_tier}' ({e}), re-compiling...")
+
         with torch.no_grad():
             cascade_res = compile_sequential_cascade(
                 fetch_layer_fn=fetcher,
