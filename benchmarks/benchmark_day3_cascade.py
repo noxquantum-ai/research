@@ -415,8 +415,9 @@ def main():
             try:
                 with open(manifest_path, "r") as mf:
                     manifest_data = json.load(mf)
-                if len(manifest_data.get("layers", {})) == len(layer_indices):
-                    log_step(f"Tier '{curr_tier}' already 100% compiled ({len(layer_indices)} layers verified in {tier_save_dir}). Skipping to next tier...")
+                num_done = manifest_data.get("num_layers", len(manifest_data.get("layers_compressed", [])))
+                if num_done == len(layer_indices):
+                    log_step(f"Tier '{curr_tier}' already 100% compiled ({num_done}/{len(layer_indices)} layers verified in {tier_save_dir}). Skipping to next tier...")
                     continue
             except Exception as e:
                 log_step(f"Could not read existing manifest for '{curr_tier}' ({e}), re-compiling...")
