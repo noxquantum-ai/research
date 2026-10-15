@@ -27,7 +27,7 @@ pip install -q -r requirements.txt
 mkdir -p ./models/Llama-2-7b-hf
 mkdir -p ./checkpoints/day3_day4_cascade
 
-MODE="${1:-full_32_layers}"
+MODE="${1:-sweep_cliff}"
 
 case "$MODE" in
   test_4_layers)
