@@ -122,23 +122,25 @@ def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.flo
             continue
 
         target_layer = model.model.layers[l_idx]
+        w_dev = target_layer.self_attn.q_proj.weight.device
+        w_dtype = target_layer.self_attn.q_proj.weight.dtype
 
         # Reconstruct and assign attention projections
-        target_layer.self_attn.q_proj.weight.data = reconstruct_from_artifact(arts["q_proj"], device=device, dtype=dtype)
-        target_layer.self_attn.k_proj.weight.data = reconstruct_from_artifact(arts["k_proj"], device=device, dtype=dtype)
-        target_layer.self_attn.v_proj.weight.data = reconstruct_from_artifact(arts["v_proj"], device=device, dtype=dtype)
-        target_layer.self_attn.o_proj.weight.data = reconstruct_from_artifact(arts["o_proj"], device=device, dtype=dtype)
+        target_layer.self_attn.q_proj.weight.data.copy_(reconstruct_from_artifact(arts["q_proj"], device=w_dev, dtype=w_dtype))
+        target_layer.self_attn.k_proj.weight.data.copy_(reconstruct_from_artifact(arts["k_proj"], device=w_dev, dtype=w_dtype))
+        target_layer.self_attn.v_proj.weight.data.copy_(reconstruct_from_artifact(arts["v_proj"], device=w_dev, dtype=w_dtype))
+        target_layer.self_attn.o_proj.weight.data.copy_(reconstruct_from_artifact(arts["o_proj"], device=w_dev, dtype=w_dtype))
 
         # Reconstruct and assign MLP projections
-        target_layer.mlp.gate_proj.weight.data = reconstruct_from_artifact(arts["gate_proj"], device=device, dtype=dtype)
-        target_layer.mlp.up_proj.weight.data = reconstruct_from_artifact(arts["up_proj"], device=device, dtype=dtype)
-        target_layer.mlp.down_proj.weight.data = reconstruct_from_artifact(arts["down_proj"], device=device, dtype=dtype)
+        target_layer.mlp.gate_proj.weight.data.copy_(reconstruct_from_artifact(arts["gate_proj"], device=w_dev, dtype=w_dtype))
+        target_layer.mlp.up_proj.weight.data.copy_(reconstruct_from_artifact(arts["up_proj"], device=w_dev, dtype=w_dtype))
+        target_layer.mlp.down_proj.weight.data.copy_(reconstruct_from_artifact(arts["down_proj"], device=w_dev, dtype=w_dtype))
 
         # Assign layer norms if present
         if data.get("input_layernorm") is not None:
-            target_layer.input_layernorm.weight.data = data["input_layernorm"].to(device=device, dtype=dtype)
+            target_layer.input_layernorm.weight.data.copy_(data["input_layernorm"].to(device=w_dev, dtype=w_dtype))
         if data.get("post_attention_layernorm") is not None:
-            target_layer.post_attention_layernorm.weight.data = data["post_attention_layernorm"].to(device=device, dtype=dtype)
+            target_layer.post_attention_layernorm.weight.data.copy_(data["post_attention_layernorm"].to(device=w_dev, dtype=w_dtype))
 
         injected_layers.append(l_idx)
         log_step(f"  Layer {l_idx:02d}: Reconstructed and injected ({data.get('total_kb', 0.0):.1f} KB artifact)")
@@ -171,11 +173,21 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(args.model_id)
 
     log_step(f"Loading base model from '{args.model_id}' ({pt_dtype})...")
-    model = AutoModelForCausalLM.from_pretrained(
-        args.model_id,
-        torch_dtype=pt_dtype,
-        device_map=device,
-    )
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_id,
+            torch_dtype=pt_dtype,
+            low_cpu_mem_usage=True,
+            device_map="auto" if str(device).startswith("cuda") else None,
+        )
+        if not str(device).startswith("cuda"):
+            model = model.to(device)
+    except Exception:
+        model = AutoModelForCausalLM.from_pretrained(
+            args.model_id,
+            torch_dtype=pt_dtype,
+            low_cpu_mem_usage=True,
+        ).to(device)
 
     test_text = load_wikitext2_test_text()
 

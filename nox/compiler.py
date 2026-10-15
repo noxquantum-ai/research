@@ -106,6 +106,8 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
     When D > 4096: Uses Warm-Started Conjugate Gradient on H initialized at sol_0 = C_prior.
     Eliminates 12 GB memory leaks, avoids OOM, and takes 260x fewer FLOPs!
     """
+    if C_prior.dtype != H.dtype or C_prior.device != H.device:
+        C_prior = C_prior.to(device=H.device, dtype=H.dtype)
     reg_scale = gamma * (torch.trace(H) / D + 1e-6)
     H.diagonal().add_(reg_scale)
     rhs.add_(reg_scale * C_prior)

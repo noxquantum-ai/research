@@ -89,7 +89,7 @@ def fetch_layer_weights(
         log_step(f"All Layer {layer_idx} weights loaded from local cache.")
         return layer_weights
 
-    headers = {}
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; NoxResearch/1.0)"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
@@ -241,7 +241,7 @@ def main():
             if args.save_checkpoint_dir and args.sweep_cliff
             else args.save_checkpoint_dir
         )
-        with torch.inference_mode():
+        with torch.no_grad():
             cascade_res = compile_sequential_cascade(
                 fetch_layer_fn=fetcher,
                 layer_indices=layer_indices,
