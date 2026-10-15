@@ -91,6 +91,36 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
     return sol.T
 
 
+def solve_accumulated_system(H, rhs, C_prior, gamma, D):
+    """
+    Solves (H + reg*I) sol = rhs + reg*C_prior for chunked DMRG site systems.
+    """
+    reg_scale = gamma * (torch.trace(H) / D + 1e-6)
+    H.diagonal().add_(reg_scale)
+    rhs.add_(reg_scale * C_prior)
+    sol = torch.linalg.solve(H, rhs)
+    del H, rhs
+    return sol.T
+
+
+def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
+    """
+    Reconstructs full dense matrix W_hat from compact compressed components.
+    """
+    cores = [c.to(device=device, dtype=dtype) for c in artifact["cores"]]
+    d_awt = artifact["d_awt"].to(device=device, dtype=dtype)
+    W_rec = mpo_to_dense(cores) / d_awt.unsqueeze(0)
+    if artifact.get("A_bridge") is not None and artifact.get("B_bridge") is not None:
+        A_b = artifact["A_bridge"].to(device=device, dtype=dtype)
+        B_b = artifact["B_bridge"].to(device=device, dtype=dtype)
+        W_rec.addmm_(A_b, B_b)
+    if artifact.get("sparse_indices") is not None and artifact.get("sparse_values") is not None:
+        idx = artifact["sparse_indices"]
+        val = artifact["sparse_values"].to(device=device, dtype=dtype)
+        W_rec[idx[:, 0].long(), idx[:, 1].long()] += val
+    return W_rec
+
+
 def local_ridge_solve(Z_env, Y_site, o_m, dim_param, ridge=1e-4, device=None):
     """
     Solves local site ridge regression: G_m* = Y_site @ Z_env (Z_env^T Z_env + lambda I)^(-1).
@@ -117,6 +147,8 @@ def nox_hybrid_dmrg_decompose(
     n_sweeps=2,
     prior_gamma=0.01,
     alpha_awt=0.5,
+    chunk_size=32,
+    return_artifacts=False,
     verbose=True,
 ):
     """
@@ -139,6 +171,7 @@ def nox_hybrid_dmrg_decompose(
 
     # Step 1A: Exact Operator-Norm Sparse Outlier Shield (1.0 Byte/Outlier Packed)
     ch_rms = torch.sqrt(torch.mean(X_calib ** 2, dim=1) + 1e-8)
+    mask = None
     if n_outliers > 0:
         importance = torch.abs(W) * ch_rms.unsqueeze(0)
         thresh = torch.kthvalue(importance.flatten(), W.numel() - n_outliers).values
@@ -153,6 +186,8 @@ def nox_hybrid_dmrg_decompose(
     W_rem = W - S_sparse
 
     # Step 1B: Covariance-Projected Hybrid SVD Bridge (Captures Off-Diagonal Manifold + Outliers)
+    A_q = None
+    B_q = None
     if r_bridge > 0:
         U_xc, S_xc, Vh_xc = torch.linalg.svd(X_calib, full_matrices=False)
         r_act = min(len(S_xc), max(r_bridge * 2, 64))
@@ -173,7 +208,7 @@ def nox_hybrid_dmrg_decompose(
         A_q = quantize_4bit_grouped(A_bridge, group_size=64)
         B_q = quantize_4bit_grouped(B_bridge, group_size=64)
         S_bridge = A_q @ B_q
-        del A_bridge, B_bridge, A_q, B_q, U_r, B_raw
+        del A_bridge, B_bridge, U_r, B_raw
         if verbose:
             bridge_params = (d_out + d_in) * r_bridge
             print(f"    [Nox Step 1B] Covariance-Projected SVD Bridge (r={r_bridge}, {bridge_params} params = {bridge_params * 0.5 / 1024.0:.1f} KB)", flush=True)
@@ -191,13 +226,13 @@ def nox_hybrid_dmrg_decompose(
     Y_target = Y_dense - (S_total @ X_calib)
 
     U_x, S_x, Vh_x = torch.linalg.svd(X_cond, full_matrices=False)
-    r_cov = min(32, S_x.shape[0])
-    X_red = (U_x[:, :r_cov] * S_x[:r_cov].unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
-    Y_red = (Y_target @ Vh_x[:r_cov, :].T).reshape(o0, o1, o2, o3, r_cov)
+    r_cov = S_x.shape[0]
+    X_red = (U_x * S_x.unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
+    Y_red = (Y_target @ Vh_x.T).reshape(o0, o1, o2, o3, r_cov)
     del U_x, S_x, Vh_x, Y_target, X_cond, W_core
 
     if verbose:
-        print(f"    [Nox Step 2] Exact AWT preconditioning applied; keeping active r={r_cov} calibration modes", flush=True)
+        print(f"    [Nox Step 2] Exact AWT preconditioning applied; keeping all r={r_cov} calibration modes (chunk_size={chunk_size})", flush=True)
 
     # Step 3: Exact AWT TT-SVD Warm-Start on W_cond
     bond_ranks = ranks[1:4] if len(ranks) == 5 else ranks
@@ -242,15 +277,22 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 0
         r1 = c1.shape[0]
+        D0 = r1 * i0
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
         R123 = torch.einsum("bcjd,degkl->bcejkgl", c1, R23)
         del R23
-        Z0 = torch.einsum("bcejkgl,ijklr->cegrbi", R123, X_red).reshape(-1, r1 * i0)
+        H0 = torch.zeros((D0, D0), device=device, dtype=torch.float32)
+        rhs0 = torch.zeros((D0, o0), device=device, dtype=torch.float32)
+        for r_start in range(0, r_cov, chunk_size):
+            r_end = min(r_start + chunk_size, r_cov)
+            Z0_c = torch.einsum("bcejkgl,ijklr->cegrbi", R123, X_red[..., r_start:r_end]).reshape(-1, D0)
+            Y0_c = Y_red[..., r_start:r_end].permute(1, 2, 3, 4, 0).reshape(-1, o0)
+            H0.addmm_(Z0_c.T, Z0_c)
+            rhs0.addmm_(Z0_c.T, Y0_c)
+            del Z0_c, Y0_c
         del R123
-        Y0 = Y_red.permute(1, 2, 3, 4, 0).reshape(-1, o0)
-        c0_prior = c0.permute(2, 1, 0).reshape(r1 * i0, o0)
-        c0 = solve_site_anchored(Z0, Y0, c0_prior, cur_gamma, device=device).reshape(o0, r1, i0).permute(0, 2, 1).contiguous()
-        del Z0
+        c0_prior = c0.permute(2, 1, 0).reshape(D0, o0)
+        c0 = solve_accumulated_system(H0, rhs0, c0_prior, cur_gamma, D0).reshape(o0, r1, i0).permute(0, 2, 1).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
@@ -263,14 +305,22 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 1
         r1, _, _, r2 = c1.shape
-        L0 = torch.einsum("aib,ijklr->abjklr", c0, X_red)
+        D1 = r1 * r2 * i1
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
-        Z1 = torch.einsum("abjklr,degkl->aegrbdj", L0, R23).reshape(-1, r1 * r2 * i1)
-        del L0, R23
-        Y1 = Y_red.permute(0, 2, 3, 4, 1).reshape(-1, o1)
-        c1_prior = c1.permute(0, 3, 2, 1).reshape(r1 * r2 * i1, o1)
-        c1 = solve_site_anchored(Z1, Y1, c1_prior, cur_gamma, device=device).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
-        del Z1
+        H1 = torch.zeros((D1, D1), device=device, dtype=torch.float32)
+        rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
+        for r_start in range(0, r_cov, chunk_size):
+            r_end = min(r_start + chunk_size, r_cov)
+            L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
+            Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
+            del L0_c
+            Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
+            H1.addmm_(Z1_c.T, Z1_c)
+            rhs1.addmm_(Z1_c.T, Y1_c)
+            del Z1_c, Y1_c
+        del R23
+        c1_prior = c1.permute(0, 3, 2, 1).reshape(D1, o1)
+        c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
@@ -283,15 +333,22 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 2
         r2, _, _, r3 = c2.shape
+        D2 = r2 * r3 * i2
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
-        L01_X = torch.einsum("acijd,ijklr->acdkrl", L01, X_red)
+        H2 = torch.zeros((D2, D2), device=device, dtype=torch.float32)
+        rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
+        for r_start in range(0, r_cov, chunk_size):
+            r_end = min(r_start + chunk_size, r_cov)
+            L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
+            Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
+            del L01_X_c
+            Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
+            H2.addmm_(Z2_c.T, Z2_c)
+            rhs2.addmm_(Z2_c.T, Y2_c)
+            del Z2_c, Y2_c
         del L01
-        Z2 = torch.einsum("acdkrl,fgl->acgrdfk", L01_X, c3).reshape(-1, r2 * r3 * i2)
-        del L01_X
-        Y2 = Y_red.permute(0, 1, 3, 4, 2).reshape(-1, o2)
-        c2_prior = c2.permute(0, 3, 2, 1).reshape(r2 * r3 * i2, o2)
-        c2 = solve_site_anchored(Z2, Y2, c2_prior, cur_gamma, device=device).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
-        del Z2
+        c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
+        c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
@@ -304,15 +361,22 @@ def nox_hybrid_dmrg_decompose(
 
         # Site 3
         r3 = c3.shape[0]
+        D3 = r3 * i3
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         L012 = torch.einsum("acijd,dekf->aceijkf", L01, c2)
         del L01
-        Z3 = torch.einsum("aceijkf,ijklr->acerfl", L012, X_red).reshape(-1, r3 * i3)
+        H3 = torch.zeros((D3, D3), device=device, dtype=torch.float32)
+        rhs3 = torch.zeros((D3, o3), device=device, dtype=torch.float32)
+        for r_start in range(0, r_cov, chunk_size):
+            r_end = min(r_start + chunk_size, r_cov)
+            Z3_c = torch.einsum("aceijkf,ijklr->acerfl", L012, X_red[..., r_start:r_end]).reshape(-1, D3)
+            Y3_c = Y_red[..., r_start:r_end].permute(0, 1, 2, 4, 3).reshape(-1, o3)
+            H3.addmm_(Z3_c.T, Z3_c)
+            rhs3.addmm_(Z3_c.T, Y3_c)
+            del Z3_c, Y3_c
         del L012
-        Y3 = Y_red.permute(0, 1, 2, 4, 3).reshape(-1, o3)
-        c3_prior = c3.permute(0, 2, 1).reshape(r3 * i3, o3)
-        c3 = solve_site_anchored(Z3, Y3, c3_prior, cur_gamma, device=device).reshape(o3, r3, i3).permute(1, 0, 2).contiguous()
-        del Z3
+        c3_prior = c3.permute(0, 2, 1).reshape(D3, o3)
+        c3 = solve_accumulated_system(H3, rhs3, c3_prior, cur_gamma, D3).reshape(o3, r3, i3).permute(1, 0, 2).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
@@ -326,7 +390,7 @@ def nox_hybrid_dmrg_decompose(
     # Reconstruct W_hat = (mpo_to_dense(cores) / d_awt) + S_total
     W_mpo = mpo_to_dense(final_cores) / d_awt.unsqueeze(0)
     W_hat = W_mpo + S_total
-    del W_mpo, S_total, X_red, Y_red, d_awt
+    del W_mpo, S_total, X_red, Y_red
     if str(device).startswith("cuda"):
         gc.collect()
         torch.cuda.empty_cache()
@@ -338,7 +402,31 @@ def nox_hybrid_dmrg_decompose(
     total_kb = (mpo_bytes + bridge_bytes + sparse_bytes) / 1024.0
     chosen_ranks = [1, c1.shape[0], c2.shape[0], c3.shape[0], 1]
 
-    return W_hat, total_kb, final_cores, chosen_ranks
+    if return_artifacts:
+        if n_outliers > 0 and mask is not None:
+            nz_mask = S_sparse != 0
+            sparse_idx = torch.nonzero(nz_mask, as_tuple=False).to(dtype=torch.int32, device="cpu")
+            sparse_val = S_sparse[nz_mask].to(dtype=torch.float16, device="cpu")
+        else:
+            sparse_idx = None
+            sparse_val = None
+
+        artifact = {
+            "cores": [c.detach().to(dtype=torch.float16, device="cpu") for c in final_cores],
+            "A_bridge": A_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and A_q is not None else None,
+            "B_bridge": B_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and B_q is not None else None,
+            "d_awt": d_awt.detach().to(dtype=torch.float16, device="cpu"),
+            "sparse_indices": sparse_idx,
+            "sparse_values": sparse_val,
+            "ranks": chosen_ranks,
+            "total_kb": total_kb,
+            "orig_shape": (d_out, d_in),
+        }
+        del S_sparse, d_awt
+        return W_hat, total_kb, final_cores, chosen_ranks, artifact
+    else:
+        del S_sparse, d_awt
+        return W_hat, total_kb, final_cores, chosen_ranks
 
 
 def nox_4step_compiler(

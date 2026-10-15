@@ -202,6 +202,7 @@ def compile_sequential_cascade(
         nox_indep_block = compile_transformer_block(
             layer_weights=weights,
             X_calib=X_d_calib,
+            X_calib_dense=X_d_calib,
             ranks=ranks,
             r_bridge=r_bridge,
             n_outliers=n_outliers,
@@ -209,6 +210,7 @@ def compile_sequential_cascade(
             n_kv_heads=n_kv_heads,
             seq_len=seq_len,
             causal_healing=False,
+            return_artifacts=False,
             verbose=False,
         )
         indep_weights = dict(weights)
@@ -220,10 +222,12 @@ def compile_sequential_cascade(
         indep_kb = nox_indep_block["total_kb"]
         del nox_indep_block, indep_weights, Y_attn_indep, Y_mlp_indep
 
-        # 4. Nox Causally-Healed path (inter-layer: calibrated on corrupted X_healed_calib)
+        # 4. Nox Causally-Healed path (inter-layer: calibrated on corrupted X_healed_calib targeting clean X_d_calib)
         nox_healed_block = compile_transformer_block(
             layer_weights=weights,
             X_calib=X_healed_calib,
+            X_calib_dense=X_d_calib,
+            alpha_heal=0.5,
             ranks=ranks,
             r_bridge=r_bridge,
             n_outliers=n_outliers,
@@ -231,6 +235,7 @@ def compile_sequential_cascade(
             n_kv_heads=n_kv_heads,
             seq_len=seq_len,
             causal_healing=True,
+            return_artifacts=True,
             verbose=False,
         )
         healed_weights = dict(weights)
@@ -250,19 +255,16 @@ def compile_sequential_cascade(
         if save_checkpoint_dir:
             os.makedirs(save_checkpoint_dir, exist_ok=True)
             ckpt_path = os.path.join(save_checkpoint_dir, f"compressed_layer_{l_idx}.pt")
-            saved_weights = {}
-            for k, v in nox_healed_block["compressed_weights"].items():
-                saved_weights[k] = v.cpu() if isinstance(v, torch.Tensor) else v
             layer_checkpoint = {
                 "layer_idx": l_idx,
-                "compressed_weights": saved_weights,
+                "compressed_artifacts": nox_healed_block.get("compressed_artifacts", None),
                 "input_layernorm": weights["input_layernorm"].cpu() if "input_layernorm" in weights else None,
                 "post_attention_layernorm": weights["post_attention_layernorm"].cpu() if "post_attention_layernorm" in weights else None,
                 "total_kb": healed_kb,
             }
             torch.save(layer_checkpoint, ckpt_path)
             if verbose:
-                print(f"  [Checkpoint] Saved Layer {l_idx} ({healed_kb:.1f} KB) -> '{ckpt_path}'", flush=True)
+                print(f"  [Checkpoint] Saved Layer {l_idx} ({healed_kb:.1f} KB compact artifact) -> '{ckpt_path}'", flush=True)
 
         del nox_healed_block, healed_weights, Y_attn_healed, Y_mlp_healed
 
