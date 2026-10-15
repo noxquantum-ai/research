@@ -360,8 +360,16 @@ Checkpoints are automatically serialized to `./checkpoints/` as compact artifact
 
 ---
 
+## Strategic Research & Launch Documentation
+
+- [Pre-Launch Strategy & Open-Weights Demonstration Roadmap](docs/PRE_LAUNCH_STRATEGY.md): Details the "Proprietary Engine, Open Weights" strategy, target validation models (Llama, Qwen 3.8-27B, DeepSeek-R1), open inference runtime specification, and benchmark verification gates.
+- [Frontier MoE & Ultra-Scale Model Scaling Analysis](docs/FRONTIER_MOE_AND_ULTRA_SCALE_ANALYSIS.md): Rigorous mathematical and physical analysis of why Nox achieves super-linear compression efficiency on ultra-scale architectures (analyzing 896-expert subspace sharing in Kimi K3, low-entropy bulk isolation in Llama 405B, and bounded residual drift across 126+ layers).
+
+---
+
 ## NoxQuantum North Star (Post-Sprint Vision)
 
 To engineer a native foundation model architecture from day one—built entirely on principles of quantum information geometry, many-body entanglement, and tensor-product Hilbert spaces—that fundamentally breaks the parameter scaling laws of deep learning. By replacing flat vector representations and unconstrained linear projections with quantum-inspired structural priors, this architecture will compress the representational and reasoning capacity of a 7B–10B dense Transformer into a sub-billion parameter footprint.
 
 While our immediate 7-day sprint proves our post-training compression engine against market incumbents, this long-term research vector will build the next generation of foundational AI: models born small, dense with multi-body correlations, and mathematically incapable of the parameter redundancy that plagues modern transformer scaling.
+
