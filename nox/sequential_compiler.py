@@ -215,6 +215,8 @@ def compile_sequential_cascade(
             Delta_mv_test = Delta_d_test
             mv_kb = 0.0
         else:
+            if verbose:
+                print(f"  [Layer {l_idx}] Compiling Multiverse baseline block...", flush=True)
             mv_ranks = layer_ranks[1:-1] if len(layer_ranks) == 5 else layer_ranks
             mv_block = compile_multiverse_block(
                 layer_weights=weights,
@@ -240,6 +242,8 @@ def compile_sequential_cascade(
             Delta_indep_test = Delta_d_test
             indep_kb = 0.0
         else:
+            if verbose:
+                print(f"  [Layer {l_idx}] Compiling Nox Independent baseline block...", flush=True)
             nox_indep_block = compile_transformer_block(
                 layer_weights=weights,
                 X_calib=X_d_calib,
@@ -267,6 +271,8 @@ def compile_sequential_cascade(
                 torch.cuda.empty_cache()
 
         # 4. Nox Causally-Healed path (inter-layer: calibrated on corrupted X_healed_calib targeting clean X_d_calib)
+        if verbose:
+            print(f"  [Layer {l_idx}] Compiling Nox Causal Healed block (inter-layer)...", flush=True)
         nox_healed_block = compile_transformer_block(
             layer_weights=weights,
             X_calib=X_healed_calib,
@@ -280,7 +286,7 @@ def compile_sequential_cascade(
             seq_len=seq_len,
             causal_healing=True,
             return_artifacts=True,
-            verbose=False,
+            verbose=verbose,
         )
         healed_weights = dict(weights)
         healed_weights.update(nox_healed_block["compressed_weights"])

@@ -341,6 +341,10 @@ def compile_mlp_block(
         n_outliers_down = n_outliers
         Y_mlp_target = Y_mlp_dense
 
+    if verbose:
+        mode_str = "Causal Healing active: Solving W_down on corrupted SwiGLU context" if causal_healing else "Independent mode: Solving W_down on clean SwiGLU context"
+        print(f"  [SwiGLU MLP Sub-Block] {mode_str} (bridge: r={r_bridge_down}, outliers={n_outliers_down})...", flush=True)
+
     gamma_down = 0.002 if causal_healing else 0.01
     if return_artifacts:
         W_hat_down, kb_down, cores_down, _, art_down = nox_hybrid_dmrg_decompose(
