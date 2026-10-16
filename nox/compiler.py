@@ -157,14 +157,24 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
     rhs.add_(reg_scale * C_prior)
 
     if D <= use_cg_threshold:
-        try:
-            L, info = torch.linalg.cholesky_ex(H)
-            if info == 0:
-                sol = torch.cholesky_solve(rhs, L)
-            else:
-                sol = torch.linalg.solve(H, rhs)
-        except Exception:
-            sol = torch.linalg.solve(H, rhs)
+        L, info = torch.linalg.cholesky_ex(H)
+        if info == 0:
+            sol = torch.cholesky_solve(rhs, L)
+        else:
+            # Activation-conditioned SwiGLU contexts can be effectively low
+            # rank. The old fallback retried the same singular direct solve.
+            # Escalating diagonal jitter keeps the solve on device and only
+            # changes cases where the regularized normal equation is not SPD.
+            diagonal_scale = H.diagonal().abs().mean().clamp_min(1e-6)
+            sol = None
+            for relative_jitter in (1e-6, 1e-4, 1e-2):
+                H.diagonal().add_(diagonal_scale * relative_jitter)
+                L, info = torch.linalg.cholesky_ex(H)
+                if info == 0:
+                    sol = torch.cholesky_solve(rhs, L)
+                    break
+            if sol is None:
+                sol = torch.linalg.pinv(H, hermitian=True, rtol=1e-5) @ rhs
     else:
         HC = H @ C_prior
         R = rhs - HC

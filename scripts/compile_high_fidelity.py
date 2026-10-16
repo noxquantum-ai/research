@@ -44,6 +44,15 @@ def select_reference_activations(construction_mode, dense_activations, calibrati
     raise ValueError(f"Unknown construction mode: {construction_mode}")
 
 
+def resume_identity_compatible(previous, current):
+    """Require identical science inputs while allowing a recorded source repair."""
+    previous = dict(previous)
+    current = dict(current)
+    previous.pop("source_fingerprint", None)
+    current.pop("source_fingerprint", None)
+    return previous == current
+
+
 def parse_site_order(value):
     try:
         return validate_site_order(tuple(int(part.strip()) for part in value.split(",")))
@@ -110,6 +119,10 @@ def main():
     parser.add_argument("--model-id", default="NousResearch/Llama-2-7b-hf")
     parser.add_argument("--model-revision", default="8efe6c9b93655b934e27bd9981e3ec13e55aee9d")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="Reuse fully written layer artifacts after validating all non-source run identity fields",
+    )
     args = parser.parse_args()
     config = AutoConfig.from_pretrained(args.model_id, revision=args.model_revision)
     if not 0 <= args.start_layer <= args.end_layer < config.num_hidden_layers:
@@ -118,8 +131,11 @@ def main():
         raise ValueError("Calibration/validation counts must be positive multiples of seq-len")
     if args.construction_mode != "independent" and args.calibration_activation_mode != "compressed_prefix":
         raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
-    if list(args.output.glob("compressed_layer_*.pt")) or (args.output / "model_manifest.json").exists():
+    has_existing = bool(list(args.output.glob("compressed_layer_*.pt"))) or (args.output / "model_manifest.json").exists()
+    if has_existing and not args.resume:
         raise FileExistsError("Use a fresh output directory; checkpoints will not be overwritten")
+    if args.resume and not (args.output / "model_manifest.json").exists():
+        raise FileNotFoundError("--resume requires an existing model_manifest.json")
     args.output.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(42)
     weights = PinnedWeights(args.model_id, args.model_revision)
@@ -160,13 +176,24 @@ def main():
             ROOT / "nox/tensor_order.py",
         ]),
     }
-    manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
-                "tier": "high_fidelity_10x", "compression_path": compression_path,
-                "calibration_activation_mode": args.calibration_activation_mode,
-                "construction_mode": args.construction_mode,
-                "mpo_site_order": args.site_order,
-                "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
-                "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
+    if args.resume:
+        manifest = json.loads((args.output / "model_manifest.json").read_text())
+        if not resume_identity_compatible(manifest["run_identity"], identity):
+            raise ValueError("Existing checkpoint identity does not match requested resumed run")
+        manifest.setdefault("resume_events", []).append({
+            "previous_source_fingerprint": manifest["run_identity"].get("source_fingerprint"),
+            "resumed_source_fingerprint": identity["source_fingerprint"],
+            "reason": "resume after completed layer artifact; source change is recorded per layer",
+        })
+        (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2))
+    else:
+        manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
+                    "tier": "high_fidelity_10x", "compression_path": compression_path,
+                    "calibration_activation_mode": args.calibration_activation_mode,
+                    "construction_mode": args.construction_mode,
+                    "mpo_site_order": args.site_order,
+                    "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
+                    "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
     compressed_validation = None
     compressed_calibration = None
     for index in range(args.end_layer + 1):
@@ -207,6 +234,29 @@ def main():
             reference_input = select_reference_activations(
                 args.construction_mode, train, calibration_input,
             )
+            path = args.output / f"compressed_layer_{index}.pt"
+            if args.resume and path.exists():
+                artifact = torch.load(path, map_location="cpu", weights_only=False)
+                if artifact.get("layer_idx") != index or artifact.get("run_fingerprint") != manifest["run_fingerprint"]:
+                    raise ValueError(f"Incompatible resumed artifact: {path}")
+                reconstructed = dict(dense)
+                reconstructed.update({
+                    name: reconstruct_from_artifact(value, device=args.device)
+                    for name, value in artifact["compressed_artifacts"].items()
+                })
+                compressed_validation, _, _ = forward_transformer_block(
+                    reconstructed, compressed_validation, **forward_options,
+                )
+                if args.calibration_activation_mode == "compressed_prefix":
+                    compressed_calibration, _, _ = forward_transformer_block(
+                        reconstructed, compressed_calibration, **forward_options,
+                    )
+                train, validation = train_next, validation_next
+                del dense, reconstructed, artifact
+                gc.collect()
+                torch.cuda.empty_cache()
+                print(f"layer={index} resumed_from={path}", flush=True)
+                continue
             torch.save({"X_test": validation.cpu(), "rms_norm_eps": config.rms_norm_eps}, args.output / f"dense_input_layer_{index}.pt")
             torch.save(calibration_input.cpu(), args.output / f"calibration_input_layer_{index}.pt")
             torch.save(validation_calibration_input.cpu(), args.output / f"layer_input_validation_layer_{index}.pt")
@@ -222,6 +272,7 @@ def main():
             artifact = {
                 "layer_idx": index, "compression_path": compression_path,
                 "construction_mode": args.construction_mode,
+                "source_fingerprint": identity["source_fingerprint"],
                 "mpo_site_order": args.site_order,
                 "attention_gauge": gauge_metadata,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
@@ -230,7 +281,6 @@ def main():
                 "post_attention_layernorm": dense["post_attention_layernorm"].cpu(),
                 "total_kb": compiled["total_kb"],
             }
-            path = args.output / f"compressed_layer_{index}.pt"
             torch.save(artifact, path)
             reconstructed = dict(dense)
             reconstructed.update({name: reconstruct_from_artifact(value, device=args.device)
