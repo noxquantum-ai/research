@@ -279,11 +279,14 @@ def block_error_metrics(candidate_weights: dict, dense_weights: dict, validation
     local = {}
     for layer_index in (0, 1):
         dense = {
-            name: tensor.to(torch.float16)
+            name: tensor.to(torch.float32)
             for name, tensor in dense_weights[layer_index].items()
         }
         candidate = dict(dense)
-        candidate.update(candidate_weights[layer_index])
+        candidate.update({
+            name: tensor.to(torch.float32)
+            for name, tensor in candidate_weights[layer_index].items()
+        })
         local_input = validation_inputs[layer_index].to(
             device=dense["q_proj"].device, dtype=torch.float32,
         )
@@ -311,11 +314,14 @@ def block_error_metrics(candidate_weights: dict, dense_weights: dict, validation
         del local_input, candidate, dense_attn, dense_mlp, candidate_attn, candidate_mlp
 
     dense_layer1 = {
-        name: tensor.to(torch.float16)
+        name: tensor.to(torch.float32)
         for name, tensor in dense_weights[1].items()
     }
     candidate_layer1 = dict(dense_layer1)
-    candidate_layer1.update(candidate_weights[1])
+    candidate_layer1.update({
+        name: tensor.to(torch.float32)
+        for name, tensor in candidate_weights[1].items()
+    })
     dense_composed, _, _ = forward_transformer_block(
         dense_layer1, cascade_dense_input, n_heads=heads, n_kv_heads=kv_heads,
         seq_len=seq_len, rms_norm_eps=rms_norm_eps,
@@ -479,6 +485,8 @@ def main():
 
     report = {
         "experiment": "packed_groupwise_residual_codec_two_layer_pilot",
+        "custom_block_diagnostics_dtype": "float32",
+        "language_model_evaluation_dtype": "float16",
         "source_commit": __import__("subprocess").check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True,
         ).strip(),
