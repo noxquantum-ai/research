@@ -28,6 +28,12 @@ from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
 from nox.defect_bridge import fit_hybrid_defect_bridge, bridge_tensor_bytes
+from nox.pees import (
+    DEFAULT_PROJECTIONS as PEES_DEFAULT_PROJECTIONS,
+    append_shield_to_projection_artifact,
+    fit_propagated_eigenspace_shield,
+    layer_projection_trajectories,
+)
 
 
 def select_calibration_activations(mode, dense_activations, compressed_activations):
@@ -76,6 +82,10 @@ def resume_identity_compatible(previous, current):
         "defect_bridge_memory_top_k": 8,
         "defect_bridge_ridge_ratio": 0.01,
         "max_checkpoint_multiplier": 1.25,
+        "pees_rank": 0,
+        "pees_projections": list(PEES_DEFAULT_PROJECTIONS),
+        "pees_tokens": 4096,
+        "pees_ridge_ratio": 0.01,
     }
     for key, value in legacy_defaults.items():
         previous.setdefault(key, value)
@@ -168,6 +178,16 @@ def main():
     parser.add_argument("--defect-bridge-memory-size", type=int, default=512)
     parser.add_argument("--defect-bridge-memory-top-k", type=int, default=8)
     parser.add_argument("--defect-bridge-ridge-ratio", type=float, default=0.01)
+    parser.add_argument(
+        "--pees-rank", type=int, default=0,
+        help="Add an initial-construction propagated eigenspace sidecar at this per-projection rank (0 disables PEES)",
+    )
+    parser.add_argument(
+        "--pees-projections", default=",".join(PEES_DEFAULT_PROJECTIONS),
+        help="Comma-separated subset of v_proj,o_proj,gate_proj,down_proj",
+    )
+    parser.add_argument("--pees-tokens", type=int, default=4096)
+    parser.add_argument("--pees-ridge-ratio", type=float, default=0.01)
     parser.add_argument("--max-checkpoint-multiplier", type=float, default=1.25)
     parser.add_argument(
         "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
@@ -197,6 +217,20 @@ def main():
         raise ValueError("Hybrid defect bridge requires a positive linear rank")
     if args.defect_bridge_memory_top_k <= 0 or args.defect_bridge_ridge_ratio < 0:
         raise ValueError("Invalid defect bridge kernel or ridge configuration")
+    pees_projections = tuple(
+        name.strip() for name in args.pees_projections.split(",") if name.strip()
+    )
+    if args.pees_rank < 0 or args.pees_tokens < args.seq_len or args.pees_ridge_ratio < 0:
+        raise ValueError("Invalid PEES rank, token count, or ridge ratio")
+    if args.pees_rank > 0:
+        if args.defect_bridge_mode != "none":
+            raise ValueError("PEES and the block defect bridge are separate byte-budget experiments")
+        if not pees_projections or len(set(pees_projections)) != len(pees_projections):
+            raise ValueError("PEES requires a nonempty projection list without duplicates")
+        if set(pees_projections) - set(PEES_DEFAULT_PROJECTIONS):
+            raise ValueError(f"Unsupported PEES projections: {sorted(set(pees_projections) - set(PEES_DEFAULT_PROJECTIONS))}")
+    elif pees_projections != PEES_DEFAULT_PROJECTIONS:
+        raise ValueError("--pees-projections is only meaningful when --pees-rank is positive")
     if args.max_checkpoint_multiplier < 1.0:
         raise ValueError("--max-checkpoint-multiplier must be at least 1")
     has_existing = bool(list(args.output.glob("compressed_layer_*.pt"))) or (args.output / "model_manifest.json").exists()
@@ -233,6 +267,8 @@ def main():
     )
     if args.defect_bridge_mode == "hybrid":
         compression_path = f"{compression_path}+hybrid_defect_bridge"
+    if args.pees_rank > 0:
+        compression_path = f"{compression_path}+pees_propagated_eigenspace"
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
         "compression_path": compression_path,
@@ -251,6 +287,10 @@ def main():
         "defect_bridge_memory_top_k": args.defect_bridge_memory_top_k,
         "defect_bridge_ridge_ratio": args.defect_bridge_ridge_ratio,
         "max_checkpoint_multiplier": args.max_checkpoint_multiplier,
+        "pees_rank": args.pees_rank,
+        "pees_projections": list(pees_projections if args.pees_rank > 0 else PEES_DEFAULT_PROJECTIONS),
+        "pees_tokens": args.pees_tokens,
+        "pees_ridge_ratio": args.pees_ridge_ratio,
         "mpo_site_order": args.site_order,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
@@ -259,6 +299,7 @@ def main():
             ROOT / "nox/mlp_gauge.py", ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
             ROOT / "nox/tensor_order.py", ROOT / "nox/allocation.py",
             ROOT / "nox/defect_bridge.py",
+            ROOT / "nox/pees.py",
         ]),
     }
     if args.resume:
@@ -417,6 +458,91 @@ def main():
                 "post_attention_layernorm": dense["post_attention_layernorm"].cpu(),
                 "total_kb": compiled["total_kb"],
             }
+            pees_base_checkpoint_bytes = None
+            pees_tensor_bytes = 0
+            if args.pees_rank > 0:
+                base_buffer = io.BytesIO()
+                torch.save(artifact, base_buffer)
+                pees_base_checkpoint_bytes = len(base_buffer.getbuffer())
+                del base_buffer
+
+                per_rank_bytes = sum(
+                    (dense[name].shape[0] + dense[name].shape[1]) * 2
+                    for name in pees_projections
+                )
+                sidecar_budget_bytes = (
+                    pees_base_checkpoint_bytes
+                    * (args.max_checkpoint_multiplier - 1.0)
+                    * 0.98
+                )
+                budgeted_rank = int(sidecar_budget_bytes // per_rank_bytes)
+                effective_rank = min(args.pees_rank, budgeted_rank)
+                if effective_rank <= 0:
+                    raise RuntimeError(
+                        "The configured checkpoint multiplier leaves no room for a PEES sidecar"
+                    )
+
+                base_reconstructed = dict(dense)
+                base_reconstructed.update({
+                    name: reconstruct_from_artifact(value, device=args.device)
+                    for name, value in artifact["compressed_artifacts"].items()
+                })
+                pees_metadata = {
+                    "objective": "propagated_defect_ridge_whitened_eigenspace",
+                    "requested_rank_per_projection": int(args.pees_rank),
+                    "effective_rank_per_projection": int(effective_rank),
+                    "projections": list(pees_projections),
+                    "sample_tokens": min(
+                        max(args.seq_len, (args.pees_tokens // args.seq_len) * args.seq_len),
+                        (train.shape[1] // args.seq_len) * args.seq_len,
+                    ),
+                    "ridge_ratio": float(args.pees_ridge_ratio),
+                    "base_checkpoint_bytes": int(pees_base_checkpoint_bytes),
+                    "max_checkpoint_multiplier": float(args.max_checkpoint_multiplier),
+                    "sidecar_budget_bytes_with_safety_margin": int(sidecar_budget_bytes),
+                    "conditional_projection_order": list(pees_projections),
+                    "projection_metrics": {},
+                }
+                for name in pees_projections:
+                    # Recompute the compressed contexts after each correction.
+                    # Later projections therefore compensate the remaining
+                    # defect after earlier PEES factors have already been
+                    # applied, avoiding duplicate cancellation of the same
+                    # upstream error.
+                    trajectory_contexts = layer_projection_trajectories(
+                        dense,
+                        base_reconstructed,
+                        train,
+                        calibration_input,
+                        seq_len=args.seq_len,
+                        n_heads=config.num_attention_heads,
+                        n_kv_heads=config.num_key_value_heads,
+                        rms_norm_eps=config.rms_norm_eps,
+                        max_tokens=args.pees_tokens,
+                        projections=(name,),
+                    )
+                    dense_context, compressed_context = trajectory_contexts[name]
+                    left, right, projection_metrics = fit_propagated_eigenspace_shield(
+                        dense_context,
+                        compressed_context,
+                        dense[name],
+                        base_reconstructed[name],
+                        rank=effective_rank,
+                        ridge_ratio=args.pees_ridge_ratio,
+                    )
+                    added_bytes = append_shield_to_projection_artifact(
+                        artifact["compressed_artifacts"][name], left, right,
+                    )
+                    pees_tensor_bytes += added_bytes
+                    projection_metrics["added_tensor_bytes"] = added_bytes
+                    pees_metadata["projection_metrics"][name] = projection_metrics
+                    base_reconstructed[name] = reconstruct_from_artifact(
+                        artifact["compressed_artifacts"][name], device=args.device,
+                    )
+                    del trajectory_contexts
+                artifact["pees"] = pees_metadata
+                del base_reconstructed
+
             # The artifacts are sufficient for reconstruction; discard the
             # transient dense reconstructions retained for compiler metrics.
             compiled.pop("compressed_weights", None)
@@ -478,6 +604,14 @@ def main():
                 })
             torch.save(artifact, path)
             actual_serialized_bytes = path.stat().st_size
+            if args.pees_rank > 0:
+                max_allowed_bytes = pees_base_checkpoint_bytes * args.max_checkpoint_multiplier
+                if actual_serialized_bytes > max_allowed_bytes:
+                    path.unlink()
+                    raise RuntimeError(
+                        f"PEES exceeds checkpoint budget: {actual_serialized_bytes} > "
+                        f"{max_allowed_bytes:.0f} ({args.max_checkpoint_multiplier:.3f}x)"
+                    )
             if args.defect_bridge_mode == "hybrid":
                 max_allowed_bytes = baseline_buffer_bytes * args.max_checkpoint_multiplier
                 if actual_serialized_bytes > max_allowed_bytes:
@@ -507,6 +641,13 @@ def main():
                 "bridge_tensor_bytes": (
                     bridge_tensor_bytes(artifact["cross_layer_bridge"])
                     if args.defect_bridge_mode == "hybrid" else 0
+                ),
+                "pees": artifact.get("pees"),
+                "base_checkpoint_bytes_before_pees": pees_base_checkpoint_bytes,
+                "pees_tensor_bytes": pees_tensor_bytes,
+                "pees_checkpoint_multiplier": (
+                    path.stat().st_size / pees_base_checkpoint_bytes
+                    if pees_base_checkpoint_bytes is not None else 1.0
                 ),
                 "checkpoint_multiplier": (
                     path.stat().st_size / baseline_buffer_bytes
