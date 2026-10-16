@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from scripts.compile_high_fidelity import select_calibration_activations
+from scripts.compile_high_fidelity import select_calibration_activations, select_reference_activations
 
 
 class CalibrationActivationModeTests(unittest.TestCase):
@@ -23,6 +23,21 @@ class CalibrationActivationModeTests(unittest.TestCase):
     def test_unknown_mode_fails_closed(self):
         with self.assertRaises(ValueError):
             select_calibration_activations("healed", torch.tensor([[1.0]]), None)
+
+    def test_trajectory_aware_mode_keeps_clean_reference_separate(self):
+        dense = torch.tensor([[1.0]])
+        compressed = torch.tensor([[2.0]])
+        self.assertIs(select_reference_activations("trajectory_aware_mlp", dense, compressed), dense)
+        self.assertIs(select_reference_activations("trajectory_aware_all", dense, compressed), dense)
+
+    def test_independent_mode_preserves_legacy_reference(self):
+        dense = torch.tensor([[1.0]])
+        calibration = torch.tensor([[2.0]])
+        self.assertIs(select_reference_activations("independent", dense, calibration), calibration)
+
+    def test_unknown_construction_mode_fails_closed(self):
+        with self.assertRaises(ValueError):
+            select_reference_activations("healing", torch.tensor([[1.0]]), torch.tensor([[2.0]]))
 
 
 if __name__ == "__main__":

@@ -131,6 +131,7 @@ def compile_attention_block(
     verbose=False,
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
+    conditional_context=False,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
@@ -217,6 +218,19 @@ def compile_attention_block(
             Y_attn_target = Y_attn_dense
         if verbose:
             print(f"  [Attention Sub-Block] Causal Healing active: Solving W_o on corrupted context A_comp (bridge: r={r_bridge_o}, outliers={n_outliers_o})...", flush=True)
+    elif conditional_context:
+        # Fit once on the context the saved Q/K/V factors actually produce.
+        # Capacity stays identical to the independent zero-healing baseline.
+        X_o_calib = A_comp
+        r_bridge_o = r_bridge
+        n_outliers_o = n_outliers
+        Y_attn_target = Y_attn_dense
+        if verbose:
+            print(
+                "  [Attention Sub-Block] Trajectory-aware construction: "
+                "solving W_o on compressed context at the fixed budget...",
+                flush=True,
+            )
     else:
         if verbose:
             print("  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...", flush=True)
@@ -279,6 +293,7 @@ def compile_mlp_block(
     verbose=False,
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
+    conditional_context=False,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
@@ -351,6 +366,20 @@ def compile_mlp_block(
             Y_mlp_target = Y_mlp_dense
         if verbose:
             print(f"  [SwiGLU MLP Sub-Block] Causal Healing active: Solving W_down on corrupted activation H_swiglu_comp (bridge: r={r_bridge_down}, outliers={n_outliers_down})...", flush=True)
+    elif conditional_context:
+        # Condition the initial down-projection construction on the SwiGLU
+        # activation produced by the factors that will be serialized. This is
+        # part of compilation and keeps the bridge/sparse/MPO budget fixed.
+        X_down_calib = H_swiglu_comp
+        r_bridge_down = r_bridge
+        n_outliers_down = n_outliers
+        Y_mlp_target = Y_mlp_dense
+        if verbose:
+            print(
+                "  [SwiGLU MLP Sub-Block] Trajectory-aware construction: "
+                "solving W_down on compressed SwiGLU context at the fixed budget...",
+                flush=True,
+            )
     else:
         if verbose:
             print("  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...", flush=True)
@@ -360,7 +389,12 @@ def compile_mlp_block(
         Y_mlp_target = Y_mlp_dense
 
     if verbose:
-        mode_str = "Causal Healing active: Solving W_down on corrupted SwiGLU context" if causal_healing else "Independent mode: Solving W_down on clean SwiGLU context"
+        if causal_healing:
+            mode_str = "Causal Healing active: Solving W_down on corrupted SwiGLU context"
+        elif conditional_context:
+            mode_str = "Trajectory-aware construction: Solving W_down on compressed SwiGLU context"
+        else:
+            mode_str = "Independent mode: Solving W_down on clean SwiGLU context"
         print(f"  [SwiGLU MLP Sub-Block] {mode_str} (bridge: r={r_bridge_down}, outliers={n_outliers_down})...", flush=True)
 
     gamma_down = 0.002 if causal_healing else 0.01
@@ -418,6 +452,7 @@ def compile_transformer_block(
     rms_norm_eps=1e-5,
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
+    trajectory_mode="none",
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -437,6 +472,10 @@ def compile_transformer_block(
     t_start = time.time()
     d_model = X_calib.shape[0]
     site_order = validate_site_order(site_order)
+    if trajectory_mode not in ("none", "mlp", "all"):
+        raise ValueError(f"Unknown trajectory_mode: {trajectory_mode}")
+    if causal_healing and trajectory_mode != "none":
+        raise ValueError("trajectory_mode and causal_healing are mutually exclusive")
 
     norm1_weight = layer_weights.get("input_layernorm", None)
     norm2_weight = layer_weights.get("post_attention_layernorm", None)
@@ -468,13 +507,18 @@ def compile_transformer_block(
         return_artifacts=return_artifacts,
         verbose=verbose,
         site_order=site_order,
+        conditional_context=trajectory_mode == "all",
     )
 
     X_res1_dense = ref_calib_dense + attn_res["Y_attn_dense"]
     X_res1_comp = X_calib + attn_res["Y_attn_comp"]
 
     X_norm2_dense = norm2(X_res1_dense)
-    X_norm2_comp = norm2(X_res1_comp) if causal_healing else norm2(X_res1_dense)
+    X_norm2_comp = (
+        norm2(X_res1_comp)
+        if causal_healing or trajectory_mode in ("mlp", "all")
+        else norm2(X_res1_dense)
+    )
 
     drift_mlp = (X_res1_dense - X_res1_comp) if (X_calib_dense is not None and causal_healing) else None
 
@@ -492,6 +536,7 @@ def compile_transformer_block(
         return_artifacts=return_artifacts,
         verbose=verbose,
         site_order=site_order,
+        conditional_context=trajectory_mode in ("mlp", "all"),
     )
 
     X_out_dense = X_res1_dense + mlp_res["Y_mlp_dense"]
@@ -527,6 +572,7 @@ def compile_transformer_block(
         "total_kb": total_kb,
         "time_sec": total_time,
         "causal_healing": causal_healing,
+        "trajectory_mode": trajectory_mode,
     }
     if return_artifacts:
         res["compressed_artifacts"] = {

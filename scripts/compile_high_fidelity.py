@@ -35,6 +35,15 @@ def select_calibration_activations(mode, dense_activations, compressed_activatio
     raise ValueError(f"Unknown calibration activation mode: {mode}")
 
 
+def select_reference_activations(construction_mode, dense_activations, calibration_activations):
+    """Select clean targets for trajectory-aware initial construction."""
+    if construction_mode == "independent":
+        return calibration_activations
+    if construction_mode in ("trajectory_aware_mlp", "trajectory_aware_all"):
+        return dense_activations
+    raise ValueError(f"Unknown construction mode: {construction_mode}")
+
+
 def parse_site_order(value):
     try:
         return validate_site_order(tuple(int(part.strip()) for part in value.split(",")))
@@ -83,6 +92,13 @@ def main():
         help=("Use dense layer inputs (independent control) or propagate calibration inputs "
               "through already-written compressed layers. Both modes keep causal_healing=False."),
     )
+    parser.add_argument(
+        "--construction-mode",
+        choices=("independent", "trajectory_aware_mlp", "trajectory_aware_all"),
+        default="independent",
+        help=("Initial zero-healing construction objective. Trajectory-aware modes regress from "
+              "the actual compressed prefix toward its corresponding clean dense trajectory."),
+    )
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
     parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
                         help="Apply an exact paired attention reparameterization before compression")
@@ -100,6 +116,8 @@ def main():
         raise ValueError("Invalid layer interval")
     if args.seq_len < 2 or any(n < args.seq_len or n % args.seq_len for n in (args.n_calib, args.n_validation)):
         raise ValueError("Calibration/validation counts must be positive multiples of seq-len")
+    if args.construction_mode != "independent" and args.calibration_activation_mode != "compressed_prefix":
+        raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
     if list(args.output.glob("compressed_layer_*.pt")) or (args.output / "model_manifest.json").exists():
         raise FileExistsError("Use a fresh output directory; checkpoints will not be overwritten")
     args.output.mkdir(parents=True, exist_ok=True)
@@ -117,11 +135,20 @@ def main():
                            seq_len=args.seq_len, rms_norm_eps=config.rms_norm_eps)
     compression = get_tier_config("high_fidelity_10x")
     compression["diagonal_prior_strength"] = args.diagonal_prior_strength
+    compression_path = (
+        "no_healing_independent"
+        if args.calibration_activation_mode == "dense"
+        else (
+            "no_healing_prefix_calibrated"
+            if args.construction_mode == "independent"
+            else f"zero_healing_{args.construction_mode}"
+        )
+    )
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
-        "compression_path": ("no_healing_independent" if args.calibration_activation_mode == "dense"
-                              else "no_healing_prefix_calibrated"),
+        "compression_path": compression_path,
         "calibration_activation_mode": args.calibration_activation_mode,
+        "construction_mode": args.construction_mode,
         "config": compression,
         "attention_gauge": args.attention_gauge,
         "mpo_site_order": args.site_order,
@@ -133,10 +160,10 @@ def main():
             ROOT / "nox/tensor_order.py",
         ]),
     }
-    compression_path = identity["compression_path"]
     manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
                 "tier": "high_fidelity_10x", "compression_path": compression_path,
                 "calibration_activation_mode": args.calibration_activation_mode,
+                "construction_mode": args.construction_mode,
                 "mpo_site_order": args.site_order,
                 "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
                 "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
@@ -177,18 +204,24 @@ def main():
             validation_calibration_input = select_calibration_activations(
                 args.calibration_activation_mode, validation, compressed_validation,
             )
+            reference_input = select_reference_activations(
+                args.construction_mode, train, calibration_input,
+            )
             torch.save({"X_test": validation.cpu(), "rms_norm_eps": config.rms_norm_eps}, args.output / f"dense_input_layer_{index}.pt")
             torch.save(calibration_input.cpu(), args.output / f"calibration_input_layer_{index}.pt")
             torch.save(validation_calibration_input.cpu(), args.output / f"layer_input_validation_layer_{index}.pt")
             compiled = compile_transformer_block(
-                dense, calibration_input, X_calib_dense=calibration_input, causal_healing=False,
+                dense, calibration_input, X_calib_dense=reference_input, causal_healing=False,
                 ranks=compression["ranks"], r_bridge=compression["r_bridge"],
                 n_outliers=compression["n_outliers"], return_artifacts=True,
                 diagonal_prior_strength=args.diagonal_prior_strength,
+                trajectory_mode=("none" if args.construction_mode == "independent"
+                                 else args.construction_mode.removeprefix("trajectory_aware_")),
                 verbose=True, site_order=args.site_order, **forward_options,
             )
             artifact = {
                 "layer_idx": index, "compression_path": compression_path,
+                "construction_mode": args.construction_mode,
                 "mpo_site_order": args.site_order,
                 "attention_gauge": gauge_metadata,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
@@ -210,13 +243,14 @@ def main():
             )
             compressed_validation, _, _ = forward_transformer_block(reconstructed, compressed_validation, **forward_options)
             calibration_dense_output, _, _ = forward_transformer_block(
-                dense, calibration_input, **forward_options,
+                dense, reference_input, **forward_options,
             )
             train_output, _, _ = forward_transformer_block(
                 reconstructed, calibration_input, **forward_options,
             )
             record = {
                 "layer": index, "calibration_activation_mode": args.calibration_activation_mode,
+                "construction_mode": args.construction_mode,
                 "mpo_site_order": args.site_order,
                 "same_input_validation": compute_metrics(dense_same_input, same_input),
                 "cascade_validation": compute_metrics(validation_next, compressed_validation),

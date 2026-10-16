@@ -195,38 +195,52 @@ def _rowspace_and_ridge_oracle(A_train, R_train, A_validation, R_validation, max
     A_validation = A_validation[:, :count].float()
     R_validation = R_validation[:, :count].float()
     feature_scale = float(A_train.shape[0])
-    gram = (A_train.T @ A_train) / feature_scale
+    # Accumulate the large products in FP32, then solve the small sample-space
+    # problem in FP64. The SwiGLU Gram matrix is highly ill-conditioned, and an
+    # FP32 solve can otherwise report a residual larger than the target itself.
+    gram = ((A_train.T @ A_train) / feature_scale).double()
+    cross = ((A_train.T @ A_validation) / feature_scale).double()
     eigenvalues, eigenvectors = torch.linalg.eigh(gram)
-    threshold = eigenvalues[-1].clamp_min(1e-30) * 1e-6
-    keep = eigenvalues > threshold
-    basis = eigenvectors[:, keep]
-    projected = (R_train @ basis) @ basis.T if basis.shape[1] else torch.zeros_like(R_train)
-    outside = torch.linalg.vector_norm(R_train - projected) / torch.linalg.vector_norm(R_train).clamp_min(1e-30)
-    cross = (A_train.T @ A_validation) / feature_scale
+    nonnegative = eigenvalues.clamp_min(0.0)
+    largest = nonnegative[-1].clamp_min(1e-30)
+    rowspace_results = {}
+    R_train64 = R_train.double()
+    R_validation64 = R_validation.double()
+    for relative_threshold in (1e-6, 1e-8):
+        keep = nonnegative > largest * relative_threshold
+        basis = eigenvectors[:, keep]
+        projected = (R_train64 @ basis) @ basis.T if basis.shape[1] else torch.zeros_like(R_train64)
+        outside = (
+            torch.linalg.vector_norm(R_train64 - projected)
+            / torch.linalg.vector_norm(R_train64).clamp_min(1e-30)
+        )
+        rowspace_results[f"{relative_threshold:.0e}"] = {
+            "effective_row_rank": int(keep.sum()),
+            "outside_fraction": float(outside),
+            "condition_number": float(largest / nonnegative[keep][0]) if keep.any() else None,
+        }
     ridge_results = {}
-    identity = torch.eye(count, device=gram.device, dtype=gram.dtype)
     mean_diagonal = gram.diagonal().mean().clamp_min(1e-30)
     for relative_ridge in (1e-6, 1e-4, 1e-2):
-        system = gram + relative_ridge * mean_diagonal * identity
-        train_coefficients = torch.linalg.solve(system, gram)
-        validation_coefficients = torch.linalg.solve(system, cross)
-        train_prediction = R_train @ train_coefficients
-        validation_prediction = R_train @ validation_coefficients
+        inverse = 1.0 / (nonnegative + relative_ridge * mean_diagonal)
+        solve_gram = (eigenvectors * inverse.unsqueeze(0)) @ eigenvectors.T
+        train_coefficients = solve_gram @ gram
+        validation_coefficients = solve_gram @ cross
+        train_prediction = R_train64 @ train_coefficients
+        validation_prediction = R_train64 @ validation_coefficients
         ridge_results[f"{relative_ridge:.0e}"] = {
             "train_relative_residual": float(
-                torch.linalg.vector_norm(train_prediction - R_train)
-                / torch.linalg.vector_norm(R_train).clamp_min(1e-30)
+                torch.linalg.vector_norm(train_prediction - R_train64)
+                / torch.linalg.vector_norm(R_train64).clamp_min(1e-30)
             ),
             "heldout_relative_residual": float(
-                torch.linalg.vector_norm(validation_prediction - R_validation)
-                / torch.linalg.vector_norm(R_validation).clamp_min(1e-30)
+                torch.linalg.vector_norm(validation_prediction - R_validation64)
+                / torch.linalg.vector_norm(R_validation64).clamp_min(1e-30)
             ),
         }
     return {
         "samples": count,
-        "numerical_row_rank": int(keep.sum()),
-        "rowspace_outside_fraction": float(outside),
-        "condition_number_at_threshold": float(eigenvalues[-1] / eigenvalues[keep][0]) if keep.any() else None,
+        "effective_rowspace": rowspace_results,
         "ridge_correction_oracle": ridge_results,
     }
 
@@ -334,6 +348,13 @@ def _ppl_variants():
                 "dense_layer1": {0: (), 1: PROJECTIONS}}
     for group_name, projections in GROUPS.items():
         variants[f"restore_both_{group_name}"] = {0: projections, 1: projections}
+    for layer_idx in (0, 1):
+        for group_name in ("gate_up", "down", "attention", "mlp"):
+            projections = GROUPS[group_name]
+            variants[f"restore_layer{layer_idx}_{group_name}"] = {
+                0: projections if layer_idx == 0 else (),
+                1: projections if layer_idx == 1 else (),
+            }
     return variants
 
 
