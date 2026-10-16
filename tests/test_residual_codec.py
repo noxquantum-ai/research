@@ -14,7 +14,7 @@ from nox.residual_codec import (
     decode_groupwise,
     encode_groupwise,
 )
-from scripts.run_residual_codec_pilot import block_error_metrics
+from scripts.run_residual_codec_pilot import block_error_metrics, load_activation_tensor
 
 
 class PackedResidualCodecTests(unittest.TestCase):
@@ -77,6 +77,14 @@ class PackedResidualCodecTests(unittest.TestCase):
     def test_nonfinite_input_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "NaN or infinite"):
             encode_groupwise(torch.tensor([[float("nan")]]), bits=2)
+
+    def test_saved_dense_validation_payload_loads_its_x_test_matrix(self):
+        expected = torch.randn(8, 16)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dense_input_layer_0.pt"
+            torch.save({"X_test": expected, "rms_norm_eps": 1e-5}, path)
+            actual = load_activation_tensor(path)
+        self.assertTrue(torch.equal(actual, expected))
 
     def test_training_statistics_can_collect_q_k_and_up_contexts(self):
         weights = {

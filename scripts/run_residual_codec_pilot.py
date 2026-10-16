@@ -126,9 +126,19 @@ def read_checkpoint(checkpoint_dir: Path, layer_index: int) -> dict:
     return torch.load(path, map_location="cpu", weights_only=False)
 
 
+def load_activation_tensor(path: Path) -> torch.Tensor:
+    """Load either a raw activation matrix or a saved ``X_test`` validation dict."""
+    value = torch.load(path, map_location="cpu", weights_only=True)
+    if torch.is_tensor(value):
+        return value.float()
+    if isinstance(value, dict) and torch.is_tensor(value.get("X_test")):
+        return value["X_test"].float()
+    raise ValueError(f"Unsupported saved activation payload at {path}")
+
+
 def compute_layer_contexts(dense_weights: dict, input_path: Path, seq_len: int, heads: int,
                            kv_heads: int, rms_norm_eps: float, device: torch.device) -> dict:
-    inputs = torch.load(input_path, map_location="cpu", weights_only=True).float().to(device)
+    inputs = load_activation_tensor(input_path).to(device)
     contexts = layer_projection_trajectories(
         dense_weights=dense_weights,
         compressed_weights=dense_weights,
@@ -395,23 +405,27 @@ def main():
     validation_contexts = {}
     validation_inputs = {}
     spectrum_report = {}
+    validation_activation_sources = {}
     for layer_index in layer_indices:
         log(f"Loading pinned dense layer {layer_index} weights and saved activation windows")
         layer_weights = pinned.layer(layer_index, str(device))
         dense_weights[layer_index] = layer_weights
         train_path = args.baseline_dir / f"calibration_input_layer_{layer_index}.pt"
         validation_path = args.baseline_dir / f"layer_input_validation_layer_{layer_index}.pt"
-        if not train_path.exists() or not validation_path.exists():
-            raise FileNotFoundError(f"Missing saved calibration/validation inputs for layer {layer_index}")
+        if not train_path.exists():
+            raise FileNotFoundError(f"Missing saved training calibration input for layer {layer_index}")
+        if not validation_path.exists():
+            validation_path = args.baseline_dir / f"dense_input_layer_{layer_index}.pt"
+        if not validation_path.exists():
+            raise FileNotFoundError(f"Missing saved held-out activation input for layer {layer_index}")
+        validation_activation_sources[layer_index] = str(validation_path)
         train_contexts[layer_index] = compute_layer_contexts(
             layer_weights, train_path, seq_len_cal, heads, kv_heads, rms_norm_eps, device,
         )
         validation_contexts[layer_index] = compute_layer_contexts(
             layer_weights, validation_path, seq_len_cal, heads, kv_heads, rms_norm_eps, device,
         )
-        validation_inputs[layer_index] = torch.load(
-            validation_path, map_location="cpu", weights_only=True,
-        ).float().to(device)
+        validation_inputs[layer_index] = load_activation_tensor(validation_path).to(device)
         source_checkpoint = read_checkpoint(args.baseline_dir, layer_index)
         spectrum_report[str(layer_index)] = {}
         for projection in PROJECTIONS:
@@ -516,6 +530,7 @@ def main():
         "baseline_checkpoint_dir": str(args.baseline_dir),
         "calibration_split": baseline_manifest["run_identity"]["input_data"]["calibration_source"],
         "heldout_split": baseline_manifest["run_identity"]["input_data"]["heldout_source"],
+        "heldout_activation_sources": validation_activation_sources,
         "test_protocol": {
             "dataset": "Salesforce/wikitext/wikitext-2-raw-v1/test",
             "max_input_tokens": int(args.max_eval_tokens),
