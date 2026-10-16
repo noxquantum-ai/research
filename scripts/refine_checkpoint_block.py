@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Distill one compressed LLaMA block against dense train/held-out outputs.
+"""Run an exploratory post-compression factor fine-tuning diagnostic.
 
-This is a diagnostic, zero-healing refinement. It preserves artifact shapes,
-uses the existing grouped-int4 forward grid through an STE, and selects the
-checkpoint by held-out layer-output error. It never trains on validation data.
+This updates a saved checkpoint after the compressor has finished, so it is
+healing and is excluded from all zero-healing acceptance results. It preserves
+artifact shapes, uses the existing grouped-int4 forward grid through an STE,
+and selects the checkpoint by held-out layer-output error. Validation data is
+used only for selection, never for optimizer updates.
 """
 import argparse
 import copy
@@ -22,6 +24,7 @@ from nox.artifacts import checkpoint_file_sizes, fingerprint, source_files_finge
 from nox.block_distillation import (
     forward_block_with_grad,
     make_trainable_components,
+    post_compression_refinement_metadata,
     reconstruct_trainable_artifact,
     relative_output_error,
 )
@@ -244,7 +247,7 @@ def main():
     source_run_fingerprint = manifest["run_fingerprint"]
     refinement = {
         "method": "quantization_aware_full_block_output_distillation",
-        "healing": False,
+        **post_compression_refinement_metadata(),
         "source_run_fingerprint": source_run_fingerprint,
         "seed": args.seed,
         "learning_rate": args.learning_rate,
@@ -304,7 +307,9 @@ def main():
         "calibration_tokens": x_train.shape[1],
         "heldout_split": input_metadata["heldout_split"],
         "heldout_tokens": x_validation.shape[1],
-        "zero_healing": True,
+        "zero_healing": False,
+        **{key: value for key, value in post_compression_refinement_metadata().items()
+           if key != "healing"},
         "initial_heldout_layer_error": initial_error,
         "best_heldout_layer_error": best_error,
         "saved_heldout_layer_error": saved_error,

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Refine and evaluate exactly one high-fidelity, zero-healing layer-15 checkpoint.
+# Diagnose post-compression factor fine-tuning on one high-fidelity layer-15 checkpoint.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -34,4 +34,4 @@ sha256sum scripts/refine_checkpoint_block.py nox/block_distillation.py \
   --device cuda --activation-file "$output/dense_input_layer_15.pt" \
   > "${output}_audit.log" 2>&1
 
-echo "COMPLETE: layer-15 high-fidelity zero-healing distillation control saved to $output"
+echo "COMPLETE: post-compression healing diagnostic saved to $output (excluded from zero-healing results)"

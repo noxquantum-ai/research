@@ -6,6 +6,7 @@ from nox.block_distillation import (
     fake_quantize_ste,
     forward_block_with_grad,
     make_trainable_components,
+    post_compression_refinement_metadata,
     reconstruct_trainable_artifact,
 )
 from nox.compiler import quantize_4bit_grouped, reconstruct_from_artifact
@@ -13,6 +14,12 @@ from nox.sequential_compiler import forward_transformer_block
 
 
 class BlockDistillationTests(unittest.TestCase):
+    def test_post_compression_optimizer_is_classified_as_healing(self):
+        metadata = post_compression_refinement_metadata()
+        self.assertTrue(metadata["healing"])
+        self.assertTrue(metadata["post_compression_factor_updates"])
+        self.assertTrue(metadata["diagnostic_only"])
+
     def test_fake_quantization_preserves_int4_forward_and_straight_through_gradient(self):
         value = torch.linspace(-2.0, 2.0, 130, requires_grad=True)
         forward = fake_quantize_ste(value)

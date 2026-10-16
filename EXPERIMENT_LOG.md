@@ -426,4 +426,30 @@ Once a full 32-layer high-fidelity checkpoint exists and passes the WikiText gat
 
 This command scores the complete test set and reports the overall score, its ratio to 45.3%, and whether it reaches 43.035%. No compressed MMLU score exists yet.
 
-Next diagnostic: quantization-aware, zero-healing output distillation of the existing high-fidelity layer-15 checkpoint. It updates the seven projection factors jointly against dense full-block outputs on 1,024 raw WikiText train tokens and chooses the saved checkpoint using 1,024 separate raw WikiText validation tokens. The ranks, bridge, sparse capacity, and artifact layout remain fixed. If the focused output and WikiText checks pass the documented gates, the next full-model run will use only the high-fidelity, zero-healing configuration. Current single-layer global PPL/agreement still fail, so no 32-layer sweep is authorized by the quality gate yet.
+The exploratory post-compression factor fine-tuning control updated the seven saved layer-15 projection factors jointly for 8 epochs (64 Adam steps) against dense full-block outputs on 1,024 raw WikiText train tokens. It selected by 1,024 separate raw WikiText validation tokens. This changes an already written checkpoint, so it is **healing** and is excluded from the zero-healing engine/results. The initial report's `zero_healing=true` marker was incorrect; the source code now labels this diagnostic as healing, and this note supersedes that field in the retained artifact. Its ranks, bridge, sparse capacity, and serialized size were unchanged.
+
+The control started from the prior-0 layer-15 checkpoint at commit `51c748d`. Held-out block output error changed from **0.05176836 to 0.05111379**; the saved reconstruction audit reproduced the latter (cosine 0.998693), and all seven matrix comparisons completed. The saved artifact is **70,116,852 bytes**, 704 bytes larger than its 70,116,148-byte parent. On the same 10,000 raw WikiText test tokens / 9,999 shifted labels, dense PPL/next-token accuracy were **5.2922001 / 61.0461%**; the original zero-healing parent scored **5.6134000 / 60.2460%**, with **89.6990%** dense top-1 agreement; this post-compression fine-tuned diagnostic scored **5.6080208 / 60.2560%**, with **89.8190%** agreement. It improves the parent only marginally and still has PPL 5.97% above dense and agreement 5.18 percentage points below 95%. This is not a qualifying zero-healing result.
+
+Exact executed sequence on the A10:
+
+```bash
+bash scripts/run_block_distillation_control.sh
+# The driver called these three commands serially:
+.venv/bin/python -u scripts/refine_checkpoint_block.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/layer15_uniform_prior_control/prior0 \
+  --weights-dir models/diagnostic_36h_cache \
+  --output checkpoints/diagnostic_36h/layer15_block_distillation \
+  --epochs 8 --learning-rate 1e-4 --patience 3
+.venv/bin/python -u scripts/diagnose_reference_pipeline.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/layer15_block_distillation \
+  --weights-dir models/diagnostic_36h_cache \
+  --output checkpoints/diagnostic_36h/layer15_block_distillation/evaluation.json
+.venv/bin/python -u scripts/audit_checkpoint_reconstruction.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/layer15_block_distillation \
+  --dense-weights-dir models/diagnostic_36h_cache --layer 15 --device cuda \
+  --activation-file checkpoints/diagnostic_36h/layer15_block_distillation/dense_input_layer_15.pt
+```
+
+The run fingerprint was `a4ae289663e4c46b8092f4f43478b2dacf5717e93b7c7693494b8d1a8a954d`; optimization took 8.361 seconds. Logs and small reports are copied locally under `experiment_artifacts/diagnostic_36h/remote_records/layer15_block_distillation/`; the 70 MB checkpoint remains on the A10. The 28-test suite also ran there and passed in 2.511 seconds.
+
+No four-layer or full 32-layer run follows from this failed one-layer gate. The next engine experiment must change the compressor's initial construction/fitting procedure and write a final checkpoint directly, with no optimizer applied afterward. Any eventual 32-layer sweep will use only the high-fidelity configuration with zero healing.

@@ -1,4 +1,4 @@
-"""Quantization-aware, no-healing layer-output refinement helpers."""
+"""Quantization-aware helpers for an exploratory post-compression healing diagnostic."""
 
 import torch
 import torch.nn.functional as F
@@ -6,6 +6,15 @@ import torch.nn.functional as F
 from nox.compiler import quantize_4bit_grouped
 from nox.utils import mpo_to_dense
 from nox.block_compiler import scaled_dot_product_attention_2d
+
+
+def post_compression_refinement_metadata():
+    """Return the classification for optimizer updates to a saved checkpoint."""
+    return {
+        "healing": True,
+        "post_compression_factor_updates": True,
+        "diagnostic_only": True,
+    }
 
 
 def fake_quantize_ste(tensor, group_size=64):
