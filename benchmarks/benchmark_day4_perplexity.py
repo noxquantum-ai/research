@@ -117,7 +117,11 @@ def generate_samples(model, tokenizer, prompts, max_new_tokens=64, device="cuda"
 
 def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.float16):
     """
-    Loads saved Nox layer checkpoints and injects reconstructed weights directly into the model.
+    Loads NEC MPO, NEC-plus-packed-residual, or direct packed-codec checkpoints
+    and injects their reconstructed weights into the model.
+
+    Codec dispatch lives in ``reconstruct_from_artifact`` so legacy NEC files
+    retain their original loading path and codec checkpoints share evaluation.
     """
     ckpt_files = sorted(glob.glob(os.path.join(checkpoint_dir, "compressed_layer_*.pt")))
     if not ckpt_files:

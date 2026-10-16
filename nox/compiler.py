@@ -8,6 +8,7 @@ from nox.tensor_order import (
     unpermute_projection,
     validate_site_order,
 )
+from nox.residual_codec import CODEC_TYPE, decode_groupwise
 
 
 def quantize_4bit_grouped(tensor, group_size=64):
@@ -206,8 +207,21 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
 
 def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
     """
-    Reconstructs full dense matrix W_hat from compact compressed components.
+    Reconstruct a dense matrix from a legacy NEC, direct low-bit, or hybrid
+    NEC-plus-residual artifact.
     """
+    codec_type = artifact.get("codec_type")
+    if codec_type == CODEC_TYPE:
+        return decode_groupwise(artifact, device=device, dtype=dtype)
+    if codec_type == "nec_hybrid_residual_v1":
+        base = reconstruct_from_artifact(artifact["base_artifact"], device=device, dtype=dtype)
+        residual = decode_groupwise(artifact["residual_codec"], device=device, dtype=dtype)
+        if tuple(base.shape) != tuple(residual.shape):
+            raise ValueError("NEC base and packed residual shapes differ")
+        return base + residual
+    if codec_type not in (None, "nec_mpo_v1"):
+        raise ValueError(f"Unsupported compressed artifact codec: {codec_type!r}")
+
     cores = [c.to(device=device, dtype=dtype) for c in artifact["cores"]]
     d_awt = artifact["d_awt"].to(device=device, dtype=dtype)
     W_rec = mpo_to_dense(cores) / d_awt.unsqueeze(0)

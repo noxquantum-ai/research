@@ -79,9 +79,12 @@ def layer_projection_trajectories(
         up = weights["up_proj"] @ norm2
         swiglu = F.silu(gate) * up
         return {
+            "q_proj": norm1,
+            "k_proj": norm1,
             "v_proj": norm1,
             "o_proj": attn,
             "gate_proj": norm2,
+            "up_proj": norm2,
             "down_proj": swiglu,
         }
 
