@@ -1,0 +1,11 @@
+{
+  "status": "CLASSIFICATION_CORRECTION",
+  "target_run_fingerprint": "a4ae289663e4c46b8092f4f43478b2dacf5717e93b7c7693494b8d1a8a954d",
+  "source_commit_at_execution": "51c748d",
+  "source_commit_reclassification": "a34fe6d",
+  "zero_healing": false,
+  "healing_diagnostic": true,
+  "post_compression_factor_updates": true,
+  "reason": "The run applied 64 Adam updates to compressed factors after the compressor wrote the checkpoint. Dense base weights were frozen, but the compressed model was still fine-tuned after compression.",
+  "original_run_outputs_preserved": true
+}

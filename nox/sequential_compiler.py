@@ -19,6 +19,7 @@ from nox.block_compiler import (
 )
 from nox.utils import compute_metrics
 from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, fingerprint
+from nox.defect_bridge import apply_defect_bridge
 
 
 def compute_dense_argmax_metrics(logits_dense, logits_compressed):
@@ -98,6 +99,9 @@ def forward_transformer_block(
     H_swiglu = F.silu(H_gate) * H_up
     Y_mlp = weights["down_proj"] @ H_swiglu
     X_out = X_res1 + Y_mlp
+    cross_layer_bridge = weights.get("cross_layer_bridge")
+    if cross_layer_bridge is not None:
+        X_out = X_out + apply_defect_bridge(X, cross_layer_bridge)
 
     return X_out, Y_attn, Y_mlp
 

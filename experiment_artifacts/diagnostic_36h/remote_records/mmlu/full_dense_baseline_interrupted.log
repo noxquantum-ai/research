@@ -1,0 +1,52 @@
+2026-10-16 11:19:16.287868: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 11:19:16.301439: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792149556.317398   14470 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792149556.322640   14470 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792149556.335084   14470 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792149556.335100   14470 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792149556.335102   14470 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792149556.335104   14470 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 11:19:16.338649: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.65s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.03it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.07s/it]
+scored=1/14042 accuracy=1.000000
+scored=101/14042 accuracy=0.287129
+scored=201/14042 accuracy=0.363184
+scored=301/14042 accuracy=0.398671
+scored=401/14042 accuracy=0.408978
+scored=501/14042 accuracy=0.427146
+scored=601/14042 accuracy=0.437604
+scored=701/14042 accuracy=0.442225
+scored=801/14042 accuracy=0.445693
+scored=901/14042 accuracy=0.446171
+scored=1001/14042 accuracy=0.435564
+scored=1101/14042 accuracy=0.425976
+scored=1201/14042 accuracy=0.417985
+scored=1301/14042 accuracy=0.420446
+scored=1401/14042 accuracy=0.416845
+scored=1501/14042 accuracy=0.409727
+scored=1601/14042 accuracy=0.418488
+scored=1701/14042 accuracy=0.417989
+scored=1801/14042 accuracy=0.417546
+scored=1901/14042 accuracy=0.409784
+scored=2001/14042 accuracy=0.413293
+scored=2101/14042 accuracy=0.411709
+scored=2201/14042 accuracy=0.407088
+scored=2301/14042 accuracy=0.399392
+scored=2401/14042 accuracy=0.394835
+scored=2501/14042 accuracy=0.391443
+scored=2601/14042 accuracy=0.386390
+scored=2701/14042 accuracy=0.388745
+scored=2801/14042 accuracy=0.389147
+scored=2901/14042 accuracy=0.395381
+Traceback (most recent call last):
+  File "/home/shadeform/diag36h-research/benchmarks/benchmark_full_mmlu.py", line 123, in <module>
+    main()
+  File "/home/shadeform/diag36h-research/benchmarks/benchmark_full_mmlu.py", line 94, in main
+    scores = score_batch(model, examples[start:start + args.batch_size], tokenizer.eos_token_id, "cuda")
+  File "/usr/lib/python3/dist-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/shadeform/diag36h-research/nox/mmlu.py", line 74, in score_batch
+    choices = torch.tensor([example["choice_token_ids"] for example in examples], device=device)
+KeyboardInterrupt

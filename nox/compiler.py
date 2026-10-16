@@ -8,6 +8,7 @@ from nox.tensor_order import (
     unpermute_projection,
     validate_site_order,
 )
+from nox.residual_codec import CODEC_TYPE, decode_groupwise
 
 
 def quantize_4bit_grouped(tensor, group_size=64):
@@ -157,14 +158,24 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
     rhs.add_(reg_scale * C_prior)
 
     if D <= use_cg_threshold:
-        try:
-            L, info = torch.linalg.cholesky_ex(H)
-            if info == 0:
-                sol = torch.cholesky_solve(rhs, L)
-            else:
-                sol = torch.linalg.solve(H, rhs)
-        except Exception:
-            sol = torch.linalg.solve(H, rhs)
+        L, info = torch.linalg.cholesky_ex(H)
+        if info == 0:
+            sol = torch.cholesky_solve(rhs, L)
+        else:
+            # Activation-conditioned SwiGLU contexts can be effectively low
+            # rank. The old fallback retried the same singular direct solve.
+            # Escalating diagonal jitter keeps the solve on device and only
+            # changes cases where the regularized normal equation is not SPD.
+            diagonal_scale = H.diagonal().abs().mean().clamp_min(1e-6)
+            sol = None
+            for relative_jitter in (1e-6, 1e-4, 1e-2):
+                H.diagonal().add_(diagonal_scale * relative_jitter)
+                L, info = torch.linalg.cholesky_ex(H)
+                if info == 0:
+                    sol = torch.cholesky_solve(rhs, L)
+                    break
+            if sol is None:
+                sol = torch.linalg.pinv(H, hermitian=True, rtol=1e-5) @ rhs
     else:
         HC = H @ C_prior
         R = rhs - HC
@@ -196,8 +207,29 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
 
 def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
     """
-    Reconstructs full dense matrix W_hat from compact compressed components.
+    Reconstruct a dense matrix from a legacy NEC, direct low-bit, or hybrid
+    NEC-plus-residual artifact.
     """
+    if artifact.get("encoding") == "nox_int4_csr_v1":
+        # The packed representation is the on-disk form of the quantum-inspired
+        # MPO/sparse/bridge operator.  Decode it at the reconstruction boundary
+        # so packed NEC bases can participate in composite codecs without an
+        # exported FP16 round-trip checkpoint.
+        from nox.packing import unpack_artifact
+        artifact = unpack_artifact(artifact)
+
+    codec_type = artifact.get("codec_type")
+    if codec_type == CODEC_TYPE:
+        return decode_groupwise(artifact, device=device, dtype=dtype)
+    if codec_type == "nec_hybrid_residual_v1":
+        base = reconstruct_from_artifact(artifact["base_artifact"], device=device, dtype=dtype)
+        residual = decode_groupwise(artifact["residual_codec"], device=device, dtype=dtype)
+        if tuple(base.shape) != tuple(residual.shape):
+            raise ValueError("NEC base and packed residual shapes differ")
+        return base + residual
+    if codec_type not in (None, "nec_mpo_v1"):
+        raise ValueError(f"Unsupported compressed artifact codec: {codec_type!r}")
+
     cores = [c.to(device=device, dtype=dtype) for c in artifact["cores"]]
     d_awt = artifact["d_awt"].to(device=device, dtype=dtype)
     W_rec = mpo_to_dense(cores) / d_awt.unsqueeze(0)

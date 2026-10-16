@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nox.compiler import reconstruct_from_artifact
 from nox.artifacts import checkpoint_file_sizes
+from nox.defect_bridge import apply_defect_bridge_sequence
 from nox.data import load_wikitext2_raw_split
 
 
@@ -116,7 +117,11 @@ def generate_samples(model, tokenizer, prompts, max_new_tokens=64, device="cuda"
 
 def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.float16):
     """
-    Loads saved Nox layer checkpoints and injects reconstructed weights directly into the model.
+    Loads NEC MPO, NEC-plus-packed-residual, or direct packed-codec checkpoints
+    and injects their reconstructed weights into the model.
+
+    Codec dispatch lives in ``reconstruct_from_artifact`` so legacy NEC files
+    retain their original loading path and codec checkpoints share evaluation.
     """
     ckpt_files = sorted(glob.glob(os.path.join(checkpoint_dir, "compressed_layer_*.pt")))
     if not ckpt_files:
@@ -155,6 +160,28 @@ def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.flo
             target_layer.input_layernorm.weight.data.copy_(data["input_layernorm"].to(device=w_dev, dtype=w_dtype))
         if data.get("post_attention_layernorm") is not None:
             target_layer.post_attention_layernorm.weight.data.copy_(data["post_attention_layernorm"].to(device=w_dev, dtype=w_dtype))
+
+        bridge = data.get("cross_layer_bridge")
+        if bridge is not None:
+            bridge = {
+                key: (value.to(device=w_dev) if torch.is_tensor(value) else value)
+                for key, value in bridge.items()
+            }
+            original_forward = target_layer.forward
+
+            def forward_with_bridge(hidden_states, *args, _forward=original_forward,
+                                    _bridge=bridge, **kwargs):
+                output = _forward(hidden_states, *args, **kwargs)
+                corrected = hidden_states + apply_defect_bridge_sequence(hidden_states, _bridge)
+                if torch.is_tensor(output):
+                    return output + (corrected - hidden_states)
+                if isinstance(output, tuple):
+                    return (output[0] + (corrected - hidden_states), *output[1:])
+                if isinstance(output, list):
+                    return [output[0] + (corrected - hidden_states), *output[1:]]
+                raise TypeError(f"Unsupported decoder-layer output type: {type(output)!r}")
+
+            target_layer.forward = forward_with_bridge
 
         injected_layers.append(l_idx)
         log_step(f"  Layer {l_idx:02d}: Reconstructed and injected ({data.get('total_kb', 0.0):.1f} KB artifact)")
@@ -209,9 +236,10 @@ def main():
     test_text, test_data_metadata = load_wikitext2_test_text(return_metadata=True)
 
     dense_ppl = None
+    dense_details = None
     if args.eval_dense:
         log_step("Evaluating Dense Uncompressed Baseline Perplexity...")
-        dense_ppl, dense_tokens = compute_perplexity(
+        dense_ppl, dense_tokens, dense_details = compute_perplexity(
             model=model,
             tokenizer=tokenizer,
             text=test_text,
@@ -219,8 +247,12 @@ def main():
             stride=args.stride,
             max_eval_tokens=args.max_eval_tokens,
             device=device,
+            return_details=True,
         )
-        log_step(f"Dense Baseline Perplexity: {dense_ppl:.2f} ({dense_tokens} tokens)")
+        log_step(
+            f"Dense Baseline Perplexity: {dense_ppl:.4f} ({dense_tokens} labels), "
+            f"next-token accuracy={dense_details['next_token_accuracy']:.6f}"
+        )
 
     # Inject Nox compressed layers
     injected_layers = inject_nox_checkpoints(model, args.checkpoint_dir, device=device, dtype=pt_dtype)
@@ -236,7 +268,7 @@ def main():
     serialized_checkpoint_bytes = sum(checkpoint_sizes.values())
 
     log_step(f"Evaluating Nox-Compressed Model Perplexity ({len(injected_layers)} compressed layers)...")
-    nox_ppl, eval_tokens = compute_perplexity(
+    nox_ppl, eval_tokens, nox_details = compute_perplexity(
         model=model,
         tokenizer=tokenizer,
         text=test_text,
@@ -244,8 +276,50 @@ def main():
         stride=args.stride,
         max_eval_tokens=args.max_eval_tokens,
         device=device,
+        return_details=True,
     )
-    log_step(f"Nox Compressed Model Perplexity: {nox_ppl:.2f} ({eval_tokens} tokens)")
+    dense_top1_agreement = None
+    if dense_details is not None:
+        if dense_details["top1_predictions"].shape != nox_details["top1_predictions"].shape:
+            raise RuntimeError("Dense and compressed evaluation scored different target positions")
+        dense_top1_agreement = float(
+            (dense_details["top1_predictions"] == nox_details["top1_predictions"]).float().mean().item()
+        )
+    eval_record = {
+        "model_id": args.model_id,
+        "model_revision": args.model_revision,
+        "checkpoint_dir": os.path.abspath(args.checkpoint_dir),
+        "compressed_layers": injected_layers,
+        "dense": None if dense_details is None else {
+            "ppl": dense_ppl,
+            "mean_nll": dense_details["mean_nll"],
+            "next_token_accuracy": dense_details["next_token_accuracy"],
+        },
+        "compressed": {
+            "ppl": nox_ppl,
+            "mean_nll": nox_details["mean_nll"],
+            "next_token_accuracy": nox_details["next_token_accuracy"],
+            "dense_top1_agreement": dense_top1_agreement,
+        },
+        "input_tokens": nox_details["input_tokens"],
+        "scored_labels": eval_tokens,
+        "ppl_context_length": args.seq_len,
+        "sliding_window_stride": args.stride,
+        "test_split": test_data_metadata,
+        "compressed_layer_checkpoint_bytes": sum(
+            size for name, size in checkpoint_sizes.items()
+            if os.path.basename(name).startswith("compressed_layer_")
+        ),
+        "all_checkpoint_directory_bytes": serialized_checkpoint_bytes,
+    }
+    eval_record_path = os.path.join(args.checkpoint_dir, "evaluation_wikitext.json")
+    with open(eval_record_path, "w", encoding="utf-8") as result_file:
+        json.dump(eval_record, result_file, indent=2)
+    log_step(
+        f"Nox Compressed Model PPL: {nox_ppl:.4f}; mean NLL={nox_details['mean_nll']:.6f}; "
+        f"next-token accuracy={nox_details['next_token_accuracy']:.6f}; "
+        f"dense top-1 agreement={dense_top1_agreement}"
+    )
 
     sample_prompts = [
         "The theory of quantum entanglement describes",

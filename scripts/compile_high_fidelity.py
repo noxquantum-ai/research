@@ -3,6 +3,7 @@
 
 import argparse
 import gc
+import io
 import json
 import sys
 import time
@@ -18,12 +19,21 @@ sys.path.insert(0, str(ROOT))
 
 from benchmarks.benchmark_day3_cascade import build_real_token_calibration_data
 from nox.artifacts import fingerprint, source_files_fingerprint
+from nox.allocation import projection_budgets
 from nox.block_compiler import compile_transformer_block
 from nox.compiler import reconstruct_from_artifact
 from nox.gauge import balanced_attention_gauge
+from nox.mlp_gauge import balanced_swiglu_gauge, entanglement_ordered_swiglu_gauge
 from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
+from nox.defect_bridge import fit_hybrid_defect_bridge, bridge_tensor_bytes
+from nox.pees import (
+    DEFAULT_PROJECTIONS as PEES_DEFAULT_PROJECTIONS,
+    append_shield_to_projection_artifact,
+    fit_propagated_eigenspace_shield,
+    layer_projection_trajectories,
+)
 
 
 def select_calibration_activations(mode, dense_activations, compressed_activations):
@@ -33,6 +43,54 @@ def select_calibration_activations(mode, dense_activations, compressed_activatio
     if mode == "compressed_prefix":
         return dense_activations if compressed_activations is None else compressed_activations
     raise ValueError(f"Unknown calibration activation mode: {mode}")
+
+
+def select_reference_activations(construction_mode, dense_activations, calibration_activations):
+    """Select clean targets for trajectory-aware initial construction."""
+    if construction_mode == "independent":
+        return calibration_activations
+    if construction_mode in (
+        "trajectory_aware_mlp", "trajectory_aware_all", "trajectory_aware_product",
+    ):
+        return dense_activations
+    raise ValueError(f"Unknown construction mode: {construction_mode}")
+
+
+def resume_identity_compatible(previous, current):
+    """Allow source repairs and extension of an otherwise identical layer prefix."""
+    previous = dict(previous)
+    current = dict(current)
+    previous.pop("source_fingerprint", None)
+    current.pop("source_fingerprint", None)
+    previous_layers = previous.pop("layers", None)
+    current_layers = current.pop("layers", None)
+    if previous_layers is None or current_layers is None:
+        return False
+    previous_layers = list(previous_layers)
+    current_layers = list(current_layers)
+    if current_layers[:len(previous_layers)] != previous_layers:
+        return False
+    # These fields were added after older run records. Missing fields map only
+    # to their historical defaults; they must not silently adopt a new method.
+    legacy_defaults = {
+        "mlp_objective": "independent",
+        "mlp_product_ridge_ratio": 0.05,
+        "budget_allocation": "uniform",
+        "defect_bridge_mode": "none",
+        "defect_bridge_linear_rank": 512,
+        "defect_bridge_memory_size": 512,
+        "defect_bridge_memory_top_k": 8,
+        "defect_bridge_ridge_ratio": 0.01,
+        "max_checkpoint_multiplier": 1.25,
+        "pees_rank": 0,
+        "pees_projections": list(PEES_DEFAULT_PROJECTIONS),
+        "pees_tokens": 4096,
+        "pees_ridge_ratio": 0.01,
+    }
+    for key, value in legacy_defaults.items():
+        previous.setdefault(key, value)
+    previous.setdefault("projection_budgets", current.get("projection_budgets"))
+    return json.dumps(previous, sort_keys=True) == json.dumps(current, sort_keys=True)
 
 
 def parse_site_order(value):
@@ -83,9 +141,54 @@ def main():
         help=("Use dense layer inputs (independent control) or propagate calibration inputs "
               "through already-written compressed layers. Both modes keep causal_healing=False."),
     )
+    parser.add_argument(
+        "--construction-mode",
+        choices=(
+            "independent", "trajectory_aware_mlp", "trajectory_aware_all",
+            "trajectory_aware_product",
+        ),
+        default="independent",
+        help=("Initial zero-healing construction objective. Trajectory-aware modes regress from "
+              "the actual compressed prefix toward its corresponding clean dense trajectory."),
+    )
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
     parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
                         help="Apply an exact paired attention reparameterization before compression")
+    parser.add_argument(
+        "--mlp-gauge", choices=("none", "balanced_up_down", "entanglement_ordered"), default="none",
+        help=("Apply an exact joint SwiGLU gauge before initial compression. The entanglement-ordered "
+              "variant maps calibration-correlated neurons onto the fixed MPO tensor grid."),
+    )
+    parser.add_argument(
+        "--mlp-objective", choices=("independent", "product_aware"), default="independent",
+        help=("Fit gate/up independently or fit Up to the closed-form ridge-compensated target "
+              "induced by the initially compressed gate."),
+    )
+    parser.add_argument("--mlp-product-ridge-ratio", type=float, default=0.05)
+    parser.add_argument(
+        "--budget-allocation", choices=("uniform", "interaction_aware"), default="uniform",
+        help="Keep uniform projection budgets or exchange Q/O sparse entries for Gate/Down at fixed total bytes",
+    )
+    parser.add_argument(
+        "--defect-bridge-mode", choices=("none", "hybrid"), default="none",
+        help=("Fit a rank-limited global correction plus calibration-state residual memory "
+              "during initial artifact construction; no checkpoint is modified afterward."),
+    )
+    parser.add_argument("--defect-bridge-linear-rank", type=int, default=512)
+    parser.add_argument("--defect-bridge-memory-size", type=int, default=512)
+    parser.add_argument("--defect-bridge-memory-top-k", type=int, default=8)
+    parser.add_argument("--defect-bridge-ridge-ratio", type=float, default=0.01)
+    parser.add_argument(
+        "--pees-rank", type=int, default=0,
+        help="Add an initial-construction propagated eigenspace sidecar at this per-projection rank (0 disables PEES)",
+    )
+    parser.add_argument(
+        "--pees-projections", default=",".join(PEES_DEFAULT_PROJECTIONS),
+        help="Comma-separated subset of v_proj,o_proj,gate_proj,down_proj",
+    )
+    parser.add_argument("--pees-tokens", type=int, default=4096)
+    parser.add_argument("--pees-ridge-ratio", type=float, default=0.01)
+    parser.add_argument("--max-checkpoint-multiplier", type=float, default=1.25)
     parser.add_argument(
         "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
         help=("Shared four-site MPO order for every projection in the layer stack; "
@@ -94,14 +197,47 @@ def main():
     parser.add_argument("--model-id", default="NousResearch/Llama-2-7b-hf")
     parser.add_argument("--model-revision", default="8efe6c9b93655b934e27bd9981e3ec13e55aee9d")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="Reuse fully written layer artifacts after validating all non-source run identity fields",
+    )
     args = parser.parse_args()
     config = AutoConfig.from_pretrained(args.model_id, revision=args.model_revision)
     if not 0 <= args.start_layer <= args.end_layer < config.num_hidden_layers:
         raise ValueError("Invalid layer interval")
     if args.seq_len < 2 or any(n < args.seq_len or n % args.seq_len for n in (args.n_calib, args.n_validation)):
         raise ValueError("Calibration/validation counts must be positive multiples of seq-len")
-    if list(args.output.glob("compressed_layer_*.pt")) or (args.output / "model_manifest.json").exists():
+    if args.construction_mode != "independent" and args.calibration_activation_mode != "compressed_prefix":
+        raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
+    if args.mlp_product_ridge_ratio <= 0:
+        raise ValueError("--mlp-product-ridge-ratio must be positive")
+    if args.defect_bridge_linear_rank < 0 or args.defect_bridge_memory_size < 0:
+        raise ValueError("Defect bridge rank and memory size must be nonnegative")
+    if args.defect_bridge_mode == "hybrid" and args.defect_bridge_linear_rank == 0:
+        raise ValueError("Hybrid defect bridge requires a positive linear rank")
+    if args.defect_bridge_memory_top_k <= 0 or args.defect_bridge_ridge_ratio < 0:
+        raise ValueError("Invalid defect bridge kernel or ridge configuration")
+    pees_projections = tuple(
+        name.strip() for name in args.pees_projections.split(",") if name.strip()
+    )
+    if args.pees_rank < 0 or args.pees_tokens < args.seq_len or args.pees_ridge_ratio < 0:
+        raise ValueError("Invalid PEES rank, token count, or ridge ratio")
+    if args.pees_rank > 0:
+        if args.defect_bridge_mode != "none":
+            raise ValueError("PEES and the block defect bridge are separate byte-budget experiments")
+        if not pees_projections or len(set(pees_projections)) != len(pees_projections):
+            raise ValueError("PEES requires a nonempty projection list without duplicates")
+        if set(pees_projections) - set(PEES_DEFAULT_PROJECTIONS):
+            raise ValueError(f"Unsupported PEES projections: {sorted(set(pees_projections) - set(PEES_DEFAULT_PROJECTIONS))}")
+    elif pees_projections != PEES_DEFAULT_PROJECTIONS:
+        raise ValueError("--pees-projections is only meaningful when --pees-rank is positive")
+    if args.max_checkpoint_multiplier < 1.0:
+        raise ValueError("--max-checkpoint-multiplier must be at least 1")
+    has_existing = bool(list(args.output.glob("compressed_layer_*.pt"))) or (args.output / "model_manifest.json").exists()
+    if has_existing and not args.resume:
         raise FileExistsError("Use a fresh output directory; checkpoints will not be overwritten")
+    if args.resume and not (args.output / "model_manifest.json").exists():
+        raise FileNotFoundError("--resume requires an existing model_manifest.json")
     args.output.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(42)
     weights = PinnedWeights(args.model_id, args.model_revision)
@@ -117,35 +253,86 @@ def main():
                            seq_len=args.seq_len, rms_norm_eps=config.rms_norm_eps)
     compression = get_tier_config("high_fidelity_10x")
     compression["diagonal_prior_strength"] = args.diagonal_prior_strength
+    per_projection_budgets = projection_budgets(
+        args.budget_allocation, compression["r_bridge"], compression["n_outliers"],
+    )
+    compression_path = (
+        "no_healing_independent"
+        if args.calibration_activation_mode == "dense"
+        else (
+            "no_healing_prefix_calibrated"
+            if args.construction_mode == "independent"
+            else f"zero_healing_{args.construction_mode}"
+        )
+    )
+    if args.defect_bridge_mode == "hybrid":
+        compression_path = f"{compression_path}+hybrid_defect_bridge"
+    if args.pees_rank > 0:
+        compression_path = f"{compression_path}+pees_propagated_eigenspace"
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
-        "compression_path": ("no_healing_independent" if args.calibration_activation_mode == "dense"
-                              else "no_healing_prefix_calibrated"),
+        "compression_path": compression_path,
         "calibration_activation_mode": args.calibration_activation_mode,
+        "construction_mode": args.construction_mode,
         "config": compression,
         "attention_gauge": args.attention_gauge,
+        "mlp_gauge": args.mlp_gauge,
+        "mlp_objective": args.mlp_objective,
+        "mlp_product_ridge_ratio": args.mlp_product_ridge_ratio,
+        "budget_allocation": args.budget_allocation,
+        "projection_budgets": per_projection_budgets,
+        "defect_bridge_mode": args.defect_bridge_mode,
+        "defect_bridge_linear_rank": args.defect_bridge_linear_rank,
+        "defect_bridge_memory_size": args.defect_bridge_memory_size,
+        "defect_bridge_memory_top_k": args.defect_bridge_memory_top_k,
+        "defect_bridge_ridge_ratio": args.defect_bridge_ridge_ratio,
+        "max_checkpoint_multiplier": args.max_checkpoint_multiplier,
+        "pees_rank": args.pees_rank,
+        "pees_projections": list(pees_projections if args.pees_rank > 0 else PEES_DEFAULT_PROJECTIONS),
+        "pees_tokens": args.pees_tokens,
+        "pees_ridge_ratio": args.pees_ridge_ratio,
         "mpo_site_order": args.site_order,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
         "source_fingerprint": source_files_fingerprint([
             Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
-            ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
-            ROOT / "nox/tensor_order.py",
+            ROOT / "nox/mlp_gauge.py", ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
+            ROOT / "nox/tensor_order.py", ROOT / "nox/allocation.py",
+            ROOT / "nox/defect_bridge.py",
+            ROOT / "nox/pees.py",
         ]),
     }
-    compression_path = identity["compression_path"]
-    manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
-                "tier": "high_fidelity_10x", "compression_path": compression_path,
-                "calibration_activation_mode": args.calibration_activation_mode,
-                "mpo_site_order": args.site_order,
-                "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
-                "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
+    if args.resume:
+        manifest = json.loads((args.output / "model_manifest.json").read_text())
+        if not resume_identity_compatible(manifest["run_identity"], identity):
+            raise ValueError("Existing checkpoint identity does not match requested resumed run")
+        manifest.setdefault("resume_events", []).append({
+            "previous_run_fingerprint": manifest["run_fingerprint"],
+            "previous_source_fingerprint": manifest["run_identity"].get("source_fingerprint"),
+            "resumed_source_fingerprint": identity["source_fingerprint"],
+            "previous_layers": manifest["run_identity"].get("layers"),
+            "resumed_layers": identity["layers"],
+            "reason": "resume after completed layer artifacts; source repair or layer-prefix extension",
+        })
+        manifest["run_identity"] = identity
+        manifest["run_fingerprint"] = fingerprint(identity)
+        manifest["layers_compressed"] = sorted(set(manifest.get("layers_compressed", [])))
+        (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2))
+    else:
+        manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
+                    "tier": "high_fidelity_10x", "compression_path": compression_path,
+                    "calibration_activation_mode": args.calibration_activation_mode,
+                    "construction_mode": args.construction_mode,
+                    "mpo_site_order": args.site_order,
+                    "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
+                    "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
     compressed_validation = None
     compressed_calibration = None
     for index in range(args.end_layer + 1):
         started = time.monotonic()
         dense = weights.layer(index, args.device)
         gauge_metadata = None
+        mlp_gauge_metadata = None
         if index == args.start_layer and args.attention_gauge == "balanced":
             dense, gauge_metadata = balanced_attention_gauge(
                 dense, config.num_attention_heads, config.num_key_value_heads,
@@ -166,6 +353,32 @@ def main():
         else:
             train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
             validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+        if index >= args.start_layer and args.mlp_gauge != "none":
+            reference_train_next = train_next
+            reference_validation_next = validation_next
+            if args.mlp_gauge == "balanced_up_down":
+                dense, mlp_gauge_metadata = balanced_swiglu_gauge(dense)
+            else:
+                gauge_input = select_calibration_activations(
+                    args.calibration_activation_mode, train, compressed_calibration,
+                )
+                dense, mlp_gauge_metadata = entanglement_ordered_swiglu_gauge(
+                    dense, gauge_input,
+                )
+            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
+            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+            mlp_gauge_metadata["train_parity_relative_error"] = compute_metrics(
+                reference_train_next, train_next,
+            )["relative_error"]
+            mlp_gauge_metadata["validation_parity_relative_error"] = compute_metrics(
+                reference_validation_next, validation_next,
+            )["relative_error"]
+            if max(
+                mlp_gauge_metadata["train_parity_relative_error"],
+                mlp_gauge_metadata["validation_parity_relative_error"],
+            ) > 2e-5:
+                raise RuntimeError(f"Exact MLP gauge parity failed: {mlp_gauge_metadata}")
+            del reference_train_next, reference_validation_next
         if index >= args.start_layer:
             if compressed_validation is None:
                 compressed_validation = validation.clone()
@@ -177,31 +390,197 @@ def main():
             validation_calibration_input = select_calibration_activations(
                 args.calibration_activation_mode, validation, compressed_validation,
             )
+            reference_input = select_reference_activations(
+                args.construction_mode, train, calibration_input,
+            )
+            path = args.output / f"compressed_layer_{index}.pt"
+            if args.resume and path.exists():
+                artifact = torch.load(path, map_location="cpu", weights_only=False)
+                accepted_fingerprints = {manifest["run_fingerprint"]}
+                accepted_fingerprints.update(
+                    event.get("previous_run_fingerprint")
+                    for event in manifest.get("resume_events", [])
+                )
+                if artifact.get("layer_idx") != index or artifact.get("run_fingerprint") not in accepted_fingerprints:
+                    raise ValueError(f"Incompatible resumed artifact: {path}")
+                reconstructed = dict(dense)
+                reconstructed.update({
+                    name: reconstruct_from_artifact(value, device=args.device)
+                    for name, value in artifact["compressed_artifacts"].items()
+                })
+                if artifact.get("cross_layer_bridge") is not None:
+                    reconstructed["cross_layer_bridge"] = artifact["cross_layer_bridge"]
+                compressed_validation, _, _ = forward_transformer_block(
+                    reconstructed, compressed_validation, **forward_options,
+                )
+                if args.calibration_activation_mode == "compressed_prefix":
+                    compressed_calibration, _, _ = forward_transformer_block(
+                        reconstructed, compressed_calibration, **forward_options,
+                    )
+                train, validation = train_next, validation_next
+                del dense, reconstructed, artifact
+                gc.collect()
+                torch.cuda.empty_cache()
+                print(f"layer={index} resumed_from={path}", flush=True)
+                continue
             torch.save({"X_test": validation.cpu(), "rms_norm_eps": config.rms_norm_eps}, args.output / f"dense_input_layer_{index}.pt")
             torch.save(calibration_input.cpu(), args.output / f"calibration_input_layer_{index}.pt")
             torch.save(validation_calibration_input.cpu(), args.output / f"layer_input_validation_layer_{index}.pt")
             compiled = compile_transformer_block(
-                dense, calibration_input, X_calib_dense=calibration_input, causal_healing=False,
+                dense, calibration_input, X_calib_dense=reference_input, causal_healing=False,
                 ranks=compression["ranks"], r_bridge=compression["r_bridge"],
                 n_outliers=compression["n_outliers"], return_artifacts=True,
                 diagonal_prior_strength=args.diagonal_prior_strength,
+                trajectory_mode=("none" if args.construction_mode == "independent"
+                                 else args.construction_mode.removeprefix("trajectory_aware_")),
+                mlp_product_aware=(
+                    args.mlp_objective == "product_aware"
+                    or args.construction_mode == "trajectory_aware_product"
+                ),
+                mlp_product_ridge_ratio=args.mlp_product_ridge_ratio,
+                projection_budgets=per_projection_budgets,
                 verbose=True, site_order=args.site_order, **forward_options,
             )
             artifact = {
                 "layer_idx": index, "compression_path": compression_path,
+                "construction_mode": args.construction_mode,
+                "source_fingerprint": identity["source_fingerprint"],
                 "mpo_site_order": args.site_order,
                 "attention_gauge": gauge_metadata,
+                "mlp_gauge": mlp_gauge_metadata,
+                "mlp_objective": args.mlp_objective,
+                "mlp_product_aware": compiled["mlp_product_aware"],
+                "budget_allocation": args.budget_allocation,
+                "projection_budgets": per_projection_budgets,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),
                 "post_attention_layernorm": dense["post_attention_layernorm"].cpu(),
                 "total_kb": compiled["total_kb"],
             }
-            path = args.output / f"compressed_layer_{index}.pt"
-            torch.save(artifact, path)
+            pees_base_checkpoint_bytes = None
+            pees_tensor_bytes = 0
+            if args.pees_rank > 0:
+                base_buffer = io.BytesIO()
+                torch.save(artifact, base_buffer)
+                pees_base_checkpoint_bytes = len(base_buffer.getbuffer())
+                del base_buffer
+
+                per_rank_bytes = sum(
+                    (dense[name].shape[0] + dense[name].shape[1]) * 2
+                    for name in pees_projections
+                )
+                sidecar_budget_bytes = (
+                    pees_base_checkpoint_bytes
+                    * (args.max_checkpoint_multiplier - 1.0)
+                    * 0.98
+                )
+                budgeted_rank = int(sidecar_budget_bytes // per_rank_bytes)
+                effective_rank = min(args.pees_rank, budgeted_rank)
+                if effective_rank <= 0:
+                    raise RuntimeError(
+                        "The configured checkpoint multiplier leaves no room for a PEES sidecar"
+                    )
+
+                base_reconstructed = dict(dense)
+                base_reconstructed.update({
+                    name: reconstruct_from_artifact(value, device=args.device)
+                    for name, value in artifact["compressed_artifacts"].items()
+                })
+                pees_metadata = {
+                    "objective": "propagated_defect_ridge_whitened_eigenspace",
+                    "requested_rank_per_projection": int(args.pees_rank),
+                    "effective_rank_per_projection": int(effective_rank),
+                    "projections": list(pees_projections),
+                    "sample_tokens": min(
+                        max(args.seq_len, (args.pees_tokens // args.seq_len) * args.seq_len),
+                        (train.shape[1] // args.seq_len) * args.seq_len,
+                    ),
+                    "ridge_ratio": float(args.pees_ridge_ratio),
+                    "base_checkpoint_bytes": int(pees_base_checkpoint_bytes),
+                    "max_checkpoint_multiplier": float(args.max_checkpoint_multiplier),
+                    "sidecar_budget_bytes_with_safety_margin": int(sidecar_budget_bytes),
+                    "conditional_projection_order": list(pees_projections),
+                    "projection_metrics": {},
+                }
+                for name in pees_projections:
+                    # Recompute the compressed contexts after each correction.
+                    # Later projections therefore compensate the remaining
+                    # defect after earlier PEES factors have already been
+                    # applied, avoiding duplicate cancellation of the same
+                    # upstream error.
+                    trajectory_contexts = layer_projection_trajectories(
+                        dense,
+                        base_reconstructed,
+                        train,
+                        calibration_input,
+                        seq_len=args.seq_len,
+                        n_heads=config.num_attention_heads,
+                        n_kv_heads=config.num_key_value_heads,
+                        rms_norm_eps=config.rms_norm_eps,
+                        max_tokens=args.pees_tokens,
+                        projections=(name,),
+                    )
+                    dense_context, compressed_context = trajectory_contexts[name]
+                    left, right, projection_metrics = fit_propagated_eigenspace_shield(
+                        dense_context,
+                        compressed_context,
+                        dense[name],
+                        base_reconstructed[name],
+                        rank=effective_rank,
+                        ridge_ratio=args.pees_ridge_ratio,
+                    )
+                    added_bytes = append_shield_to_projection_artifact(
+                        artifact["compressed_artifacts"][name], left, right,
+                    )
+                    pees_tensor_bytes += added_bytes
+                    projection_metrics["added_tensor_bytes"] = added_bytes
+                    pees_metadata["projection_metrics"][name] = projection_metrics
+                    base_reconstructed[name] = reconstruct_from_artifact(
+                        artifact["compressed_artifacts"][name], device=args.device,
+                    )
+                    del trajectory_contexts
+                artifact["pees"] = pees_metadata
+                del base_reconstructed
+
+            # The artifacts are sufficient for reconstruction; discard the
+            # transient dense reconstructions retained for compiler metrics.
+            compiled.pop("compressed_weights", None)
+            compiled.pop("X_out_comp", None)
+            compiled.pop("X_out_dense", None)
             reconstructed = dict(dense)
             reconstructed.update({name: reconstruct_from_artifact(value, device=args.device)
                                   for name, value in artifact["compressed_artifacts"].items()})
+            # The bridge learns the complete composed defect on calibration
+            # trajectories: dense next-layer state minus the lossy block output
+            # at the actual (possibly compressed-prefix) input.
+            train_output, _, _ = forward_transformer_block(
+                reconstructed, calibration_input, **forward_options,
+            )
+            if args.defect_bridge_mode == "hybrid":
+                baseline_buffer = io.BytesIO()
+                torch.save(artifact, baseline_buffer)
+                baseline_buffer_bytes = len(baseline_buffer.getbuffer())
+                del baseline_buffer
+                bridge = fit_hybrid_defect_bridge(
+                    calibration_input,
+                    train_next - train_output,
+                    linear_rank=args.defect_bridge_linear_rank,
+                    memory_size=args.defect_bridge_memory_size,
+                    ridge_ratio=args.defect_bridge_ridge_ratio,
+                    memory_top_k=args.defect_bridge_memory_top_k,
+                    storage_dtype=torch.float16,
+                )
+                artifact["cross_layer_bridge"] = bridge
+                artifact["cross_layer_bridge_metadata"] = dict(bridge["metadata"])
+                reconstructed["cross_layer_bridge"] = bridge
+                artifact["cross_layer_bridge_metadata"]["base_checkpoint_bytes_before_bridge"] = int(
+                    baseline_buffer_bytes
+                )
+                artifact["cross_layer_bridge_metadata"]["max_checkpoint_multiplier"] = float(
+                    args.max_checkpoint_multiplier
+                )
+
             dense_same_input, _, _ = forward_transformer_block(
                 dense, validation_calibration_input, **forward_options,
             )
@@ -209,20 +588,71 @@ def main():
                 reconstructed, validation_calibration_input, **forward_options,
             )
             compressed_validation, _, _ = forward_transformer_block(reconstructed, compressed_validation, **forward_options)
-            calibration_dense_output, _, _ = forward_transformer_block(
-                dense, calibration_input, **forward_options,
-            )
-            train_output, _, _ = forward_transformer_block(
+            calibration_output, _, _ = forward_transformer_block(
                 reconstructed, calibration_input, **forward_options,
             )
+            calibration_target = train_next
+            calibration_metrics = compute_metrics(calibration_target, calibration_output)
+            validation_output, _, _ = forward_transformer_block(
+                reconstructed, validation_calibration_input, **forward_options,
+            )
+            validation_metrics = compute_metrics(validation_next, validation_output)
+            if args.defect_bridge_mode == "hybrid":
+                artifact["cross_layer_bridge_metadata"].update({
+                    "validation_relative_error": validation_metrics["relative_error"],
+                    "validation_cosine_similarity": validation_metrics["cosine_similarity"],
+                })
+            torch.save(artifact, path)
+            actual_serialized_bytes = path.stat().st_size
+            if args.pees_rank > 0:
+                max_allowed_bytes = pees_base_checkpoint_bytes * args.max_checkpoint_multiplier
+                if actual_serialized_bytes > max_allowed_bytes:
+                    path.unlink()
+                    raise RuntimeError(
+                        f"PEES exceeds checkpoint budget: {actual_serialized_bytes} > "
+                        f"{max_allowed_bytes:.0f} ({args.max_checkpoint_multiplier:.3f}x)"
+                    )
+            if args.defect_bridge_mode == "hybrid":
+                max_allowed_bytes = baseline_buffer_bytes * args.max_checkpoint_multiplier
+                if actual_serialized_bytes > max_allowed_bytes:
+                    path.unlink()
+                    raise RuntimeError(
+                        f"Defect bridge exceeds checkpoint budget: {actual_serialized_bytes} > "
+                        f"{max_allowed_bytes:.0f} ({args.max_checkpoint_multiplier:.3f}x)"
+                    )
             record = {
                 "layer": index, "calibration_activation_mode": args.calibration_activation_mode,
+                "construction_mode": args.construction_mode,
                 "mpo_site_order": args.site_order,
                 "same_input_validation": compute_metrics(dense_same_input, same_input),
                 "cascade_validation": compute_metrics(validation_next, compressed_validation),
-                "calibration": compute_metrics(calibration_dense_output, train_output),
+                "calibration": calibration_metrics,
+                "heldout_block_output": validation_metrics,
                 "attention_gauge": gauge_metadata,
+                "mlp_gauge": mlp_gauge_metadata,
+                "mlp_objective": args.mlp_objective,
+                "mlp_product_aware": compiled["mlp_product_aware"],
+                "budget_allocation": args.budget_allocation,
+                "projection_budgets": per_projection_budgets,
                 "serialized_bytes": path.stat().st_size,
+                "base_checkpoint_bytes_before_bridge": (
+                    baseline_buffer_bytes if args.defect_bridge_mode == "hybrid" else None
+                ),
+                "bridge_tensor_bytes": (
+                    bridge_tensor_bytes(artifact["cross_layer_bridge"])
+                    if args.defect_bridge_mode == "hybrid" else 0
+                ),
+                "pees": artifact.get("pees"),
+                "base_checkpoint_bytes_before_pees": pees_base_checkpoint_bytes,
+                "pees_tensor_bytes": pees_tensor_bytes,
+                "pees_checkpoint_multiplier": (
+                    path.stat().st_size / pees_base_checkpoint_bytes
+                    if pees_base_checkpoint_bytes is not None else 1.0
+                ),
+                "checkpoint_multiplier": (
+                    path.stat().st_size / baseline_buffer_bytes
+                    if args.defect_bridge_mode == "hybrid" else 1.0
+                ),
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
                 "seconds": time.monotonic() - started,
             }
