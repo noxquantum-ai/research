@@ -232,9 +232,10 @@ def main():
     test_text, test_data_metadata = load_wikitext2_test_text(return_metadata=True)
 
     dense_ppl = None
+    dense_details = None
     if args.eval_dense:
         log_step("Evaluating Dense Uncompressed Baseline Perplexity...")
-        dense_ppl, dense_tokens = compute_perplexity(
+        dense_ppl, dense_tokens, dense_details = compute_perplexity(
             model=model,
             tokenizer=tokenizer,
             text=test_text,
@@ -242,8 +243,12 @@ def main():
             stride=args.stride,
             max_eval_tokens=args.max_eval_tokens,
             device=device,
+            return_details=True,
         )
-        log_step(f"Dense Baseline Perplexity: {dense_ppl:.2f} ({dense_tokens} tokens)")
+        log_step(
+            f"Dense Baseline Perplexity: {dense_ppl:.4f} ({dense_tokens} labels), "
+            f"next-token accuracy={dense_details['next_token_accuracy']:.6f}"
+        )
 
     # Inject Nox compressed layers
     injected_layers = inject_nox_checkpoints(model, args.checkpoint_dir, device=device, dtype=pt_dtype)
@@ -259,7 +264,7 @@ def main():
     serialized_checkpoint_bytes = sum(checkpoint_sizes.values())
 
     log_step(f"Evaluating Nox-Compressed Model Perplexity ({len(injected_layers)} compressed layers)...")
-    nox_ppl, eval_tokens = compute_perplexity(
+    nox_ppl, eval_tokens, nox_details = compute_perplexity(
         model=model,
         tokenizer=tokenizer,
         text=test_text,
@@ -267,8 +272,50 @@ def main():
         stride=args.stride,
         max_eval_tokens=args.max_eval_tokens,
         device=device,
+        return_details=True,
     )
-    log_step(f"Nox Compressed Model Perplexity: {nox_ppl:.2f} ({eval_tokens} tokens)")
+    dense_top1_agreement = None
+    if dense_details is not None:
+        if dense_details["top1_predictions"].shape != nox_details["top1_predictions"].shape:
+            raise RuntimeError("Dense and compressed evaluation scored different target positions")
+        dense_top1_agreement = float(
+            (dense_details["top1_predictions"] == nox_details["top1_predictions"]).float().mean().item()
+        )
+    eval_record = {
+        "model_id": args.model_id,
+        "model_revision": args.model_revision,
+        "checkpoint_dir": os.path.abspath(args.checkpoint_dir),
+        "compressed_layers": injected_layers,
+        "dense": None if dense_details is None else {
+            "ppl": dense_ppl,
+            "mean_nll": dense_details["mean_nll"],
+            "next_token_accuracy": dense_details["next_token_accuracy"],
+        },
+        "compressed": {
+            "ppl": nox_ppl,
+            "mean_nll": nox_details["mean_nll"],
+            "next_token_accuracy": nox_details["next_token_accuracy"],
+            "dense_top1_agreement": dense_top1_agreement,
+        },
+        "input_tokens": nox_details["input_tokens"],
+        "scored_labels": eval_tokens,
+        "ppl_context_length": args.seq_len,
+        "sliding_window_stride": args.stride,
+        "test_split": test_data_metadata,
+        "compressed_layer_checkpoint_bytes": sum(
+            size for name, size in checkpoint_sizes.items()
+            if os.path.basename(name).startswith("compressed_layer_")
+        ),
+        "all_checkpoint_directory_bytes": serialized_checkpoint_bytes,
+    }
+    eval_record_path = os.path.join(args.checkpoint_dir, "evaluation_wikitext.json")
+    with open(eval_record_path, "w", encoding="utf-8") as result_file:
+        json.dump(eval_record, result_file, indent=2)
+    log_step(
+        f"Nox Compressed Model PPL: {nox_ppl:.4f}; mean NLL={nox_details['mean_nll']:.6f}; "
+        f"next-token accuracy={nox_details['next_token_accuracy']:.6f}; "
+        f"dense top-1 agreement={dense_top1_agreement}"
+    )
 
     sample_prompts = [
         "The theory of quantum entanglement describes",
