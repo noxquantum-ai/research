@@ -3,7 +3,13 @@ from types import SimpleNamespace
 
 import torch
 
-from nox.mmlu import format_question, prepare_example, score_batch
+from nox.mmlu import (
+    compare_mmlu_reference,
+    format_question,
+    prepare_example,
+    resolve_mmlu_reference,
+    score_batch,
+)
 
 
 class FixtureTokenizer:
@@ -54,3 +60,44 @@ class MMLUProtocolTests(unittest.TestCase):
 
         scores = score_batch(model, examples, 0, "cpu")
         self.assertEqual(scores.argmax(dim=1).tolist(), [1, 3])
+
+    def test_external_reference_is_explicitly_marked_unmatched(self):
+        reference = resolve_mmlu_reference(
+            reference_accuracy=0.453,
+            reference_source="Llama 2 paper Table 19, five-shot base 7B",
+        )
+        self.assertEqual(reference["kind"], "published_external_score")
+        self.assertFalse(reference["protocol_match"])
+        self.assertEqual(reference["accuracy"], 0.453)
+
+    def test_matched_dense_reference_requires_complete_same_protocol(self):
+        baseline = {"status": "COMPLETE", "variant": "dense", "accuracy": 0.44,
+                    "protocol_fingerprint": "same"}
+        reference = resolve_mmlu_reference(dense_result=baseline, protocol_fingerprint="same")
+        self.assertTrue(reference["protocol_match"])
+        with self.assertRaisesRegex(ValueError, "different protocol"):
+            resolve_mmlu_reference(dense_result=dict(baseline, protocol_fingerprint="other"),
+                                    protocol_fingerprint="same")
+        with self.assertRaisesRegex(ValueError, "Choose either"):
+            resolve_mmlu_reference(dense_result=baseline, reference_accuracy=0.453,
+                                    protocol_fingerprint="same")
+
+    def test_external_reference_requires_valid_score_and_source(self):
+        with self.assertRaisesRegex(ValueError, "between 0 and 1"):
+            resolve_mmlu_reference(reference_accuracy=45.3, reference_source="paper")
+        with self.assertRaisesRegex(ValueError, "nonempty source"):
+            resolve_mmlu_reference(reference_accuracy=0.453)
+
+    def test_published_threshold_uses_only_the_complete_overall_score(self):
+        reference = resolve_mmlu_reference(
+            reference_accuracy=0.453,
+            reference_source="Llama 2 paper Table 19, five-shot base 7B",
+        )
+        failed = compare_mmlu_reference(0.43, reference, full_test=True)
+        self.assertFalse(failed["passes_published_reference_threshold"])
+        self.assertAlmostEqual(failed["published_reference_95pct_threshold"], 0.43035)
+
+        passed = compare_mmlu_reference(0.43035, reference, full_test=True)
+        self.assertTrue(passed["passes_published_reference_threshold"])
+        partial = compare_mmlu_reference(0.45, reference, full_test=False)
+        self.assertFalse(partial["passes_published_reference_threshold"])

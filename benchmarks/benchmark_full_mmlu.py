@@ -14,7 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from benchmarks.benchmark_day4_perplexity import inject_nox_checkpoints
 from nox.artifacts import checkpoint_file_sizes, fingerprint, source_files_fingerprint
-from nox.mmlu import load_full_mmlu, prepare_example, score_batch
+from nox.mmlu import (
+    compare_mmlu_reference,
+    load_full_mmlu,
+    prepare_example,
+    resolve_mmlu_reference,
+    score_batch,
+)
 
 
 def main():
@@ -22,6 +28,10 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--checkpoint-dir", type=Path)
     parser.add_argument("--dense-results", type=Path)
+    parser.add_argument("--reference-accuracy", type=float,
+                        help="External published MMLU accuracy as a fraction, e.g. 0.453")
+    parser.add_argument("--reference-source",
+                        help="Citation or identifier for --reference-accuracy")
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--max-context", type=int, default=4096)
     parser.add_argument("--max-questions", type=int, default=0, help="Smoke check only; zero runs the full test")
@@ -57,13 +67,15 @@ def main():
             json.dump(report, output, indent=2)
         print(json.dumps({key: report[key] for key in ("status", "full_test", "input_token_count", "effective_shot_counts")}))
         return
-    baseline = None
+    reference = None
     if args.checkpoint_dir:
-        if args.dense_results is None:
-            raise ValueError("Compressed evaluation requires matched --dense-results")
-        baseline = json.loads(args.dense_results.read_text())
-        if baseline.get("status") != "COMPLETE" or baseline.get("variant") != "dense" or baseline["protocol_fingerprint"] != protocol_hash:
-            raise ValueError("Dense result is incomplete or uses a different protocol")
+        baseline = json.loads(args.dense_results.read_text()) if args.dense_results else None
+        reference = resolve_mmlu_reference(
+            dense_result=baseline,
+            reference_accuracy=args.reference_accuracy,
+            reference_source=args.reference_source,
+            protocol_fingerprint=protocol_hash,
+        )
         expected = {f"compressed_layer_{index}.pt" for index in range(32)}
         if {path.name for path in args.checkpoint_dir.glob("compressed_layer_*.pt")} != expected:
             raise ValueError("MMLU acceptance evaluation requires all 32 transformer layers")
@@ -81,6 +93,8 @@ def main():
             del checkpoint
         report["checkpoint_manifest_fingerprint"] = fingerprint(manifest)
         report["compressed_layer_file_bytes"] = checkpoint_file_sizes(args.checkpoint_dir, range(32))
+    elif args.dense_results or args.reference_accuracy is not None or args.reference_source:
+        raise ValueError("MMLU reference options apply only to compressed checkpoint evaluation")
     model = AutoModelForCausalLM.from_pretrained(model_id, revision=revision, torch_dtype=torch.float16,
                                                device_map={"": "cuda"}, attn_implementation="sdpa").eval()
     if args.checkpoint_dir:
@@ -109,11 +123,9 @@ def main():
                   scored_questions=sum(totals.values()), seconds=time.monotonic() - started,
                   subject_accuracy={subject: correct[subject] / totals[subject] for subject in sorted(totals)},
                   predictions_path=str(predictions_path))
-    if baseline:
-        if baseline["accuracy"] <= 0:
-            raise ValueError("Dense accuracy must be positive for retention")
-        report["dense_accuracy_retention"] = accuracy / baseline["accuracy"]
-        report["passes_mmlu_gate"] = report["full_test"] and report["dense_accuracy_retention"] >= 0.95
+    if reference:
+        report["mmlu_reference"] = reference
+        report.update(compare_mmlu_reference(accuracy, reference, report["full_test"]))
     with args.output.open("x") as output:
         json.dump(report, output, indent=2)
     print(f"COMPLETE: {args.output}; full_test={report['full_test']}; accuracy={accuracy:.6f}", flush=True)

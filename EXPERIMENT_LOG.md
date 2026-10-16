@@ -4,7 +4,7 @@ Started 2026-10-16. This log records the local repository snapshot, prior eviden
 
 ## Current scope and corrections (2026-10-16)
 
-The user narrowed the target to one high-fidelity engine with zero healing, and explicitly authorized incremental pushes directly to `main`. The agreed quality checks are raw WikiText PPL within 5% of matched dense, at least 95% dense top-1 agreement, and MMLU accuracy at least 95% of the matched dense score. Full-model serialized size must include all tensors needed for inference. The high-fidelity name denotes a compression target, not an achieved ratio.
+The user narrowed the target to one high-fidelity engine with zero healing, and explicitly authorized incremental pushes directly to `main`. The agreed quality checks are raw WikiText PPL within 5% of matched dense, at least 95% dense top-1 agreement, and at least 95% of the published five-shot Llama 2 7B MMLU score on the complete test set. MMLU acceptance uses one aggregate score across all 57 subjects. The published result is an external reference, not a same-run dense comparison. Full-model serialized size must include all tensors needed for inference. The high-fidelity name denotes a compression target, not an achieved ratio.
 
 Two measured bugs invalidate the earlier claim that the baseline protocol was fully verified:
 
@@ -403,6 +403,27 @@ An FP16 direct packed-checkpoint audit produced impossible cosine values above 1
 
 The repeated CPU audit of the existing packed layer-15 artifact reports per-projection weight relative errors from 0.0003946 (gate) to 0.0006112 (down), and a same-input held-out block reconstruction difference of 0.00001023 (128 tokens). All cosine results are now in [-1, 1]. This establishes round-trip fidelity against the original compressed checkpoint only; it does not establish fidelity to dense weights or full-model quality. Raw outputs are preserved in `experiment_artifacts/diagnostic_36h/remote_records/packing_layer15/direct_audit_fp32.json` and its log.
 
-The full MMLU protocol has been prepared and its focused tests pass. The full test set has 14,042 questions across 57 subjects, 285 five-shot demonstrations, and 11,305,511 total tokenized prompt tokens at the current 4,096-token cap. The dense full-test baseline is now running on the A10; no compressed MMLU result exists.
+The full MMLU protocol has been prepared: 14,042 test questions across 57 subjects, 285 five-shot demonstrations, and 11,305,511 total prompt tokens at the 4,096-token cap. The full dense evaluation was started and then stopped after 2,976 predictions to release the A10. Its partial accuracy is not used as a score; the log and prediction prefix remain preserved under `checkpoints/diagnostic_36h/mmlu/`.
 
-After the active paired layer control and packed-checkpoint quality run release the A10, `scripts/run_dense_mmlu_after_controls.sh` queues a dense full-test reference at batch size 1. This measures the requested MMLU denominator on the pinned model; there is no full 32-layer zero-healing checkpoint yet to compare against it.
+For the external reference, the Llama 2 paper reports **45.3%** for base Llama 2 7B on five-shot MMLU (Table 19, [paper](https://arxiv.org/abs/2307.09288)). A 95% threshold against that published result is 43.035%. The harness accepts the score explicitly and marks it as an external, protocol-unmatched reference; any compressed score must be produced by our pinned full-test harness over all subjects. The acceptance number is the single aggregate score; subject scores are diagnostic only. Do not describe the external comparison as matched dense retention. The interrupted partial run is retained only as an execution record.
+
+The MMLU reference-handling tests and full remote suite passed **28 tests** on the A10 host:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v
+```
+
+Once a full 32-layer high-fidelity checkpoint exists and passes the WikiText gate, its complete MMLU score command is:
+
+```bash
+.venv/bin/python -u benchmarks/benchmark_full_mmlu.py \
+  --checkpoint-dir FULL_HIGH_FIDELITY_ZERO_HEALING_CHECKPOINT \
+  --reference-accuracy 0.453 \
+  --reference-source "Llama 2 paper Table 19: base 7B, five-shot MMLU, arXiv:2307.09288" \
+  --output checkpoints/diagnostic_36h/mmlu/full_compressed.json \
+  --batch-size 1 --max-context 4096
+```
+
+This command scores the complete test set and reports the overall score, its ratio to 45.3%, and whether it reaches 43.035%. No compressed MMLU score exists yet.
+
+Next diagnostic: quantization-aware, zero-healing output distillation of the existing high-fidelity layer-15 checkpoint. It updates the seven projection factors jointly against dense full-block outputs on 1,024 raw WikiText train tokens and chooses the saved checkpoint using 1,024 separate raw WikiText validation tokens. The ranks, bridge, sparse capacity, and artifact layout remain fixed. If the focused output and WikiText checks pass the documented gates, the next full-model run will use only the high-fidelity, zero-healing configuration. Current single-layer global PPL/agreement still fail, so no 32-layer sweep is authorized by the quality gate yet.

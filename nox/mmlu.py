@@ -1,11 +1,69 @@
 """Pinned full-test MMLU data and explicit answer-letter evaluation helpers."""
 import hashlib
 from collections import Counter
+import math
 from pathlib import Path
 
 import torch
 
 MMLU_REVISION = "c30699e8356da336a370243923dbaf21066bb9fe"
+
+
+def resolve_mmlu_reference(dense_result=None, reference_accuracy=None,
+                           reference_source=None, protocol_fingerprint=None):
+    """Validate either a matched dense run or an explicitly external score."""
+    if dense_result is not None and reference_accuracy is not None:
+        raise ValueError("Choose either a matched dense result or an external reference")
+    if dense_result is not None:
+        if reference_source:
+            raise ValueError("--reference-source applies only to an external reference")
+        if (dense_result.get("status") != "COMPLETE"
+                or dense_result.get("variant") != "dense"
+                or dense_result.get("protocol_fingerprint") != protocol_fingerprint):
+            raise ValueError("Dense result is incomplete or uses a different protocol")
+        accuracy = dense_result.get("accuracy")
+        if not isinstance(accuracy, (int, float)) or not math.isfinite(accuracy) or not 0 < accuracy <= 1:
+            raise ValueError("Dense result has an invalid accuracy")
+        return {
+            "kind": "matched_dense_run",
+            "accuracy": float(accuracy),
+            "protocol_match": True,
+            "source": "dense_results",
+        }
+    if reference_accuracy is None:
+        raise ValueError("Compressed MMLU evaluation requires a reference accuracy")
+    if (not isinstance(reference_accuracy, (int, float))
+            or not math.isfinite(reference_accuracy) or not 0 < reference_accuracy <= 1):
+        raise ValueError("External reference accuracy must be between 0 and 1")
+    if not reference_source or not reference_source.strip():
+        raise ValueError("External reference requires a nonempty source")
+    return {
+        "kind": "published_external_score",
+        "accuracy": float(reference_accuracy),
+        "protocol_match": False,
+        "source": reference_source.strip(),
+    }
+
+
+def compare_mmlu_reference(accuracy, reference, full_test, minimum_retention=0.95):
+    """Report overall full-test accuracy retention without mixing reference types."""
+    if not isinstance(accuracy, (int, float)) or not math.isfinite(accuracy) or not 0 <= accuracy <= 1:
+        raise ValueError("MMLU accuracy must be between 0 and 1")
+    if not 0 < minimum_retention <= 1:
+        raise ValueError("minimum_retention must be between 0 and 1")
+    reference_accuracy = reference["accuracy"]
+    ratio = accuracy / reference_accuracy
+    if reference["protocol_match"]:
+        return {
+            "dense_accuracy_retention": ratio,
+            "passes_mmlu_gate": bool(full_test and ratio + 1e-12 >= minimum_retention),
+        }
+    threshold = minimum_retention * reference_accuracy
+    return {
+        "published_reference_accuracy_ratio": ratio,
+        "published_reference_95pct_threshold": threshold,
+        "passes_published_reference_threshold": bool(full_test and accuracy + 1e-12 >= threshold),
+    }
 
 
 def load_full_mmlu():
