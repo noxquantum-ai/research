@@ -21,6 +21,7 @@ from nox.artifacts import fingerprint, source_files_fingerprint
 from nox.block_compiler import compile_transformer_block
 from nox.compiler import reconstruct_from_artifact
 from nox.gauge import balanced_attention_gauge
+from nox.mlp_gauge import balanced_swiglu_gauge
 from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
@@ -112,6 +113,10 @@ def main():
     parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
                         help="Apply an exact paired attention reparameterization before compression")
     parser.add_argument(
+        "--mlp-gauge", choices=("none", "balanced_up_down"), default="none",
+        help="Apply the exact paired SwiGLU up/down balancing gauge before initial compression",
+    )
+    parser.add_argument(
         "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
         help=("Shared four-site MPO order for every projection in the layer stack; "
               "the reindexing is inverted in the saved dense-weight reconstruction"),
@@ -167,12 +172,13 @@ def main():
         "construction_mode": args.construction_mode,
         "config": compression,
         "attention_gauge": args.attention_gauge,
+        "mlp_gauge": args.mlp_gauge,
         "mpo_site_order": args.site_order,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
         "source_fingerprint": source_files_fingerprint([
             Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
-            ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
+            ROOT / "nox/mlp_gauge.py", ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
             ROOT / "nox/tensor_order.py",
         ]),
     }
@@ -200,6 +206,7 @@ def main():
         started = time.monotonic()
         dense = weights.layer(index, args.device)
         gauge_metadata = None
+        mlp_gauge_metadata = None
         if index == args.start_layer and args.attention_gauge == "balanced":
             dense, gauge_metadata = balanced_attention_gauge(
                 dense, config.num_attention_heads, config.num_key_value_heads,
@@ -220,6 +227,24 @@ def main():
         else:
             train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
             validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+        if index >= args.start_layer and args.mlp_gauge == "balanced_up_down":
+            reference_train_next = train_next
+            reference_validation_next = validation_next
+            dense, mlp_gauge_metadata = balanced_swiglu_gauge(dense)
+            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
+            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+            mlp_gauge_metadata["train_parity_relative_error"] = compute_metrics(
+                reference_train_next, train_next,
+            )["relative_error"]
+            mlp_gauge_metadata["validation_parity_relative_error"] = compute_metrics(
+                reference_validation_next, validation_next,
+            )["relative_error"]
+            if max(
+                mlp_gauge_metadata["train_parity_relative_error"],
+                mlp_gauge_metadata["validation_parity_relative_error"],
+            ) > 2e-5:
+                raise RuntimeError(f"Exact MLP gauge parity failed: {mlp_gauge_metadata}")
+            del reference_train_next, reference_validation_next
         if index >= args.start_layer:
             if compressed_validation is None:
                 compressed_validation = validation.clone()
@@ -275,6 +300,7 @@ def main():
                 "source_fingerprint": identity["source_fingerprint"],
                 "mpo_site_order": args.site_order,
                 "attention_gauge": gauge_metadata,
+                "mlp_gauge": mlp_gauge_metadata,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),
@@ -306,6 +332,7 @@ def main():
                 "cascade_validation": compute_metrics(validation_next, compressed_validation),
                 "calibration": compute_metrics(calibration_dense_output, train_output),
                 "attention_gauge": gauge_metadata,
+                "mlp_gauge": mlp_gauge_metadata,
                 "serialized_bytes": path.stat().st_size,
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
                 "seconds": time.monotonic() - started,
