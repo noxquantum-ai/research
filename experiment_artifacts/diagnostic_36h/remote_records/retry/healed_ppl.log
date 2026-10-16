@@ -1,0 +1,95 @@
+[07:15:25] NVIDIA GPU Acceleration enabled: NVIDIA A10
+[07:15:25] Loading tokenizer from 'NousResearch/Llama-2-7b-hf'...
+[07:15:27] Loading base model from 'NousResearch/Llama-2-7b-hf' (torch.float16)...
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Traceback (most recent call last):
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2600, in __getattr__
+    module = self._get_module(self._class_to_module[name])
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2831, in _get_module
+    raise e
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2829, in _get_module
+    return importlib.import_module("." + module_name, self.__name__)
+  File "/usr/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 29, in <module>
+    from ...modeling_layers import (
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/modeling_layers.py", line 37, in <module>
+    from .modeling_utils import LoadStateDictConfig, PreTrainedModel, _get_resolved_checkpoint_files
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/modeling_utils.py", line 58, in <module>
+    from .distributed.checkpoint import _get_resolved_distributed_checkpoint_files, get_distributed_checkpoint_dir
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/distributed/checkpoint.py", line 43, in <module>
+    from torch.distributed.checkpoint.hf_storage import HuggingFaceStorageReader, HuggingFaceStorageWriter
+ModuleNotFoundError: No module named 'torch.distributed.checkpoint.hf_storage'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/shadeform/diag36h-research/benchmarks/benchmark_day4_perplexity.py", line 173, in main
+    model = AutoModelForCausalLM.from_pretrained(
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 365, in from_pretrained
+    explicit_local_code = has_local_code and not _get_model_class(
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 183, in _get_model_class
+    supported_models = model_mapping[type(config)]
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 611, in __getitem__
+    return self._load_attr_from_module(model_type, model_name)
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 625, in _load_attr_from_module
+    return getattribute_from_module(self._modules[module_name], attr)
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 537, in getattribute_from_module
+    if hasattr(module, attr):
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2688, in __getattr__
+    raise ModuleNotFoundError(import_error_message) from e
+ModuleNotFoundError: Could not import module 'LlamaForCausalLM'. Are this object's requirements defined correctly? Set the logging verbosity to DEBUG for the original import error.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2600, in __getattr__
+    module = self._get_module(self._class_to_module[name])
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2831, in _get_module
+    raise e
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2829, in _get_module
+    return importlib.import_module("." + module_name, self.__name__)
+  File "/usr/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 29, in <module>
+    from ...modeling_layers import (
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/modeling_layers.py", line 37, in <module>
+    from .modeling_utils import LoadStateDictConfig, PreTrainedModel, _get_resolved_checkpoint_files
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/modeling_utils.py", line 58, in <module>
+    from .distributed.checkpoint import _get_resolved_distributed_checkpoint_files, get_distributed_checkpoint_dir
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/distributed/checkpoint.py", line 43, in <module>
+    from torch.distributed.checkpoint.hf_storage import HuggingFaceStorageReader, HuggingFaceStorageWriter
+ModuleNotFoundError: No module named 'torch.distributed.checkpoint.hf_storage'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/shadeform/diag36h-research/benchmarks/benchmark_day4_perplexity.py", line 284, in <module>
+    main()
+  File "/home/shadeform/diag36h-research/benchmarks/benchmark_day4_perplexity.py", line 183, in main
+    model = AutoModelForCausalLM.from_pretrained(
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 365, in from_pretrained
+    explicit_local_code = has_local_code and not _get_model_class(
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 183, in _get_model_class
+    supported_models = model_mapping[type(config)]
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 611, in __getitem__
+    return self._load_attr_from_module(model_type, model_name)
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 625, in _load_attr_from_module
+    return getattribute_from_module(self._modules[module_name], attr)
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/models/auto/auto_factory.py", line 537, in getattribute_from_module
+    if hasattr(module, attr):
+  File "/home/shadeform/diag36h-research/.venv/lib/python3.10/site-packages/transformers/utils/import_utils.py", line 2688, in __getattr__
+    raise ModuleNotFoundError(import_error_message) from e
+ModuleNotFoundError: Could not import module 'LlamaForCausalLM'. Are this object's requirements defined correctly? Set the logging verbosity to DEBUG for the original import error.

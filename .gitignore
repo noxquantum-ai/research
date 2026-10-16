@@ -10,3 +10,4 @@ models/
 *.pt
 *.log
 *.pem
+!experiment_artifacts/**/*.log

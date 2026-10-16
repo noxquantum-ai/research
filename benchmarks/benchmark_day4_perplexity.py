@@ -10,13 +10,14 @@ import json
 import os
 import sys
 import time
-import urllib.request
 from pathlib import Path
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nox.compiler import reconstruct_from_artifact
+from nox.artifacts import checkpoint_file_sizes
+from nox.data import load_wikitext2_raw_split
 
 
 def log_step(msg):
@@ -24,30 +25,23 @@ def log_step(msg):
     print(f"[{t_str}] {msg}", flush=True)
 
 
-def load_wikitext2_test_text():
-    """
-    Loads WikiText-2 test text using datasets or direct raw fallback.
-    """
-    try:
-        from datasets import load_dataset
-        log_step("Loading WikiText-2 test set via datasets library...")
-        ds = load_dataset("wikitext", "wikitext-2-raw-v1", split="test")
-        text = "\n\n".join(ds["text"])
-        return text
-    except Exception as e:
-        log_step(f"datasets load failed ({e}), falling back to direct raw HTTP download...")
-        url = "https://raw.githubusercontent.com/pytorch/examples/main/word_language_model/data/wikitext-2/test.txt"
-        req = urllib.request.Request(url, headers={"User-Agent": "NoxResearch/1.0"})
-        with urllib.request.urlopen(req) as resp:
-            text = resp.read().decode("utf-8")
-        return text
+def load_wikitext2_test_text(return_metadata=False):
+    """Load the explicit raw WikiText-2 test split and report its checksum."""
+    text, metadata = load_wikitext2_raw_split("test")
+    log_step(
+        f"Loaded WikiText-2 raw test split: {metadata['source_bytes']} bytes, "
+        f"sha256={metadata['source_sha256']} from {metadata['source_url']}"
+    )
+    return (text, metadata) if return_metadata else text
 
 
 @torch.no_grad()
-def compute_perplexity(model, tokenizer, text, seq_len=2048, stride=512, max_eval_tokens=10000, device="cuda"):
+def compute_perplexity(model, tokenizer, text, seq_len=2048, stride=512, max_eval_tokens=10000, device="cuda", return_details=False):
     """
     Computes sliding-window language model perplexity across tokens.
     """
+    if seq_len < 2 or stride < 1 or stride >= seq_len:
+        raise ValueError("Require seq_len >= 2 and 1 <= stride < seq_len to score every next token")
     model.eval()
     encodings = tokenizer(text, return_tensors="pt")
     total_tokens = encodings.input_ids.size(1)
@@ -57,6 +51,8 @@ def compute_perplexity(model, tokenizer, text, seq_len=2048, stride=512, max_eva
 
     nlls = []
     total_evaluated_tokens = 0
+    predictions = []
+    correct = 0
 
     for i in range(0, eval_limit, stride):
         begin_loc = max(i + stride - seq_len, 0)
@@ -66,17 +62,35 @@ def compute_perplexity(model, tokenizer, text, seq_len=2048, stride=512, max_eva
         target_ids = input_ids.clone()
         target_ids[:, :-trg_len] = -100
 
+        scored_tokens = int((target_ids[:, 1:] != -100).sum().item())
+        if scored_tokens == 0:
+            continue
         outputs = model(input_ids, labels=target_ids)
-        neg_log_likelihood = outputs.loss * trg_len
+        neg_log_likelihood = outputs.loss * scored_tokens
+        if return_details:
+            labels = target_ids[:, 1:]
+            mask = labels != -100
+            predicted = outputs.logits[:, :-1].argmax(dim=-1)[mask]
+            correct += int((predicted == labels[mask]).sum().item())
+            predictions.append(predicted.cpu())
 
         nlls.append(neg_log_likelihood)
-        total_evaluated_tokens += trg_len
+        total_evaluated_tokens += scored_tokens
 
         if end_loc >= eval_limit:
             break
 
+    if not nlls:
+        raise ValueError("Perplexity requires at least two input tokens")
     total_nll = torch.stack(nlls).sum()
     ppl = torch.exp(total_nll / total_evaluated_tokens).item()
+    if return_details:
+        return ppl, total_evaluated_tokens, {
+            "top1_predictions": torch.cat(predictions),
+            "next_token_accuracy": correct / total_evaluated_tokens,
+            "mean_nll": float((total_nll / total_evaluated_tokens).item()),
+            "input_tokens": eval_limit,
+        }
     return ppl, total_evaluated_tokens
 
 
@@ -152,6 +166,7 @@ def main():
     parser = argparse.ArgumentParser(description="Day 4-5 Benchmark: Perplexity & Language Model Evaluation")
     parser.add_argument("--checkpoint_dir", type=str, required=True, help="Path to directory containing compressed_layer_*.pt")
     parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="Base HuggingFace model ID")
+    parser.add_argument("--model_revision", type=str, default="main", help="HuggingFace revision (use a commit SHA for repeatable runs)")
     parser.add_argument("--device", type=str, default=None, help="Device (default: auto cuda if available, else cpu)")
     parser.add_argument("--eval_dense", action="store_true", help="Also compute baseline perplexity on dense uncompressed model")
     parser.add_argument("--seq_len", type=int, default=2048, help="Context sequence length (default: 2048)")
@@ -170,13 +185,14 @@ def main():
 
     log_step(f"Loading tokenizer from '{args.model_id}'...")
     from transformers import AutoTokenizer, AutoModelForCausalLM
-    tokenizer = AutoTokenizer.from_pretrained(args.model_id)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_id, revision=args.model_revision)
 
     log_step(f"Loading base model from '{args.model_id}' ({pt_dtype})...")
     try:
         model = AutoModelForCausalLM.from_pretrained(
             args.model_id,
             torch_dtype=pt_dtype,
+            revision=args.model_revision,
             low_cpu_mem_usage=True,
             device_map="auto" if str(device).startswith("cuda") else None,
         )
@@ -186,10 +202,11 @@ def main():
         model = AutoModelForCausalLM.from_pretrained(
             args.model_id,
             torch_dtype=pt_dtype,
+            revision=args.model_revision,
             low_cpu_mem_usage=True,
         ).to(device)
 
-    test_text = load_wikitext2_test_text()
+    test_text, test_data_metadata = load_wikitext2_test_text(return_metadata=True)
 
     dense_ppl = None
     if args.eval_dense:
@@ -214,6 +231,9 @@ def main():
     if os.path.exists(manifest_path):
         with open(manifest_path, "r", encoding="utf-8") as f:
             manifest = json.load(f)
+
+    checkpoint_sizes = checkpoint_file_sizes(args.checkpoint_dir)
+    serialized_checkpoint_bytes = sum(checkpoint_sizes.values())
 
     log_step(f"Evaluating Nox-Compressed Model Perplexity ({len(injected_layers)} compressed layers)...")
     nox_ppl, eval_tokens = compute_perplexity(
@@ -241,11 +261,24 @@ def main():
     print(" DAY 4-5 BENCHMARK SCORECARD: WIKITEXT-2 PERPLEXITY & LANGUAGE QUALITY")
     print("=" * 110)
     print(f"Model ID:              {args.model_id}")
+    print(f"Model revision:         {args.model_revision}")
     print(f"Checkpoint Directory:  {args.checkpoint_dir}")
     print(f"Compression Tier:      {manifest.get('tier', 'Custom / Unspecified')}")
     print(f"Compressed Layers:     {injected_layers}")
-    print(f"Total Checkpoint Size: {manifest.get('total_model_mb', 'N/A'):.2f} MB" if 'total_model_mb' in manifest else f"Total Layers: {len(injected_layers)}")
-    print(f"Tokens Evaluated:      {eval_tokens}")
+    print(
+        f"Serialized layer checkpoints: {serialized_checkpoint_bytes / (1024.0 * 1024.0):.2f} MiB "
+        f"({serialized_checkpoint_bytes} bytes; {len(checkpoint_sizes)} files)"
+    )
+    if "total_model_mb" in manifest:
+        print(
+            "Legacy estimated tensor payload: "
+            f"{manifest['total_model_mb']:.2f} MB (not serialized file size)"
+        )
+    print(
+        f"WikiText-2 split:       {test_data_metadata['split']} "
+        f"sha256={test_data_metadata['source_sha256']}"
+    )
+    print(f"Scored next-token labels: {eval_tokens}")
     if dense_ppl is not None:
         print(f"Dense FP16 Baseline PPL: {dense_ppl:.2f}")
         print(f"Nox Compressed PPL:      {nox_ppl:.2f}")

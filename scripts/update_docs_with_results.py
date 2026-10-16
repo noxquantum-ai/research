@@ -30,43 +30,65 @@ def main():
 
     # Generate benchmark summary markdown block
     summary_lines = [
-        "## Verified Multi-Tier Empirical Benchmark Scorecard (Full 32-Layer LLaMA-2 7B)",
+        "## Recorded Multi-Tier Results (Full 32-Layer LLaMA-2 7B)",
         "",
-        "| Architecture / Model | Physical Size | Compression | WikiText-2 PPL | MMLU (%) | GSM8K (%) | HellaSwag (%) | BoolQ (%) | ARC-C (%) | Training / Healing Required |",
+        "Checkpoint size is the serialized layer-checkpoint bundle; it excludes unchanged base-model tensors. The bundle alone is not a full-model compression ratio.",
+        "",
+        "Only benchmark results with recorded canonical dataset provenance are shown as scores; curated fallback pools are marked unavailable.",
+        "",
+        "| Architecture / Model | Serialized checkpoint bundle | Full-model ratio | WikiText-2 PPL | MMLU (%) | GSM8K (%) | HellaSwag (%) | BoolQ (%) | ARC-C (%) |",
         "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
     ]
 
-    dense_res = day5_results.get("dense_fp16", {})
-    summary_lines.append(
-        f"| **Dense LLaMA-2 7B Baseline (Before)** | 13.50 GB | 1.0x | {dense_res.get('wikitext2_ppl', 1.94)} | {dense_res.get('mmlu_acc', 45.3)}% | {dense_res.get('gsm8k_acc', 14.5)}% | {dense_res.get('hellaswag_acc', 76.2)}% | {dense_res.get('boolq_acc', 77.8)}% | {dense_res.get('arc_challenge_acc', 52.1)}% | None (Original) |"
+    dense_res = day5_results.get("dense_fp16", day5_results.get("external_dense_reference", {}))
+    dense_measured = dense_res.get("measured_by_this_run", "Official" not in dense_res.get("tier", ""))
+    dense_label = (
+        "Dense baseline measured in this run"
+        if dense_measured
+        else "Published dense reference (not measured here; protocol differs)"
     )
     summary_lines.append(
-        "| **CompactifAI (Multiverse Computing)** | ~1.80 GB | ~7.5x | ~6.85 | 43.1% | 12.8% | 73.9% | 75.2% | 49.3% | **Requires 8x A10G GPU Fine-Tuning** |"
+        f"| **{dense_label}** | N/A | N/A | {dense_res.get('wikitext2_ppl', 'N/A')} | {dense_res.get('mmlu_acc', 'N/A')} | {dense_res.get('gsm8k_acc', 'N/A')} | {dense_res.get('hellaswag_acc', 'N/A')} | {dense_res.get('boolq_acc', 'N/A')} | {dense_res.get('arc_challenge_acc', 'N/A')} |"
     )
 
     tier_order = [
-        ("high_fidelity_10x", "Nox High-Fidelity Lossless", "~1.1 GB", "~12x"),
-        ("production_18x", "Nox Production CompactifAI-Killer", "263.2 MB", "51.3x"),
-        ("extreme_77x", "Nox Extreme Stress-Test", "184.8 MB", "73.1x"),
+        ("high_fidelity_10x", "Nox High-Fidelity"),
+        ("production_18x", "Nox Production"),
+        ("extreme_77x", "Nox Extreme"),
     ]
 
-    for t_id, t_name, size_str, comp_str in tier_order:
+    for t_id, t_name in tier_order:
         manifest = tier_metrics.get(t_id, {})
         d5 = day5_results.get(t_id, {})
 
-        size_mb = manifest.get("total_model_mb", None)
-        actual_size = f"{size_mb:.1f} MB" if size_mb else size_str
-        actual_comp = f"{13500.0 / size_mb:.1f}x" if size_mb else comp_str
-        w_ppl = d5.get("wikitext2_ppl", manifest.get("final_logit_metrics", {}).get("dense_ppl", "N/A"))
-        c4_ppl = d5.get("c4_ppl", "N/A")
-        mmlu = d5.get("mmlu_acc", "N/A")
-        gsm = d5.get("gsm8k_acc", "N/A")
-        hs = d5.get("hellaswag_acc", "N/A")
-        boolq = d5.get("boolq_acc", "N/A")
-        arc = d5.get("arc_challenge_acc", "N/A")
+        stored_bytes = manifest.get("serialized_checkpoint_bytes")
+        candidate_dirs = [sweep_dir / t_id, root_dir / "compressed_models" / "tiers" / t_id]
+        if stored_bytes is None:
+            for candidate_dir in candidate_dirs:
+                files = list(candidate_dir.glob("compressed_layer_*.pt")) if candidate_dir.exists() else []
+                if files:
+                    stored_bytes = sum(p.stat().st_size for p in files)
+                    break
+        actual_size = f"{stored_bytes / (1024.0 * 1024.0):.1f} MiB" if stored_bytes else "not recorded"
+
+        provenance = d5.get("dataset_provenance", {})
+        w_source = provenance.get("wikitext2", {})
+        w_ppl = d5.get("wikitext2_ppl", "N/A") if w_source and not w_source.get("fallback") else "N/A (provenance missing)"
+
+        def verified_accuracy(key, dataset_key):
+            dataset_meta = provenance.get(dataset_key, {})
+            if dataset_meta and not dataset_meta.get("fallback"):
+                return d5.get(key, "N/A")
+            return "N/A (curated fallback or provenance missing)"
+
+        mmlu = verified_accuracy("mmlu_acc", "mmlu")
+        gsm = verified_accuracy("gsm8k_acc", "gsm8k")
+        hs = verified_accuracy("hellaswag_acc", "hellaswag")
+        boolq = verified_accuracy("boolq_acc", "boolq")
+        arc = verified_accuracy("arc_challenge_acc", "arc_challenge")
 
         summary_lines.append(
-            f"| **{t_name}** | **{actual_size}** | **{actual_comp}** | {w_ppl} | {mmlu}% | {gsm}% | {hs}% | {boolq}% | {arc}% | **ZERO Fine-Tuning (Closed-Form)** |"
+            f"| **{t_name}** | **{actual_size}** | N/A (base tensors excluded) | {w_ppl} | {mmlu} | {gsm} | {hs} | {boolq} | {arc} |"
         )
 
     summary_block = "\n".join(summary_lines) + "\n\n"

@@ -10,7 +10,7 @@ from nox.utils import compute_metrics, count_parameters, get_modes_for_projectio
 class RMSNorm(torch.nn.Module):
     """Root Mean Square Layer Normalization."""
 
-    def __init__(self, dim, eps=1e-6, weight=None):
+    def __init__(self, dim, eps=1e-5, weight=None):
         super().__init__()
         self.eps = eps
         if weight is not None:
@@ -397,6 +397,7 @@ def compile_transformer_block(
     causal_healing=True,
     return_artifacts=False,
     verbose=True,
+    rms_norm_eps=1e-5,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -419,8 +420,8 @@ def compile_transformer_block(
     norm1_weight = layer_weights.get("input_layernorm", None)
     norm2_weight = layer_weights.get("post_attention_layernorm", None)
 
-    norm1 = RMSNorm(d_model, weight=norm1_weight)
-    norm2 = RMSNorm(d_model, weight=norm2_weight)
+    norm1 = RMSNorm(d_model, eps=rms_norm_eps, weight=norm1_weight)
+    norm2 = RMSNorm(d_model, eps=rms_norm_eps, weight=norm2_weight)
 
     ref_calib_dense = X_calib_dense if X_calib_dense is not None else X_calib
 
@@ -511,13 +512,13 @@ def compile_transformer_block(
 
 
 @torch.no_grad()
-def evaluate_compiled_block(compiled_weights, layer_weights, X_test, n_heads=32, n_kv_heads=32, seq_len=128):
+def evaluate_compiled_block(compiled_weights, layer_weights, X_test, n_heads=32, n_kv_heads=32, seq_len=128, rms_norm_eps=1e-5):
     """
     Evaluates a compiled Transformer block on unseen held-out test tokens.
     """
     d_model = X_test.shape[0]
-    norm1 = RMSNorm(d_model, weight=layer_weights.get("input_layernorm", None))
-    norm2 = RMSNorm(d_model, weight=layer_weights.get("post_attention_layernorm", None))
+    norm1 = RMSNorm(d_model, eps=rms_norm_eps, weight=layer_weights.get("input_layernorm", None))
+    norm2 = RMSNorm(d_model, eps=rms_norm_eps, weight=layer_weights.get("post_attention_layernorm", None))
 
     cw = compiled_weights["compressed_weights"]
     lw = layer_weights

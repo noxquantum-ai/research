@@ -32,6 +32,9 @@ from benchmarks.benchmark_day4_perplexity import (
     inject_nox_checkpoints,
     load_wikitext2_test_text,
 )
+from nox.artifacts import checkpoint_storage_bytes
+
+DATASET_PROVENANCE = {}
 
 
 def log_step(msg):
@@ -52,9 +55,18 @@ def load_c4_validation_text(max_tokens=10000):
             text_samples.append(sample["text"])
             if len(" ".join(text_samples).split()) >= max_tokens * 2:
                 break
+        DATASET_PROVENANCE["c4"] = {
+            "source": "Hugging Face c4/en validation",
+            "fallback": False,
+        }
         return "\n\n".join(text_samples)
     except Exception as e:
         log_step(f"datasets C4 load failed ({e}), using diverse raw web samples...")
+        DATASET_PROVENANCE["c4"] = {
+            "source": "handwritten curated text",
+            "fallback": True,
+            "reason": str(e),
+        }
         # Curated diverse web text samples
         sample_texts = [
             "Quantum entanglement is a physical phenomenon that occurs when a group of particles are generated, "
@@ -82,8 +94,18 @@ def evaluate_arc_challenge(model, tokenizer, num_samples=100, device="cuda"):
         from datasets import load_dataset
         ds = load_dataset("ai2_arc", "ARC-Challenge", split="test")
         samples = list(ds)[:num_samples]
+        DATASET_PROVENANCE["arc_challenge"] = {
+            "source": "Hugging Face ai2_arc/ARC-Challenge test",
+            "fallback": False,
+            "examples": len(samples),
+        }
     except Exception as e:
         log_step(f"datasets ARC load failed ({e}), using curated ARC sample pool...")
+        DATASET_PROVENANCE["arc_challenge"] = {
+            "source": "handwritten curated questions",
+            "fallback": True,
+            "reason": str(e),
+        }
         samples = [
             {
                 "question": "Which property of a mineral can be determined just by looking at it?",
@@ -161,8 +183,18 @@ def evaluate_hellaswag(model, tokenizer, num_samples=100, device="cuda"):
         from datasets import load_dataset
         ds = load_dataset("hellaswag", split="validation")
         samples = list(ds)[:num_samples]
+        DATASET_PROVENANCE["hellaswag"] = {
+            "source": "Hugging Face hellaswag validation",
+            "fallback": False,
+            "examples": len(samples),
+        }
     except Exception as e:
         log_step(f"datasets HellaSwag load failed ({e}), using curated HellaSwag sample pool...")
+        DATASET_PROVENANCE["hellaswag"] = {
+            "source": "handwritten curated questions",
+            "fallback": True,
+            "reason": str(e),
+        }
         samples = [
             {
                 "ctx": "A person is slicing an apple on a wooden cutting board with a sharp knife.",
@@ -234,8 +266,18 @@ def evaluate_gsm8k(model, tokenizer, num_samples=30, max_new_tokens=96, device="
         from datasets import load_dataset
         ds = load_dataset("gsm8k", "main", split="test")
         samples = list(ds)[:num_samples]
+        DATASET_PROVENANCE["gsm8k"] = {
+            "source": "Hugging Face gsm8k/main test",
+            "fallback": False,
+            "examples": len(samples),
+        }
     except Exception as e:
         log_step(f"datasets GSM8K load failed ({e}), using curated math sample pool...")
+        DATASET_PROVENANCE["gsm8k"] = {
+            "source": "handwritten curated questions",
+            "fallback": True,
+            "reason": str(e),
+        }
         samples = [
             {
                 "question": "Janet has 3 cats. Each cat eats 2 cans of food per day. How many cans do they eat in a week?",
@@ -295,8 +337,18 @@ def evaluate_mmlu(model, tokenizer, num_samples=60, device="cuda"):
         from datasets import load_dataset
         ds = load_dataset("cais/mmlu", "all", split="test")
         samples = list(ds)[:num_samples]
+        DATASET_PROVENANCE["mmlu"] = {
+            "source": "Hugging Face cais/mmlu all test",
+            "fallback": False,
+            "examples": len(samples),
+        }
     except Exception as e:
         log_step(f"datasets MMLU load failed ({e}), using curated MMLU benchmark pool...")
+        DATASET_PROVENANCE["mmlu"] = {
+            "source": "handwritten curated questions",
+            "fallback": True,
+            "reason": str(e),
+        }
         samples = [
             {
                 "question": "Which of the following is true of the velocity of an object in uniform circular motion?",
@@ -369,8 +421,18 @@ def evaluate_boolq(model, tokenizer, num_samples=60, device="cuda"):
         from datasets import load_dataset
         ds = load_dataset("google/boolq", split="validation")
         samples = list(ds)[:num_samples]
+        DATASET_PROVENANCE["boolq"] = {
+            "source": "Hugging Face google/boolq validation",
+            "fallback": False,
+            "examples": len(samples),
+        }
     except Exception as e:
         log_step(f"datasets BoolQ load failed ({e}), using curated BoolQ sample pool...")
+        DATASET_PROVENANCE["boolq"] = {
+            "source": "handwritten curated questions",
+            "fallback": True,
+            "reason": str(e),
+        }
         samples = [
             {
                 "passage": "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
@@ -433,13 +495,20 @@ def evaluate_tier(
     Evaluates one tier on all multi-task benchmarks.
     """
     log_step(f"=== Starting Multi-Task Evaluation for Tier '{tier_name}' ===")
+    DATASET_PROVENANCE.clear()
 
     if checkpoint_dir is not None:
         injected = inject_nox_checkpoints(model, checkpoint_dir, device=device, dtype=pt_dtype)
         log_step(f"Injected {len(injected)} compressed layers from '{checkpoint_dir}'")
 
     # 1. WikiText-2 PPL
-    w_text = load_wikitext2_test_text()
+    w_text, wikitext_metadata = load_wikitext2_test_text(return_metadata=True)
+    DATASET_PROVENANCE["wikitext2"] = {
+        "source": wikitext_metadata["source_url"],
+        "split": wikitext_metadata["split"],
+        "sha256": wikitext_metadata["source_sha256"],
+        "fallback": False,
+    }
     w_ppl, w_tokens = compute_perplexity(model, tokenizer, w_text, max_eval_tokens=num_eval_tokens, device=device)
     log_step(f"[{tier_name}] WikiText-2 Perplexity: {w_ppl:.2f}")
 
@@ -451,8 +520,12 @@ def evaluate_tier(
     results = {
         "tier": tier_name,
         "wikitext2_ppl": round(w_ppl, 3),
+        "wikitext2_scored_tokens": w_tokens,
         "c4_ppl": round(c4_ppl, 3),
+        "c4_scored_tokens": c4_tokens,
     }
+    if checkpoint_dir is not None:
+        results["serialized_checkpoint_bytes"] = checkpoint_storage_bytes(checkpoint_dir)
 
     if run_all_tasks:
         # 3. MMLU
@@ -474,6 +547,8 @@ def evaluate_tier(
         # 7. ARC-Challenge
         arc_acc, arc_n = evaluate_arc_challenge(model, tokenizer, num_samples=60, device=device)
         results["arc_challenge_acc"] = round(arc_acc, 2)
+
+    results["dataset_provenance"] = dict(DATASET_PROVENANCE)
 
     return results
 
@@ -508,8 +583,10 @@ def main():
         dense_res = evaluate_tier("dense_fp16", None, model, tokenizer, device, pt_dtype, run_all_tasks=True)
         all_results["dense_fp16"] = dense_res
     else:
-        all_results["dense_fp16"] = {
-            "tier": "dense_fp16 (Meta Official)",
+        all_results["external_dense_reference"] = {
+            "tier": "Published dense reference (not run by this command)",
+            "measured_by_this_run": False,
+            "protocol_comparable_to_local_results": False,
             "wikitext2_ppl": 5.47,
             "c4_ppl": 7.26,
             "mmlu_acc": 45.3,

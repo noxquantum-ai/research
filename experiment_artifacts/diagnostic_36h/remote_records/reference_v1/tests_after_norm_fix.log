@@ -1,0 +1,25 @@
+2026-10-16 09:07:02.087286: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 09:07:02.100647: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792141622.116803    9497 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792141622.122144    9497 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792141622.134650    9497 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792141622.134667    9497 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792141622.134670    9497 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792141622.134671    9497 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 09:07:02.138267: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+test_small_embedding_inputs_match_hf_with_model_epsilon (test_dense_layer_parity.DenseLayerParityTests) ... ok
+test_checkpoint_size_uses_serialized_bytes (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_compiler_payload_estimate_matches_saved_tensor_dtypes (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_dense_argmax_diagnostics_are_not_named_perplexity (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_empty_tensor_cache_is_a_miss_and_remains_untouched (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_perplexity_counts_only_scored_next_token_labels (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_run_fingerprint_is_stable_and_sensitive_to_input_data (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_download_failure_does_not_silently_use_processed_data (test_wikitext_source.WikiTextSourceTests) ... ok
+test_raw_split_uses_pinned_raw_parquet_and_preserves_rows (test_wikitext_source.WikiTextSourceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.055s
+
+OK

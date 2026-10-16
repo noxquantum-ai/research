@@ -1,0 +1,128 @@
+=== healed layer 15 ===
+checkpoint_dir_bytes=169023120 (161.19 MiB)
+layer_15_checkpoint_bytes=42250420
+compiler_payload_estimate_kb=41208.787109375
+manifest_estimated_model_mb=160.9926052093506
+manifest_serialized_checkpoint_bytes=169023120
+layer=15 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.951489 cosine=0.346839 max_abs=0.169629
+k_proj: shape=(4096, 4096) rel_fro=0.949384 cosine=0.356540 max_abs=0.168402
+v_proj: shape=(4096, 4096) rel_fro=0.965402 cosine=0.312761 max_abs=0.0768423
+o_proj: shape=(4096, 4096) rel_fro=0.979421 cosine=0.229696 max_abs=0.155431
+gate_proj: shape=(11008, 4096) rel_fro=0.961450 cosine=0.280748 max_abs=0.0883996
+up_proj: shape=(11008, 4096) rel_fro=0.967321 cosine=0.260032 max_abs=0.0812917
+down_proj: shape=(4096, 11008) rel_fro=1.035929 cosine=0.081137 max_abs=0.173538
+same_input_layer_output: tokens=128 rel_fro=0.044689 cosine=0.999001 max_abs=2.75181
+audit_status=COMPLETE
+=== healed layer 16 ===
+checkpoint_dir_bytes=169023120 (161.19 MiB)
+layer_16_checkpoint_bytes=42252980
+compiler_payload_estimate_kb=41211.423828125
+manifest_estimated_model_mb=160.9926052093506
+manifest_serialized_checkpoint_bytes=169023120
+layer=16 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.949852 cosine=0.354226 max_abs=0.181694
+k_proj: shape=(4096, 4096) rel_fro=0.948916 cosine=0.360507 max_abs=0.191918
+v_proj: shape=(4096, 4096) rel_fro=0.968842 cosine=0.307680 max_abs=0.0741225
+o_proj: shape=(4096, 4096) rel_fro=0.973687 cosine=0.242009 max_abs=0.16277
+gate_proj: shape=(11008, 4096) rel_fro=0.960979 cosine=0.282218 max_abs=0.0918717
+up_proj: shape=(11008, 4096) rel_fro=0.967342 cosine=0.259750 max_abs=0.0825014
+down_proj: shape=(4096, 11008) rel_fro=1.032092 cosine=0.077892 max_abs=0.157957
+same_input_layer_output: tokens=128 rel_fro=0.052783 cosine=0.998606 max_abs=3.16323
+audit_status=COMPLETE
+=== healed layer 17 ===
+checkpoint_dir_bytes=169023120 (161.19 MiB)
+layer_17_checkpoint_bytes=42259124
+compiler_payload_estimate_kb=41217.419921875
+manifest_estimated_model_mb=160.9926052093506
+manifest_serialized_checkpoint_bytes=169023120
+layer=17 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=1.006536 cosine=0.288021 max_abs=2.77244
+k_proj: shape=(4096, 4096) rel_fro=0.993566 cosine=0.308304 max_abs=2.16224
+v_proj: shape=(4096, 4096) rel_fro=1.014643 cosine=0.260218 max_abs=1.81702
+o_proj: shape=(4096, 4096) rel_fro=0.977455 cosine=0.238716 max_abs=0.209843
+gate_proj: shape=(11008, 4096) rel_fro=0.960968 cosine=0.282512 max_abs=0.104253
+up_proj: shape=(11008, 4096) rel_fro=0.966728 cosine=0.261750 max_abs=0.0789734
+down_proj: shape=(4096, 11008) rel_fro=1.029074 cosine=0.080909 max_abs=0.140518
+same_input_layer_output: tokens=128 rel_fro=0.055808 cosine=0.998442 max_abs=3.69492
+audit_status=COMPLETE
+=== healed layer 18 ===
+checkpoint_dir_bytes=169023120 (161.19 MiB)
+layer_18_checkpoint_bytes=42260596
+compiler_payload_estimate_kb=41218.796875
+manifest_estimated_model_mb=160.9926052093506
+manifest_serialized_checkpoint_bytes=169023120
+layer=18 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.999984 cosine=0.288765 max_abs=2.69233
+k_proj: shape=(4096, 4096) rel_fro=0.997666 cosine=0.297839 max_abs=2.17355
+v_proj: shape=(4096, 4096) rel_fro=1.003157 cosine=0.267852 max_abs=1.20729
+o_proj: shape=(4096, 4096) rel_fro=0.980721 cosine=0.229458 max_abs=0.178955
+gate_proj: shape=(11008, 4096) rel_fro=0.960973 cosine=0.282907 max_abs=0.0923319
+up_proj: shape=(11008, 4096) rel_fro=0.966428 cosine=0.262894 max_abs=0.0784288
+down_proj: shape=(4096, 11008) rel_fro=1.032158 cosine=0.077032 max_abs=0.49796
+same_input_layer_output: tokens=128 rel_fro=0.058152 cosine=0.998308 max_abs=3.46715
+audit_status=COMPLETE
+=== no_healing layer 15 ===
+checkpoint_dir_bytes=174849744 (166.75 MiB)
+layer_15_checkpoint_bytes=43707060
+compiler_payload_estimate_kb=42631.23828125
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=174849744
+layer=15 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.951489 cosine=0.346839 max_abs=0.169629
+k_proj: shape=(4096, 4096) rel_fro=0.949384 cosine=0.356540 max_abs=0.168402
+v_proj: shape=(4096, 4096) rel_fro=0.965402 cosine=0.312761 max_abs=0.0768423
+o_proj: shape=(4096, 4096) rel_fro=0.967186 cosine=0.274634 max_abs=0.140208
+gate_proj: shape=(11008, 4096) rel_fro=0.961381 cosine=0.280987 max_abs=0.0901411
+up_proj: shape=(11008, 4096) rel_fro=0.967196 cosine=0.260344 max_abs=0.0778544
+down_proj: shape=(4096, 11008) rel_fro=1.037943 cosine=0.099996 max_abs=0.155618
+same_input_layer_output: tokens=128 rel_fro=0.044896 cosine=0.998992 max_abs=3.42545
+audit_status=COMPLETE
+=== no_healing layer 16 ===
+checkpoint_dir_bytes=174849744 (166.75 MiB)
+layer_16_checkpoint_bytes=43709684
+compiler_payload_estimate_kb=42633.806640625
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=174849744
+layer=16 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.947233 cosine=0.358522 max_abs=0.238254
+k_proj: shape=(4096, 4096) rel_fro=0.947044 cosine=0.363469 max_abs=0.174698
+v_proj: shape=(4096, 4096) rel_fro=0.967222 cosine=0.310487 max_abs=0.0771572
+o_proj: shape=(4096, 4096) rel_fro=0.958993 cosine=0.294127 max_abs=0.172066
+gate_proj: shape=(11008, 4096) rel_fro=0.960276 cosine=0.284275 max_abs=0.0904034
+up_proj: shape=(11008, 4096) rel_fro=0.966887 cosine=0.261210 max_abs=0.0876818
+down_proj: shape=(4096, 11008) rel_fro=1.034479 cosine=0.097630 max_abs=0.143442
+same_input_layer_output: tokens=128 rel_fro=0.052867 cosine=0.998602 max_abs=3.5806
+audit_status=COMPLETE
+=== no_healing layer 17 ===
+checkpoint_dir_bytes=174849744 (166.75 MiB)
+layer_17_checkpoint_bytes=43715764
+compiler_payload_estimate_kb=42639.783203125
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=174849744
+layer=17 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.998500 cosine=0.296538 max_abs=2.61133
+k_proj: shape=(4096, 4096) rel_fro=0.996640 cosine=0.307191 max_abs=2.72229
+v_proj: shape=(4096, 4096) rel_fro=1.012379 cosine=0.263507 max_abs=1.64563
+o_proj: shape=(4096, 4096) rel_fro=0.963311 cosine=0.288662 max_abs=0.167856
+gate_proj: shape=(11008, 4096) rel_fro=0.959818 cosine=0.285811 max_abs=0.0977195
+up_proj: shape=(11008, 4096) rel_fro=0.965952 cosine=0.264183 max_abs=0.0782784
+down_proj: shape=(4096, 11008) rel_fro=1.032400 cosine=0.100430 max_abs=0.127747
+same_input_layer_output: tokens=128 rel_fro=0.055756 cosine=0.998445 max_abs=3.41782
+audit_status=COMPLETE
+=== no_healing layer 18 ===
+checkpoint_dir_bytes=174849744 (166.75 MiB)
+layer_18_checkpoint_bytes=43717236
+compiler_payload_estimate_kb=42641.23828125
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=174849744
+layer=18 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.999232 cosine=0.291608 max_abs=2.24412
+k_proj: shape=(4096, 4096) rel_fro=0.993211 cosine=0.303511 max_abs=1.7985
+v_proj: shape=(4096, 4096) rel_fro=1.001755 cosine=0.271079 max_abs=1.4204
+o_proj: shape=(4096, 4096) rel_fro=0.966723 cosine=0.279051 max_abs=0.147527
+gate_proj: shape=(11008, 4096) rel_fro=0.959585 cosine=0.286883 max_abs=0.0888802
+up_proj: shape=(11008, 4096) rel_fro=0.965485 cosine=0.265833 max_abs=0.0791585
+down_proj: shape=(4096, 11008) rel_fro=1.034338 cosine=0.096217 max_abs=0.14134
+same_input_layer_output: tokens=128 rel_fro=0.058379 cosine=0.998295 max_abs=4.55426
+audit_status=COMPLETE

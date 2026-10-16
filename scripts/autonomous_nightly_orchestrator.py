@@ -114,7 +114,7 @@ def package_and_flag():
         "--method",
         "all",
     ]
-    subprocess.run(cmd_export, cwd="/home/shadeform/research")
+    subprocess.run(cmd_export, cwd="/home/shadeform/research", check=True)
 
     flag_path = "/home/shadeform/research/PIPELINE_COMPLETE.flag"
     with open(flag_path, "w", encoding="utf-8") as f:

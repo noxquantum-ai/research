@@ -1,0 +1,55 @@
+{
+  "layer_parity": {
+    "0": {
+      "custom_vs_hf_relative_error": 0.23142912983894348,
+      "custom_vs_hf_max_abs": 0.6021943092346191,
+      "max_cache_weight_relative_error": 0.0,
+      "cache_weight_relative_errors": {
+        "q_proj": 0.0,
+        "k_proj": 0.0,
+        "v_proj": 0.0,
+        "o_proj": 0.0,
+        "gate_proj": 0.0,
+        "up_proj": 0.0,
+        "down_proj": 0.0,
+        "input_layernorm": 0.0,
+        "post_attention_layernorm": 0.0
+      },
+      "configured_epsilon": 1e-05,
+      "configured_epsilon_relative_error": 0.000424246012698859
+    },
+    "15": {
+      "custom_vs_hf_relative_error": 0.00018317163630854338,
+      "custom_vs_hf_max_abs": 0.348876953125,
+      "max_cache_weight_relative_error": 0.0,
+      "cache_weight_relative_errors": {
+        "q_proj": 0.0,
+        "k_proj": 0.0,
+        "v_proj": 0.0,
+        "o_proj": 0.0,
+        "gate_proj": 0.0,
+        "up_proj": 0.0,
+        "down_proj": 0.0,
+        "input_layernorm": 0.0,
+        "post_attention_layernorm": 0.0
+      },
+      "configured_epsilon": 1e-05,
+      "configured_epsilon_relative_error": 0.00018305359117221087
+    }
+  },
+  "validation_source": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  }
+}

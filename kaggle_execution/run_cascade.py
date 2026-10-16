@@ -31,7 +31,8 @@ def run_cmd(cmd):
     print("[Kaggle Runner] Executing:", cmd, flush=True)
     res = subprocess.run(cmd, shell=True, text=True)
     if res.returncode != 0:
-        print("[Kaggle Runner] Warning: Command returned non-zero exit code", res.returncode, flush=True)
+        print("[Kaggle Runner] ERROR: Command returned non-zero exit code", res.returncode, flush=True)
+        raise subprocess.CalledProcessError(res.returncode, cmd)
     return res.returncode
 
 def main():

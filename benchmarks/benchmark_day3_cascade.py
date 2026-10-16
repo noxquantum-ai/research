@@ -7,6 +7,7 @@ Multiverse and independent matrix compression.
 """
 
 import argparse
+import hashlib
 import json
 import os
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
@@ -44,6 +45,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nox.sequential_compiler import compile_sequential_cascade, get_tier_config, forward_transformer_block
 from nox.utils import compute_metrics
+from nox.artifacts import checkpoint_file_sizes, fingerprint, source_files_fingerprint
+from nox.data import load_wikitext2_raw_split
 
 
 def log_step(msg):
@@ -52,11 +55,30 @@ def log_step(msg):
     print(f"[{t_str}] {msg}", flush=True)
 
 
+def load_cached_tensor(cache_path):
+    """Return a valid tensor cache entry, or None so the caller can refetch it."""
+    if not os.path.isfile(cache_path):
+        return None
+    if os.path.getsize(cache_path) == 0:
+        log_step(f"Ignoring empty tensor cache '{cache_path}'; it will be fetched again.")
+        return None
+    try:
+        tensor = torch.load(cache_path, map_location="cpu", weights_only=True)
+    except Exception as exc:
+        log_step(f"Ignoring unreadable tensor cache '{cache_path}' ({exc}); it will be fetched again.")
+        return None
+    if not torch.is_tensor(tensor) or tensor.numel() == 0:
+        log_step(f"Ignoring invalid tensor cache '{cache_path}'; it will be fetched again.")
+        return None
+    return tensor.to(dtype=torch.float32)
+
+
 def fetch_layer_weights(
     repo_id="NousResearch/Llama-2-7b-hf",
     layer_idx=15,
     save_dir="./models/Llama-2-7b-hf",
     token=None,
+    revision="main",
 ):
     """
     Fetches all 7 projection matrices and 2 layer norms for a single Transformer layer
@@ -81,9 +103,10 @@ def fetch_layer_weights(
 
     for name, tensor_key in tensor_mapping.items():
         cache_path = os.path.join(save_dir, f"layer_{layer_idx}_{name}.pt")
-        if os.path.exists(cache_path):
+        cached_tensor = load_cached_tensor(cache_path)
+        if cached_tensor is not None:
             log_step(f"Loading cached {name} (Layer {layer_idx}) from '{cache_path}'...")
-            layer_weights[name] = torch.load(cache_path, weights_only=True).to(dtype=torch.float32)
+            layer_weights[name] = cached_tensor
         else:
             missing_tensors[name] = tensor_key
 
@@ -96,7 +119,7 @@ def fetch_layer_weights(
         headers["Authorization"] = f"Bearer {token}"
 
     log_step(f"Resolving safetensors shard index for '{repo_id}' to fetch missing Layer {layer_idx} tensors...")
-    index_url = f"https://huggingface.co/{repo_id}/raw/main/model.safetensors.index.json"
+    index_url = f"https://huggingface.co/{repo_id}/raw/{revision}/model.safetensors.index.json"
     req_index = urllib.request.Request(index_url, headers=headers)
     with urllib.request.urlopen(req_index) as resp:
         index_json = json.loads(resp.read().decode("utf-8"))
@@ -106,7 +129,7 @@ def fetch_layer_weights(
 
     for name, tensor_key in missing_tensors.items():
         shard_name = weight_map.get(tensor_key, "model-00001-of-00002.safetensors")
-        file_url = f"https://huggingface.co/{repo_id}/resolve/main/{shard_name}"
+        file_url = f"https://huggingface.co/{repo_id}/resolve/{revision}/{shard_name}"
 
         if shard_name not in shard_headers:
             log_step(f"Fetching safetensors header from '{shard_name}'...")
@@ -156,27 +179,28 @@ def fetch_layer_weights(
     return layer_weights
 
 
-def fetch_named_tensor(repo_id, tensor_key, cache_name, save_dir, token=None):
+def fetch_named_tensor(repo_id, tensor_key, cache_name, save_dir, token=None, revision="main"):
     """
     Fetches a specific named tensor (e.g. embed_tokens, norm, lm_head) via HTTP Range.
     """
     os.makedirs(save_dir, exist_ok=True)
     cache_path = os.path.join(save_dir, f"{cache_name}.pt")
-    if os.path.exists(cache_path):
+    cached_tensor = load_cached_tensor(cache_path)
+    if cached_tensor is not None:
         log_step(f"Loading cached {cache_name} from '{cache_path}'...")
-        return torch.load(cache_path, weights_only=True).to(dtype=torch.float32)
+        return cached_tensor
 
     headers = {"User-Agent": "Mozilla/5.0 (compatible; NoxResearch/1.0)"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    index_url = f"https://huggingface.co/{repo_id}/raw/main/model.safetensors.index.json"
+    index_url = f"https://huggingface.co/{repo_id}/raw/{revision}/model.safetensors.index.json"
     req_index = urllib.request.Request(index_url, headers=headers)
     with urllib.request.urlopen(req_index) as resp:
         index_json = json.loads(resp.read().decode("utf-8"))
     weight_map = index_json.get("weight_map", {})
     shard_name = weight_map.get(tensor_key, "model-00001-of-00002.safetensors")
-    file_url = f"https://huggingface.co/{repo_id}/resolve/main/{shard_name}"
+    file_url = f"https://huggingface.co/{repo_id}/resolve/{revision}/{shard_name}"
 
     req_header_len = urllib.request.Request(file_url, headers={**headers, "Range": "bytes=0-7"})
     with urllib.request.urlopen(req_header_len) as resp:
@@ -216,52 +240,64 @@ def fetch_named_tensor(repo_id, tensor_key, cache_name, save_dir, token=None):
     return tensor
 
 
-def build_real_token_calibration_data(embed_weight, model_id, n_calib=256, n_test=128, seq_len=128):
-    """
-    Tokenizes real diverse text passages (WikiText prose, math, Python code)
-    and computes exact initial LLaMA-2 activation embeddings.
-    """
-    calib_passages = [
-        "The theory of quantum entanglement describes how two or more particles become correlated such that the quantum state of each particle cannot be described independently of the state of the others, even when the particles are separated by a large spatial distance. In modern theoretical physics, differential geometry and Lie algebra provide the foundational mathematical framework for general relativity and quantum field theory. The curvature of spacetime is determined by the stress-energy tensor through Einstein's field equations, which equate geometric Ricci curvature with the energy and momentum of matter fields.",
-        "Let f be a real-valued continuous function defined on the compact interval [a, b]. By the Weierstrass Approximation Theorem, for any epsilon > 0, there exists a polynomial P with real coefficients such that the supremum norm of f minus P is strictly bounded by epsilon. When analyzing recursive divide-and-conquer algorithms, the recurrence relation T(n) = 2T(n/2) + O(n) achieves a master theorem bound of O(n log n), which is asymptotically optimal for comparison-based sorting under information theoretic lower bounds.",
-    ]
-    test_passage = (
-        "Large language models trained on massive multi-modal corpora exhibit emergent reasoning capabilities across diverse tasks including algorithmic problem solving, natural language inference, and structured code synthesis. Preserving these high-dimensional manifolds under post-training compression requires geometric subspace alignment and causal error compensation across sequential layers."
+def build_real_token_calibration_data(
+    embed_weight, model_id, n_calib=256, n_test=128, seq_len=128, revision="main"
+):
+    """Build disjoint WikiText train/validation embedding streams with the model tokenizer."""
+    from transformers import AutoTokenizer
+
+    train_text, train_meta = load_wikitext2_raw_split("train")
+    valid_text, valid_meta = load_wikitext2_raw_split("valid")
+    log_step(
+        "WikiText-2 raw splits loaded: "
+        f"train sha256={train_meta['source_sha256']} ({train_meta['source_bytes']} bytes), "
+        f"valid sha256={valid_meta['source_sha256']} ({valid_meta['source_bytes']} bytes)."
     )
+    log_step(f"Tokenizing WikiText-2 train/validation with '{model_id}' tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)
 
-    try:
-        from transformers import AutoTokenizer
-        log_step(f"Tokenizing real calibration text using '{model_id}' tokenizer...")
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
+    calib_tokens = tokenizer.encode(train_text, add_special_tokens=True)
+    validation_tokens = tokenizer.encode(valid_text, add_special_tokens=True)
+    if len(calib_tokens) < n_calib or len(validation_tokens) < n_test:
+        raise ValueError(
+            "WikiText-2 split is shorter than requested token count: "
+            f"train={len(calib_tokens)} requested={n_calib}; "
+            f"valid={len(validation_tokens)} requested={n_test}"
+        )
 
-        calib_tokens = []
-        for p in calib_passages:
-            ids = tokenizer.encode(p, add_special_tokens=True)
-            if len(ids) < seq_len:
-                ids = (ids * ((seq_len // len(ids)) + 1))[:seq_len]
-            else:
-                ids = ids[:seq_len]
-            calib_tokens.extend(ids)
-        calib_tokens = calib_tokens[:n_calib]
-
-        test_ids = tokenizer.encode(test_passage, add_special_tokens=True)
-        if len(test_ids) < n_test:
-            test_ids = (test_ids * ((n_test // len(test_ids)) + 1))[:n_test]
-        else:
-            test_ids = test_ids[:n_test]
-    except Exception as e:
-        log_step(f"Online tokenization fallback ({e}); using pre-encoded LLaMA vocabulary IDs...")
-        torch.manual_seed(42)
-        calib_tokens = torch.randint(100, 31900, (n_calib,)).tolist()
-        test_ids = torch.randint(100, 31900, (n_test,)).tolist()
-
+    calib_tokens = calib_tokens[:n_calib]
+    validation_tokens = validation_tokens[:n_test]
     calib_t = torch.tensor(calib_tokens, dtype=torch.long)
-    test_t = torch.tensor(test_ids, dtype=torch.long)
+    validation_t = torch.tensor(validation_tokens, dtype=torch.long)
 
     X_calib = F.embedding(calib_t, embed_weight).T.contiguous()
-    X_test = F.embedding(test_t, embed_weight).T.contiguous()
-    log_step(f"Real LLaMA-2 activations generated: X_calib {list(X_calib.shape)}, X_test {list(X_test.shape)}.")
-    return X_calib, X_test
+    X_test = F.embedding(validation_t, embed_weight).T.contiguous()
+
+    def token_digest(token_ids):
+        packed = b"".join(int(token_id).to_bytes(8, "little", signed=True) for token_id in token_ids)
+        return hashlib.sha256(packed).hexdigest()
+
+    data_metadata = {
+        "dataset": "wikitext-2-raw-v1",
+        "calibration_split": "train",
+        "heldout_split": "validation",
+        "evaluation_split": "test",
+        "calibration_source": train_meta,
+        "heldout_source": valid_meta,
+        "tokenizer_model_id": model_id,
+        "tokenizer_model_revision": revision,
+        "calibration_token_count": len(calib_tokens),
+        "heldout_token_count": len(validation_tokens),
+        "calibration_token_ids_sha256": token_digest(calib_tokens),
+        "heldout_token_ids_sha256": token_digest(validation_tokens),
+        "activation_sequence_length": seq_len,
+    }
+    log_step(
+        f"WikiText-2 activations generated: train X_calib {list(X_calib.shape)} "
+        f"({len(calib_tokens)} tokens), validation X_test {list(X_test.shape)} "
+        f"({len(validation_tokens)} tokens)."
+    )
+    return X_calib, X_test, data_metadata
 
 
 def build_calibrated_layer_input(d_model=4096, n_calib=256, n_test=128, seed=42):
@@ -298,16 +334,38 @@ def main():
     parser.add_argument("--tier", type=str, choices=["extreme_77x", "production_18x", "high_fidelity_10x"], default="extreme_77x", help="Compression tier")
     parser.add_argument("--sweep_cliff", action="store_true", help="Sweep across all 3 tiers to map the Entanglement Cliff")
     parser.add_argument("--save_checkpoint_dir", type=str, default=None, help="Directory to save compressed checkpoints")
+    parser.add_argument(
+        "--save_no_healing_checkpoint_dir",
+        type=str,
+        default=None,
+        help="Optional output directory for independent Nox checkpoints to evaluate full-model PPL without causal healing.",
+    )
+    parser.add_argument(
+        "--save_validation_activations_dir",
+        type=str,
+        default=None,
+        help="Optional directory for dense WikiText validation activations used by checkpoint output audits.",
+    )
     parser.add_argument("--skip_independent", action="store_true", help="Skip compiling Nox Independent baseline to cut compilation runtime in half")
     parser.add_argument("--skip_baselines", action="store_true", help="Skip compiling all baselines (Multiverse + Independent) for 4x faster production compression")
     parser.add_argument("--use_synthetic_calib", action="store_true", help="Use synthetic Gaussian calibration manifold instead of real token embeddings")
     parser.add_argument("--model_id", type=str, default="NousResearch/Llama-2-7b-hf", help="HuggingFace model ID")
+    parser.add_argument("--model_revision", type=str, default="main", help="HuggingFace revision (use a commit SHA for repeatable runs)")
     parser.add_argument("--save_dir", type=str, default="./models/Llama-2-7b-hf", help="Local directory for cached weights")
     parser.add_argument("--token", type=str, default=None, help="HuggingFace API token")
     parser.add_argument("--n_calib", type=int, default=256, help="Number of calibration tokens")
     parser.add_argument("--n_test", type=int, default=128, help="Number of test tokens")
     parser.add_argument("--device", type=str, default=None, help="Device (default: auto cuda, else cpu)")
     args = parser.parse_args()
+
+    if args.save_no_healing_checkpoint_dir and (args.skip_independent or args.skip_baselines):
+        parser.error("--save_no_healing_checkpoint_dir requires the independent Nox path to be enabled")
+    if (
+        args.save_checkpoint_dir
+        and args.save_no_healing_checkpoint_dir
+        and Path(args.save_checkpoint_dir).resolve() == Path(args.save_no_healing_checkpoint_dir).resolve()
+    ):
+        parser.error("healed and no-healing checkpoints must use different output directories")
 
     hf_token = args.token or HF_TOKEN
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -335,6 +393,7 @@ def main():
             layer_idx=l_idx,
             save_dir=args.save_dir,
             token=hf_token,
+            revision=args.model_revision,
         )
 
     # Obtain initial activation stream (real token embeddings by default)
@@ -345,6 +404,13 @@ def main():
             n_calib=args.n_calib,
             n_test=args.n_test,
         )
+        input_data_metadata = {
+            "dataset": "synthetic-gaussian-manifold",
+            "calibration_token_count": args.n_calib,
+            "heldout_token_count": args.n_test,
+            "seed": 42,
+            "activation_sequence_length": 128,
+        }
     else:
         log_step(f"Loading real token embeddings from '{args.model_id}'...")
         embed_w = fetch_named_tensor(
@@ -353,13 +419,15 @@ def main():
             cache_name="model_embed_tokens",
             save_dir=args.save_dir,
             token=hf_token,
+            revision=args.model_revision,
         )
-        X_calib, X_test = build_real_token_calibration_data(
+        X_calib, X_test, input_data_metadata = build_real_token_calibration_data(
             embed_weight=embed_w,
             model_id=args.model_id,
             n_calib=args.n_calib,
             n_test=args.n_test,
             seq_len=128,
+            revision=args.model_revision,
         )
         del embed_w
         if str(device).startswith("cuda"):
@@ -392,6 +460,7 @@ def main():
             cache_name="model_norm",
             save_dir=args.save_dir,
             token=hf_token,
+            revision=args.model_revision,
         )
         lm_head_w = fetch_named_tensor(
             repo_id=args.model_id,
@@ -399,6 +468,7 @@ def main():
             cache_name="lm_head",
             save_dir=args.save_dir,
             token=hf_token,
+            revision=args.model_revision,
         )
 
     tiers_to_execute = ["extreme_77x", "production_18x", "high_fidelity_10x"] if args.sweep_cliff else [args.tier]
@@ -410,17 +480,81 @@ def main():
             if args.save_checkpoint_dir and args.sweep_cliff
             else args.save_checkpoint_dir
         )
+        independent_save_dir = (
+            os.path.join(args.save_no_healing_checkpoint_dir, curr_tier)
+            if args.save_no_healing_checkpoint_dir and args.sweep_cliff
+            else args.save_no_healing_checkpoint_dir
+        )
         if tier_save_dir and os.path.exists(os.path.join(tier_save_dir, "model_manifest.json")):
             manifest_path = os.path.join(tier_save_dir, "model_manifest.json")
             try:
                 with open(manifest_path, "r") as mf:
                     manifest_data = json.load(mf)
-                num_done = manifest_data.get("num_layers", len(manifest_data.get("layers_compressed", [])))
-                if num_done == len(layer_indices):
-                    log_step(f"Tier '{curr_tier}' already 100% compiled ({num_done}/{len(layer_indices)} layers verified in {tier_save_dir}). Skipping to next tier...")
+                identity = {
+                    "schema_version": 1,
+                    "model_id": args.model_id,
+                    "model_revision": args.model_revision,
+                    "tier": curr_tier,
+                    "config": get_tier_config(curr_tier),
+                    "layers": layer_indices,
+                    "input_data": input_data_metadata,
+                    "sequence_length": 128,
+                    "source_fingerprint": source_files_fingerprint(
+                        [
+                            Path(__file__).resolve(),
+                            Path(__file__).resolve().parents[1] / "nox" / "sequential_compiler.py",
+                            Path(__file__).resolve().parents[1] / "nox" / "block_compiler.py",
+                            Path(__file__).resolve().parents[1] / "nox" / "compiler.py",
+                            Path(__file__).resolve().parents[1] / "nox" / "data.py",
+                            Path(__file__).resolve().parents[1] / "nox" / "artifacts.py",
+                        ]
+                    ),
+                }
+                expected_fingerprint = fingerprint(identity)
+                files_ok = (
+                    manifest_data.get("checkpoint_file_sizes")
+                    == checkpoint_file_sizes(tier_save_dir, layer_indices)
+                )
+                if (
+                    manifest_data.get("run_fingerprint") == expected_fingerprint
+                    and manifest_data.get("layers_compressed") == layer_indices
+                    and files_ok
+                    and not args.save_no_healing_checkpoint_dir
+                    and not args.save_validation_activations_dir
+                ):
+                    log_step(
+                        f"Tier '{curr_tier}' matches the current run fingerprint and checkpoint sizes "
+                        f"({len(layer_indices)} layers). Skipping verified outputs in {tier_save_dir}."
+                    )
                     continue
+                log_step(
+                    f"Existing outputs for tier '{curr_tier}' are stale or lack verifiable provenance; "
+                    "recompiling without deleting them."
+                )
             except Exception as e:
-                log_step(f"Could not read existing manifest for '{curr_tier}' ({e}), re-compiling...")
+                log_step(f"Could not verify existing outputs for '{curr_tier}' ({e}); recompiling in place.")
+
+        identity = {
+            "schema_version": 1,
+            "model_id": args.model_id,
+            "model_revision": args.model_revision,
+            "tier": curr_tier,
+            "config": get_tier_config(curr_tier),
+            "layers": layer_indices,
+            "input_data": input_data_metadata,
+            "sequence_length": 128,
+            "source_fingerprint": source_files_fingerprint(
+                [
+                    Path(__file__).resolve(),
+                    Path(__file__).resolve().parents[1] / "nox" / "sequential_compiler.py",
+                    Path(__file__).resolve().parents[1] / "nox" / "block_compiler.py",
+                    Path(__file__).resolve().parents[1] / "nox" / "compiler.py",
+                    Path(__file__).resolve().parents[1] / "nox" / "data.py",
+                    Path(__file__).resolve().parents[1] / "nox" / "artifacts.py",
+                ]
+            ),
+        }
+        run_fingerprint = fingerprint(identity)
 
         with torch.no_grad():
             cascade_res = compile_sequential_cascade(
@@ -434,10 +568,15 @@ def main():
                 seq_len=128,
                 device=device,
                 save_checkpoint_dir=tier_save_dir,
+                save_independent_checkpoint_dir=independent_save_dir,
+                save_validation_activations_dir=args.save_validation_activations_dir,
                 skip_independent=args.skip_independent,
                 skip_baselines=args.skip_baselines,
                 final_norm_weight=final_norm_w,
                 lm_head_weight=lm_head_w,
+                input_data_metadata=input_data_metadata,
+                run_identity=identity,
+                run_fingerprint=run_fingerprint,
                 verbose=True,
             )
 
@@ -500,6 +639,11 @@ def main():
         final_delta_cos = history[-1]["causal_healed"]["delta"]["cosine_similarity"]
         avg_layer_kb = sum(h["causal_healed"]["kb"] for h in history) / len(history)
         total_mb = (avg_layer_kb * len(history)) / 1024.0
+        serialized_checkpoint_mib = None
+        if tier_save_dir:
+            serialized_checkpoint_mib = sum(
+                checkpoint_file_sizes(tier_save_dir, layer_indices).values()
+            ) / (1024.0 * 1024.0)
 
         sweep_results.append({
             "tier": curr_tier,
@@ -507,6 +651,7 @@ def main():
             "desc": cfg["description"],
             "avg_layer_mb": avg_layer_kb / 1024.0,
             "total_mb": total_mb,
+            "serialized_checkpoint_mib": serialized_checkpoint_mib,
             "first_err": first_layer_healed_err,
             "last_err": last_layer_healed_err,
             "drift_growth": healed_drift_growth,
@@ -518,18 +663,20 @@ def main():
         print(f"  Last Layer RelErr  (Layer {end_l}): Healed = {last_layer_healed_err:.4f} | Independent = {last_layer_indep_err:.4f}")
         print(f"  Residual Drift Growth across {len(layer_indices)} layers: Healed = {healed_drift_growth:+.4f} | Independent = {indep_drift_growth:+.4f}")
         if abs(healed_drift_growth) <= abs(indep_drift_growth):
-            print("  Status: PASSED (Inter-layer causal healing bounded compounding drift).")
+            print("  Drift comparison: healing reduced absolute endpoint drift growth versus the independent path.")
         else:
-            print("  Status: PENDING REVIEW.")
+            print("  Drift comparison: healing did not reduce absolute endpoint drift growth versus the independent path.")
+        print("  This drift comparison is not an overall model-quality pass; see held-out output and token PPL results.")
 
     if args.sweep_cliff and len(sweep_results) > 1:
         print("\n" + "=" * 125)
         print(f" DAY 3-4 MASTER ENTANGLEMENT CLIFF & PARETO TRADEOFF SWEEP (LAYERS {start_l} -> {end_l})")
         print("=" * 125)
-        print(f"{'Tier':<22} | {'Epsilon':<8} | {'Layer MB':<10} | {'Total MB':<10} | {'First Err':<10} | {'Final Err':<10} | {'Drift Growth':<13} | {'Delta CosSim':<12}")
+        print(f"{'Tier':<22} | {'Epsilon':<8} | {'Estimated MB':<13} | {'Serialized MiB':<15} | {'First Err':<10} | {'Final Err':<10} | {'Drift Growth':<13} | {'Delta CosSim':<12}")
         print("-" * 125)
         for r in sweep_results:
-            print(f"{r['tier']:<22} | {str(r['epsilon']):<8} | {r['avg_layer_mb']:<10.2f} | {r['total_mb']:<10.2f} | {r['first_err']:<10.4f} | {r['last_err']:<10.4f} | {r['drift_growth']:<+13.4f} | {r['final_delta_cos']:<12.4f}")
+            serialized_mib = "N/A" if r["serialized_checkpoint_mib"] is None else f"{r['serialized_checkpoint_mib']:.2f}"
+            print(f"{r['tier']:<22} | {str(r['epsilon']):<8} | {r['total_mb']:<13.2f} | {serialized_mib:<15} | {r['first_err']:<10.4f} | {r['last_err']:<10.4f} | {r['drift_growth']:<+13.4f} | {r['final_delta_cos']:<12.4f}")
         print("-" * 125)
 
 

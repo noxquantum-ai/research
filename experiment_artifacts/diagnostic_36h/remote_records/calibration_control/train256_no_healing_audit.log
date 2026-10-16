@@ -1,0 +1,13 @@
+checkpoint_dir_bytes=70112564 (66.86 MiB)
+layer_15_checkpoint_bytes=70112564
+compiler_payload_estimate_kb=68417.916015625
+layer=15 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.927193 cosine=0.435209 max_abs=0.135124
+k_proj: shape=(4096, 4096) rel_fro=0.921625 cosine=0.447749 max_abs=0.155821
+v_proj: shape=(4096, 4096) rel_fro=0.957079 cosine=0.389059 max_abs=0.0722094
+o_proj: shape=(4096, 4096) rel_fro=0.942209 cosine=0.358859 max_abs=0.133108
+gate_proj: shape=(11008, 4096) rel_fro=0.953989 cosine=0.322077 max_abs=0.0831784
+up_proj: shape=(11008, 4096) rel_fro=0.964792 cosine=0.294938 max_abs=0.0809511
+down_proj: shape=(4096, 11008) rel_fro=1.133935 cosine=0.109402 max_abs=0.135798
+same_input_layer_output: tokens=128 rel_fro=0.044818 cosine=0.998995 max_abs=3.24776
+audit_status=COMPLETE

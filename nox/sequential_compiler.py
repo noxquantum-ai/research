@@ -18,6 +18,35 @@ from nox.block_compiler import (
     compile_multiverse_block,
 )
 from nox.utils import compute_metrics
+from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, fingerprint
+
+
+def compute_dense_argmax_metrics(logits_dense, logits_compressed):
+    """Compare compressed logits against dense greedy labels; these are not PPL metrics."""
+    if logits_dense.shape != logits_compressed.shape:
+        raise ValueError(
+            f"Logit shape mismatch: dense={tuple(logits_dense.shape)} "
+            f"compressed={tuple(logits_compressed.shape)}"
+        )
+
+    targets = logits_dense.argmax(dim=-1)
+    dense_ce = F.cross_entropy(logits_dense, targets).item()
+    compressed_ce = F.cross_entropy(logits_compressed, targets).item()
+    top1 = (logits_compressed.argmax(dim=-1) == targets).float().mean().item() * 100.0
+    top_k = min(5, logits_compressed.shape[-1])
+    top5 = (logits_compressed.topk(top_k, dim=-1).indices == targets.unsqueeze(-1)).any(dim=-1).float().mean().item() * 100.0
+    cosine = F.cosine_similarity(logits_dense.flatten().unsqueeze(0), logits_compressed.flatten().unsqueeze(0)).item()
+    return {
+        "target": "dense_argmax",
+        "metric_semantics": "cross-entropy to dense greedy tokens; not language-model perplexity",
+        "dense_argmax_cross_entropy_dense_logits": dense_ce,
+        "dense_argmax_cross_entropy_compressed_logits": compressed_ce,
+        "exp_dense_argmax_cross_entropy_dense_logits": float(torch.exp(torch.tensor(dense_ce)).item()),
+        "exp_dense_argmax_cross_entropy_compressed_logits": float(torch.exp(torch.tensor(compressed_ce)).item()),
+        "logit_cos_sim": cosine,
+        "top1_agreement_pct": top1,
+        "top5_agreement_pct": top5,
+    }
 
 
 @torch.no_grad()
@@ -27,6 +56,7 @@ def forward_transformer_block(
     n_heads=32,
     n_kv_heads=32,
     seq_len=128,
+    rms_norm_eps=1e-5,
 ):
     """
     Executes a complete forward pass through one Transformer layer (Attention + SwiGLU MLP).
@@ -49,8 +79,8 @@ def forward_transformer_block(
     if X.dtype != w_dtype:
         X = X.to(w_dtype)
 
-    norm1 = RMSNorm(d_model, weight=weights.get("input_layernorm", None))
-    norm2 = RMSNorm(d_model, weight=weights.get("post_attention_layernorm", None))
+    norm1 = RMSNorm(d_model, eps=rms_norm_eps, weight=weights.get("input_layernorm", None))
+    norm2 = RMSNorm(d_model, eps=rms_norm_eps, weight=weights.get("post_attention_layernorm", None))
 
     # Attention sub-block
     X_norm1 = norm1(X)
@@ -87,7 +117,7 @@ def get_tier_config(tier_name="extreme_77x"):
             "r_bridge": 128,
             "n_outliers": 524288,
             "epsilon": 0.005,
-            "description": "High-Fidelity Lossless Tier (~10-12x compression, ~32 MB/layer, eps=0.005)",
+            "description": "High-fidelity experimental configuration; quality and serialized size require measurement",
         }
     elif tier_name == "production_18x":
         return {
@@ -119,10 +149,15 @@ def compile_sequential_cascade(
     seq_len=128,
     device="cpu",
     save_checkpoint_dir=None,
+    save_independent_checkpoint_dir=None,
+    save_validation_activations_dir=None,
     skip_independent=False,
     skip_baselines=False,
     final_norm_weight=None,
     lm_head_weight=None,
+    input_data_metadata=None,
+    run_identity=None,
+    run_fingerprint=None,
     verbose=True,
 ):
     """
@@ -143,6 +178,10 @@ def compile_sequential_cascade(
         seq_len: Sequence chunk length.
         device: Device to execute computation on ('cuda' or 'cpu').
         save_checkpoint_dir: Directory to save serialized layer checkpoints.
+        save_independent_checkpoint_dir: Optional directory for independently
+            calibrated (no-healing) checkpoints, for downstream PPL evaluation.
+        save_validation_activations_dir: Optional directory for dense held-out
+            layer inputs used by checkpoint reconstruction/output audits.
         skip_independent: Whether to skip compiling Nox Independent baseline.
         skip_baselines: Whether to skip compiling all baselines (Multiverse + Independent) for pure production compression speed.
         final_norm_weight: Optional model.norm.weight for Layer 31 logit verification.
@@ -200,6 +239,14 @@ def compile_sequential_cascade(
         weights = fetch_layer_fn(l_idx)
         weights = {k: v.to(device=device, dtype=torch.float32) for k, v in weights.items()}
 
+        if save_validation_activations_dir:
+            os.makedirs(save_validation_activations_dir, exist_ok=True)
+            activation_path = os.path.join(
+                save_validation_activations_dir,
+                f"dense_input_layer_{l_idx}.pt",
+            )
+            torch.save(X_d_test.detach().to(device="cpu", dtype=torch.float32), activation_path)
+
         # 1. Dense Reference forward pass
         X_d_calib_next, Y_attn_d_calib, Y_mlp_d_calib = forward_transformer_block(
             weights, X_d_calib, n_heads=n_heads, n_kv_heads=n_kv_heads, seq_len=seq_len
@@ -255,7 +302,7 @@ def compile_sequential_cascade(
                 n_kv_heads=n_kv_heads,
                 seq_len=seq_len,
                 causal_healing=False,
-                return_artifacts=False,
+                return_artifacts=bool(save_independent_checkpoint_dir),
                 verbose=False,
             )
             indep_weights = dict(weights)
@@ -265,6 +312,27 @@ def compile_sequential_cascade(
             )
             Delta_indep_test = Y_attn_indep + Y_mlp_indep
             indep_kb = nox_indep_block["total_kb"]
+            if save_independent_checkpoint_dir:
+                os.makedirs(save_independent_checkpoint_dir, exist_ok=True)
+                independent_checkpoint = {
+                    "layer_idx": l_idx,
+                    "compression_path": "no_healing_independent",
+                    "compressed_artifacts": nox_indep_block["compressed_artifacts"],
+                    "input_layernorm": weights["input_layernorm"].cpu() if "input_layernorm" in weights else None,
+                    "post_attention_layernorm": weights["post_attention_layernorm"].cpu() if "post_attention_layernorm" in weights else None,
+                    "total_kb": indep_kb,
+                }
+                independent_path = os.path.join(
+                    save_independent_checkpoint_dir,
+                    f"compressed_layer_{l_idx}.pt",
+                )
+                torch.save(independent_checkpoint, independent_path)
+                if verbose:
+                    print(
+                        f"  [Checkpoint] Saved no-healing Layer {l_idx} "
+                        f"({indep_kb:.1f} KB estimated payload) -> '{independent_path}'",
+                        flush=True,
+                    )
             del nox_indep_block, indep_weights, Y_attn_indep, Y_mlp_indep
             if str(device).startswith("cuda"):
                 gc.collect()
@@ -451,45 +519,38 @@ def compile_sequential_cascade(
         norm_healed = norm_layer(X_healed_test).T
         logits_healed = norm_healed @ head_w.T  # [N, 32000]
 
-        cos_sim_logits = F.cosine_similarity(logits_d.flatten().unsqueeze(0), logits_healed.flatten().unsqueeze(0)).item()
-
-        top1_dense = logits_d.argmax(dim=-1)
-        top1_healed = logits_healed.argmax(dim=-1)
-        top1_agree = (top1_dense == top1_healed).float().mean().item() * 100.0
-
-        top5_healed = logits_healed.topk(5, dim=-1).indices
-        top5_agree = (top5_healed == top1_dense.unsqueeze(-1)).any(dim=-1).float().mean().item() * 100.0
-
-        loss_dense = F.cross_entropy(logits_d, top1_dense).item()
-        loss_healed = F.cross_entropy(logits_healed, top1_dense).item()
-        ppl_dense = float(torch.exp(torch.tensor(loss_dense)).item())
-        ppl_healed = float(torch.exp(torch.tensor(loss_healed)).item())
-
-        final_logit_metrics = {
-            "logit_cos_sim": cos_sim_logits,
-            "top1_agreement_pct": top1_agree,
-            "top5_agreement_pct": top5_agree,
-            "dense_ppl": ppl_dense,
-            "healed_ppl": ppl_healed,
-        }
+        final_logit_metrics = compute_dense_argmax_metrics(logits_d, logits_healed)
 
         if verbose:
             print(" Exit Residual Stream -> RMSNorm -> lm_head (32,000 Vocab Logits) across held-out tokens:")
-            print(f"  - Dense Reference Target Perplexity (PPL): {ppl_dense:.2f}")
-            print(f"  - Nox Healed Exit Logit Cosine Sim:        {cos_sim_logits:.4f}")
-            print(f"  - Nox Healed Top-1 Vocab Agreement:        {top1_agree:.2f}%")
-            print(f"  - Nox Healed Top-5 Vocab Agreement:        {top5_agree:.2f}%")
-            print(f"  - Nox Healed Exit Perplexity (PPL):        {ppl_healed:.2f}")
+            print("  - Reference targets: dense model's greedy top-1 token (not dataset labels)")
+            print(f"  - Dense self cross-entropy:                 {final_logit_metrics['dense_argmax_cross_entropy_dense_logits']:.4f}")
+            print(f"  - Compressed vs dense-argmax cross-entropy: {final_logit_metrics['dense_argmax_cross_entropy_compressed_logits']:.4f}")
+            print(f"  - Compressed top-1 agreement:               {final_logit_metrics['top1_agreement_pct']:.2f}%")
+            print(f"  - Compressed top-5 agreement:               {final_logit_metrics['top5_agreement_pct']:.2f}%")
+            print(f"  - Logit cosine similarity:                  {final_logit_metrics['logit_cos_sim']:.4f}")
+            print("  - These are logit-agreement diagnostics, not language-model perplexity.")
             print("=" * 120 + "\n")
 
     if save_checkpoint_dir:
         manifest_path = os.path.join(save_checkpoint_dir, "model_manifest.json")
         total_model_kb = sum(h["causal_healed"]["kb"] for h in history)
+        checkpoint_sizes = checkpoint_file_sizes(save_checkpoint_dir, layer_indices)
+        serialized_checkpoint_bytes = checkpoint_storage_bytes(save_checkpoint_dir, layer_indices)
         manifest_data = {
             "tier": tier,
             "config": cfg,
+            "run_identity": run_identity,
+            "run_fingerprint": run_fingerprint,
+            "input_data": input_data_metadata,
             "layers_compressed": list(layer_indices),
             "num_layers": len(layer_indices),
+            "estimated_tensor_payload_kb": total_model_kb,
+            "serialized_checkpoint_bytes": serialized_checkpoint_bytes,
+            "serialized_checkpoint_mib": serialized_checkpoint_bytes / (1024.0 * 1024.0),
+            "checkpoint_file_sizes": checkpoint_sizes,
+            # Legacy field retained for reading older manifests. It is the compiler's
+            # payload estimate, not the serialized bytes on disk.
             "total_model_kb": total_model_kb,
             "total_model_mb": total_model_kb / 1024.0,
             "first_layer_rel_err": history[0]["causal_healed"]["block"]["relative_error"],
@@ -501,7 +562,51 @@ def compile_sequential_cascade(
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest_data, f, indent=2)
         if verbose:
-            print(f"\n[Checkpoint Manifest] Master manifest written to '{manifest_path}' ({total_model_kb / 1024.0:.2f} MB total).", flush=True)
+            print(
+                f"\n[Checkpoint Manifest] Wrote '{manifest_path}': estimated tensor payload "
+                f"{total_model_kb / 1024.0:.2f} MiB; serialized checkpoint files "
+                f"{serialized_checkpoint_bytes / (1024.0 * 1024.0):.2f} MiB.",
+                flush=True,
+            )
+
+    if save_independent_checkpoint_dir:
+        independent_identity = {
+            **(run_identity or {}),
+            "compression_path": "no_healing_independent",
+        }
+        independent_fingerprint = fingerprint(independent_identity)
+        independent_sizes = checkpoint_file_sizes(save_independent_checkpoint_dir, layer_indices)
+        independent_bytes = checkpoint_storage_bytes(save_independent_checkpoint_dir, layer_indices)
+        independent_payload_kb = sum(h["independent"]["kb"] for h in history)
+        independent_manifest = {
+            "compression_path": "no_healing_independent",
+            "tier": tier,
+            "config": cfg,
+            "run_identity": independent_identity,
+            "run_fingerprint": independent_fingerprint,
+            "input_data": input_data_metadata,
+            "layers_compressed": list(layer_indices),
+            "num_layers": len(layer_indices),
+            "estimated_tensor_payload_kb": independent_payload_kb,
+            "serialized_checkpoint_bytes": independent_bytes,
+            "serialized_checkpoint_mib": independent_bytes / (1024.0 * 1024.0),
+            "checkpoint_file_sizes": independent_sizes,
+            "first_layer_rel_err": history[0]["independent"]["block"]["relative_error"],
+            "last_layer_rel_err": history[-1]["independent"]["block"]["relative_error"],
+            "drift_growth": (
+                history[-1]["independent"]["block"]["relative_error"]
+                - history[0]["independent"]["block"]["relative_error"]
+            ),
+        }
+        manifest_path = os.path.join(save_independent_checkpoint_dir, "model_manifest.json")
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(independent_manifest, f, indent=2)
+        if verbose:
+            print(
+                f"\n[No-Healing Manifest] Wrote '{manifest_path}': serialized checkpoint files "
+                f"{independent_bytes / (1024.0 * 1024.0):.2f} MiB.",
+                flush=True,
+            )
 
     return {
         "history": history,

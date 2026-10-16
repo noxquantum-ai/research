@@ -1,0 +1,13 @@
+test_checkpoint_size_uses_serialized_bytes (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_compiler_payload_estimate_matches_saved_tensor_dtypes (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_dense_argmax_diagnostics_are_not_named_perplexity (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_empty_tensor_cache_is_a_miss_and_remains_untouched (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_perplexity_counts_only_scored_next_token_labels (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_run_fingerprint_is_stable_and_sensitive_to_input_data (test_pipeline_accounting.PipelineAccountingTests) ... ok
+test_download_failure_does_not_silently_use_processed_data (test_wikitext_source.WikiTextSourceTests) ... ok
+test_raw_split_uses_pinned_raw_parquet_and_preserves_rows (test_wikitext_source.WikiTextSourceTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.261s
+
+OK

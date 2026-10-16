@@ -1,0 +1,43 @@
+[07:17:31] NVIDIA GPU Acceleration enabled: NVIDIA A10
+[07:17:31] Loading tokenizer from 'NousResearch/Llama-2-7b-hf'...
+[07:17:31] Loading base model from 'NousResearch/Llama-2-7b-hf' (torch.float16)...
+2026-10-16 07:17:33.211458: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 07:17:33.224719: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792135053.240726    6132 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792135053.245992    6132 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792135053.258562    6132 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792135053.258581    6132 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792135053.258583    6132 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792135053.258585    6132 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 07:17:33.262119: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.47s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.10it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.00it/s]
+[07:17:37] Loaded WikiText-2 raw test split: 1256449 bytes, sha256=d790b833ef8cf03a90db7bf1271b7520b83c45ce07ba3c1a9699df81e239eca0 from https://raw.githubusercontent.com/pytorch/examples/main/word_language_model/data/wikitext-2/test.txt
+[07:17:37] Evaluating Dense Uncompressed Baseline Perplexity...
+[07:17:38] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[07:17:48] Dense Baseline Perplexity: 20.79 (9999 tokens)
+[07:17:48] Found 4 compressed layer checkpoints in '/home/shadeform/diag36h-research/checkpoints/diagnostic_36h/retry/no_healing'. Injecting weights...
+[07:17:48]   Layer 15: Reconstructed and injected (42631.2 KB artifact)
+[07:17:48]   Layer 16: Reconstructed and injected (42633.8 KB artifact)
+[07:17:48]   Layer 17: Reconstructed and injected (42639.8 KB artifact)
+[07:17:48]   Layer 18: Reconstructed and injected (42641.2 KB artifact)
+[07:17:48] Evaluating Nox-Compressed Model Perplexity (4 compressed layers)...
+[07:17:48] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[07:17:58] Nox Compressed Model Perplexity: 30.63 (9999 tokens)
+
+==============================================================================================================
+ DAY 4-5 BENCHMARK SCORECARD: WIKITEXT-2 PERPLEXITY & LANGUAGE QUALITY
+==============================================================================================================
+Model ID:              NousResearch/Llama-2-7b-hf
+Model revision:         8efe6c9b93655b934e27bd9981e3ec13e55aee9d
+Checkpoint Directory:  /home/shadeform/diag36h-research/checkpoints/diagnostic_36h/retry/no_healing
+Compression Tier:      production_18x
+Compressed Layers:     [15, 16, 17, 18]
+Serialized layer checkpoints: 166.75 MiB (174849744 bytes; 4 files)
+WikiText-2 split:       test sha256=d790b833ef8cf03a90db7bf1271b7520b83c45ce07ba3c1a9699df81e239eca0
+Scored next-token labels: 9999
+Dense FP16 Baseline PPL: 20.79
+Nox Compressed PPL:      30.63
+PPL Degradation (Delta): +9.84 (+47.3%)
+==============================================================================================================

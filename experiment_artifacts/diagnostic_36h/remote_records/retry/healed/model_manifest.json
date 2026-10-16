@@ -1,0 +1,121 @@
+{
+  "tier": "production_18x",
+  "config": {
+    "ranks": [
+      1,
+      40,
+      80,
+      40,
+      1
+    ],
+    "r_bridge": 128,
+    "n_outliers": 262144,
+    "epsilon": 0.015,
+    "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)"
+  },
+  "run_identity": {
+    "schema_version": 1,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tier": "production_18x",
+    "config": {
+      "ranks": [
+        1,
+        40,
+        80,
+        40,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 262144,
+      "epsilon": 0.015,
+      "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)"
+    },
+    "layers": [
+      15,
+      16,
+      17,
+      18
+    ],
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "split": "train",
+        "source_url": "https://raw.githubusercontent.com/pytorch/examples/main/word_language_model/data/wikitext-2/train.txt",
+        "source_sha256": "9e9fa1ad55b1c2c95b08e37dd8e653f638fac2c6de904b79e813611eefbc985f",
+        "source_bytes": 10797148
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "split": "valid",
+        "source_url": "https://raw.githubusercontent.com/pytorch/examples/main/word_language_model/data/wikitext-2/valid.txt",
+        "source_sha256": "f0737ed31fc1329026e95cb8b98e19c2a182c39c240ab909dc31abf2f8af58e8",
+        "source_bytes": 1121681
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 256,
+      "heldout_token_count": 128,
+      "calibration_token_ids_sha256": "014c4516a9de99e83d5bfe299229da4769c26f92e8d005cf9c938e5fc8733f14",
+      "heldout_token_ids_sha256": "ce0c71ad91d45f5a12a24ef556d491e4e1190144a34637a20985091ba94daddf",
+      "activation_sequence_length": 128
+    },
+    "sequence_length": 128,
+    "source_fingerprint": "d5201cef7c046afbf35ba935fe4d8641fcd0b400fb157f0f8ef60d633b5f7cb4"
+  },
+  "run_fingerprint": "4d24bd95b113b0ed0d442db2d736f260eb35cc24185233740751382614947e1c",
+  "input_data": {
+    "dataset": "wikitext-2-raw-v1",
+    "calibration_split": "train",
+    "heldout_split": "validation",
+    "evaluation_split": "test",
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "split": "train",
+      "source_url": "https://raw.githubusercontent.com/pytorch/examples/main/word_language_model/data/wikitext-2/train.txt",
+      "source_sha256": "9e9fa1ad55b1c2c95b08e37dd8e653f638fac2c6de904b79e813611eefbc985f",
+      "source_bytes": 10797148
+    },
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "split": "valid",
+      "source_url": "https://raw.githubusercontent.com/pytorch/examples/main/word_language_model/data/wikitext-2/valid.txt",
+      "source_sha256": "f0737ed31fc1329026e95cb8b98e19c2a182c39c240ab909dc31abf2f8af58e8",
+      "source_bytes": 1121681
+    },
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "calibration_token_count": 256,
+    "heldout_token_count": 128,
+    "calibration_token_ids_sha256": "014c4516a9de99e83d5bfe299229da4769c26f92e8d005cf9c938e5fc8733f14",
+    "heldout_token_ids_sha256": "ce0c71ad91d45f5a12a24ef556d491e4e1190144a34637a20985091ba94daddf",
+    "activation_sequence_length": 128
+  },
+  "layers_compressed": [
+    15,
+    16,
+    17,
+    18
+  ],
+  "num_layers": 4,
+  "estimated_tensor_payload_kb": 164856.427734375,
+  "serialized_checkpoint_bytes": 169023120,
+  "serialized_checkpoint_mib": 161.19300842285156,
+  "checkpoint_file_sizes": {
+    "compressed_layer_15.pt": 42250420,
+    "compressed_layer_16.pt": 42252980,
+    "compressed_layer_17.pt": 42259124,
+    "compressed_layer_18.pt": 42260596
+  },
+  "total_model_kb": 164856.427734375,
+  "total_model_mb": 160.9926052093506,
+  "first_layer_rel_err": 0.04468743082718156,
+  "last_layer_rel_err": 0.10674825207466968,
+  "drift_growth": 0.062060821247488115,
+  "final_delta_cos_sim": 0.2937135696411133,
+  "final_logit_metrics": null
+}

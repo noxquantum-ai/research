@@ -4,7 +4,12 @@ from nox.utils import quantize_dequantize_groupwise, quantize_4bit_per_channel, 
 
 
 def quantize_4bit_grouped(tensor, group_size=64):
-    """4-bit group quantization (standard GPTQ/AWQ style, 0.5 bytes/param)."""
+    """Return 4-bit quantized/dequantized values in the input tensor's dtype.
+
+    This simulates quantization for fitting and reconstruction. The current
+    artifact writer stores these values as FP16 tensors; it does not bit-pack
+    them into a half-byte representation.
+    """
     orig_shape = tensor.shape
     flat = tensor.reshape(-1)
     pad = (group_size - (flat.numel() % group_size)) % group_size
@@ -17,6 +22,23 @@ def quantize_4bit_grouped(tensor, group_size=64):
     if pad > 0:
         deq = deq[:-pad]
     return deq.reshape(orig_shape)
+
+
+def estimate_artifact_tensor_bytes(cores, A_bridge, B_bridge, d_awt, sparse_count):
+    """Estimate stored tensor payload bytes using artifact dtypes.
+
+    Components are FP16, except each sparse value has two int32 coordinates.
+    This excludes torch.save container overhead and layer-level norm tensors.
+    """
+    bytes_fp16 = 2
+    total = sum(core.numel() * bytes_fp16 for core in cores)
+    if A_bridge is not None:
+        total += A_bridge.numel() * bytes_fp16
+    if B_bridge is not None:
+        total += B_bridge.numel() * bytes_fp16
+    total += d_awt.numel() * bytes_fp16
+    total += int(sparse_count) * (2 * 4 + bytes_fp16)
+    return int(total)
 
 
 def adaptive_tt_svd_4site(
@@ -200,7 +222,8 @@ def nox_hybrid_dmrg_decompose(
 ):
     """
     Nox Hybrid Entanglement Engine (v3 - Covariance Bridge + Bidirectional Isometric Gauge):
-      1. Bit-Packed Outlier Shield (1.0 byte/outlier) for extreme coordinate spikes.
+      1. Sparse outlier shield; values are stored as FP16 with two int32
+         coordinates per nonzero in the current artifact format.
       2. Covariance-Projected SVD Bridge (r_bridge) capturing both off-diagonal semantic
          manifold correlations and diagonal outlier channels.
       3. Exact AWT Channel Preconditioning.
@@ -216,7 +239,7 @@ def nox_hybrid_dmrg_decompose(
         gc.collect()
         torch.cuda.empty_cache()
 
-    # Step 1A: Exact Operator-Norm Sparse Outlier Shield (1.0 Byte/Outlier Packed)
+    # Step 1A: Exact Operator-Norm Sparse Outlier Shield
     ch_rms = torch.sqrt(torch.mean(X_calib ** 2, dim=1) + 1e-8)
     mask = None
     if n_outliers > 0:
@@ -226,10 +249,18 @@ def nox_hybrid_dmrg_decompose(
         mask = importance >= thresh
         S_vals = torch.where(mask, W, torch.zeros_like(W))
         S_sparse = quantize_4bit_grouped(S_vals, group_size=64) * mask.to(W.dtype)
+        sparse_count = int(torch.count_nonzero(S_sparse).item())
+        nz_mask = (S_sparse != 0) if return_artifacts else None
         if verbose:
-            print(f"    [Nox Step 1A] Bit-Packed Sparse Outlier Shield ({n_outliers} entries = {n_outliers / 1024.0:.1f} KB)", flush=True)
+            print(
+                f"    [Nox Step 1A] Sparse Outlier Shield ({sparse_count} stored entries; "
+                f"{sparse_count * 10 / 1024.0:.1f} KiB tensor payload)",
+                flush=True,
+            )
     else:
         S_sparse = torch.zeros_like(W)
+        nz_mask = None
+        sparse_count = 0
 
     W_rem = W - S_sparse
 
@@ -559,16 +590,17 @@ def nox_hybrid_dmrg_decompose(
         gc.collect()
         torch.cuda.empty_cache()
 
-    # Byte accounting:
-    mpo_bytes = sum(c.numel() for c in final_cores) * 0.5
-    bridge_bytes = ((d_out + d_in) * r_bridge * 0.5) if r_bridge > 0 else 0.0
-    sparse_bytes = n_outliers * 1.0
-    total_kb = (mpo_bytes + bridge_bytes + sparse_bytes) / 1024.0
+    # Match the component dtypes and sparse index representation used on disk.
+    payload_bytes = estimate_artifact_tensor_bytes(
+        final_cores, A_q, B_q, d_awt, sparse_count
+    )
+    total_kb = payload_bytes / 1024.0
     chosen_ranks = [1, c1.shape[0], c2.shape[0], c3.shape[0], 1]
 
     if return_artifacts:
         if n_outliers > 0 and mask is not None:
-            nz_mask = S_sparse != 0
+            if nz_mask is None:
+                nz_mask = S_sparse != 0
             sparse_idx = torch.nonzero(nz_mask, as_tuple=False).to(dtype=torch.int32, device="cpu")
             sparse_val = S_sparse[nz_mask].to(dtype=torch.float16, device="cpu")
         else:
