@@ -452,4 +452,42 @@ bash scripts/run_block_distillation_control.sh
 
 The run fingerprint was `a4ae289663e4c46b8092f4f43478b2dacf5717e93b7c7693494b8d1a8a954d`; optimization took 8.361 seconds. Logs and small reports are copied locally under `experiment_artifacts/diagnostic_36h/remote_records/layer15_block_distillation/`; the 70 MB checkpoint remains on the A10. The 28-test suite also ran there and passed in 2.511 seconds.
 
+After correcting the healing classification in commit `a34fe6d`, the remote full suite passed **29 tests** in 2.469 seconds. `classification_correction.json` beside the retained remote checkpoint explicitly supersedes its original incorrect zero-healing metadata.
+
 No four-layer or full 32-layer run follows from this failed one-layer gate. The next engine experiment must change the compressor's initial construction/fitting procedure and write a final checkpoint directly, with no optimizer applied afterward. Any eventual 32-layer sweep will use only the high-fidelity configuration with zero healing.
+
+## Exact attention gauge experiment
+
+**Question:** can an exact reparameterization of attention move weight structure into a form the existing high-fidelity codec stores more accurately, without changing the dense block function?
+
+The candidate applies reciprocal per-channel scaling to Q/K and V/O. A first Q/K version used independent scales for each channel; its dense block parity test failed by 4.2%, because those scales did not commute with cross-position RoPE rotations. That version was not compressed. The corrected transform ties each Q/K scale across the two coordinates mixed by Llama RoPE, which is required for the exact symmetry. On the A10, the corrected dense parity errors were `4.9848571e-8` on calibration inputs and `6.0965924e-8` on held-out inputs.
+
+The A10 one-layer comparison started from source commit `a34fe6d`; the only compressed layer was 15. It used pinned `NousResearch/Llama-2-7b-hf` revision `8efe6c9b93655b934e27bd9981e3ec13e55aee9d`, high-fidelity ranks `[1,64,128,64,1]`, bridge rank 128, 524,288 configured sparse outliers, diagonal prior 0, and epsilon 0.005. Calibration used 1,024 uniformly sampled tokens from raw WikiText train; validation used 1,024 disjoint uniformly sampled tokens from raw WikiText validation; each used eight 128-token windows. The dataset revision was `b08601e04326c79dfdd32d625aee71d232d685c3`; train and validation Parquet SHA-256 values were `e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7` and `204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c`. There was no fallback data or literal `<unk>`.
+
+Exact commands on the remote A10:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -p test_attention_gauge.py -v
+.venv/bin/python -u scripts/compile_high_fidelity.py \
+  --output checkpoints/diagnostic_36h/gauge_balanced_layer15 \
+  --start-layer 15 --end-layer 15 --n-calib 1024 --n-validation 1024 \
+  --seq-len 128 --calibration-sampling uniform \
+  --validation-sampling uniform --attention-gauge balanced
+.venv/bin/python -u scripts/audit_checkpoint_reconstruction.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/gauge_balanced_layer15 \
+  --dense-weights-dir models/diagnostic_36h_cache --layer 15 --device cuda \
+  --activation-file checkpoints/diagnostic_36h/gauge_balanced_layer15/dense_input_layer_15.pt
+.venv/bin/python -u scripts/diagnose_reference_pipeline.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/gauge_balanced_layer15 \
+  --weights-dir models/diagnostic_36h_cache \
+  --output checkpoints/diagnostic_36h/gauge_balanced_layer15/evaluation.json
+.venv/bin/python -m unittest discover -s tests -v
+```
+
+The gauge run took 766.724 seconds and wrote a 70,116,468-byte checkpoint, 320 bytes larger than the matched no-gauge prior-0 control (70,116,148 bytes). Both are 5.77x smaller than the seven dense FP16 projection payloads for this layer (404,766,720 bytes). The saved-checkpoint audit completed: held-out layer-output relative error was 0.051782 (control 0.0517685); matrix relative errors for Q/K/V/O/gate/up/down were 0.918029/0.907921/0.935408/0.973156/0.940183/0.948645/1.051585. The artifact faithfully reconstructs its own compressed approximation, but its weights remain far from the dense matrices.
+
+On the same 10,000 raw WikiText test input tokens and 9,999 shifted labels (context 2,048, stride 512), dense PPL/next-token accuracy were 5.2922001/61.0461%. The gauge checkpoint scored PPL 5.6152387, next-token accuracy 60.1760%, and dense top-1 agreement 89.63897%; PPL was 6.1041% above dense. The matched no-gauge control scored PPL 5.6134000, accuracy 60.2460%, and agreement 89.69897% (6.0693% PPL increase). The gauge therefore worsened PPL by 0.0328% relative to the control and reduced agreement by 0.0600 percentage points. It did not strengthen the engine; these differences are negligible and slightly adverse.
+
+The focused gauge tests passed (2 tests), and the full remote suite passed **31 tests** in 2.545 seconds. The test and evaluation records are copied under `experiment_artifacts/diagnostic_36h/remote_records/gauge_balanced_layer15/`; the checkpoint and raw calibration inputs remain on the A10. No base-model fine-tuning or post-compression healing ran. The compressor did perform its normal DMRG/local least-squares factor construction on the calibration activations as part of writing the compressed artifact; no optimizer updated the checkpoint after that artifact was written.
+
+This experiment covers one replaced layer with the other 31 layers dense. It does not verify full-model PPL, the 32-layer cascade, or MMLU. Do not scale this gauge transform to the full model on the strength of this result. The next useful step is a different, evidence-led initial encoding change or retaining the current high-fidelity codec if the approximately 90% agreement / 6% PPL gap is acceptable.

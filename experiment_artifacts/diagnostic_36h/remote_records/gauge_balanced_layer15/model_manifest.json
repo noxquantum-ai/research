@@ -1,0 +1,148 @@
+{
+  "run_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "compression_path": "no_healing_independent",
+    "config": {
+      "ranks": [
+        1,
+        64,
+        128,
+        64,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 524288,
+      "epsilon": 0.005,
+      "description": "High-fidelity experimental configuration; quality and serialized size require measurement",
+      "diagonal_prior_strength": 0.0
+    },
+    "attention_gauge": "balanced",
+    "forward_options": {
+      "n_heads": 32,
+      "n_kv_heads": 32,
+      "seq_len": 128,
+      "rms_norm_eps": 1e-05
+    },
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 1024,
+      "heldout_token_count": 1024,
+      "calibration_token_ids_sha256": "7f60905fb0e061cc1eecb73c69167168fc23c724dc4aa7fdfb9235bbbd6e1902",
+      "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+      "activation_sequence_length": 128,
+      "calibration_sampling": "uniform",
+      "calibration_seed": 42,
+      "calibration_window_offsets": [
+        2681856,
+        466944,
+        104832,
+        1153536,
+        1027072,
+        936192,
+        585216,
+        429824
+      ],
+      "validation_sampling": "uniform",
+      "validation_seed": 43,
+      "validation_window_offsets": [
+        20096,
+        149888,
+        75392,
+        242432,
+        193920,
+        50432,
+        237568,
+        261120
+      ]
+    },
+    "layers": [
+      15
+    ],
+    "source_fingerprint": "3618ac1eb0bf7532e941aec0e74006143cee6498b62d22bdd7de7652e755da19"
+  },
+  "run_fingerprint": "707be834c97db2fecd9ce0571b0a4529cf8fb7085d29492a0d17f63163d25175",
+  "tier": "high_fidelity_10x",
+  "compression_path": "no_healing_independent",
+  "rms_norm_eps": 1e-05,
+  "history": [
+    {
+      "layer": 15,
+      "same_input_validation": {
+        "relative_error": 0.05178198850514086,
+        "angular_drift": 0.0013415813446044922,
+        "norm_ratio": 0.9987907657215588,
+        "cosine_similarity": 0.9986584186553955
+      },
+      "cascade_validation": {
+        "relative_error": 0.05178198850514086,
+        "angular_drift": 0.0013415813446044922,
+        "norm_ratio": 0.9987907657215588,
+        "cosine_similarity": 0.9986584186553955
+      },
+      "calibration": {
+        "relative_error": 0.029942197570405706,
+        "angular_drift": 0.00044846534729003906,
+        "norm_ratio": 0.9994911977676563,
+        "cosine_similarity": 0.99955153465271
+      },
+      "attention_gauge": {
+        "method": "headwise_pairwise_energy_balance_v1",
+        "n_heads": 32,
+        "n_kv_heads": 32,
+        "head_dim": 128,
+        "qk_scale_min": 0.822112500667572,
+        "qk_scale_max": 1.1500838994979858,
+        "vo_scale_min": 0.8998390436172485,
+        "vo_scale_max": 1.206941843032837,
+        "train_parity_relative_error": 4.9848570960760045e-08,
+        "validation_parity_relative_error": 6.096592390012993e-08
+      },
+      "serialized_bytes": 70116468,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 766.724014468
+    }
+  ],
+  "layers_compressed": [
+    15
+  ],
+  "serialized_checkpoint_bytes": 70116468,
+  "checkpoint_file_sizes": {
+    "compressed_layer_15.pt": 70116468
+  }
+}

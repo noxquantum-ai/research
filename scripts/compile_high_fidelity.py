@@ -20,6 +20,7 @@ from benchmarks.benchmark_day3_cascade import build_real_token_calibration_data
 from nox.artifacts import fingerprint, source_files_fingerprint
 from nox.block_compiler import compile_transformer_block
 from nox.compiler import reconstruct_from_artifact
+from nox.gauge import balanced_attention_gauge
 from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 
@@ -61,6 +62,8 @@ def main():
     parser.add_argument("--calibration-sampling", choices=("prefix", "uniform"), default="prefix")
     parser.add_argument("--validation-sampling", choices=("prefix", "uniform"), default="prefix")
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
+    parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
+                        help="Apply an exact paired attention reparameterization before compression")
     parser.add_argument("--model-id", default="NousResearch/Llama-2-7b-hf")
     parser.add_argument("--model-revision", default="8efe6c9b93655b934e27bd9981e3ec13e55aee9d")
     parser.add_argument("--device", default="cuda")
@@ -90,10 +93,11 @@ def main():
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
         "compression_path": "no_healing_independent", "config": compression,
+        "attention_gauge": args.attention_gauge,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
         "source_fingerprint": source_files_fingerprint([
-            Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py",
+            Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
             ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
         ]),
     }
@@ -105,8 +109,27 @@ def main():
     for index in range(args.end_layer + 1):
         started = time.monotonic()
         dense = weights.layer(index, args.device)
-        train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
-        validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+        gauge_metadata = None
+        if index == args.start_layer and args.attention_gauge == "balanced":
+            dense, gauge_metadata = balanced_attention_gauge(
+                dense, config.num_attention_heads, config.num_key_value_heads,
+            )
+            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
+            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+            # Verify the exact symmetry against the original pinned dense block
+            # before any lossy compression is attempted.
+            original = weights.layer(index, args.device)
+            original_train, _, _ = forward_transformer_block(original, train, **forward_options)
+            original_validation, _, _ = forward_transformer_block(original, validation, **forward_options)
+            gauge_metadata["train_parity_relative_error"] = compute_metrics(original_train, train_next)["relative_error"]
+            gauge_metadata["validation_parity_relative_error"] = compute_metrics(original_validation, validation_next)["relative_error"]
+            if max(gauge_metadata["train_parity_relative_error"],
+                   gauge_metadata["validation_parity_relative_error"]) > 2e-5:
+                raise RuntimeError(f"Exact attention gauge parity failed: {gauge_metadata}")
+            del original, original_train, original_validation
+        else:
+            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
+            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
         if index >= args.start_layer:
             if compressed_validation is None:
                 compressed_validation = validation.clone()
@@ -121,6 +144,7 @@ def main():
             )
             artifact = {
                 "layer_idx": index, "compression_path": "no_healing_independent",
+                "attention_gauge": gauge_metadata,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),
@@ -139,6 +163,7 @@ def main():
                 "layer": index, "same_input_validation": compute_metrics(validation_next, same_input),
                 "cascade_validation": compute_metrics(validation_next, compressed_validation),
                 "calibration": compute_metrics(train_next, train_output),
+                "attention_gauge": gauge_metadata,
                 "serialized_bytes": path.stat().st_size,
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
                 "seconds": time.monotonic() - started,
