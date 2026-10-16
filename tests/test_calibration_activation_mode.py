@@ -44,8 +44,8 @@ class CalibrationActivationModeTests(unittest.TestCase):
             select_reference_activations("healing", torch.tensor([[1.0]]), torch.tensor([[2.0]]))
 
     def test_resume_compatibility_ignores_only_source_fingerprint(self):
-        previous = {"model": "pinned", "layers": [0, 1], "source_fingerprint": "old"}
-        repaired = {"model": "pinned", "layers": [0, 1], "source_fingerprint": "new"}
+        previous = {"model": "pinned", "layers": [0, 1], "order": [0, 1], "source_fingerprint": "old"}
+        repaired = {"model": "pinned", "layers": [0, 1], "order": (0, 1), "source_fingerprint": "new"}
         changed_science = {"model": "other", "layers": [0, 1], "source_fingerprint": "new"}
         self.assertTrue(resume_identity_compatible(previous, repaired))
         self.assertFalse(resume_identity_compatible(previous, changed_science))

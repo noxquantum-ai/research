@@ -50,7 +50,7 @@ def resume_identity_compatible(previous, current):
     current = dict(current)
     previous.pop("source_fingerprint", None)
     current.pop("source_fingerprint", None)
-    return previous == current
+    return json.dumps(previous, sort_keys=True) == json.dumps(current, sort_keys=True)
 
 
 def parse_site_order(value):
