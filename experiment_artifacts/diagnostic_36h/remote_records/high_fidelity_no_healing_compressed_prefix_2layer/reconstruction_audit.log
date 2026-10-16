@@ -1,0 +1,50 @@
+e8d5936888036aa9b9d9c73ed6f0eefcd2dfd5053ec128495c2cf1716d53572d  checkpoints/diagnostic_36h/high_fidelity_no_healing_4layer_prefix/compressed_layer_0.pt
+f2f8196780c805931e3b07ecf186ac78956e61e0b0803b45566a6e21cb5969ca  checkpoints/diagnostic_36h/high_fidelity_no_healing_compressed_prefix_2layer/compressed_layer_0.pt
+audit_rms_norm_eps=1e-05 (legacy checkpoints default to their original 1e-6)
+checkpoint_dir_bytes=139846298 (133.37 MiB)
+layer_0_checkpoint_bytes=69811117
+compiler_payload_estimate_kb=68123.35546875
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=139846298
+layer=0 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.734009 cosine=0.716622 max_abs=0.676603
+k_proj: shape=(4096, 4096) rel_fro=0.982257 cosine=0.545648 max_abs=0.93235
+v_proj: shape=(4096, 4096) rel_fro=1.051462 cosine=0.371533 max_abs=0.391951
+o_proj: shape=(4096, 4096) rel_fro=0.859220 cosine=0.539597 max_abs=0.0747183
+gate_proj: shape=(11008, 4096) rel_fro=0.956937 cosine=0.344204 max_abs=0.264194
+up_proj: shape=(11008, 4096) rel_fro=0.966225 cosine=0.322044 max_abs=0.243919
+down_proj: shape=(4096, 11008) rel_fro=1.172265 cosine=0.132635 max_abs=0.199377
+same_input_layer_output: tokens=1024 rel_fro=0.274842 cosine=0.964899 max_abs=0.529171
+audit_status=COMPLETE
+audit_rms_norm_eps=1e-05 (legacy checkpoints default to their original 1e-6)
+checkpoint_dir_bytes=139846298 (133.37 MiB)
+layer_1_checkpoint_bytes=70035181
+compiler_payload_estimate_kb=68342.232421875
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=139846298
+layer=1 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.987135 cosine=0.477896 max_abs=1.94906
+k_proj: shape=(4096, 4096) rel_fro=0.989434 cosine=0.481136 max_abs=2.09117
+v_proj: shape=(4096, 4096) rel_fro=1.038205 cosine=0.324995 max_abs=0.704991
+o_proj: shape=(4096, 4096) rel_fro=0.939218 cosine=0.474633 max_abs=0.0828182
+gate_proj: shape=(11008, 4096) rel_fro=0.931073 cosine=0.391458 max_abs=0.447517
+up_proj: shape=(11008, 4096) rel_fro=0.950372 cosine=0.346482 max_abs=0.139473
+down_proj: shape=(4096, 11008) rel_fro=1.207362 cosine=0.104548 max_abs=0.158425
+same_input_layer_output: tokens=1024 rel_fro=0.047369 cosine=0.999088 max_abs=174.788
+audit_status=COMPLETE
+audit_rms_norm_eps=1e-05 (legacy checkpoints default to their original 1e-6)
+checkpoint_dir_bytes=279960564 (266.99 MiB)
+layer_1_checkpoint_bytes=70044141
+compiler_payload_estimate_kb=68351.021484375
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=279960564
+layer=1 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=1.011412 cosine=0.470679 max_abs=2.12336
+k_proj: shape=(4096, 4096) rel_fro=1.021722 cosine=0.471266 max_abs=2.32007
+v_proj: shape=(4096, 4096) rel_fro=1.058858 cosine=0.318650 max_abs=0.721155
+o_proj: shape=(4096, 4096) rel_fro=0.978946 cosine=0.452871 max_abs=0.0801994
+gate_proj: shape=(11008, 4096) rel_fro=0.932464 cosine=0.393782 max_abs=0.439253
+up_proj: shape=(11008, 4096) rel_fro=0.951854 cosine=0.349032 max_abs=0.186559
+down_proj: shape=(4096, 11008) rel_fro=1.227760 cosine=0.103520 max_abs=0.138873
+same_input_layer_output: tokens=1024 rel_fro=0.048865 cosine=0.999000 max_abs=156.085
+audit_status=COMPLETE

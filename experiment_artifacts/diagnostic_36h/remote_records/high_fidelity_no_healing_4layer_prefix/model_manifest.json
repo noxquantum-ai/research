@@ -1,0 +1,221 @@
+{
+  "run_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "compression_path": "no_healing_independent",
+    "config": {
+      "ranks": [
+        1,
+        64,
+        128,
+        64,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 524288,
+      "epsilon": 0.005,
+      "description": "High-fidelity experimental configuration; quality and serialized size require measurement",
+      "diagonal_prior_strength": 0.0
+    },
+    "attention_gauge": "none",
+    "forward_options": {
+      "n_heads": 32,
+      "n_kv_heads": 32,
+      "seq_len": 128,
+      "rms_norm_eps": 1e-05
+    },
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 1024,
+      "heldout_token_count": 1024,
+      "calibration_token_ids_sha256": "7f60905fb0e061cc1eecb73c69167168fc23c724dc4aa7fdfb9235bbbd6e1902",
+      "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+      "activation_sequence_length": 128,
+      "calibration_sampling": "uniform",
+      "calibration_seed": 42,
+      "calibration_window_offsets": [
+        2681856,
+        466944,
+        104832,
+        1153536,
+        1027072,
+        936192,
+        585216,
+        429824
+      ],
+      "validation_sampling": "uniform",
+      "validation_seed": 43,
+      "validation_window_offsets": [
+        20096,
+        149888,
+        75392,
+        242432,
+        193920,
+        50432,
+        237568,
+        261120
+      ]
+    },
+    "layers": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "source_fingerprint": "3618ac1eb0bf7532e941aec0e74006143cee6498b62d22bdd7de7652e755da19"
+  },
+  "run_fingerprint": "d0014a2d5e8b7c8fcc6caaf8ccd2fc41407c7d590cda45430059aba4d0621a2a",
+  "tier": "high_fidelity_10x",
+  "compression_path": "no_healing_independent",
+  "rms_norm_eps": 1e-05,
+  "history": [
+    {
+      "layer": 0,
+      "same_input_validation": {
+        "relative_error": 0.27484174403454115,
+        "angular_drift": 0.035101473331451416,
+        "norm_ratio": 0.8838609830135626,
+        "cosine_similarity": 0.9648985266685486
+      },
+      "cascade_validation": {
+        "relative_error": 0.27484174403454115,
+        "angular_drift": 0.035101473331451416,
+        "norm_ratio": 0.8838609830135626,
+        "cosine_similarity": 0.9648985266685486
+      },
+      "calibration": {
+        "relative_error": 0.19695832278563016,
+        "angular_drift": 0.017927348613739014,
+        "norm_ratio": 0.9249812848199159,
+        "cosine_similarity": 0.982072651386261
+      },
+      "attention_gauge": null,
+      "serialized_bytes": 69811117,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 766.9005565959997
+    },
+    {
+      "layer": 1,
+      "same_input_validation": {
+        "relative_error": 0.04390508298364407,
+        "angular_drift": 0.0009038448333740234,
+        "norm_ratio": 0.9880990687770204,
+        "cosine_similarity": 0.999096155166626
+      },
+      "cascade_validation": {
+        "relative_error": 0.2379438125244725,
+        "angular_drift": 0.027828991413116455,
+        "norm_ratio": 0.9305302697757515,
+        "cosine_similarity": 0.9721710085868835
+      },
+      "calibration": {
+        "relative_error": 0.03587730342775576,
+        "angular_drift": 0.0006399154663085938,
+        "norm_ratio": 0.996614633038212,
+        "cosine_similarity": 0.9993600845336914
+      },
+      "attention_gauge": null,
+      "serialized_bytes": 70044141,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 772.7568939949997
+    },
+    {
+      "layer": 2,
+      "same_input_validation": {
+        "relative_error": 0.009046798232024922,
+        "angular_drift": 4.088878631591797e-05,
+        "norm_ratio": 0.9999055542356992,
+        "cosine_similarity": 0.9999591112136841
+      },
+      "cascade_validation": {
+        "relative_error": 0.23769659626661876,
+        "angular_drift": 0.02777266502380371,
+        "norm_ratio": 0.9306876111462059,
+        "cosine_similarity": 0.9722273349761963
+      },
+      "calibration": {
+        "relative_error": 0.0053226891622893645,
+        "angular_drift": 1.424551010131836e-05,
+        "norm_ratio": 0.9999356084545281,
+        "cosine_similarity": 0.9999857544898987
+      },
+      "attention_gauge": null,
+      "serialized_bytes": 70010157,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 773.9685314449998
+    },
+    {
+      "layer": 3,
+      "same_input_validation": {
+        "relative_error": 0.012459568391150257,
+        "angular_drift": 7.772445678710938e-05,
+        "norm_ratio": 0.9998751417699161,
+        "cosine_similarity": 0.9999222755432129
+      },
+      "cascade_validation": {
+        "relative_error": 0.2381242200009311,
+        "angular_drift": 0.02787649631500244,
+        "norm_ratio": 0.9305594130335062,
+        "cosine_similarity": 0.9721235036849976
+      },
+      "calibration": {
+        "relative_error": 0.007638048320680553,
+        "angular_drift": 2.9325485229492188e-05,
+        "norm_ratio": 0.9999332803548971,
+        "cosine_similarity": 0.9999706745147705
+      },
+      "attention_gauge": null,
+      "serialized_bytes": 70095149,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 771.9133130490009
+    }
+  ],
+  "layers_compressed": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "serialized_checkpoint_bytes": 279960564,
+  "checkpoint_file_sizes": {
+    "compressed_layer_0.pt": 69811117,
+    "compressed_layer_1.pt": 70044141,
+    "compressed_layer_2.pt": 70010157,
+    "compressed_layer_3.pt": 70095149
+  }
+}

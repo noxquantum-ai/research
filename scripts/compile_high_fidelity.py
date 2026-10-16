@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile one high-fidelity configuration from dense activations with zero healing."""
+"""Compile one high-fidelity configuration with zero healing."""
 
 import argparse
 import gc
@@ -23,6 +23,23 @@ from nox.compiler import reconstruct_from_artifact
 from nox.gauge import balanced_attention_gauge
 from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
+from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
+
+
+def select_calibration_activations(mode, dense_activations, compressed_activations):
+    """Select the inputs used to fit this layer's codec, without changing targets."""
+    if mode == "dense":
+        return dense_activations
+    if mode == "compressed_prefix":
+        return dense_activations if compressed_activations is None else compressed_activations
+    raise ValueError(f"Unknown calibration activation mode: {mode}")
+
+
+def parse_site_order(value):
+    try:
+        return validate_site_order(tuple(int(part.strip()) for part in value.split(",")))
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise argparse.ArgumentTypeError("site order must be four comma-separated digits, e.g. 2,0,3,1") from exc
 
 
 class PinnedWeights:
@@ -61,9 +78,19 @@ def main():
     parser.add_argument("--seq-len", type=int, default=128)
     parser.add_argument("--calibration-sampling", choices=("prefix", "uniform"), default="prefix")
     parser.add_argument("--validation-sampling", choices=("prefix", "uniform"), default="prefix")
+    parser.add_argument(
+        "--calibration-activation-mode", choices=("dense", "compressed_prefix"), default="dense",
+        help=("Use dense layer inputs (independent control) or propagate calibration inputs "
+              "through already-written compressed layers. Both modes keep causal_healing=False."),
+    )
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
     parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
                         help="Apply an exact paired attention reparameterization before compression")
+    parser.add_argument(
+        "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
+        help=("Shared four-site MPO order for every projection in the layer stack; "
+              "the reindexing is inverted in the saved dense-weight reconstruction"),
+    )
     parser.add_argument("--model-id", default="NousResearch/Llama-2-7b-hf")
     parser.add_argument("--model-revision", default="8efe6c9b93655b934e27bd9981e3ec13e55aee9d")
     parser.add_argument("--device", default="cuda")
@@ -92,20 +119,29 @@ def main():
     compression["diagonal_prior_strength"] = args.diagonal_prior_strength
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
-        "compression_path": "no_healing_independent", "config": compression,
+        "compression_path": ("no_healing_independent" if args.calibration_activation_mode == "dense"
+                              else "no_healing_prefix_calibrated"),
+        "calibration_activation_mode": args.calibration_activation_mode,
+        "config": compression,
         "attention_gauge": args.attention_gauge,
+        "mpo_site_order": args.site_order,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
         "source_fingerprint": source_files_fingerprint([
             Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
             ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
+            ROOT / "nox/tensor_order.py",
         ]),
     }
+    compression_path = identity["compression_path"]
     manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
-                "tier": "high_fidelity_10x", "compression_path": "no_healing_independent",
+                "tier": "high_fidelity_10x", "compression_path": compression_path,
+                "calibration_activation_mode": args.calibration_activation_mode,
+                "mpo_site_order": args.site_order,
                 "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
                 "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
     compressed_validation = None
+    compressed_calibration = None
     for index in range(args.end_layer + 1):
         started = time.monotonic()
         dense = weights.layer(index, args.device)
@@ -133,17 +169,27 @@ def main():
         if index >= args.start_layer:
             if compressed_validation is None:
                 compressed_validation = validation.clone()
+            if args.calibration_activation_mode == "compressed_prefix" and compressed_calibration is None:
+                compressed_calibration = train.clone()
+            calibration_input = select_calibration_activations(
+                args.calibration_activation_mode, train, compressed_calibration,
+            )
+            validation_calibration_input = select_calibration_activations(
+                args.calibration_activation_mode, validation, compressed_validation,
+            )
             torch.save({"X_test": validation.cpu(), "rms_norm_eps": config.rms_norm_eps}, args.output / f"dense_input_layer_{index}.pt")
-            torch.save(train.cpu(), args.output / f"calibration_input_layer_{index}.pt")
+            torch.save(calibration_input.cpu(), args.output / f"calibration_input_layer_{index}.pt")
+            torch.save(validation_calibration_input.cpu(), args.output / f"layer_input_validation_layer_{index}.pt")
             compiled = compile_transformer_block(
-                dense, train, X_calib_dense=train, causal_healing=False,
+                dense, calibration_input, X_calib_dense=calibration_input, causal_healing=False,
                 ranks=compression["ranks"], r_bridge=compression["r_bridge"],
                 n_outliers=compression["n_outliers"], return_artifacts=True,
                 diagonal_prior_strength=args.diagonal_prior_strength,
-                verbose=True, **forward_options,
+                verbose=True, site_order=args.site_order, **forward_options,
             )
             artifact = {
-                "layer_idx": index, "compression_path": "no_healing_independent",
+                "layer_idx": index, "compression_path": compression_path,
+                "mpo_site_order": args.site_order,
                 "attention_gauge": gauge_metadata,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
@@ -156,13 +202,25 @@ def main():
             reconstructed = dict(dense)
             reconstructed.update({name: reconstruct_from_artifact(value, device=args.device)
                                   for name, value in artifact["compressed_artifacts"].items()})
-            same_input, _, _ = forward_transformer_block(reconstructed, validation, **forward_options)
+            dense_same_input, _, _ = forward_transformer_block(
+                dense, validation_calibration_input, **forward_options,
+            )
+            same_input, _, _ = forward_transformer_block(
+                reconstructed, validation_calibration_input, **forward_options,
+            )
             compressed_validation, _, _ = forward_transformer_block(reconstructed, compressed_validation, **forward_options)
-            train_output, _, _ = forward_transformer_block(reconstructed, train, **forward_options)
+            calibration_dense_output, _, _ = forward_transformer_block(
+                dense, calibration_input, **forward_options,
+            )
+            train_output, _, _ = forward_transformer_block(
+                reconstructed, calibration_input, **forward_options,
+            )
             record = {
-                "layer": index, "same_input_validation": compute_metrics(validation_next, same_input),
+                "layer": index, "calibration_activation_mode": args.calibration_activation_mode,
+                "mpo_site_order": args.site_order,
+                "same_input_validation": compute_metrics(dense_same_input, same_input),
                 "cascade_validation": compute_metrics(validation_next, compressed_validation),
-                "calibration": compute_metrics(train_next, train_output),
+                "calibration": compute_metrics(calibration_dense_output, train_output),
                 "attention_gauge": gauge_metadata,
                 "serialized_bytes": path.stat().st_size,
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
@@ -174,6 +232,10 @@ def main():
             manifest["serialized_checkpoint_bytes"] += path.stat().st_size
             (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2))
             print(json.dumps(record), flush=True)
+            if args.calibration_activation_mode == "compressed_prefix":
+                compressed_calibration, _, _ = forward_transformer_block(
+                    reconstructed, compressed_calibration, **forward_options,
+                )
             del compiled, reconstructed, same_input, train_output, artifact
         train, validation = train_next, validation_next
         del dense

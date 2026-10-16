@@ -1,6 +1,13 @@
 import gc
 import torch
 from nox.utils import quantize_dequantize_groupwise, quantize_4bit_per_channel, mpo_to_dense
+from nox.tensor_order import (
+    IDENTITY_SITE_ORDER,
+    mode_index_permutation,
+    permute_projection,
+    unpermute_projection,
+    validate_site_order,
+)
 
 
 def quantize_4bit_grouped(tensor, group_size=64):
@@ -202,6 +209,13 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
         idx = artifact["sparse_indices"]
         val = artifact["sparse_values"].to(device=device, dtype=dtype)
         W_rec[idx[:, 0].long(), idx[:, 1].long()] += val
+    site_order = artifact.get("site_order")
+    if site_order is not None and tuple(site_order) != IDENTITY_SITE_ORDER:
+        out_modes = tuple(artifact["original_o_modes"])
+        in_modes = tuple(artifact["original_i_modes"])
+        out_perm = mode_index_permutation(out_modes, site_order, device=device)
+        in_perm = mode_index_permutation(in_modes, site_order, device=device)
+        W_rec = unpermute_projection(W_rec, out_perm, in_perm)
     return W_rec
 
 
@@ -237,6 +251,7 @@ def nox_hybrid_dmrg_decompose(
     quantize_components=True,
     diagnostic_callback=None,
     diagonal_prior_strength=0.0,
+    site_order=IDENTITY_SITE_ORDER,
 ):
     """
     Nox Hybrid Entanglement Engine (v3 - Covariance Bridge + Bidirectional Isometric Gauge):
@@ -248,6 +263,51 @@ def nox_hybrid_dmrg_decompose(
       4. Bidirectional QR Gauge-Fixed DMRG Sweep (Left->Right then Right->Left canonicalization
          before the final in-loop 4-bit quantization pass so gauges never collide).
     """
+    site_order = validate_site_order(site_order)
+    if site_order != IDENTITY_SITE_ORDER:
+        W_ordered, X_ordered, Y_ordered, o_ordered, i_ordered, out_perm, in_perm = permute_projection(
+            W, X_calib, Y_dense, o_modes, i_modes, site_order,
+        )
+
+        def restore_diagnostic(stage, value):
+            if diagnostic_callback is not None:
+                diagnostic_callback(stage, unpermute_projection(value, out_perm, in_perm))
+
+        result = nox_hybrid_dmrg_decompose(
+            W=W_ordered,
+            X_calib=X_ordered,
+            Y_dense=Y_ordered,
+            o_modes=o_ordered,
+            i_modes=i_ordered,
+            ranks=ranks,
+            r_bridge=r_bridge,
+            n_outliers=n_outliers,
+            n_sweeps=n_sweeps,
+            prior_gamma=prior_gamma,
+            alpha_awt=alpha_awt,
+            chunk_size=chunk_size,
+            return_artifacts=return_artifacts,
+            verbose=verbose,
+            quantize_components=quantize_components,
+            diagnostic_callback=restore_diagnostic if diagnostic_callback is not None else None,
+            diagonal_prior_strength=diagonal_prior_strength,
+            site_order=IDENTITY_SITE_ORDER,
+        )
+        if return_artifacts:
+            W_hat, total_kb, cores, chosen_ranks, artifact = result
+            artifact["site_order"] = site_order
+            artifact["original_o_modes"] = tuple(o_modes)
+            artifact["original_i_modes"] = tuple(i_modes)
+            return (
+                unpermute_projection(W_hat, out_perm, in_perm),
+                total_kb,
+                cores,
+                chosen_ranks,
+                artifact,
+            )
+        W_hat, total_kb, cores, chosen_ranks = result
+        return unpermute_projection(W_hat, out_perm, in_perm), total_kb, cores, chosen_ranks
+
     d_out, d_in = W.shape
     if diagonal_prior_strength < 0:
         raise ValueError("Weight prior strength must be nonnegative")

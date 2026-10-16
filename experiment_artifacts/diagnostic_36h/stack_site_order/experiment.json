@@ -1,0 +1,51 @@
+{
+  "experiment": "shared_stack_mpo_site_order",
+  "status": "implemented_and_unit_tested; GPU ranking and end_to_end_validation_pending",
+  "local_base_commit": "5eb4780",
+  "branch": "main",
+  "scope": "weight-only MPO site-order selection for the high_fidelity_10x zero-healing stack",
+  "hypothesis": "One shared ordering of the four tensorized channel sites may lower rank-truncation error across a contiguous layer stack. It preserves each dense linear operator exactly before compression and adds no healing or training step.",
+  "method": {
+    "selection": "For each candidate site order, compute normalized TT-SVD truncation bounds at the high_fidelity_10x ranks over representative layers and projections; rank orders by mean bound, with maximum bound as tie-breaker.",
+    "candidate_orders": 24,
+    "caveat": "This is a weight-only proxy. It excludes Nox bridge, sparse shield, activation-weighted DMRG refinement, component quantization, attention/MLP nonlinearities, and full-model cascade. Only the paired WikiText evaluation can establish a quality change.",
+    "screen_layers": [0, 3],
+    "screen_projections": ["q_proj", "o_proj"],
+    "compression_regime": "high_fidelity_10x",
+    "calibration_activation_mode": "compressed_prefix",
+    "causal_healing": false
+  },
+  "baseline_reference": {
+    "model": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "dataset": "Salesforce/wikitext wikitext-2-raw-v1",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "calibration_split_and_tokens": "train, 1024 token IDs, uniform windows, seed 42, seq_len 128",
+    "heldout_split_and_tokens": "validation, 1024 token IDs, uniform windows, seed 43, seq_len 128",
+    "evaluation_split_and_tokens": "test, 10000 input tokens / 9999 shifted labels, seq_len 2048, stride 512",
+    "dense_raw_wikitext_ppl": 5.2922000885,
+    "two_layer_compressed_prefix_raw_wikitext_ppl": 9.4423685074,
+    "two_layer_dense_top1_agreement_pct": 72.2572267056,
+    "two_layer_checkpoint_bytes": 139846298,
+    "two_layer_checkpoint_files": {
+      "compressed_layer_0.pt": 69811117,
+      "compressed_layer_1.pt": 70035181
+    },
+    "source": "experiment_artifacts/diagnostic_36h/remote_records/high_fidelity_no_healing_compressed_prefix_2layer/evaluation.json and model_manifest.json"
+  },
+  "candidate_measurements": null,
+  "validation_commands_on_a10": [
+    "cd /home/shadeform/diag36h-research",
+    ".venv/bin/python -u scripts/score_mpo_site_orders.py --layers 0,3 --projections q_proj,o_proj --output experiment_artifacts/diagnostic_36h/stack_site_order/site_order_screen.json",
+    "SITE_ORDER=$(.venv/bin/python -c \"import json; print(','.join(map(str, json.load(open('experiment_artifacts/diagnostic_36h/stack_site_order/site_order_screen.json'))['best_order']['site_order'])))\")",
+    ".venv/bin/python -u scripts/compile_high_fidelity.py --output checkpoints/diagnostic_36h/high_fidelity_no_healing_site_order_4layer --start-layer 0 --end-layer 3 --n-calib 1024 --n-validation 1024 --seq-len 128 --calibration-sampling uniform --validation-sampling uniform --calibration-activation-mode compressed_prefix --diagonal-prior-strength 0 --attention-gauge none --site-order \"$SITE_ORDER\"",
+    ".venv/bin/python -u scripts/diagnose_reference_pipeline.py --checkpoint-dir checkpoints/diagnostic_36h/high_fidelity_no_healing_site_order_4layer --weights-dir checkpoints/diagnostic_36h/dense_weights --output checkpoints/diagnostic_36h/high_fidelity_no_healing_site_order_4layer/evaluation.json",
+    ".venv/bin/python -u scripts/audit_checkpoint_reconstruction.py --help"
+  ],
+  "interpretation_gate": "Do not accept the method on the TT-SVD score alone. Compare it against the paired identity-order four-layer run on the same pinned model, WikiText test tokens, and compressed-prefix calibration stream. Require lower raw WikiText PPL and higher dense top-1 agreement; report checkpoint bytes and held-out block errors. MMLU remains a separate required full-model check.",
+  "local_unit_tests": {
+    "command": "python3 -m unittest tests.test_tensor_order tests.test_calibration_activation_mode -v",
+    "result": "9 tests passed; 0 failures",
+    "coverage": "24 exact coordinate permutations on a rectangular projection, artifact reconstruction inversion, TT-SVD full-rank order invariance, one small compiler order-control comparison, invalid-order rejection, and existing compressed-prefix selection controls"
+  }
+}

@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from nox.compiler import nox_hybrid_dmrg_decompose
 from nox.baselines.multiverse import multiverse_tt_svd
 from nox.utils import compute_metrics, count_parameters, get_modes_for_projection, mpo_to_dense
+from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
 
 
 class RMSNorm(torch.nn.Module):
@@ -129,12 +130,18 @@ def compile_attention_block(
     return_artifacts=False,
     verbose=False,
     diagonal_prior_strength=0.0,
+    site_order=IDENTITY_SITE_ORDER,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
     causal healing where W_o absorbs Q,K,V distortion and inter-layer residual drift.
     """
-    compile_projection = partial(nox_hybrid_dmrg_decompose, diagonal_prior_strength=diagonal_prior_strength)
+    site_order = validate_site_order(site_order)
+    compile_projection = partial(
+        nox_hybrid_dmrg_decompose,
+        diagonal_prior_strength=diagonal_prior_strength,
+        site_order=site_order,
+    )
     W_q = weights["q_proj"]
     W_k = weights["k_proj"]
     W_v = weights["v_proj"]
@@ -271,12 +278,18 @@ def compile_mlp_block(
     return_artifacts=False,
     verbose=False,
     diagonal_prior_strength=0.0,
+    site_order=IDENTITY_SITE_ORDER,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
     causal healing where W_down absorbs non-linear distortion and residual drift.
     """
-    compile_projection = partial(nox_hybrid_dmrg_decompose, diagonal_prior_strength=diagonal_prior_strength)
+    site_order = validate_site_order(site_order)
+    compile_projection = partial(
+        nox_hybrid_dmrg_decompose,
+        diagonal_prior_strength=diagonal_prior_strength,
+        site_order=site_order,
+    )
     W_gate = weights["gate_proj"]
     W_up = weights["up_proj"]
     W_down = weights["down_proj"]
@@ -404,6 +417,7 @@ def compile_transformer_block(
     verbose=True,
     rms_norm_eps=1e-5,
     diagonal_prior_strength=0.0,
+    site_order=IDENTITY_SITE_ORDER,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -422,6 +436,7 @@ def compile_transformer_block(
     """
     t_start = time.time()
     d_model = X_calib.shape[0]
+    site_order = validate_site_order(site_order)
 
     norm1_weight = layer_weights.get("input_layernorm", None)
     norm2_weight = layer_weights.get("post_attention_layernorm", None)
@@ -452,6 +467,7 @@ def compile_transformer_block(
         causal_healing=causal_healing,
         return_artifacts=return_artifacts,
         verbose=verbose,
+        site_order=site_order,
     )
 
     X_res1_dense = ref_calib_dense + attn_res["Y_attn_dense"]
@@ -475,6 +491,7 @@ def compile_transformer_block(
         causal_healing=causal_healing,
         return_artifacts=return_artifacts,
         verbose=verbose,
+        site_order=site_order,
     )
 
     X_out_dense = X_res1_dense + mlp_res["Y_mlp_dense"]

@@ -12,7 +12,8 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from nox.block_compiler import RMSNorm, scaled_dot_product_attention_2d
 from nox.compiler import quantize_4bit_grouped, reconstruct_from_artifact
-from nox.utils import compute_metrics, mpo_to_dense
+from nox.tensor_order import mode_index_permutation, unpermute_projection
+from nox.utils import compute_metrics, get_modes_for_projection, mpo_to_dense
 
 
 def projection_inputs(weights, x, eps, seq_len, n_heads, n_kv_heads):
@@ -44,7 +45,11 @@ def main():
     weights = {name: torch.load(args.dense_weights_dir / f"layer_{args.layer}_{name}.pt", map_location="cpu", weights_only=True).to(args.device).float()
                for name in names + ["input_layernorm", "post_attention_layernorm"]}
     train = torch.load(args.checkpoint_dir / f"calibration_input_layer_{args.layer}.pt", map_location="cpu", weights_only=True)
-    valid = torch.load(args.checkpoint_dir / f"dense_input_layer_{args.layer}.pt", map_location="cpu", weights_only=True)["X_test"]
+    stream_validation_path = args.checkpoint_dir / f"layer_input_validation_layer_{args.layer}.pt"
+    if stream_validation_path.exists():
+        valid = torch.load(stream_validation_path, map_location="cpu", weights_only=True)
+    else:
+        valid = torch.load(args.checkpoint_dir / f"dense_input_layer_{args.layer}.pt", map_location="cpu", weights_only=True)["X_test"]
     inputs = {split: projection_inputs(weights, x.to(args.device), eps, args.seq_len, args.n_heads, args.n_kv_heads)
               for split, x in (("calibration", train), ("validation", valid))}
     results = {"layer": args.layer, "rms_norm_eps": eps, "calibration_tokens": train.shape[1],
@@ -53,7 +58,21 @@ def main():
         artifact = checkpoint["compressed_artifacts"][name]
         reconstructed = reconstruct_from_artifact(artifact, device=args.device)
         core = mpo_to_dense([t.to(args.device).float() for t in artifact["cores"]]) / artifact["d_awt"].to(args.device).float().unsqueeze(0)
-        bridge = artifact["A_bridge"].to(args.device).float() @ artifact["B_bridge"].to(args.device).float()
+        if artifact.get("A_bridge") is not None:
+            bridge = artifact["A_bridge"].to(args.device).float() @ artifact["B_bridge"].to(args.device).float()
+        else:
+            bridge = torch.zeros_like(core)
+        sparse = torch.zeros_like(core)
+        if artifact.get("sparse_indices") is not None:
+            indices = artifact["sparse_indices"].long().to(args.device)
+            sparse[indices[:, 0], indices[:, 1]] = artifact["sparse_values"].to(args.device).float()
+        if artifact.get("site_order") is not None:
+            out_modes, in_modes = get_modes_for_projection(*weights[name].shape)
+            out_perm = mode_index_permutation(out_modes, artifact["site_order"], device=args.device)
+            in_perm = mode_index_permutation(in_modes, artifact["site_order"], device=args.device)
+            core = unpermute_projection(core, out_perm, in_perm)
+            bridge = unpermute_projection(bridge, out_perm, in_perm)
+            sparse = unpermute_projection(sparse, out_perm, in_perm)
         dense_fp16 = weights[name].half().float()
         dense_int4 = quantize_4bit_grouped(weights[name])
         record = {}
@@ -64,13 +83,14 @@ def main():
                 "full": compute_metrics(target, reconstructed @ x),
                 "without_core": compute_metrics(target, (reconstructed - core) @ x),
                 "without_bridge": compute_metrics(target, (reconstructed - bridge) @ x),
+                "without_sparse": compute_metrics(target, (reconstructed - sparse) @ x),
                 "dense_fp16_control": compute_metrics(target, dense_fp16 @ x),
                 "dense_int4_simulation_control": compute_metrics(target, dense_int4 @ x),
                 "target_norm": target.norm().item(),
             }
         results["projections"][name] = record
         print(name, json.dumps(record), flush=True)
-        del core, bridge, reconstructed, dense_fp16, dense_int4
+        del core, bridge, sparse, reconstructed, dense_fp16, dense_int4
     with args.output.open("x") as output:
         json.dump(results, output, indent=2)
 
