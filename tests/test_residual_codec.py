@@ -7,6 +7,7 @@ import torch
 
 from benchmarks.benchmark_day4_perplexity import inject_nox_checkpoints
 from nox.compiler import reconstruct_from_artifact
+from nox.pees import layer_projection_trajectories
 from nox.residual_codec import (
     CODEC_TYPE,
     codec_payload_bytes,
@@ -75,6 +76,28 @@ class PackedResidualCodecTests(unittest.TestCase):
     def test_nonfinite_input_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "NaN or infinite"):
             encode_groupwise(torch.tensor([[float("nan")]]), bits=2)
+
+    def test_training_statistics_can_collect_q_k_and_up_contexts(self):
+        weights = {
+            "q_proj": torch.randn(8, 8),
+            "k_proj": torch.randn(8, 8),
+            "v_proj": torch.randn(8, 8),
+            "o_proj": torch.randn(8, 8),
+            "gate_proj": torch.randn(12, 8),
+            "up_proj": torch.randn(12, 8),
+            "down_proj": torch.randn(8, 12),
+            "input_layernorm": torch.ones(8),
+            "post_attention_layernorm": torch.ones(8),
+        }
+        inputs = torch.randn(8, 8)
+        contexts = layer_projection_trajectories(
+            weights, weights, inputs, inputs,
+            seq_len=4, n_heads=2, n_kv_heads=2, rms_norm_eps=1e-5,
+            max_tokens=8, projections=("q_proj", "k_proj", "up_proj"),
+        )
+        self.assertEqual(set(contexts), {"q_proj", "k_proj", "up_proj"})
+        self.assertEqual(tuple(contexts["q_proj"][0].shape), (8, 8))
+        self.assertEqual(tuple(contexts["up_proj"][0].shape), (8, 8))
 
     def test_direct_dispatch_and_hybrid_dispatch(self):
         matrix = torch.randn(8, 8)

@@ -16,6 +16,9 @@ from nox.block_compiler import RMSNorm, scaled_dot_product_attention_2d
 
 
 DEFAULT_PROJECTIONS = ("v_proj", "o_proj", "gate_proj", "down_proj")
+ALL_LAYER_PROJECTIONS = (
+    "q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj",
+)
 
 
 @torch.no_grad()
@@ -44,7 +47,7 @@ def layer_projection_trajectories(
         raise ValueError("input token count must be divisible by seq_len")
     if max_tokens < seq_len:
         raise ValueError("max_tokens must include at least one full sequence")
-    unknown = set(projections) - set(DEFAULT_PROJECTIONS)
+    unknown = set(projections) - set(ALL_LAYER_PROJECTIONS)
     if unknown:
         raise ValueError(f"unsupported PEES projections: {sorted(unknown)}")
 
