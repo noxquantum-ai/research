@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nox.compiler import reconstruct_from_artifact
 from nox.artifacts import checkpoint_file_sizes
+from nox.defect_bridge import apply_defect_bridge_sequence
 from nox.data import load_wikitext2_raw_split
 
 
@@ -155,6 +156,28 @@ def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.flo
             target_layer.input_layernorm.weight.data.copy_(data["input_layernorm"].to(device=w_dev, dtype=w_dtype))
         if data.get("post_attention_layernorm") is not None:
             target_layer.post_attention_layernorm.weight.data.copy_(data["post_attention_layernorm"].to(device=w_dev, dtype=w_dtype))
+
+        bridge = data.get("cross_layer_bridge")
+        if bridge is not None:
+            bridge = {
+                key: (value.to(device=w_dev) if torch.is_tensor(value) else value)
+                for key, value in bridge.items()
+            }
+            original_forward = target_layer.forward
+
+            def forward_with_bridge(hidden_states, *args, _forward=original_forward,
+                                    _bridge=bridge, **kwargs):
+                output = _forward(hidden_states, *args, **kwargs)
+                corrected = hidden_states + apply_defect_bridge_sequence(hidden_states, _bridge)
+                if torch.is_tensor(output):
+                    return output + (corrected - hidden_states)
+                if isinstance(output, tuple):
+                    return (output[0] + (corrected - hidden_states), *output[1:])
+                if isinstance(output, list):
+                    return [output[0] + (corrected - hidden_states), *output[1:]]
+                raise TypeError(f"Unsupported decoder-layer output type: {type(output)!r}")
+
+            target_layer.forward = forward_with_bridge
 
         injected_layers.append(l_idx)
         log_step(f"  Layer {l_idx:02d}: Reconstructed and injected ({data.get('total_kb', 0.0):.1f} KB artifact)")

@@ -3,6 +3,7 @@
 
 import argparse
 import gc
+import io
 import json
 import sys
 import time
@@ -26,6 +27,7 @@ from nox.mlp_gauge import balanced_swiglu_gauge, entanglement_ordered_swiglu_gau
 from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
+from nox.defect_bridge import fit_hybrid_defect_bridge, bridge_tensor_bytes
 
 
 def select_calibration_activations(mode, dense_activations, compressed_activations):
@@ -62,13 +64,22 @@ def resume_identity_compatible(previous, current):
     current_layers = list(current_layers)
     if current_layers[:len(previous_layers)] != previous_layers:
         return False
-    # These fields were added after the original independent compiler record;
-    # their absence means the original explicit defaults.
-    for key in (
-        "mlp_objective", "mlp_product_ridge_ratio", "budget_allocation", "projection_budgets",
-    ):
-        if key in current and key not in previous:
-            previous[key] = current[key]
+    # These fields were added after older run records. Missing fields map only
+    # to their historical defaults; they must not silently adopt a new method.
+    legacy_defaults = {
+        "mlp_objective": "independent",
+        "mlp_product_ridge_ratio": 0.05,
+        "budget_allocation": "uniform",
+        "defect_bridge_mode": "none",
+        "defect_bridge_linear_rank": 512,
+        "defect_bridge_memory_size": 512,
+        "defect_bridge_memory_top_k": 8,
+        "defect_bridge_ridge_ratio": 0.01,
+        "max_checkpoint_multiplier": 1.25,
+    }
+    for key, value in legacy_defaults.items():
+        previous.setdefault(key, value)
+    previous.setdefault("projection_budgets", current.get("projection_budgets"))
     return json.dumps(previous, sort_keys=True) == json.dumps(current, sort_keys=True)
 
 
@@ -149,6 +160,16 @@ def main():
         help="Keep uniform projection budgets or exchange Q/O sparse entries for Gate/Down at fixed total bytes",
     )
     parser.add_argument(
+        "--defect-bridge-mode", choices=("none", "hybrid"), default="none",
+        help=("Fit a rank-limited global correction plus calibration-state residual memory "
+              "during initial artifact construction; no checkpoint is modified afterward."),
+    )
+    parser.add_argument("--defect-bridge-linear-rank", type=int, default=512)
+    parser.add_argument("--defect-bridge-memory-size", type=int, default=512)
+    parser.add_argument("--defect-bridge-memory-top-k", type=int, default=8)
+    parser.add_argument("--defect-bridge-ridge-ratio", type=float, default=0.01)
+    parser.add_argument("--max-checkpoint-multiplier", type=float, default=1.25)
+    parser.add_argument(
         "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
         help=("Shared four-site MPO order for every projection in the layer stack; "
               "the reindexing is inverted in the saved dense-weight reconstruction"),
@@ -170,6 +191,14 @@ def main():
         raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
     if args.mlp_product_ridge_ratio <= 0:
         raise ValueError("--mlp-product-ridge-ratio must be positive")
+    if args.defect_bridge_linear_rank < 0 or args.defect_bridge_memory_size < 0:
+        raise ValueError("Defect bridge rank and memory size must be nonnegative")
+    if args.defect_bridge_mode == "hybrid" and args.defect_bridge_linear_rank == 0:
+        raise ValueError("Hybrid defect bridge requires a positive linear rank")
+    if args.defect_bridge_memory_top_k <= 0 or args.defect_bridge_ridge_ratio < 0:
+        raise ValueError("Invalid defect bridge kernel or ridge configuration")
+    if args.max_checkpoint_multiplier < 1.0:
+        raise ValueError("--max-checkpoint-multiplier must be at least 1")
     has_existing = bool(list(args.output.glob("compressed_layer_*.pt"))) or (args.output / "model_manifest.json").exists()
     if has_existing and not args.resume:
         raise FileExistsError("Use a fresh output directory; checkpoints will not be overwritten")
@@ -202,6 +231,8 @@ def main():
             else f"zero_healing_{args.construction_mode}"
         )
     )
+    if args.defect_bridge_mode == "hybrid":
+        compression_path = f"{compression_path}+hybrid_defect_bridge"
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
         "compression_path": compression_path,
@@ -214,6 +245,12 @@ def main():
         "mlp_product_ridge_ratio": args.mlp_product_ridge_ratio,
         "budget_allocation": args.budget_allocation,
         "projection_budgets": per_projection_budgets,
+        "defect_bridge_mode": args.defect_bridge_mode,
+        "defect_bridge_linear_rank": args.defect_bridge_linear_rank,
+        "defect_bridge_memory_size": args.defect_bridge_memory_size,
+        "defect_bridge_memory_top_k": args.defect_bridge_memory_top_k,
+        "defect_bridge_ridge_ratio": args.defect_bridge_ridge_ratio,
+        "max_checkpoint_multiplier": args.max_checkpoint_multiplier,
         "mpo_site_order": args.site_order,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
@@ -221,6 +258,7 @@ def main():
             Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
             ROOT / "nox/mlp_gauge.py", ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
             ROOT / "nox/tensor_order.py", ROOT / "nox/allocation.py",
+            ROOT / "nox/defect_bridge.py",
         ]),
     }
     if args.resume:
@@ -329,6 +367,8 @@ def main():
                     name: reconstruct_from_artifact(value, device=args.device)
                     for name, value in artifact["compressed_artifacts"].items()
                 })
+                if artifact.get("cross_layer_bridge") is not None:
+                    reconstructed["cross_layer_bridge"] = artifact["cross_layer_bridge"]
                 compressed_validation, _, _ = forward_transformer_block(
                     reconstructed, compressed_validation, **forward_options,
                 )
@@ -377,10 +417,44 @@ def main():
                 "post_attention_layernorm": dense["post_attention_layernorm"].cpu(),
                 "total_kb": compiled["total_kb"],
             }
-            torch.save(artifact, path)
+            # The artifacts are sufficient for reconstruction; discard the
+            # transient dense reconstructions retained for compiler metrics.
+            compiled.pop("compressed_weights", None)
+            compiled.pop("X_out_comp", None)
+            compiled.pop("X_out_dense", None)
             reconstructed = dict(dense)
             reconstructed.update({name: reconstruct_from_artifact(value, device=args.device)
                                   for name, value in artifact["compressed_artifacts"].items()})
+            # The bridge learns the complete composed defect on calibration
+            # trajectories: dense next-layer state minus the lossy block output
+            # at the actual (possibly compressed-prefix) input.
+            train_output, _, _ = forward_transformer_block(
+                reconstructed, calibration_input, **forward_options,
+            )
+            if args.defect_bridge_mode == "hybrid":
+                baseline_buffer = io.BytesIO()
+                torch.save(artifact, baseline_buffer)
+                baseline_buffer_bytes = len(baseline_buffer.getbuffer())
+                del baseline_buffer
+                bridge = fit_hybrid_defect_bridge(
+                    calibration_input,
+                    train_next - train_output,
+                    linear_rank=args.defect_bridge_linear_rank,
+                    memory_size=args.defect_bridge_memory_size,
+                    ridge_ratio=args.defect_bridge_ridge_ratio,
+                    memory_top_k=args.defect_bridge_memory_top_k,
+                    storage_dtype=torch.float16,
+                )
+                artifact["cross_layer_bridge"] = bridge
+                artifact["cross_layer_bridge_metadata"] = dict(bridge["metadata"])
+                reconstructed["cross_layer_bridge"] = bridge
+                artifact["cross_layer_bridge_metadata"]["base_checkpoint_bytes_before_bridge"] = int(
+                    baseline_buffer_bytes
+                )
+                artifact["cross_layer_bridge_metadata"]["max_checkpoint_multiplier"] = float(
+                    args.max_checkpoint_multiplier
+                )
+
             dense_same_input, _, _ = forward_transformer_block(
                 dense, validation_calibration_input, **forward_options,
             )
@@ -388,19 +462,38 @@ def main():
                 reconstructed, validation_calibration_input, **forward_options,
             )
             compressed_validation, _, _ = forward_transformer_block(reconstructed, compressed_validation, **forward_options)
-            calibration_dense_output, _, _ = forward_transformer_block(
-                dense, reference_input, **forward_options,
-            )
-            train_output, _, _ = forward_transformer_block(
+            calibration_output, _, _ = forward_transformer_block(
                 reconstructed, calibration_input, **forward_options,
             )
+            calibration_target = train_next
+            calibration_metrics = compute_metrics(calibration_target, calibration_output)
+            validation_output, _, _ = forward_transformer_block(
+                reconstructed, validation_calibration_input, **forward_options,
+            )
+            validation_metrics = compute_metrics(validation_next, validation_output)
+            if args.defect_bridge_mode == "hybrid":
+                artifact["cross_layer_bridge_metadata"].update({
+                    "validation_relative_error": validation_metrics["relative_error"],
+                    "validation_cosine_similarity": validation_metrics["cosine_similarity"],
+                })
+            torch.save(artifact, path)
+            actual_serialized_bytes = path.stat().st_size
+            if args.defect_bridge_mode == "hybrid":
+                max_allowed_bytes = baseline_buffer_bytes * args.max_checkpoint_multiplier
+                if actual_serialized_bytes > max_allowed_bytes:
+                    path.unlink()
+                    raise RuntimeError(
+                        f"Defect bridge exceeds checkpoint budget: {actual_serialized_bytes} > "
+                        f"{max_allowed_bytes:.0f} ({args.max_checkpoint_multiplier:.3f}x)"
+                    )
             record = {
                 "layer": index, "calibration_activation_mode": args.calibration_activation_mode,
                 "construction_mode": args.construction_mode,
                 "mpo_site_order": args.site_order,
                 "same_input_validation": compute_metrics(dense_same_input, same_input),
                 "cascade_validation": compute_metrics(validation_next, compressed_validation),
-                "calibration": compute_metrics(calibration_dense_output, train_output),
+                "calibration": calibration_metrics,
+                "heldout_block_output": validation_metrics,
                 "attention_gauge": gauge_metadata,
                 "mlp_gauge": mlp_gauge_metadata,
                 "mlp_objective": args.mlp_objective,
@@ -408,6 +501,17 @@ def main():
                 "budget_allocation": args.budget_allocation,
                 "projection_budgets": per_projection_budgets,
                 "serialized_bytes": path.stat().st_size,
+                "base_checkpoint_bytes_before_bridge": (
+                    baseline_buffer_bytes if args.defect_bridge_mode == "hybrid" else None
+                ),
+                "bridge_tensor_bytes": (
+                    bridge_tensor_bytes(artifact["cross_layer_bridge"])
+                    if args.defect_bridge_mode == "hybrid" else 0
+                ),
+                "checkpoint_multiplier": (
+                    path.stat().st_size / baseline_buffer_bytes
+                    if args.defect_bridge_mode == "hybrid" else 1.0
+                ),
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
                 "seconds": time.monotonic() - started,
             }
