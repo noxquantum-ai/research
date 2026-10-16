@@ -12,9 +12,20 @@ from benchmarks.benchmark_day4_perplexity import compute_perplexity
 from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, fingerprint
 from nox.compiler import estimate_artifact_tensor_bytes
 from nox.sequential_compiler import compute_dense_argmax_metrics
+from scripts.audit_checkpoint_reconstruction import compare_weights
 
 
 class PipelineAccountingTests(unittest.TestCase):
+    def test_weight_audit_promotes_fp16_before_reductions(self):
+        reference = torch.ones(100_000, dtype=torch.float16)
+        identical = reference.clone()
+
+        scores = compare_weights(reference, identical)
+
+        self.assertEqual(scores["relative_frobenius_error"], 0.0)
+        self.assertEqual(scores["cosine_similarity"], 1.0)
+        self.assertTrue(torch.isfinite(torch.tensor(list(scores.values()))).all())
+
     def test_checkpoint_size_uses_serialized_bytes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

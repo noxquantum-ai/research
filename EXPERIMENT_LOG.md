@@ -340,3 +340,49 @@ The environment repair command was:
 - `scripts/autonomous_nightly_orchestrator.py`
 - `scripts/update_docs_with_results.py`
 - `tests/test_pipeline_accounting.py` (new)
+
+## Matched 1,024-token layer-15 prior control (2026-10-16)
+
+The A10 is running a paired no-healing comparison with the same high-fidelity compiler, model, uniform train/validation windows, and ranks. The only setting changed is a fixed dense-weight prior (`diagonal_prior_strength=0` versus `1`). Both runs compile layer 15 only. They are evaluated in the full dense model with all other layers dense, so this is a one-layer intervention, not a full-model result.
+
+The driver ran the following sequence for strengths 0 and 1, serially:
+
+```bash
+for strength in 0 1; do
+  out="checkpoints/diagnostic_36h/layer15_uniform_prior_control/prior${strength}"
+  .venv/bin/python -u scripts/compile_high_fidelity.py \
+    --output "$out" --start-layer 15 --end-layer 15 \
+    --n-calib 1024 --n-validation 1024 --seq-len 128 \
+    --calibration-sampling uniform --validation-sampling uniform \
+    --diagonal-prior-strength "$strength"
+  .venv/bin/python -u scripts/diagnose_reference_pipeline.py \
+    --checkpoint-dir "$out" --weights-dir models/diagnostic_36h_cache \
+    --output "$out/evaluation.json"
+done
+```
+
+The first arm completed in 767.0 seconds. It used 1,024 uniform calibration tokens from raw WikiText train and 1,024 uniform held-out tokens from raw WikiText validation; each consists of eight 128-token windows sampled from the separate split. The pinned WikiText revision is `b08601e04326c79dfdd32d625aee71d232d685c3`, with no fallback or literal `<unk>` in train/validation. The train parquet SHA-256 is `e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7`; validation is `204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c`; raw test is `5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91`. The tokenizer is the same pinned Llama-2-7B revision as the weights. The compiler used high-fidelity ranks `[1,64,128,64,1]`, bridge rank 128, 524,288 configured outliers and epsilon 0.005. The same model/tokenizer scored 10,000 raw WikiText test input tokens, 9,999 shifted labels, context 2,048 and stride 512. This run records the dense baseline alongside its compressed result:
+
+| Measure | Dense | One-layer high-fidelity, no healing, prior 0 |
+|---|---:|---:|
+| Raw WikiText PPL | 5.2922001 | 5.6134000 |
+| Next-token accuracy | 61.0461% | 60.2460% |
+| Dense top-1 agreement | — | 89.6990% |
+| Serialized layer checkpoint | — | 70,116,148 bytes |
+| Same-input layer-15 held-out residual error | — | 0.0517685 |
+
+The 0.0517685 layer-output error passes the project's 0.10 diagnostic threshold. The global quality goals still fail: PPL is 6.07% above dense, while dense top-1 agreement is below 95%. The layer error is not sufficient to predict final-model agreement. The checkpoint is 5.77× smaller than the seven dense FP16 projection weights for this one layer, not evidence of 10× model storage reduction. No healing is enabled (`causal_healing=False`); only layer 15 is replaced.
+
+The strength-1 paired arm is still running on the remote A10. No claim is made until its artifact, PPL, agreement and serialized size are available. Its source command and run identity are kept in `layer15_uniform_prior_control_driver.log`.
+
+## Audit metric correction
+
+An FP16 direct packed-checkpoint audit produced impossible cosine values above 1.0. The cause was FP16 reduction/rounding in the generic weight comparison. `scripts/audit_checkpoint_reconstruction.py::compare_weights` now promotes both tensors to FP32 for subtraction, norms and cosine, clamps cosine to its mathematical range, and uses an epsilon floor for a zero reference norm. A 100,000-element FP16 regression test catches reduction overflow. The first test attempt caught a residual FP32 rounding result of 1.00000012; cosine clamping fixed it, and the final remote suite passed **21 tests**:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v
+```
+
+The repeated CPU audit of the existing packed layer-15 artifact reports per-projection weight relative errors from 0.0003946 (gate) to 0.0006112 (down), and a same-input held-out block reconstruction difference of 0.00001023 (128 tokens). All cosine results are now in [-1, 1]. This establishes round-trip fidelity against the original compressed checkpoint only; it does not establish fidelity to dense weights or full-model quality. Raw outputs are preserved in `experiment_artifacts/diagnostic_36h/remote_records/packing_layer15/direct_audit_fp32.json` and its log.
+
+The full MMLU protocol has been prepared and its focused tests pass, but neither dense nor compressed MMLU scoring has run. The full test set has 14,042 questions across 57 subjects, 285 five-shot demonstrations, and 11,305,511 total tokenized prompt tokens at the current 4,096-token cap. These are readiness counts, not accuracy results.

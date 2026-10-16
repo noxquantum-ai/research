@@ -25,12 +25,20 @@ def compare_weights(reference, reconstructed):
             f"Shape mismatch: reference={tuple(reference.shape)} "
             f"reconstructed={tuple(reconstructed.shape)}"
         )
+    # Checkpoints often store FP16 tensors.  Norms and dot products must be
+    # accumulated in FP32; FP16 reductions can overflow and even report a
+    # cosine similarity greater than one.
+    reference = reference.float()
+    reconstructed = reconstructed.float()
     diff = reconstructed - reference
+    reference_norm = reference.norm()
+    denominator = reference_norm.clamp_min(torch.finfo(reference.dtype).eps)
+    cosine = torch.nn.functional.cosine_similarity(
+        reconstructed.flatten(), reference.flatten(), dim=0
+    ).clamp(-1.0, 1.0)
     return {
-        "relative_frobenius_error": diff.norm().item() / reference.norm().item(),
-        "cosine_similarity": torch.nn.functional.cosine_similarity(
-            reconstructed.flatten(), reference.flatten(), dim=0
-        ).item(),
+        "relative_frobenius_error": diff.norm().item() / denominator.item(),
+        "cosine_similarity": cosine.item(),
         "max_absolute_error": diff.abs().max().item(),
     }
 

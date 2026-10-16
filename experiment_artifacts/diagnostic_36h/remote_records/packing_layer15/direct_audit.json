@@ -1,0 +1,60 @@
+{
+  "layer": 15,
+  "device": "cpu",
+  "forward_options": {
+    "n_heads": 32,
+    "n_kv_heads": 32,
+    "seq_len": 128,
+    "rms_norm_eps": 1e-05
+  },
+  "heldout_tokens": 128,
+  "projections": {
+    "q_proj": {
+      "relative_frobenius_error": 0.00041045465210669697,
+      "cosine_similarity": 1.0018709897994995,
+      "max_absolute_error": 5.793571472167969e-05
+    },
+    "k_proj": {
+      "relative_frobenius_error": 0.0004131593867025604,
+      "cosine_similarity": 1.0021835565567017,
+      "max_absolute_error": 5.513429641723633e-05
+    },
+    "v_proj": {
+      "relative_frobenius_error": 0.0004648065991151789,
+      "cosine_similarity": 1.0019577741622925,
+      "max_absolute_error": 3.588572144508362e-05
+    },
+    "o_proj": {
+      "relative_frobenius_error": 0.00041220138529422817,
+      "cosine_similarity": 1.0020668506622314,
+      "max_absolute_error": 2.8386712074279785e-05
+    },
+    "gate_proj": {
+      "relative_frobenius_error": 0.00039460695465795255,
+      "cosine_similarity": 1.0097781419754028,
+      "max_absolute_error": 3.581494092941284e-05
+    },
+    "up_proj": {
+      "relative_frobenius_error": 0.0004368824801638621,
+      "cosine_similarity": 1.0094518661499023,
+      "max_absolute_error": 2.7810223400592804e-05
+    },
+    "down_proj": {
+      "relative_frobenius_error": 0.0006112047941250707,
+      "cosine_similarity": 1.0072917938232422,
+      "max_absolute_error": 6.745383143424988e-05
+    }
+  },
+  "heldout_block_difference": {
+    "relative_frobenius_error": 1.0233233008779133e-05,
+    "cosine_similarity": 1.000185251235962,
+    "max_absolute_error": 0.000614166259765625
+  },
+  "input_hashes": {
+    "original": "bf069090889aef79ddfb2558ae1f7b988e64ebbcfe53e38c92601d41af7247b1",
+    "packed": "ff0498aaf7934c63b6433a50ce22d438f6da2caa78550f8a0f6a94d35d9e6f3c",
+    "activations": "757d131d76efe9462cb38e52a6ce5af4aab671e86555d2f42d3c49ff984d9a21"
+  },
+  "full_model_quality_verified": false,
+  "passes_roundtrip_gate": true
+}

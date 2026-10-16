@@ -1,0 +1,8 @@
+q_proj {"relative_frobenius_error": 0.00041045465210669697, "cosine_similarity": 1.0, "max_absolute_error": 5.793571472167969e-05}
+k_proj {"relative_frobenius_error": 0.0004131593867025604, "cosine_similarity": 1.0, "max_absolute_error": 5.513429641723633e-05}
+v_proj {"relative_frobenius_error": 0.0004648065991151789, "cosine_similarity": 1.0, "max_absolute_error": 3.588572144508362e-05}
+o_proj {"relative_frobenius_error": 0.00041220138529422817, "cosine_similarity": 1.0, "max_absolute_error": 2.8386712074279785e-05}
+gate_proj {"relative_frobenius_error": 0.00039460695465795255, "cosine_similarity": 1.0, "max_absolute_error": 3.581494092941284e-05}
+up_proj {"relative_frobenius_error": 0.0004368824801638621, "cosine_similarity": 1.0, "max_absolute_error": 2.7810223400592804e-05}
+down_proj {"relative_frobenius_error": 0.0006112047941250707, "cosine_similarity": 1.0, "max_absolute_error": 6.745383143424988e-05}
+{"relative_frobenius_error": 1.0233233008779133e-05, "cosine_similarity": 1.0, "max_absolute_error": 0.000614166259765625}

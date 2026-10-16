@@ -1,0 +1,26 @@
+[10:04:48] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[10:04:48] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[10:04:58] WikiText-2 activations generated: train X_calib [4096, 1024] (1024 tokens), validation X_test [4096, 1024] (1024 tokens).
+layer=0 elapsed=0.41s
+layer=1 elapsed=0.25s
+layer=2 elapsed=0.25s
+layer=3 elapsed=0.25s
+layer=4 elapsed=0.25s
+layer=5 elapsed=0.25s
+layer=6 elapsed=0.25s
+layer=7 elapsed=0.25s
+layer=8 elapsed=0.25s
+layer=9 elapsed=0.25s
+layer=10 elapsed=0.27s
+layer=11 elapsed=0.25s
+layer=12 elapsed=0.25s
+layer=13 elapsed=0.25s
+layer=14 elapsed=0.25s
+  [Attention Sub-Block] Compressing Q, K, V projections...
+  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...
+  [SwiGLU MLP Sub-Block] Compressing Gate and Up projections...
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on clean SwiGLU context (bridge: r=128, outliers=524288)...
+{"layer": 15, "same_input_validation": {"relative_error": 0.05176845559411001, "angular_drift": 0.0013410449028015137, "norm_ratio": 0.9987767869675356, "cosine_similarity": 0.9986589550971985}, "cascade_validation": {"relative_error": 0.05176845559411001, "angular_drift": 0.0013410449028015137, "norm_ratio": 0.9987767869675356, "cosine_similarity": 0.9986589550971985}, "calibration": {"relative_error": 0.0299445601660375, "angular_drift": 0.00044852495193481445, "norm_ratio": 0.9994877270839431, "cosine_similarity": 0.9995514750480652}, "serialized_bytes": 70116148, "dense_fp16_tensor_bytes": 404766720, "seconds": 767.0164847509986}
+layer=15 elapsed=767.15s
+COMPLETE: checkpoints/diagnostic_36h/layer15_uniform_prior_control/prior0
