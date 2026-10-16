@@ -45,7 +45,7 @@
   "interpretation_gate": "Do not accept the method on the TT-SVD score alone. Compare it against the paired identity-order four-layer run on the same pinned model, WikiText test tokens, and compressed-prefix calibration stream. Require lower raw WikiText PPL and higher dense top-1 agreement; report checkpoint bytes and held-out block errors. MMLU remains a separate required full-model check.",
   "local_unit_tests": {
     "command": "python3 -m unittest tests.test_tensor_order tests.test_calibration_activation_mode -v",
-    "result": "9 tests passed; 0 failures",
-    "coverage": "24 exact coordinate permutations on a rectangular projection, artifact reconstruction inversion, TT-SVD full-rank order invariance, one small compiler order-control comparison, invalid-order rejection, and existing compressed-prefix selection controls"
+    "result": "10 tests passed; 0 failures",
+    "coverage": "24 exact coordinate permutations on a rectangular projection, artifact reconstruction inversion after save/load, TT-SVD full-rank order invariance, a synthetic cross-site interaction case where the score selects its low-rank site order, one small compiler order-control comparison, invalid-order rejection, and existing compressed-prefix selection controls"
   }
 }

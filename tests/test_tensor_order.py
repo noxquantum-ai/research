@@ -85,6 +85,26 @@ class TensorSiteOrderTests(unittest.TestCase):
             error = tt_svd_relative_error(W, modes, modes, ranks, order)
             self.assertLess(error, 1e-6)
 
+    def test_site_order_screen_detects_pairwise_cross_site_structure(self):
+        torch.manual_seed(23)
+        pair_02 = torch.randn(4, 4)
+        pair_13 = torch.randn(4, 4)
+        pair_tensor = torch.empty(4, 4, 4, 4)
+        for p0 in range(4):
+            for p1 in range(4):
+                for p2 in range(4):
+                    for p3 in range(4):
+                        pair_tensor[p0, p1, p2, p3] = pair_02[p0, p2] * pair_13[p1, p3]
+        tensor = pair_tensor.reshape(2, 2, 2, 2, 2, 2, 2, 2)
+        matrix = tensor.permute(0, 2, 4, 6, 1, 3, 5, 7).reshape(16, 16)
+        modes = (2, 2, 2, 2)
+        ranks = (1, 4, 1, 4, 1)
+
+        aligned = tt_svd_relative_error(matrix, modes, modes, ranks, (0, 2, 1, 3))
+        fixed_order = tt_svd_relative_error(matrix, modes, modes, ranks, (0, 1, 2, 3))
+        self.assertLess(aligned, 1e-6)
+        self.assertGreater(fixed_order, 0.05)
+
     def test_compiler_returns_original_coordinate_matrix_and_serializable_artifact(self):
         torch.manual_seed(9)
         W = torch.randn(16, 16)
