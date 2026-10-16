@@ -164,6 +164,39 @@ Next command: `bash scripts/run_weight_prior_layer_control.sh` on the GPU host. 
 
 Research context: [Activation-Aware Weight Tensorization](https://arxiv.org/html/2610.10085v1) distinguishes calibration-weighted objectives from held-out fidelity and reports that richer covariance objectives do not always generalize better. Its experiments concern other models and selected operator/suffix replacements; they do not establish our target. The regularizer here is an ordinary fixed weighted Frobenius penalty implemented by basis augmentation; no novelty or guaranteed accuracy claim is made.
 
+The matched single-layer driver started on the A10 at **2026-10-16 10:04:45 UTC**, commit **9af8ac2**, after verifying improvement on all eight windows. Its durable log is `checkpoints/diagnostic_36h/layer15_uniform_prior_control_driver.log`. Strength-0 compilation is in progress; strength-1 compilation and matched PPL/agreement evaluation are queued by the fail-fast driver.
+
+### Storage control and MMLU data readiness
+
+Measured a separate packed encoding against the existing corrected 256-token layer-15 checkpoint. Groupwise factors use packed nibbles and FP32 scales; sparse values stay FP16, while indices become CSR row pointers plus int16 columns. This reduces disk overhead; factor requantization is not lossless and is explicitly gated at 0.001 relative error per component. The running fitting controls are unchanged.
+
+```bash
+.venv/bin/python -m unittest discover -s tests -p test_packing.py
+.venv/bin/python -u scripts/pack_checkpoint_control.py \
+  --input checkpoints/diagnostic_36h/corrected_raw_layer15/compressed_layer_15.pt \
+  --output-dir checkpoints/diagnostic_36h/packing_layer15
+```
+
+All **3 packing tests passed**, and the full remote suite subsequently passed **17 tests** in 2.484 seconds. Actual disk bytes decreased from **70,110,452 to 24,346,251** (2.87972× smaller than the existing artifact). Factor relative errors range roughly 0.000264–0.000369; sparse coordinates, sparse values, and channel scales round-trip exactly. This is **component-round-trip validation only**. The packed format is not yet integrated into inference, and no full-model storage ratio or inference memory saving is claimed. A decoded checkpoint was exported for an independent matched-quality check:
+
+```bash
+.venv/bin/python -u scripts/diagnose_reference_pipeline.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/packing_layer15/roundtrip \
+  --weights-dir models/diagnostic_36h_cache \
+  --output checkpoints/diagnostic_36h/packing_layer15/evaluation.json
+```
+
+This GPU quality check is pending completion of the running single-layer comparison.
+
+Separately validated and cached full MMLU data on the remote host, using `cais/mmlu` revision **c30699e8356da336a370243923dbaf21066bb9fe**, with no fallback:
+
+```bash
+.venv/bin/python -u scripts/audit_mmlu_source.py \
+  --output checkpoints/diagnostic_36h/mmlu_source_preflight.json
+```
+
+The Parquet files contain **285 dev examples (5 per subject) and 14,042 test examples across 57 subjects**. Their file hashes and subject counts are in the output JSON. The pinned LLaMA tokenizer appends A/B/C/D as token IDs 319/350/315/360 after the answer prefix in the probe. This prepares data/protocol checks, not a model accuracy result. The [dataset specification](https://huggingface.co/datasets/cais/mmlu/raw/main/README.md) and [reference evaluator](https://raw.githubusercontent.com/hendrycks/test/master/evaluate.py) support using subject-specific demonstrations and answer-letter scoring; the earlier subset/fallback evaluator remains unsuitable for the final acceptance claim.
+
 - Local repository: `/home/fluxx/Workspace/research`.
 - Initial branch/HEAD: `main` / `f0415af` (`chore: organize compressed model tiers into nested tiers directory`). This is not the suggested `debug/36h-pipeline` / `42a50aa`.
 - The worktree was clean at the start. Initial investigation edits were local and uncommitted. Later user messages explicitly authorize commits and pushes to `main`; publication will be recorded with commit IDs. No reset or clean was performed.
