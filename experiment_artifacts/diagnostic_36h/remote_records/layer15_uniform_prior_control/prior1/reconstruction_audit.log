@@ -1,0 +1,16 @@
+audit_rms_norm_eps=1e-05 (legacy checkpoints default to their original 1e-6)
+checkpoint_dir_bytes=70116148 (66.87 MiB)
+layer_15_checkpoint_bytes=70116148
+compiler_payload_estimate_kb=68421.314453125
+manifest_estimated_model_mb=unknown
+manifest_serialized_checkpoint_bytes=70116148
+layer=15 reconstruction comparison
+q_proj: shape=(4096, 4096) rel_fro=0.832723 cosine=0.557689 max_abs=0.17588
+k_proj: shape=(4096, 4096) rel_fro=0.827119 cosine=0.567454 max_abs=0.168357
+v_proj: shape=(4096, 4096) rel_fro=0.849412 cosine=0.530017 max_abs=0.0800962
+o_proj: shape=(4096, 4096) rel_fro=0.874350 cosine=0.486019 max_abs=0.0816132
+gate_proj: shape=(11008, 4096) rel_fro=0.917124 cosine=0.401537 max_abs=0.0862551
+up_proj: shape=(11008, 4096) rel_fro=0.926071 cosine=0.379892 max_abs=0.0667699
+down_proj: shape=(4096, 11008) rel_fro=0.970250 cosine=0.260095 max_abs=0.100036
+same_input_layer_output: tokens=1024 rel_fro=0.051034 cosine=1.000000 max_abs=3.85854
+audit_status=COMPLETE

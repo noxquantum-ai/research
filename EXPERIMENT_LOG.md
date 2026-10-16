@@ -319,7 +319,7 @@ The environment repair command was:
 
 ## Conclusions and next run
 
-- Legacy measurements show highly approximate weight reconstructions and a four-layer PPL degradation of about 47–49% on processed text. The later dense-parity check found a wrong RMSNorm epsilon, so the custom calibration/reference stream was not faithful to HF inference. The first failing stage now established is dense layer-0 normalization. Corrected compression experiments are needed to separate its contribution from fitting, quantization and cascade loss.
+- Legacy measurements show highly approximate weight reconstructions and a four-layer PPL degradation of about 47–49% on processed text. The wrong processed-vs-raw WikiText source and RMSNorm epsilon are both corrected. Dense custom-vs-HF layer-0 parity is now 0.000424 relative error at epsilon 1e-5 (the old 1e-6 path was 0.231429). On corrected raw data, one zero-healing layer-15 replacement still gives PPL 5.6132 vs 5.2922 dense and 89.72% top-1 agreement. The first remaining failing stage is therefore the compressed operator fit/budget, before any full-model cascade can be assessed. Current controls rule out packed serialization as the dominant source; they do not yet distinguish approximation budget from the fitting objective as the main cause.
 - Healing provides no meaningful recovery. At both budgets no-healing is marginally better on PPL and endpoint output error.
 - Raising from production to high fidelity increases serialized bytes substantially but leaves matrix/output/PPL quality essentially unchanged. Do not scale either configuration to all 32 layers yet.
 - Full-model corrected PPL and the intended full-model “No Healing” result remain unverified. The historical full-model PPL values are archived but use the previous run/config and are not a substitute.
@@ -373,7 +373,25 @@ The first arm completed in 767.0 seconds. It used 1,024 uniform calibration toke
 
 The 0.0517685 layer-output error passes the project's 0.10 diagnostic threshold. The global quality goals still fail: PPL is 6.07% above dense, while dense top-1 agreement is below 95%. The layer error is not sufficient to predict final-model agreement. The checkpoint is 5.77× smaller than the seven dense FP16 projection weights for this one layer, not evidence of 10× model storage reduction. No healing is enabled (`causal_healing=False`); only layer 15 is replaced.
 
-The strength-1 paired arm is still running on the remote A10. No claim is made until its artifact, PPL, agreement and serialized size are available. Its source command and run identity are kept in `layer15_uniform_prior_control_driver.log`.
+The strength-1 arm completed in 3,414.0 seconds (56m54s), 4.45× the strength-0 compile time. It produced the same serialized checkpoint size. Its raw PPL changed by only -0.000177 and dense top-1 agreement by +0.020 percentage points; dense next-token accuracy fell slightly. The 4,096-column prior improves matrix reconstruction and local held-out block error modestly, but has no meaningful language-model quality benefit at this setting:
+
+| Measure | Prior 0 | Prior 1 |
+|---|---:|---:|
+| Raw WikiText PPL (dense 5.2922001) | 5.6134000 | 5.6132231 |
+| Raw next-token accuracy (dense 61.0461%) | 60.2460% | 60.2160% |
+| Dense top-1 agreement | 89.6990% | 89.7190% |
+| Processed-text PPL | 22.0973 | 22.0665 |
+| Serialized layer checkpoint | 70,116,148 bytes | 70,116,148 bytes |
+| Compile runtime | 767.0 seconds | 3,414.0 seconds |
+| Direct saved-checkpoint held-out block error | 0.051808 | 0.051034 |
+
+Both arms score the same 10,000 raw test input tokens and 9,999 shifted labels with the other 31 layers dense. Both fail the 95% dense-agreement goal and exceed the dense PPL by about 6.07%. The prior-1 result does not justify its additional compute.
+
+The saved-checkpoint audit compared all seven reconstructed matrices directly against their dense FP16 references and replayed the 1,024 held-out dense layer inputs. Relative Frobenius errors for prior-0 → prior-1 were: q 0.9151→0.8327, k 0.9105→0.8271, v 0.9361→0.8494, o 0.9721→0.8744, gate 0.9402→0.9171, up 0.9486→0.9261, down 1.0521→0.9703. The local block errors agree with the compiler manifest to rounding (prior-0 0.05177; prior-1 0.05100). Thus the serialized factors reconstruct the saved approximation, but that approximation remains far from dense weights. The dense-weight prior narrows the weight gap without restoring model agreement.
+
+### Packed checkpoint quality check
+
+The decoded packed layer-15 checkpoint was evaluated in the same full dense model and WikiText protocol. Dense PPL was 5.2922001; packed-round-trip PPL was 5.6438975, with 89.5890% dense top-1 agreement. This matches the original 256-token checkpoint's raw result (PPL 5.6438818, agreement 89.5790%) to rounding. The FP32 direct reconstruction audit found 0.0003946–0.0006112 relative weight error per projection and 0.00001023 relative held-out block-output difference across 128 tokens. The original artifact used 70,110,452 bytes; the packed file used 24,346,251 bytes (2.87972× smaller). This rules out pack/unpack serialization as the source of the large quality loss. It is not yet integrated into model inference or a full-model storage measurement.
 
 ## Audit metric correction
 
@@ -385,6 +403,6 @@ An FP16 direct packed-checkpoint audit produced impossible cosine values above 1
 
 The repeated CPU audit of the existing packed layer-15 artifact reports per-projection weight relative errors from 0.0003946 (gate) to 0.0006112 (down), and a same-input held-out block reconstruction difference of 0.00001023 (128 tokens). All cosine results are now in [-1, 1]. This establishes round-trip fidelity against the original compressed checkpoint only; it does not establish fidelity to dense weights or full-model quality. Raw outputs are preserved in `experiment_artifacts/diagnostic_36h/remote_records/packing_layer15/direct_audit_fp32.json` and its log.
 
-The full MMLU protocol has been prepared and its focused tests pass, but neither dense nor compressed MMLU scoring has run. The full test set has 14,042 questions across 57 subjects, 285 five-shot demonstrations, and 11,305,511 total tokenized prompt tokens at the current 4,096-token cap. These are readiness counts, not accuracy results.
+The full MMLU protocol has been prepared and its focused tests pass. The full test set has 14,042 questions across 57 subjects, 285 five-shot demonstrations, and 11,305,511 total tokenized prompt tokens at the current 4,096-token cap. The dense full-test baseline is now running on the A10; no compressed MMLU result exists.
 
 After the active paired layer control and packed-checkpoint quality run release the A10, `scripts/run_dense_mmlu_after_controls.sh` queues a dense full-test reference at batch size 1. This measures the requested MMLU denominator on the pinned model; there is no full 32-layer zero-healing checkpoint yet to compare against it.

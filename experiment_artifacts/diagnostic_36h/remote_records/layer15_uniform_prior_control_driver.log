@@ -1,0 +1,8 @@
+Projection improvement reproduced on all eight windows; proceeding to single-layer control.
+Fri Oct 16 10:04:45 UTC 2026
+9af8ac219ca80019e0ee8774fd96da210d43b118
+ca83772fa29a250f9ef387e2ad5a3502bcb1a02cdaa2ea18a3166989964fa211  scripts/compile_high_fidelity.py
+b3b7d673eb1c04f3d46f73154e067c76c54b70a1fb0cee6b7b888755b0588a69  scripts/diagnose_reference_pipeline.py
+ec6f13acbfdc3dbf5c5c7fa80b4dbb722237516128b248f93044c0a047e61644  nox/compiler.py
+7d886024116bce8ea42e62003bdc83f496b08bfaac25c333f410b6fb139f46cf  nox/block_compiler.py
+COMPLETE: matched single-layer controls saved under checkpoints/diagnostic_36h/layer15_uniform_prior_control
