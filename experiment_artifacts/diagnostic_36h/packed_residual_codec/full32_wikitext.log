@@ -1,0 +1,71 @@
+[20:11:42] NVIDIA GPU Acceleration enabled: NVIDIA A10
+[20:11:42] Loading tokenizer from 'NousResearch/Llama-2-7b-hf'...
+[20:11:43] Loading base model from 'NousResearch/Llama-2-7b-hf' (torch.float16)...
+2026-10-16 20:11:44.838772: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 20:11:44.852152: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792181504.868331   23536 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792181504.873624   23536 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792181504.886303   23536 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792181504.886320   23536 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792181504.886322   23536 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792181504.886324   23536 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 20:11:44.889843: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.49s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.09it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.00s/it]
+[20:11:49] Loaded WikiText-2 raw test split: 732610 bytes, sha256=5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91 from https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet
+[20:11:49] Evaluating Dense Uncompressed Baseline Perplexity...
+[20:11:50] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[20:12:00] Dense Baseline Perplexity: 5.2922 (9999 labels), next-token accuracy=0.610461
+[20:12:00] Found 32 compressed layer checkpoints in '/home/shadeform/nec-crosslayer-research/checkpoints/diagnostic_36h/direct_packed_3bit_full_041bdfd'. Injecting weights...
+[20:12:00]   Layer 00: Reconstructed and injected (80357.5 KB artifact)
+[20:12:00]   Layer 01: Reconstructed and injected (80357.5 KB artifact)
+[20:12:00]   Layer 10: Reconstructed and injected (80357.5 KB artifact)
+[20:12:00]   Layer 11: Reconstructed and injected (80357.5 KB artifact)
+[20:12:01]   Layer 12: Reconstructed and injected (80357.5 KB artifact)
+[20:12:01]   Layer 13: Reconstructed and injected (80357.5 KB artifact)
+[20:12:01]   Layer 14: Reconstructed and injected (80357.5 KB artifact)
+[20:12:01]   Layer 15: Reconstructed and injected (80357.5 KB artifact)
+[20:12:02]   Layer 16: Reconstructed and injected (80357.5 KB artifact)
+[20:12:02]   Layer 17: Reconstructed and injected (80357.5 KB artifact)
+[20:12:02]   Layer 18: Reconstructed and injected (80357.5 KB artifact)
+[20:12:02]   Layer 19: Reconstructed and injected (80357.5 KB artifact)
+[20:12:02]   Layer 02: Reconstructed and injected (80357.5 KB artifact)
+[20:12:03]   Layer 20: Reconstructed and injected (80357.5 KB artifact)
+[20:12:03]   Layer 21: Reconstructed and injected (80357.5 KB artifact)
+[20:12:03]   Layer 22: Reconstructed and injected (80357.5 KB artifact)
+[20:12:03]   Layer 23: Reconstructed and injected (80357.5 KB artifact)
+[20:12:03]   Layer 24: Reconstructed and injected (80357.5 KB artifact)
+[20:12:04]   Layer 25: Reconstructed and injected (80357.5 KB artifact)
+[20:12:04]   Layer 26: Reconstructed and injected (80357.5 KB artifact)
+[20:12:04]   Layer 27: Reconstructed and injected (80357.5 KB artifact)
+[20:12:04]   Layer 28: Reconstructed and injected (80357.5 KB artifact)
+[20:12:05]   Layer 29: Reconstructed and injected (80357.5 KB artifact)
+[20:12:05]   Layer 03: Reconstructed and injected (80357.5 KB artifact)
+[20:12:05]   Layer 30: Reconstructed and injected (80357.5 KB artifact)
+[20:12:05]   Layer 31: Reconstructed and injected (80357.5 KB artifact)
+[20:12:05]   Layer 04: Reconstructed and injected (80357.5 KB artifact)
+[20:12:06]   Layer 05: Reconstructed and injected (80357.5 KB artifact)
+[20:12:06]   Layer 06: Reconstructed and injected (80357.5 KB artifact)
+[20:12:06]   Layer 07: Reconstructed and injected (80357.5 KB artifact)
+[20:12:06]   Layer 08: Reconstructed and injected (80357.5 KB artifact)
+[20:12:06]   Layer 09: Reconstructed and injected (80357.5 KB artifact)
+[20:12:06] Evaluating Nox-Compressed Model Perplexity (32 compressed layers)...
+[20:12:07] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[20:12:17] Nox Compressed Model PPL: 6.8153; mean NLL=1.919167; next-token accuracy=0.570657; dense top-1 agreement=0.7899789810180664
+
+==============================================================================================================
+ DAY 4-5 BENCHMARK SCORECARD: WIKITEXT-2 PERPLEXITY & LANGUAGE QUALITY
+==============================================================================================================
+Model ID:              NousResearch/Llama-2-7b-hf
+Model revision:         8efe6c9b93655b934e27bd9981e3ec13e55aee9d
+Checkpoint Directory:  /home/shadeform/nec-crosslayer-research/checkpoints/diagnostic_36h/direct_packed_3bit_full_041bdfd
+Compression Tier:      direct_packed_3bit
+Compressed Layers:     [0, 1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 2, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 3, 30, 31, 4, 5, 6, 7, 8, 9]
+Serialized layer checkpoints: 2511.94 MiB (2633959038 bytes; 32 files)
+WikiText-2 split:       test sha256=5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91
+Scored next-token labels: 9999
+Dense FP16 Baseline PPL: 5.29
+Nox Compressed PPL:      6.82
+PPL Degradation (Delta): +1.52 (+28.8%)
+==============================================================================================================

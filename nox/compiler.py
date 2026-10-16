@@ -210,6 +210,14 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
     Reconstruct a dense matrix from a legacy NEC, direct low-bit, or hybrid
     NEC-plus-residual artifact.
     """
+    if artifact.get("encoding") == "nox_int4_csr_v1":
+        # The packed representation is the on-disk form of the quantum-inspired
+        # MPO/sparse/bridge operator.  Decode it at the reconstruction boundary
+        # so packed NEC bases can participate in composite codecs without an
+        # exported FP16 round-trip checkpoint.
+        from nox.packing import unpack_artifact
+        artifact = unpack_artifact(artifact)
+
     codec_type = artifact.get("codec_type")
     if codec_type == CODEC_TYPE:
         return decode_groupwise(artifact, device=device, dtype=dtype)

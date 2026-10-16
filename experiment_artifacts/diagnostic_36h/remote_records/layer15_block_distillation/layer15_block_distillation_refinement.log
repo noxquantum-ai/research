@@ -1,0 +1,10 @@
+initial heldout_layer_error=0.05176836; train_windows=8; validation_windows=8; steps_per_epoch=8
+epoch=1 heldout_layer_error=0.05172708
+epoch=2 heldout_layer_error=0.05168188
+epoch=3 heldout_layer_error=0.05155544
+epoch=4 heldout_layer_error=0.05143279
+epoch=5 heldout_layer_error=0.05133435
+epoch=6 heldout_layer_error=0.05122703
+epoch=7 heldout_layer_error=0.05116978
+epoch=8 heldout_layer_error=0.05111382
+{"status": "COMPLETE", "model_id": "NousResearch/Llama-2-7b-hf", "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d", "dataset": "wikitext-2-raw-v1", "calibration_split": "train", "calibration_tokens": 1024, "heldout_split": "validation", "heldout_tokens": 1024, "zero_healing": true, "initial_heldout_layer_error": 0.05176835507154465, "best_heldout_layer_error": 0.05111382156610489, "saved_heldout_layer_error": 0.0511137917637825, "best_epoch": 8, "serialized_checkpoint_bytes": 70116852, "run_fingerprint": "a4ae289663e4c46b8092f4f43478b2dacf5717e93b7c7693494b8d1a0a8a954d", "seconds": 8.36114127899782}

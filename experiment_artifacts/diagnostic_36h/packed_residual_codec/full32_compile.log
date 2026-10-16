@@ -1,0 +1,37 @@
+[20:10:48] CUDA device: NVIDIA A10
+[20:10:48] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[20:10:48] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[20:10:58] WikiText-2 activations generated: train X_calib [4096, 1024] (1024 tokens), validation X_test [4096, 1024] (1024 tokens).
+[20:10:59] Layer 00/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.75
+[20:11:00] Layer 01/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.47
+[20:11:00] Layer 02/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.46
+[20:11:01] Layer 03/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.46
+[20:11:02] Layer 04/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.45
+[20:11:02] Layer 05/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.45
+[20:11:03] Layer 06/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.45
+[20:11:03] Layer 07/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.45
+[20:11:04] Layer 08/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.45
+[20:11:05] Layer 09/31: payload=82286080 bytes, file=82311156 bytes, seconds=0.45
+[20:11:05] Layer 10/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:06] Layer 11/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:07] Layer 12/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:07] Layer 13/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:08] Layer 14/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:08] Layer 15/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:09] Layer 16/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:10] Layer 17/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:10] Layer 18/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:11] Layer 19/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:11] Layer 20/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:12] Layer 21/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:13] Layer 22/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:13] Layer 23/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:14] Layer 24/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:15] Layer 25/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:15] Layer 26/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:16] Layer 27/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:16] Layer 28/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:17] Layer 29/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:18] Layer 30/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.46
+[20:11:18] Layer 31/31: payload=82286080 bytes, file=82311249 bytes, seconds=0.45
+[20:11:19] COMPLETE: /home/shadeform/nec-crosslayer-research/checkpoints/diagnostic_36h/direct_packed_3bit_full_041bdfd; layer_files=2633959038; full_bundle=3161886843; source_shards=13476876272; serialized_ratio=4.2623x; seconds=30.94

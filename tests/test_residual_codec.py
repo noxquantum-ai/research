@@ -7,6 +7,7 @@ import torch
 
 from benchmarks.benchmark_day4_perplexity import inject_nox_checkpoints
 from nox.compiler import reconstruct_from_artifact
+from nox.packing import pack_artifact
 from nox.pees import layer_projection_trajectories
 from nox.residual_codec import (
     CODEC_TYPE,
@@ -192,6 +193,28 @@ class PackedResidualCodecTests(unittest.TestCase):
         }
         actual = reconstruct_from_artifact(hybrid)
         expected = decode_groupwise(base) + decode_groupwise(residual)
+        self.assertTrue(torch.equal(actual, expected))
+
+    def test_packed_nec_base_dispatches_inside_hybrid(self):
+        base = {
+            "cores": [torch.arange(-8, 8, dtype=torch.float16).reshape(1, 4, 4, 1)],
+            "d_awt": torch.ones(4, dtype=torch.float16),
+            "A_bridge": None,
+            "B_bridge": None,
+            "orig_shape": (4, 4),
+            "quantization_bits": 4,
+            "sparse_indices": None,
+            "sparse_values": None,
+        }
+        packed_base = pack_artifact(base)
+        residual = encode_groupwise(torch.randn(4, 4), bits=2, group_size=4)
+        hybrid = {
+            "codec_type": "nec_hybrid_residual_v1",
+            "base_artifact": packed_base,
+            "residual_codec": residual,
+        }
+        actual = reconstruct_from_artifact(hybrid)
+        expected = reconstruct_from_artifact(packed_base) + decode_groupwise(residual)
         self.assertTrue(torch.equal(actual, expected))
 
     def test_codec_checkpoint_injects_into_tiny_model(self):

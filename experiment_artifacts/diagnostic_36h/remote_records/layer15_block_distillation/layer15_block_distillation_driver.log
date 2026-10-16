@@ -1,0 +1,7 @@
+Fri Oct 16 11:32:28 UTC 2026
+51c748d
+1c7734b146db642729d66a45bad0a9992ea87fed54a052bddd64bb506a622667  scripts/refine_checkpoint_block.py
+04c7d6c416258d01e33547d0b640c94e7dcc4c2a2e7b93ebd8ec0ad29488320a  nox/block_distillation.py
+b3b7d673eb1c04f3d46f73154e067c76c54b70a1fb0cee6b7b888755b0588a69  scripts/diagnose_reference_pipeline.py
+b045037994ae8601bc7f8f6fcfb33da71cbda13dc7d5f839fe4ca60ff27e8ec8  scripts/audit_checkpoint_reconstruction.py
+COMPLETE: layer-15 high-fidelity zero-healing distillation control saved to checkpoints/diagnostic_36h/layer15_block_distillation

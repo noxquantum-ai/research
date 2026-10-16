@@ -30,6 +30,7 @@ from benchmarks.benchmark_day4_perplexity import (
 from nox.artifacts import checkpoint_file_sizes
 from nox.compiler import reconstruct_from_artifact
 from nox.pees import layer_projection_trajectories
+from nox.packing import pack_artifact
 from nox.residual_codec import codec_payload_bytes, decode_groupwise, encode_groupwise
 from nox.sequential_compiler import forward_transformer_block
 from nox.tensor_order import IDENTITY_SITE_ORDER, mode_index_permutation, permute_projection
@@ -201,7 +202,13 @@ def write_candidate(
                 )
                 candidate_artifact = {**quantized, "codec_kind": "direct_quant"}
                 reconstructed = decode_groupwise(quantized, device=device, dtype=torch.float32)
-            elif method == "nec_hybrid":
+            elif method in {"nec_hybrid", "nec_hybrid_packed"}:
+                stored_base = base_artifact
+                if method == "nec_hybrid_packed":
+                    stored_base = pack_artifact(base_artifact)
+                    base_weight = reconstruct_from_artifact(
+                        stored_base, device=device, dtype=torch.float32,
+                    )
                 residual = dense_weight - base_weight
                 quantized = encode_groupwise(
                     residual,
@@ -213,10 +220,11 @@ def write_candidate(
                 candidate_artifact = {
                     "codec_type": "nec_hybrid_residual_v1",
                     "codec_kind": "nec_hybrid_residual",
-                    "base_artifact": base_artifact,
+                    "base_artifact": stored_base,
                     "residual_codec": quantized,
                     "orig_shape": tuple(dense_weight.shape),
                     "residual_payload_bytes": codec_payload_bytes(quantized),
+                    "base_storage_encoding": stored_base.get("encoding", "fp16_container"),
                 }
                 reconstructed = base_weight + decode_groupwise(
                     quantized, device=device, dtype=torch.float32,
@@ -365,8 +373,13 @@ def parse_args():
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument("--layers", type=int, nargs="+", default=None,
                         help="Contiguous zero-based compressed layer prefix; default uses the baseline manifest")
-    parser.add_argument("--candidate-set", choices=("comparison", "direct3_a05"), default="comparison",
-                        help="Run all six matched codecs or only direct 3-bit alpha=0.5 for a stack extension")
+    parser.add_argument(
+        "--candidate-set",
+        choices=("comparison", "direct3_a05", "packed_hybrid2_a05"),
+        default="comparison",
+        help=("Run all six matched codecs, direct 3-bit alpha=0.5, or the "
+              "packed quantum-inspired NEC base plus 2-bit residual"),
+    )
     parser.add_argument("--max-eval-tokens", type=int, default=10000)
     parser.add_argument("--seq-len", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
@@ -444,11 +457,14 @@ def main():
         ("nec_hybrid", 2, 0.0, "nec_residual_2b_a0"),
         ("nec_hybrid", 2, 0.5, "nec_residual_2b_a05"),
     ]
-    candidate_specs = (
-        [all_candidate_specs[1]]
-        if args.candidate_set == "direct3_a05"
-        else all_candidate_specs
-    )
+    if args.candidate_set == "direct3_a05":
+        candidate_specs = [all_candidate_specs[1]]
+    elif args.candidate_set == "packed_hybrid2_a05":
+        candidate_specs = [
+            ("nec_hybrid_packed", 2, 0.5, "packed_nec_residual_2b_a05"),
+        ]
+    else:
+        candidate_specs = all_candidate_specs
     baseline_projection_metrics = {}
     baseline_candidate_weights = {}
     for layer_index in layer_indices:
