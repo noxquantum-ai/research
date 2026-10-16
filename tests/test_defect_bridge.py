@@ -14,11 +14,14 @@ from nox.defect_bridge import (
 
 
 class DefectBridgeTests(unittest.TestCase):
+    def setUp(self):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     def test_ridge_bridge_recovers_low_rank_defect(self):
-        generator = torch.Generator().manual_seed(41)
-        context = torch.randn(24, 20, generator=generator)
-        left = torch.randn(24, 3, generator=generator)
-        right = torch.randn(24, 3, generator=generator)
+        generator = torch.Generator(device=self.device).manual_seed(41)
+        context = torch.randn(24, 20, generator=generator, device=self.device)
+        left = torch.randn(24, 3, generator=generator, device=self.device)
+        right = torch.randn(24, 3, generator=generator, device=self.device)
         defect = left @ (right.T @ context)
 
         bridge_left, bridge_right, metadata = fit_ridge_low_rank_bridge(
@@ -31,9 +34,9 @@ class DefectBridgeTests(unittest.TestCase):
         self.assertEqual(metadata["effective_rank"], 3)
 
     def test_hybrid_bridge_round_trip_preserves_reconstruction(self):
-        generator = torch.Generator().manual_seed(42)
-        context = torch.randn(32, 48, generator=generator)
-        defect = torch.tanh(torch.randn(32, 48, generator=generator))
+        generator = torch.Generator(device=self.device).manual_seed(42)
+        context = torch.randn(32, 48, generator=generator, device=self.device)
+        defect = torch.tanh(torch.randn(32, 48, generator=generator, device=self.device))
         bridge = fit_hybrid_defect_bridge(
             context,
             defect,
@@ -60,9 +63,9 @@ class DefectBridgeTests(unittest.TestCase):
         torch.testing.assert_close(sequence_output.reshape(-1, 32), before.T, rtol=0, atol=0)
 
     def test_memory_budget_matches_two_factor_payload(self):
-        generator = torch.Generator().manual_seed(43)
-        context = torch.randn(16, 10, generator=generator)
-        defect = torch.randn(16, 10, generator=generator)
+        generator = torch.Generator(device=self.device).manual_seed(43)
+        context = torch.randn(16, 10, generator=generator, device=self.device)
+        defect = torch.randn(16, 10, generator=generator, device=self.device)
         bridge = fit_hybrid_defect_bridge(
             context,
             defect,
