@@ -1,0 +1,2867 @@
+{
+  "experiment": "packed_groupwise_residual_codec_two_layer_pilot",
+  "custom_block_diagnostics_dtype": "float32",
+  "language_model_evaluation_dtype": "float16",
+  "source_commit": "0344493a5c7311d7c2f4f469509754b354a53bb2",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "baseline_checkpoint_dir": "/home/shadeform/diag36h-research/checkpoints/diagnostic_36h/high_fidelity_no_healing_compressed_prefix_2layer",
+  "calibration_split": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "train",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+    "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+    "source_bytes": 6357543,
+    "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+    "text_bytes": 10988279,
+    "text_join": "double_newline",
+    "rows": 36718,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "heldout_split": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "test_protocol": {
+    "dataset": "Salesforce/wikitext/wikitext-2-raw-v1/test",
+    "max_input_tokens": 10000,
+    "sequence_length": 2048,
+    "stride": 512
+  },
+  "group_size": 64,
+  "gradient_healing": false,
+  "offline_representation_diagnostic": true,
+  "qualifying_zero_healing_artifact": false,
+  "spectral_cut_diagnostics": {
+    "0": {
+      "q_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8014693260192871
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "k_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8277767300605774
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "v_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8606913089752197
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "o_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8018645644187927
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "gate_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 344,
+          "right_dimension": 131072,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.7969279885292053
+        },
+        {
+          "cut": 2,
+          "left_dimension": 11008,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.9236024022102356
+        },
+        {
+          "cut": 3,
+          "left_dimension": 704512,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "up_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 344,
+          "right_dimension": 131072,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.7995104789733887
+        },
+        {
+          "cut": 2,
+          "left_dimension": 11008,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.9248204231262207
+        },
+        {
+          "cut": 3,
+          "left_dimension": 704512,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "down_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 344,
+          "right_dimension": 131072,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.7973480820655823
+        },
+        {
+          "cut": 2,
+          "left_dimension": 11008,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.9246360659599304
+        },
+        {
+          "cut": 3,
+          "left_dimension": 704512,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ]
+    },
+    "1": {
+      "q_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8393374681472778
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "k_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8486904501914978
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "v_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8705962896347046
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "o_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 64,
+          "right_dimension": 262144,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        },
+        {
+          "cut": 2,
+          "left_dimension": 4096,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.8383134603500366
+        },
+        {
+          "cut": 3,
+          "left_dimension": 262144,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "gate_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 344,
+          "right_dimension": 131072,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.7976505756378174
+        },
+        {
+          "cut": 2,
+          "left_dimension": 11008,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.9241703748703003
+        },
+        {
+          "cut": 3,
+          "left_dimension": 704512,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "up_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 344,
+          "right_dimension": 131072,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.8000195622444153
+        },
+        {
+          "cut": 2,
+          "left_dimension": 11008,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.9249123334884644
+        },
+        {
+          "cut": 3,
+          "left_dimension": 704512,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ],
+      "down_proj": [
+        {
+          "cut": 1,
+          "left_dimension": 344,
+          "right_dimension": 131072,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.7991194128990173
+        },
+        {
+          "cut": 2,
+          "left_dimension": 11008,
+          "right_dimension": 4096,
+          "configured_bond_rank": 128,
+          "discarded_energy_fraction": 0.9248189926147461
+        },
+        {
+          "cut": 3,
+          "left_dimension": 704512,
+          "right_dimension": 64,
+          "configured_bond_rank": 64,
+          "discarded_energy_fraction": 0.0
+        }
+      ]
+    }
+  },
+  "nec_mpo_baseline_projection_metrics": {
+    "layer_0/q_proj": {
+      "activation_weighted_relative_error": 0.008965501561760902,
+      "validation_context_tokens": 1024
+    },
+    "layer_0/k_proj": {
+      "activation_weighted_relative_error": 0.016485856845974922,
+      "validation_context_tokens": 1024
+    },
+    "layer_0/v_proj": {
+      "activation_weighted_relative_error": 0.19880248606204987,
+      "validation_context_tokens": 1024
+    },
+    "layer_0/o_proj": {
+      "activation_weighted_relative_error": 0.09856272488832474,
+      "validation_context_tokens": 1024
+    },
+    "layer_0/gate_proj": {
+      "activation_weighted_relative_error": 0.4820757806301117,
+      "validation_context_tokens": 1024
+    },
+    "layer_0/up_proj": {
+      "activation_weighted_relative_error": 0.5745269656181335,
+      "validation_context_tokens": 1024
+    },
+    "layer_0/down_proj": {
+      "activation_weighted_relative_error": 0.4841293692588806,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/q_proj": {
+      "activation_weighted_relative_error": 0.0670541301369667,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/k_proj": {
+      "activation_weighted_relative_error": 0.062284380197525024,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/v_proj": {
+      "activation_weighted_relative_error": 0.40561971068382263,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/o_proj": {
+      "activation_weighted_relative_error": 0.2615600824356079,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/gate_proj": {
+      "activation_weighted_relative_error": 0.46075439453125,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/up_proj": {
+      "activation_weighted_relative_error": 0.6312224864959717,
+      "validation_context_tokens": 1024
+    },
+    "layer_1/down_proj": {
+      "activation_weighted_relative_error": 0.004974198527634144,
+      "validation_context_tokens": 1024
+    }
+  },
+  "nec_mpo_baseline_block_and_cascade_metrics": {
+    "0": {
+      "same_input_block_output_relative_error": 0.27484577894210815,
+      "same_input_active_transformation_relative_error": 0.3265664577484131
+    },
+    "1": {
+      "same_input_block_output_relative_error": 0.04742879420518875,
+      "same_input_active_transformation_relative_error": 0.047434981912374496
+    },
+    "layers_0_1_composed": {
+      "relative_error": 0.2557234466075897,
+      "candidate_total_hidden_drift_from_dense": 0.2557234466075897
+    }
+  },
+  "candidates": {
+    "direct_3b_a0": {
+      "candidate": "direct_3b_a0",
+      "method": "direct_quant",
+      "bits": 3,
+      "group_size": 64,
+      "activation_alpha": 0.0,
+      "checkpoint_file_bytes": {
+        "compressed_layer_0.pt": 82254693,
+        "compressed_layer_1.pt": 82254693
+      },
+      "serialized_checkpoint_bytes": 164509386,
+      "codec_payload_bytes": 164429824,
+      "projection_metrics": {
+        "layer_0/q_proj": {
+          "activation_weighted_relative_error": 0.028529347851872444,
+          "weight_relative_frobenius_error": 0.36259010434150696,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/k_proj": {
+          "activation_weighted_relative_error": 0.036276813596487045,
+          "weight_relative_frobenius_error": 0.3633806109428406,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/v_proj": {
+          "activation_weighted_relative_error": 0.21148423850536346,
+          "weight_relative_frobenius_error": 0.2582540214061737,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/o_proj": {
+          "activation_weighted_relative_error": 0.11013386398553848,
+          "weight_relative_frobenius_error": 0.3018510937690735,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/gate_proj": {
+          "activation_weighted_relative_error": 0.1535366326570511,
+          "weight_relative_frobenius_error": 0.25301089882850647,
+          "codec_payload_bytes": 18317312,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/up_proj": {
+          "activation_weighted_relative_error": 0.18049563467502594,
+          "weight_relative_frobenius_error": 0.25274261832237244,
+          "codec_payload_bytes": 18317312,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/down_proj": {
+          "activation_weighted_relative_error": 0.14216449856758118,
+          "weight_relative_frobenius_error": 0.25562798976898193,
+          "codec_payload_bytes": 18317312,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/q_proj": {
+          "activation_weighted_relative_error": 0.0724138617515564,
+          "weight_relative_frobenius_error": 0.278734028339386,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/k_proj": {
+          "activation_weighted_relative_error": 0.06421375274658203,
+          "weight_relative_frobenius_error": 0.2813269793987274,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/v_proj": {
+          "activation_weighted_relative_error": 0.26582783460617065,
+          "weight_relative_frobenius_error": 0.26209741830825806,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/o_proj": {
+          "activation_weighted_relative_error": 0.14381790161132812,
+          "weight_relative_frobenius_error": 0.27886897325515747,
+          "codec_payload_bytes": 6815744,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/gate_proj": {
+          "activation_weighted_relative_error": 0.13243703544139862,
+          "weight_relative_frobenius_error": 0.2535909414291382,
+          "codec_payload_bytes": 18317312,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/up_proj": {
+          "activation_weighted_relative_error": 0.18997737765312195,
+          "weight_relative_frobenius_error": 0.2527144253253937,
+          "codec_payload_bytes": 18317312,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/down_proj": {
+          "activation_weighted_relative_error": 0.027443716302514076,
+          "weight_relative_frobenius_error": 0.2534489333629608,
+          "codec_payload_bytes": 18317312,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        }
+      },
+      "same_input_block_and_cascade_metrics": {
+        "0": {
+          "same_input_block_output_relative_error": 0.1579294502735138,
+          "same_input_active_transformation_relative_error": 0.1876487284898758
+        },
+        "1": {
+          "same_input_block_output_relative_error": 0.04870779439806938,
+          "same_input_active_transformation_relative_error": 0.04871414974331856
+        },
+        "layers_0_1_composed": {
+          "relative_error": 0.0903681293129921,
+          "candidate_total_hidden_drift_from_dense": 0.0903681293129921
+        }
+      },
+      "wikitext_test": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.36665678024292,
+        "mean_nll": 1.6802051067352295,
+        "next_token_accuracy": 0.6093609360936093,
+        "dense_top1_agreement": 0.9505950808525085,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 164509386,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 82254693,
+          "compressed_layer_1.pt": 82254693
+        }
+      }
+    },
+    "direct_3b_a05": {
+      "candidate": "direct_3b_a05",
+      "method": "direct_quant",
+      "bits": 3,
+      "group_size": 64,
+      "activation_alpha": 0.5,
+      "checkpoint_file_bytes": {
+        "compressed_layer_0.pt": 82327645,
+        "compressed_layer_1.pt": 82327645
+      },
+      "serialized_checkpoint_bytes": 164655290,
+      "codec_payload_bytes": 164572160,
+      "projection_metrics": {
+        "layer_0/q_proj": {
+          "activation_weighted_relative_error": 0.03144026920199394,
+          "weight_relative_frobenius_error": 0.588074803352356,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/k_proj": {
+          "activation_weighted_relative_error": 0.038913387805223465,
+          "weight_relative_frobenius_error": 0.6206239461898804,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/v_proj": {
+          "activation_weighted_relative_error": 0.09386025369167328,
+          "weight_relative_frobenius_error": 0.30290064215660095,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/o_proj": {
+          "activation_weighted_relative_error": 0.08972638845443726,
+          "weight_relative_frobenius_error": 0.37565377354621887,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/gate_proj": {
+          "activation_weighted_relative_error": 0.1375277191400528,
+          "weight_relative_frobenius_error": 0.2794274687767029,
+          "codec_payload_bytes": 18325504,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/up_proj": {
+          "activation_weighted_relative_error": 0.1591367870569229,
+          "weight_relative_frobenius_error": 0.2707963287830353,
+          "codec_payload_bytes": 18325504,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/down_proj": {
+          "activation_weighted_relative_error": 0.11924733221530914,
+          "weight_relative_frobenius_error": 0.2628704309463501,
+          "codec_payload_bytes": 18339328,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/q_proj": {
+          "activation_weighted_relative_error": 0.04879870265722275,
+          "weight_relative_frobenius_error": 0.5304840803146362,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/k_proj": {
+          "activation_weighted_relative_error": 0.04764439910650253,
+          "weight_relative_frobenius_error": 0.5456942915916443,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/v_proj": {
+          "activation_weighted_relative_error": 0.148927241563797,
+          "weight_relative_frobenius_error": 0.2894863188266754,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/o_proj": {
+          "activation_weighted_relative_error": 0.14553342759609222,
+          "weight_relative_frobenius_error": 0.3705580234527588,
+          "codec_payload_bytes": 6823936,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/gate_proj": {
+          "activation_weighted_relative_error": 0.13220277428627014,
+          "weight_relative_frobenius_error": 0.26222655177116394,
+          "codec_payload_bytes": 18325504,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/up_proj": {
+          "activation_weighted_relative_error": 0.18290294706821442,
+          "weight_relative_frobenius_error": 0.25703519582748413,
+          "codec_payload_bytes": 18325504,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/down_proj": {
+          "activation_weighted_relative_error": 0.0018634132575243711,
+          "weight_relative_frobenius_error": 0.30056244134902954,
+          "codec_payload_bytes": 18339328,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 3,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        }
+      },
+      "same_input_block_and_cascade_metrics": {
+        "0": {
+          "same_input_block_output_relative_error": 0.10088083148002625,
+          "same_input_active_transformation_relative_error": 0.11986465752124786
+        },
+        "1": {
+          "same_input_block_output_relative_error": 0.08914585411548615,
+          "same_input_active_transformation_relative_error": 0.08915749192237854
+        },
+        "layers_0_1_composed": {
+          "relative_error": 0.11865684390068054,
+          "candidate_total_hidden_drift_from_dense": 0.11865684390068054
+        }
+      },
+      "wikitext_test": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.323338508605957,
+        "mean_nll": 1.6721006631851196,
+        "next_token_accuracy": 0.6096609660966097,
+        "dense_top1_agreement": 0.973897397518158,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 164655290,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 82327645,
+          "compressed_layer_1.pt": 82327645
+        }
+      }
+    },
+    "direct_4b_a0": {
+      "candidate": "direct_4b_a0",
+      "method": "direct_quant",
+      "bits": 4,
+      "group_size": 64,
+      "activation_alpha": 0.0,
+      "checkpoint_file_bytes": {
+        "compressed_layer_0.pt": 107551589,
+        "compressed_layer_1.pt": 107551589
+      },
+      "serialized_checkpoint_bytes": 215103178,
+      "codec_payload_bytes": 215023616,
+      "projection_metrics": {
+        "layer_0/q_proj": {
+          "activation_weighted_relative_error": 0.012161223217844963,
+          "weight_relative_frobenius_error": 0.1867431104183197,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/k_proj": {
+          "activation_weighted_relative_error": 0.01549083087593317,
+          "weight_relative_frobenius_error": 0.17530810832977295,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/v_proj": {
+          "activation_weighted_relative_error": 0.13076698780059814,
+          "weight_relative_frobenius_error": 0.1109853982925415,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/o_proj": {
+          "activation_weighted_relative_error": 0.048888254910707474,
+          "weight_relative_frobenius_error": 0.13235974311828613,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/gate_proj": {
+          "activation_weighted_relative_error": 0.06541434675455093,
+          "weight_relative_frobenius_error": 0.10861518979072571,
+          "codec_payload_bytes": 23953408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/up_proj": {
+          "activation_weighted_relative_error": 0.07825540751218796,
+          "weight_relative_frobenius_error": 0.10833740234375,
+          "codec_payload_bytes": 23953408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/down_proj": {
+          "activation_weighted_relative_error": 0.06055986136198044,
+          "weight_relative_frobenius_error": 0.10965750366449356,
+          "codec_payload_bytes": 23953408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/q_proj": {
+          "activation_weighted_relative_error": 0.031070685014128685,
+          "weight_relative_frobenius_error": 0.1203712448477745,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/k_proj": {
+          "activation_weighted_relative_error": 0.028045516461133957,
+          "weight_relative_frobenius_error": 0.12143225222826004,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/v_proj": {
+          "activation_weighted_relative_error": 0.13482476770877838,
+          "weight_relative_frobenius_error": 0.11248601973056793,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/o_proj": {
+          "activation_weighted_relative_error": 0.06252101063728333,
+          "weight_relative_frobenius_error": 0.12235784530639648,
+          "codec_payload_bytes": 8912896,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/gate_proj": {
+          "activation_weighted_relative_error": 0.05663391947746277,
+          "weight_relative_frobenius_error": 0.10882210731506348,
+          "codec_payload_bytes": 23953408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/up_proj": {
+          "activation_weighted_relative_error": 0.08120622485876083,
+          "weight_relative_frobenius_error": 0.10837060213088989,
+          "codec_payload_bytes": 23953408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/down_proj": {
+          "activation_weighted_relative_error": 0.025311283767223358,
+          "weight_relative_frobenius_error": 0.10884241759777069,
+          "codec_payload_bytes": 23953408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        }
+      },
+      "same_input_block_and_cascade_metrics": {
+        "0": {
+          "same_input_block_output_relative_error": 0.08395329117774963,
+          "same_input_active_transformation_relative_error": 0.09975167363882065
+        },
+        "1": {
+          "same_input_block_output_relative_error": 0.04478627070784569,
+          "same_input_active_transformation_relative_error": 0.044792115688323975
+        },
+        "layers_0_1_composed": {
+          "relative_error": 0.03455095738172531,
+          "candidate_total_hidden_drift_from_dense": 0.03455095738172531
+        }
+      },
+      "wikitext_test": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.346065998077393,
+        "mean_nll": 1.6763609647750854,
+        "next_token_accuracy": 0.608960896089609,
+        "dense_top1_agreement": 0.9584958553314209,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 215103178,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 107551589,
+          "compressed_layer_1.pt": 107551589
+        }
+      }
+    },
+    "direct_4b_a05": {
+      "candidate": "direct_4b_a05",
+      "method": "direct_quant",
+      "bits": 4,
+      "group_size": 64,
+      "activation_alpha": 0.5,
+      "checkpoint_file_bytes": {
+        "compressed_layer_0.pt": 107624541,
+        "compressed_layer_1.pt": 107624541
+      },
+      "serialized_checkpoint_bytes": 215249082,
+      "codec_payload_bytes": 215165952,
+      "projection_metrics": {
+        "layer_0/q_proj": {
+          "activation_weighted_relative_error": 0.014269649982452393,
+          "weight_relative_frobenius_error": 0.4411272704601288,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/k_proj": {
+          "activation_weighted_relative_error": 0.01804162748157978,
+          "weight_relative_frobenius_error": 0.4572916030883789,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/v_proj": {
+          "activation_weighted_relative_error": 0.039715882390737534,
+          "weight_relative_frobenius_error": 0.13478532433509827,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/o_proj": {
+          "activation_weighted_relative_error": 0.03677523136138916,
+          "weight_relative_frobenius_error": 0.17407259345054626,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/gate_proj": {
+          "activation_weighted_relative_error": 0.059568386524915695,
+          "weight_relative_frobenius_error": 0.1217384859919548,
+          "codec_payload_bytes": 23961600,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/up_proj": {
+          "activation_weighted_relative_error": 0.06858502328395844,
+          "weight_relative_frobenius_error": 0.11702392250299454,
+          "codec_payload_bytes": 23961600,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/down_proj": {
+          "activation_weighted_relative_error": 0.05066593363881111,
+          "weight_relative_frobenius_error": 0.11353939771652222,
+          "codec_payload_bytes": 23975424,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/q_proj": {
+          "activation_weighted_relative_error": 0.022646447643637657,
+          "weight_relative_frobenius_error": 0.28357577323913574,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/k_proj": {
+          "activation_weighted_relative_error": 0.021796679124236107,
+          "weight_relative_frobenius_error": 0.2954121232032776,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/v_proj": {
+          "activation_weighted_relative_error": 0.06422960013151169,
+          "weight_relative_frobenius_error": 0.1257249265909195,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/o_proj": {
+          "activation_weighted_relative_error": 0.06412740796804428,
+          "weight_relative_frobenius_error": 0.17822499573230743,
+          "codec_payload_bytes": 8921088,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/gate_proj": {
+          "activation_weighted_relative_error": 0.05600178986787796,
+          "weight_relative_frobenius_error": 0.11354617029428482,
+          "codec_payload_bytes": 23961600,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/up_proj": {
+          "activation_weighted_relative_error": 0.07854455709457397,
+          "weight_relative_frobenius_error": 0.11066699028015137,
+          "codec_payload_bytes": 23961600,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/down_proj": {
+          "activation_weighted_relative_error": 0.0008277491433545947,
+          "weight_relative_frobenius_error": 0.13480210304260254,
+          "codec_payload_bytes": 23975424,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 4,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        }
+      },
+      "same_input_block_and_cascade_metrics": {
+        "0": {
+          "same_input_block_output_relative_error": 0.04270750656723976,
+          "same_input_active_transformation_relative_error": 0.050744231790304184
+        },
+        "1": {
+          "same_input_block_output_relative_error": 0.015046955086290836,
+          "same_input_active_transformation_relative_error": 0.015048923902213573
+        },
+        "layers_0_1_composed": {
+          "relative_error": 0.022560104727745056,
+          "candidate_total_hidden_drift_from_dense": 0.022560104727745056
+        }
+      },
+      "wikitext_test": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.300602436065674,
+        "mean_nll": 1.6678204536437988,
+        "next_token_accuracy": 0.6101610161016101,
+        "dense_top1_agreement": 0.9889988899230957,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 215249082,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 107624541,
+          "compressed_layer_1.pt": 107624541
+        }
+      }
+    },
+    "nec_residual_2b_a0": {
+      "candidate": "nec_residual_2b_a0",
+      "method": "nec_hybrid",
+      "bits": 2,
+      "group_size": 64,
+      "activation_alpha": 0.0,
+      "checkpoint_file_bytes": {
+        "compressed_layer_0.pt": 126734621,
+        "compressed_layer_1.pt": 126958685
+      },
+      "serialized_checkpoint_bytes": 253693306,
+      "codec_payload_bytes": 113836032,
+      "projection_metrics": {
+        "layer_0/q_proj": {
+          "activation_weighted_relative_error": 0.013864683918654919,
+          "weight_relative_frobenius_error": 0.5331646203994751,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/k_proj": {
+          "activation_weighted_relative_error": 0.029193894937634468,
+          "weight_relative_frobenius_error": 0.7069567441940308,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/v_proj": {
+          "activation_weighted_relative_error": 0.21777969598770142,
+          "weight_relative_frobenius_error": 0.7670896053314209,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/o_proj": {
+          "activation_weighted_relative_error": 0.11297960579395294,
+          "weight_relative_frobenius_error": 0.6297171115875244,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/gate_proj": {
+          "activation_weighted_relative_error": 0.3665941655635834,
+          "weight_relative_frobenius_error": 0.6790115237236023,
+          "codec_payload_bytes": 12681216,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/up_proj": {
+          "activation_weighted_relative_error": 0.43790096044540405,
+          "weight_relative_frobenius_error": 0.6845558285713196,
+          "codec_payload_bytes": 12681216,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/down_proj": {
+          "activation_weighted_relative_error": 0.35257184505462646,
+          "weight_relative_frobenius_error": 0.8453096151351929,
+          "codec_payload_bytes": 12681216,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/q_proj": {
+          "activation_weighted_relative_error": 0.07770251482725143,
+          "weight_relative_frobenius_error": 0.702076256275177,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/k_proj": {
+          "activation_weighted_relative_error": 0.07432384788990021,
+          "weight_relative_frobenius_error": 0.7030707001686096,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/v_proj": {
+          "activation_weighted_relative_error": 0.4091125726699829,
+          "weight_relative_frobenius_error": 0.7428224682807922,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/o_proj": {
+          "activation_weighted_relative_error": 0.2596924304962158,
+          "weight_relative_frobenius_error": 0.6737460494041443,
+          "codec_payload_bytes": 4718592,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/gate_proj": {
+          "activation_weighted_relative_error": 0.3320833742618561,
+          "weight_relative_frobenius_error": 0.6541917324066162,
+          "codec_payload_bytes": 12681216,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/up_proj": {
+          "activation_weighted_relative_error": 0.48250776529312134,
+          "weight_relative_frobenius_error": 0.6646459102630615,
+          "codec_payload_bytes": 12681216,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/down_proj": {
+          "activation_weighted_relative_error": 0.0038580631371587515,
+          "weight_relative_frobenius_error": 0.8692824840545654,
+          "codec_payload_bytes": 12681216,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.0,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        }
+      },
+      "same_input_block_and_cascade_metrics": {
+        "0": {
+          "same_input_block_output_relative_error": 0.2450549155473709,
+          "same_input_active_transformation_relative_error": 0.29116952419281006
+        },
+        "1": {
+          "same_input_block_output_relative_error": 0.3047260046005249,
+          "same_input_active_transformation_relative_error": 0.3047657608985901
+        },
+        "layers_0_1_composed": {
+          "relative_error": 0.20627465844154358,
+          "candidate_total_hidden_drift_from_dense": 0.20627465844154358
+        }
+      },
+      "wikitext_test": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.889801025390625,
+        "mean_nll": 1.7732222080230713,
+        "next_token_accuracy": 0.5953595359535954,
+        "dense_top1_agreement": 0.8750874996185303,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 253693306,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 126734621,
+          "compressed_layer_1.pt": 126958685
+        }
+      }
+    },
+    "nec_residual_2b_a05": {
+      "candidate": "nec_residual_2b_a05",
+      "method": "nec_hybrid",
+      "bits": 2,
+      "group_size": 64,
+      "activation_alpha": 0.5,
+      "checkpoint_file_bytes": {
+        "compressed_layer_0.pt": 126807701,
+        "compressed_layer_1.pt": 127031765
+      },
+      "serialized_checkpoint_bytes": 253839466,
+      "codec_payload_bytes": 113978368,
+      "projection_metrics": {
+        "layer_0/q_proj": {
+          "activation_weighted_relative_error": 0.009828788228332996,
+          "weight_relative_frobenius_error": 0.5617343783378601,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/k_proj": {
+          "activation_weighted_relative_error": 0.02050860971212387,
+          "weight_relative_frobenius_error": 0.7447118759155273,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/v_proj": {
+          "activation_weighted_relative_error": 0.21741622686386108,
+          "weight_relative_frobenius_error": 0.7659285068511963,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/o_proj": {
+          "activation_weighted_relative_error": 0.10929940640926361,
+          "weight_relative_frobenius_error": 0.6305006742477417,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/gate_proj": {
+          "activation_weighted_relative_error": 0.3379878103733063,
+          "weight_relative_frobenius_error": 0.6865580081939697,
+          "codec_payload_bytes": 12689408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/up_proj": {
+          "activation_weighted_relative_error": 0.4069609045982361,
+          "weight_relative_frobenius_error": 0.6894780397415161,
+          "codec_payload_bytes": 12689408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_0/down_proj": {
+          "activation_weighted_relative_error": 0.34985068440437317,
+          "weight_relative_frobenius_error": 0.8452461361885071,
+          "codec_payload_bytes": 12703232,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/q_proj": {
+          "activation_weighted_relative_error": 0.060448698699474335,
+          "weight_relative_frobenius_error": 0.7456719875335693,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/k_proj": {
+          "activation_weighted_relative_error": 0.05968023091554642,
+          "weight_relative_frobenius_error": 0.7536404132843018,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/v_proj": {
+          "activation_weighted_relative_error": 0.37123075127601624,
+          "weight_relative_frobenius_error": 0.7359352707862854,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/o_proj": {
+          "activation_weighted_relative_error": 0.2392377108335495,
+          "weight_relative_frobenius_error": 0.6970560550689697,
+          "codec_payload_bytes": 4726784,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/gate_proj": {
+          "activation_weighted_relative_error": 0.32321983575820923,
+          "weight_relative_frobenius_error": 0.6545409560203552,
+          "codec_payload_bytes": 12689408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/up_proj": {
+          "activation_weighted_relative_error": 0.4718621075153351,
+          "weight_relative_frobenius_error": 0.6631799936294556,
+          "codec_payload_bytes": 12689408,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        },
+        "layer_1/down_proj": {
+          "activation_weighted_relative_error": 0.003931619226932526,
+          "weight_relative_frobenius_error": 0.8644492626190186,
+          "codec_payload_bytes": 12703232,
+          "train_context_tokens": 1024,
+          "validation_context_tokens": 1024,
+          "activation_alpha": 0.5,
+          "quantization_bits": 2,
+          "calibration_split": "train",
+          "measurement_split": "validation"
+        }
+      },
+      "same_input_block_and_cascade_metrics": {
+        "0": {
+          "same_input_block_output_relative_error": 0.21216176450252533,
+          "same_input_active_transformation_relative_error": 0.2520865201950073
+        },
+        "1": {
+          "same_input_block_output_relative_error": 0.09676714986562729,
+          "same_input_active_transformation_relative_error": 0.09677977114915848
+        },
+        "layers_0_1_composed": {
+          "relative_error": 0.0746481716632843,
+          "candidate_total_hidden_drift_from_dense": 0.0746481716632843
+        }
+      },
+      "wikitext_test": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.665241718292236,
+        "mean_nll": 1.7343496084213257,
+        "next_token_accuracy": 0.6001600160016002,
+        "dense_top1_agreement": 0.9039903879165649,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 253839466,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 126807701,
+          "compressed_layer_1.pt": 127031765
+        }
+      }
+    }
+  },
+  "evaluation": {
+    "dense": {
+      "ppl": 5.292200088500977,
+      "mean_nll": 1.666234016418457,
+      "next_token_accuracy": 0.6104610461046105
+    },
+    "scored_labels": 9999,
+    "test_split": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "test",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+      "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+      "source_bytes": 732610,
+      "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+      "text_bytes": 1296370,
+      "text_join": "double_newline",
+      "rows": 4358,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "candidates": {
+      "nec_mpo": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 9.442368507385254,
+        "mean_nll": 2.245206832885742,
+        "next_token_accuracy": 0.5288528852885288,
+        "dense_top1_agreement": 0.7225722670555115,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 139846298,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 69811117,
+          "compressed_layer_1.pt": 70035181
+        }
+      },
+      "direct_3b_a0": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.36665678024292,
+        "mean_nll": 1.6802051067352295,
+        "next_token_accuracy": 0.6093609360936093,
+        "dense_top1_agreement": 0.9505950808525085,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 164509386,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 82254693,
+          "compressed_layer_1.pt": 82254693
+        }
+      },
+      "direct_3b_a05": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.323338508605957,
+        "mean_nll": 1.6721006631851196,
+        "next_token_accuracy": 0.6096609660966097,
+        "dense_top1_agreement": 0.973897397518158,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 164655290,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 82327645,
+          "compressed_layer_1.pt": 82327645
+        }
+      },
+      "direct_4b_a0": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.346065998077393,
+        "mean_nll": 1.6763609647750854,
+        "next_token_accuracy": 0.608960896089609,
+        "dense_top1_agreement": 0.9584958553314209,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 215103178,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 107551589,
+          "compressed_layer_1.pt": 107551589
+        }
+      },
+      "direct_4b_a05": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.300602436065674,
+        "mean_nll": 1.6678204536437988,
+        "next_token_accuracy": 0.6101610161016101,
+        "dense_top1_agreement": 0.9889988899230957,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 215249082,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 107624541,
+          "compressed_layer_1.pt": 107624541
+        }
+      },
+      "nec_residual_2b_a0": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.889801025390625,
+        "mean_nll": 1.7732222080230713,
+        "next_token_accuracy": 0.5953595359535954,
+        "dense_top1_agreement": 0.8750874996185303,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 253693306,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 126734621,
+          "compressed_layer_1.pt": 126958685
+        }
+      },
+      "nec_residual_2b_a05": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "ppl": 5.665241718292236,
+        "mean_nll": 1.7343496084213257,
+        "next_token_accuracy": 0.6001600160016002,
+        "dense_top1_agreement": 0.9039903879165649,
+        "scored_labels": 9999,
+        "serialized_checkpoint_bytes": 253839466,
+        "checkpoint_file_bytes": {
+          "compressed_layer_0.pt": 126807701,
+          "compressed_layer_1.pt": 127031765
+        }
+      }
+    },
+    "candidate_summary": {
+      "nec_mpo": {
+        "ppl": 9.442368507385254,
+        "mean_nll": 2.245206832885742,
+        "next_token_accuracy": 0.5288528852885288,
+        "dense_top1_agreement": 0.7225722670555115,
+        "serialized_checkpoint_bytes": 139846298
+      },
+      "direct_3b_a0": {
+        "ppl": 5.36665678024292,
+        "mean_nll": 1.6802051067352295,
+        "next_token_accuracy": 0.6093609360936093,
+        "dense_top1_agreement": 0.9505950808525085,
+        "serialized_checkpoint_bytes": 164509386
+      },
+      "direct_3b_a05": {
+        "ppl": 5.323338508605957,
+        "mean_nll": 1.6721006631851196,
+        "next_token_accuracy": 0.6096609660966097,
+        "dense_top1_agreement": 0.973897397518158,
+        "serialized_checkpoint_bytes": 164655290
+      },
+      "direct_4b_a0": {
+        "ppl": 5.346065998077393,
+        "mean_nll": 1.6763609647750854,
+        "next_token_accuracy": 0.608960896089609,
+        "dense_top1_agreement": 0.9584958553314209,
+        "serialized_checkpoint_bytes": 215103178
+      },
+      "direct_4b_a05": {
+        "ppl": 5.300602436065674,
+        "mean_nll": 1.6678204536437988,
+        "next_token_accuracy": 0.6101610161016101,
+        "dense_top1_agreement": 0.9889988899230957,
+        "serialized_checkpoint_bytes": 215249082
+      },
+      "nec_residual_2b_a0": {
+        "ppl": 5.889801025390625,
+        "mean_nll": 1.7732222080230713,
+        "next_token_accuracy": 0.5953595359535954,
+        "dense_top1_agreement": 0.8750874996185303,
+        "serialized_checkpoint_bytes": 253693306
+      },
+      "nec_residual_2b_a05": {
+        "ppl": 5.665241718292236,
+        "mean_nll": 1.7343496084213257,
+        "next_token_accuracy": 0.6001600160016002,
+        "dense_top1_agreement": 0.9039903879165649,
+        "serialized_checkpoint_bytes": 253839466
+      }
+    },
+    "candidate_projection_and_block_metrics": {
+      "direct_3b_a0": {
+        "projection_metrics": {
+          "layer_0/q_proj": {
+            "activation_weighted_relative_error": 0.028529347851872444,
+            "weight_relative_frobenius_error": 0.36259010434150696,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/k_proj": {
+            "activation_weighted_relative_error": 0.036276813596487045,
+            "weight_relative_frobenius_error": 0.3633806109428406,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/v_proj": {
+            "activation_weighted_relative_error": 0.21148423850536346,
+            "weight_relative_frobenius_error": 0.2582540214061737,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/o_proj": {
+            "activation_weighted_relative_error": 0.11013386398553848,
+            "weight_relative_frobenius_error": 0.3018510937690735,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/gate_proj": {
+            "activation_weighted_relative_error": 0.1535366326570511,
+            "weight_relative_frobenius_error": 0.25301089882850647,
+            "codec_payload_bytes": 18317312,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/up_proj": {
+            "activation_weighted_relative_error": 0.18049563467502594,
+            "weight_relative_frobenius_error": 0.25274261832237244,
+            "codec_payload_bytes": 18317312,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/down_proj": {
+            "activation_weighted_relative_error": 0.14216449856758118,
+            "weight_relative_frobenius_error": 0.25562798976898193,
+            "codec_payload_bytes": 18317312,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/q_proj": {
+            "activation_weighted_relative_error": 0.0724138617515564,
+            "weight_relative_frobenius_error": 0.278734028339386,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/k_proj": {
+            "activation_weighted_relative_error": 0.06421375274658203,
+            "weight_relative_frobenius_error": 0.2813269793987274,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/v_proj": {
+            "activation_weighted_relative_error": 0.26582783460617065,
+            "weight_relative_frobenius_error": 0.26209741830825806,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/o_proj": {
+            "activation_weighted_relative_error": 0.14381790161132812,
+            "weight_relative_frobenius_error": 0.27886897325515747,
+            "codec_payload_bytes": 6815744,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/gate_proj": {
+            "activation_weighted_relative_error": 0.13243703544139862,
+            "weight_relative_frobenius_error": 0.2535909414291382,
+            "codec_payload_bytes": 18317312,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/up_proj": {
+            "activation_weighted_relative_error": 0.18997737765312195,
+            "weight_relative_frobenius_error": 0.2527144253253937,
+            "codec_payload_bytes": 18317312,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/down_proj": {
+            "activation_weighted_relative_error": 0.027443716302514076,
+            "weight_relative_frobenius_error": 0.2534489333629608,
+            "codec_payload_bytes": 18317312,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          }
+        },
+        "same_input_block_and_cascade_metrics": {
+          "0": {
+            "same_input_block_output_relative_error": 0.1579294502735138,
+            "same_input_active_transformation_relative_error": 0.1876487284898758
+          },
+          "1": {
+            "same_input_block_output_relative_error": 0.04870779439806938,
+            "same_input_active_transformation_relative_error": 0.04871414974331856
+          },
+          "layers_0_1_composed": {
+            "relative_error": 0.0903681293129921,
+            "candidate_total_hidden_drift_from_dense": 0.0903681293129921
+          }
+        }
+      },
+      "direct_3b_a05": {
+        "projection_metrics": {
+          "layer_0/q_proj": {
+            "activation_weighted_relative_error": 0.03144026920199394,
+            "weight_relative_frobenius_error": 0.588074803352356,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/k_proj": {
+            "activation_weighted_relative_error": 0.038913387805223465,
+            "weight_relative_frobenius_error": 0.6206239461898804,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/v_proj": {
+            "activation_weighted_relative_error": 0.09386025369167328,
+            "weight_relative_frobenius_error": 0.30290064215660095,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/o_proj": {
+            "activation_weighted_relative_error": 0.08972638845443726,
+            "weight_relative_frobenius_error": 0.37565377354621887,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/gate_proj": {
+            "activation_weighted_relative_error": 0.1375277191400528,
+            "weight_relative_frobenius_error": 0.2794274687767029,
+            "codec_payload_bytes": 18325504,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/up_proj": {
+            "activation_weighted_relative_error": 0.1591367870569229,
+            "weight_relative_frobenius_error": 0.2707963287830353,
+            "codec_payload_bytes": 18325504,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/down_proj": {
+            "activation_weighted_relative_error": 0.11924733221530914,
+            "weight_relative_frobenius_error": 0.2628704309463501,
+            "codec_payload_bytes": 18339328,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/q_proj": {
+            "activation_weighted_relative_error": 0.04879870265722275,
+            "weight_relative_frobenius_error": 0.5304840803146362,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/k_proj": {
+            "activation_weighted_relative_error": 0.04764439910650253,
+            "weight_relative_frobenius_error": 0.5456942915916443,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/v_proj": {
+            "activation_weighted_relative_error": 0.148927241563797,
+            "weight_relative_frobenius_error": 0.2894863188266754,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/o_proj": {
+            "activation_weighted_relative_error": 0.14553342759609222,
+            "weight_relative_frobenius_error": 0.3705580234527588,
+            "codec_payload_bytes": 6823936,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/gate_proj": {
+            "activation_weighted_relative_error": 0.13220277428627014,
+            "weight_relative_frobenius_error": 0.26222655177116394,
+            "codec_payload_bytes": 18325504,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/up_proj": {
+            "activation_weighted_relative_error": 0.18290294706821442,
+            "weight_relative_frobenius_error": 0.25703519582748413,
+            "codec_payload_bytes": 18325504,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/down_proj": {
+            "activation_weighted_relative_error": 0.0018634132575243711,
+            "weight_relative_frobenius_error": 0.30056244134902954,
+            "codec_payload_bytes": 18339328,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 3,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          }
+        },
+        "same_input_block_and_cascade_metrics": {
+          "0": {
+            "same_input_block_output_relative_error": 0.10088083148002625,
+            "same_input_active_transformation_relative_error": 0.11986465752124786
+          },
+          "1": {
+            "same_input_block_output_relative_error": 0.08914585411548615,
+            "same_input_active_transformation_relative_error": 0.08915749192237854
+          },
+          "layers_0_1_composed": {
+            "relative_error": 0.11865684390068054,
+            "candidate_total_hidden_drift_from_dense": 0.11865684390068054
+          }
+        }
+      },
+      "direct_4b_a0": {
+        "projection_metrics": {
+          "layer_0/q_proj": {
+            "activation_weighted_relative_error": 0.012161223217844963,
+            "weight_relative_frobenius_error": 0.1867431104183197,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/k_proj": {
+            "activation_weighted_relative_error": 0.01549083087593317,
+            "weight_relative_frobenius_error": 0.17530810832977295,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/v_proj": {
+            "activation_weighted_relative_error": 0.13076698780059814,
+            "weight_relative_frobenius_error": 0.1109853982925415,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/o_proj": {
+            "activation_weighted_relative_error": 0.048888254910707474,
+            "weight_relative_frobenius_error": 0.13235974311828613,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/gate_proj": {
+            "activation_weighted_relative_error": 0.06541434675455093,
+            "weight_relative_frobenius_error": 0.10861518979072571,
+            "codec_payload_bytes": 23953408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/up_proj": {
+            "activation_weighted_relative_error": 0.07825540751218796,
+            "weight_relative_frobenius_error": 0.10833740234375,
+            "codec_payload_bytes": 23953408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/down_proj": {
+            "activation_weighted_relative_error": 0.06055986136198044,
+            "weight_relative_frobenius_error": 0.10965750366449356,
+            "codec_payload_bytes": 23953408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/q_proj": {
+            "activation_weighted_relative_error": 0.031070685014128685,
+            "weight_relative_frobenius_error": 0.1203712448477745,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/k_proj": {
+            "activation_weighted_relative_error": 0.028045516461133957,
+            "weight_relative_frobenius_error": 0.12143225222826004,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/v_proj": {
+            "activation_weighted_relative_error": 0.13482476770877838,
+            "weight_relative_frobenius_error": 0.11248601973056793,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/o_proj": {
+            "activation_weighted_relative_error": 0.06252101063728333,
+            "weight_relative_frobenius_error": 0.12235784530639648,
+            "codec_payload_bytes": 8912896,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/gate_proj": {
+            "activation_weighted_relative_error": 0.05663391947746277,
+            "weight_relative_frobenius_error": 0.10882210731506348,
+            "codec_payload_bytes": 23953408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/up_proj": {
+            "activation_weighted_relative_error": 0.08120622485876083,
+            "weight_relative_frobenius_error": 0.10837060213088989,
+            "codec_payload_bytes": 23953408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/down_proj": {
+            "activation_weighted_relative_error": 0.025311283767223358,
+            "weight_relative_frobenius_error": 0.10884241759777069,
+            "codec_payload_bytes": 23953408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          }
+        },
+        "same_input_block_and_cascade_metrics": {
+          "0": {
+            "same_input_block_output_relative_error": 0.08395329117774963,
+            "same_input_active_transformation_relative_error": 0.09975167363882065
+          },
+          "1": {
+            "same_input_block_output_relative_error": 0.04478627070784569,
+            "same_input_active_transformation_relative_error": 0.044792115688323975
+          },
+          "layers_0_1_composed": {
+            "relative_error": 0.03455095738172531,
+            "candidate_total_hidden_drift_from_dense": 0.03455095738172531
+          }
+        }
+      },
+      "direct_4b_a05": {
+        "projection_metrics": {
+          "layer_0/q_proj": {
+            "activation_weighted_relative_error": 0.014269649982452393,
+            "weight_relative_frobenius_error": 0.4411272704601288,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/k_proj": {
+            "activation_weighted_relative_error": 0.01804162748157978,
+            "weight_relative_frobenius_error": 0.4572916030883789,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/v_proj": {
+            "activation_weighted_relative_error": 0.039715882390737534,
+            "weight_relative_frobenius_error": 0.13478532433509827,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/o_proj": {
+            "activation_weighted_relative_error": 0.03677523136138916,
+            "weight_relative_frobenius_error": 0.17407259345054626,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/gate_proj": {
+            "activation_weighted_relative_error": 0.059568386524915695,
+            "weight_relative_frobenius_error": 0.1217384859919548,
+            "codec_payload_bytes": 23961600,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/up_proj": {
+            "activation_weighted_relative_error": 0.06858502328395844,
+            "weight_relative_frobenius_error": 0.11702392250299454,
+            "codec_payload_bytes": 23961600,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/down_proj": {
+            "activation_weighted_relative_error": 0.05066593363881111,
+            "weight_relative_frobenius_error": 0.11353939771652222,
+            "codec_payload_bytes": 23975424,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/q_proj": {
+            "activation_weighted_relative_error": 0.022646447643637657,
+            "weight_relative_frobenius_error": 0.28357577323913574,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/k_proj": {
+            "activation_weighted_relative_error": 0.021796679124236107,
+            "weight_relative_frobenius_error": 0.2954121232032776,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/v_proj": {
+            "activation_weighted_relative_error": 0.06422960013151169,
+            "weight_relative_frobenius_error": 0.1257249265909195,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/o_proj": {
+            "activation_weighted_relative_error": 0.06412740796804428,
+            "weight_relative_frobenius_error": 0.17822499573230743,
+            "codec_payload_bytes": 8921088,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/gate_proj": {
+            "activation_weighted_relative_error": 0.05600178986787796,
+            "weight_relative_frobenius_error": 0.11354617029428482,
+            "codec_payload_bytes": 23961600,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/up_proj": {
+            "activation_weighted_relative_error": 0.07854455709457397,
+            "weight_relative_frobenius_error": 0.11066699028015137,
+            "codec_payload_bytes": 23961600,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/down_proj": {
+            "activation_weighted_relative_error": 0.0008277491433545947,
+            "weight_relative_frobenius_error": 0.13480210304260254,
+            "codec_payload_bytes": 23975424,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 4,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          }
+        },
+        "same_input_block_and_cascade_metrics": {
+          "0": {
+            "same_input_block_output_relative_error": 0.04270750656723976,
+            "same_input_active_transformation_relative_error": 0.050744231790304184
+          },
+          "1": {
+            "same_input_block_output_relative_error": 0.015046955086290836,
+            "same_input_active_transformation_relative_error": 0.015048923902213573
+          },
+          "layers_0_1_composed": {
+            "relative_error": 0.022560104727745056,
+            "candidate_total_hidden_drift_from_dense": 0.022560104727745056
+          }
+        }
+      },
+      "nec_residual_2b_a0": {
+        "projection_metrics": {
+          "layer_0/q_proj": {
+            "activation_weighted_relative_error": 0.013864683918654919,
+            "weight_relative_frobenius_error": 0.5331646203994751,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/k_proj": {
+            "activation_weighted_relative_error": 0.029193894937634468,
+            "weight_relative_frobenius_error": 0.7069567441940308,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/v_proj": {
+            "activation_weighted_relative_error": 0.21777969598770142,
+            "weight_relative_frobenius_error": 0.7670896053314209,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/o_proj": {
+            "activation_weighted_relative_error": 0.11297960579395294,
+            "weight_relative_frobenius_error": 0.6297171115875244,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/gate_proj": {
+            "activation_weighted_relative_error": 0.3665941655635834,
+            "weight_relative_frobenius_error": 0.6790115237236023,
+            "codec_payload_bytes": 12681216,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/up_proj": {
+            "activation_weighted_relative_error": 0.43790096044540405,
+            "weight_relative_frobenius_error": 0.6845558285713196,
+            "codec_payload_bytes": 12681216,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/down_proj": {
+            "activation_weighted_relative_error": 0.35257184505462646,
+            "weight_relative_frobenius_error": 0.8453096151351929,
+            "codec_payload_bytes": 12681216,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/q_proj": {
+            "activation_weighted_relative_error": 0.07770251482725143,
+            "weight_relative_frobenius_error": 0.702076256275177,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/k_proj": {
+            "activation_weighted_relative_error": 0.07432384788990021,
+            "weight_relative_frobenius_error": 0.7030707001686096,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/v_proj": {
+            "activation_weighted_relative_error": 0.4091125726699829,
+            "weight_relative_frobenius_error": 0.7428224682807922,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/o_proj": {
+            "activation_weighted_relative_error": 0.2596924304962158,
+            "weight_relative_frobenius_error": 0.6737460494041443,
+            "codec_payload_bytes": 4718592,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/gate_proj": {
+            "activation_weighted_relative_error": 0.3320833742618561,
+            "weight_relative_frobenius_error": 0.6541917324066162,
+            "codec_payload_bytes": 12681216,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/up_proj": {
+            "activation_weighted_relative_error": 0.48250776529312134,
+            "weight_relative_frobenius_error": 0.6646459102630615,
+            "codec_payload_bytes": 12681216,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/down_proj": {
+            "activation_weighted_relative_error": 0.0038580631371587515,
+            "weight_relative_frobenius_error": 0.8692824840545654,
+            "codec_payload_bytes": 12681216,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.0,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          }
+        },
+        "same_input_block_and_cascade_metrics": {
+          "0": {
+            "same_input_block_output_relative_error": 0.2450549155473709,
+            "same_input_active_transformation_relative_error": 0.29116952419281006
+          },
+          "1": {
+            "same_input_block_output_relative_error": 0.3047260046005249,
+            "same_input_active_transformation_relative_error": 0.3047657608985901
+          },
+          "layers_0_1_composed": {
+            "relative_error": 0.20627465844154358,
+            "candidate_total_hidden_drift_from_dense": 0.20627465844154358
+          }
+        }
+      },
+      "nec_residual_2b_a05": {
+        "projection_metrics": {
+          "layer_0/q_proj": {
+            "activation_weighted_relative_error": 0.009828788228332996,
+            "weight_relative_frobenius_error": 0.5617343783378601,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/k_proj": {
+            "activation_weighted_relative_error": 0.02050860971212387,
+            "weight_relative_frobenius_error": 0.7447118759155273,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/v_proj": {
+            "activation_weighted_relative_error": 0.21741622686386108,
+            "weight_relative_frobenius_error": 0.7659285068511963,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/o_proj": {
+            "activation_weighted_relative_error": 0.10929940640926361,
+            "weight_relative_frobenius_error": 0.6305006742477417,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/gate_proj": {
+            "activation_weighted_relative_error": 0.3379878103733063,
+            "weight_relative_frobenius_error": 0.6865580081939697,
+            "codec_payload_bytes": 12689408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/up_proj": {
+            "activation_weighted_relative_error": 0.4069609045982361,
+            "weight_relative_frobenius_error": 0.6894780397415161,
+            "codec_payload_bytes": 12689408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_0/down_proj": {
+            "activation_weighted_relative_error": 0.34985068440437317,
+            "weight_relative_frobenius_error": 0.8452461361885071,
+            "codec_payload_bytes": 12703232,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/q_proj": {
+            "activation_weighted_relative_error": 0.060448698699474335,
+            "weight_relative_frobenius_error": 0.7456719875335693,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/k_proj": {
+            "activation_weighted_relative_error": 0.05968023091554642,
+            "weight_relative_frobenius_error": 0.7536404132843018,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/v_proj": {
+            "activation_weighted_relative_error": 0.37123075127601624,
+            "weight_relative_frobenius_error": 0.7359352707862854,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/o_proj": {
+            "activation_weighted_relative_error": 0.2392377108335495,
+            "weight_relative_frobenius_error": 0.6970560550689697,
+            "codec_payload_bytes": 4726784,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/gate_proj": {
+            "activation_weighted_relative_error": 0.32321983575820923,
+            "weight_relative_frobenius_error": 0.6545409560203552,
+            "codec_payload_bytes": 12689408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/up_proj": {
+            "activation_weighted_relative_error": 0.4718621075153351,
+            "weight_relative_frobenius_error": 0.6631799936294556,
+            "codec_payload_bytes": 12689408,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          },
+          "layer_1/down_proj": {
+            "activation_weighted_relative_error": 0.003931619226932526,
+            "weight_relative_frobenius_error": 0.8644492626190186,
+            "codec_payload_bytes": 12703232,
+            "train_context_tokens": 1024,
+            "validation_context_tokens": 1024,
+            "activation_alpha": 0.5,
+            "quantization_bits": 2,
+            "calibration_split": "train",
+            "measurement_split": "validation"
+          }
+        },
+        "same_input_block_and_cascade_metrics": {
+          "0": {
+            "same_input_block_output_relative_error": 0.21216176450252533,
+            "same_input_active_transformation_relative_error": 0.2520865201950073
+          },
+          "1": {
+            "same_input_block_output_relative_error": 0.09676714986562729,
+            "same_input_active_transformation_relative_error": 0.09677977114915848
+          },
+          "layers_0_1_composed": {
+            "relative_error": 0.0746481716632843,
+            "candidate_total_hidden_drift_from_dense": 0.0746481716632843
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,8 @@ from nox.residual_codec import (
     decode_groupwise,
     encode_groupwise,
 )
+from nox.sequential_compiler import forward_transformer_block
+from scripts.compile_direct_packed import projection_contexts_and_output
 from scripts.run_residual_codec_pilot import block_error_metrics, load_activation_tensor
 
 
@@ -144,6 +146,36 @@ class PackedResidualCodecTests(unittest.TestCase):
         )
         self.assertIn("layers_0_3_composed", metrics)
         self.assertEqual(metrics["layers_0_3_composed"]["relative_error"], 0.0)
+
+    def test_full_constructor_contexts_match_dense_block(self):
+        torch.manual_seed(19)
+        width, intermediate, tokens, seq_len = 8, 12, 4, 2
+        weights = {
+            "q_proj": torch.randn(width, width),
+            "k_proj": torch.randn(width, width),
+            "v_proj": torch.randn(width, width),
+            "o_proj": torch.randn(width, width),
+            "gate_proj": torch.randn(intermediate, width),
+            "up_proj": torch.randn(intermediate, width),
+            "down_proj": torch.randn(width, intermediate),
+            "input_layernorm": torch.randn(width),
+            "post_attention_layernorm": torch.randn(width),
+        }
+        hidden = torch.randn(width, tokens)
+        contexts, actual = projection_contexts_and_output(
+            weights, hidden, seq_len=seq_len, n_heads=2, n_kv_heads=2,
+            rms_norm_eps=1e-5,
+        )
+        expected, _, _ = forward_transformer_block(
+            weights, hidden, seq_len=seq_len, n_heads=2, n_kv_heads=2,
+            rms_norm_eps=1e-5,
+        )
+        self.assertEqual(set(contexts), {
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        })
+        self.assertEqual(contexts["down_proj"].shape, (intermediate, tokens))
+        self.assertTrue(torch.allclose(actual, expected, atol=1e-5, rtol=1e-5))
 
     def test_direct_dispatch_and_hybrid_dispatch(self):
         matrix = torch.randn(8, 8)

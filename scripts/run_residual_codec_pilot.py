@@ -519,7 +519,7 @@ def main():
         torch.cuda.empty_cache()
 
     report = {
-        "experiment": "packed_groupwise_residual_codec_two_layer_pilot",
+        "experiment": "packed_groupwise_residual_codec_prefix_pilot",
         "custom_block_diagnostics_dtype": "float32",
         "language_model_evaluation_dtype": "float16",
         "source_commit": __import__("subprocess").check_output(

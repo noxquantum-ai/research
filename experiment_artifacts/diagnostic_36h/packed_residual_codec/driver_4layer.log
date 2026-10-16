@@ -1,0 +1,38 @@
+[20:02:05] CUDA device: NVIDIA A10
+[20:02:05] Loading pinned dense layer 0 weights and saved activation windows
+[20:02:29] Loading pinned dense layer 1 weights and saved activation windows
+[20:02:51] Loading pinned dense layer 2 weights and saved activation windows
+[20:03:14] Loading pinned dense layer 3 weights and saved activation windows
+[20:03:38] Constructing direct_3b_a05 from saved NEC checkpoints
+[20:03:42] Loading pinned HF model once for matched dense/NEC/candidate PPL
+2026-10-16 20:03:43.820374: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 20:03:43.833076: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792181023.846728   23090 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792181023.851078   23090 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792181023.860966   23090 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792181023.860980   23090 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792181023.860982   23090 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792181023.860984   23090 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 20:03:43.864013: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.39s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.16it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.06it/s]
+[20:03:47] Loaded WikiText-2 raw test split: 732610 bytes, sha256=5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91 from https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet
+[20:03:48] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[20:03:58] Evaluating nec_mpo on raw WikiText test
+[20:03:58] Found 4 compressed layer checkpoints in '/home/shadeform/diag36h-research/checkpoints/diagnostic_36h/high_fidelity_no_healing_4layer_prefix'. Injecting weights...
+[20:03:58]   Layer 00: Reconstructed and injected (68123.4 KB artifact)
+[20:03:58]   Layer 01: Reconstructed and injected (68351.0 KB artifact)
+[20:03:58]   Layer 02: Reconstructed and injected (68317.8 KB artifact)
+[20:03:58]   Layer 03: Reconstructed and injected (68400.8 KB artifact)
+[20:03:59] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[20:04:09] nec_mpo: PPL=511.624420, NLL=6.237591, next_acc=0.169517, dense_agreement=0.206221, bytes=279960564
+[20:04:09] Evaluating direct_3b_a05 on raw WikiText test
+[20:04:09] Found 4 compressed layer checkpoints in '/home/shadeform/nec-crosslayer-research/checkpoints/diagnostic_36h/packed_residual_codec_4layer_afecd94/direct_3b_a05'. Injecting weights...
+[20:04:09]   Layer 00: Reconstructed and injected (68123.4 KB artifact)
+[20:04:09]   Layer 01: Reconstructed and injected (68351.0 KB artifact)
+[20:04:10]   Layer 02: Reconstructed and injected (68317.8 KB artifact)
+[20:04:10]   Layer 03: Reconstructed and injected (68400.8 KB artifact)
+[20:04:11] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+[20:04:20] direct_3b_a05: PPL=5.354042, NLL=1.677852, next_acc=0.609161, dense_agreement=0.947795, bytes=329310580
+[20:04:20] Saved pilot report to /home/shadeform/nec-crosslayer-research/checkpoints/diagnostic_36h/packed_residual_codec_4layer_afecd94/representation_pilot.json
