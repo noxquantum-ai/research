@@ -116,7 +116,7 @@ The next diagnostic adds a fixed dense-weight prior only to the TT fitting objec
 
 The prior control completed: calibration error **0.449208**, held-out error **0.673847**, compared with **0.408913 / 0.724945** without the prior. The first sweep improves held-out error to 0.673074 instead of worsening it to 0.706886. This supports the regularizer as a partial remedy, not an adequate-quality engine. It remains opt-in for diagnostics. These early diagnostic results reconstruct the FP16 artifact components in memory; baseline reconstruction was separately checked against the existing disk checkpoint. Subsequent projection diagnostics now save and reload their own `.pt` artifacts and record their actual file sizes.
 
-A single larger-budget control is running with the original zero-strength fit and bridge rank 512 instead of 128, retaining identical 1,024 corpus-spread tokens and TT ranks:
+A single larger-budget control completed with the original zero-strength fit and bridge rank 512 instead of 128, retaining identical 1,024 corpus-spread tokens and TT ranks:
 
 ```bash
 .venv/bin/python -u scripts/diagnose_projection_stages.py \
@@ -126,6 +126,10 @@ A single larger-budget control is running with the original zero-strength fit an
   --only-quantized --bridge-rank-control 512 \
   --output checkpoints/diagnostic_36h/calibration_coverage1024/uniform_bridge512_v_proj.json
 ```
+
+Its calibration/held-out errors are **0.207751 / 0.616448**, versus **0.408913 / 0.724945** at bridge rank 128. It still worsens held-out error relative to its own TT warm-start (0.598875). The saved and reloaded projection artifact occupies **15,742,968 bytes**; reconstruction differs from the pre-save FP32 fit by **0.0002437404** relative norm. Fit/audit duration was **59.394 seconds**. More bridge capacity helps, but neither this result nor the fixed-budget regularizer establishes adequate full-model quality. This budget control is not a new production regime.
+
+Diagnostic source, completed coverage/prior results, and 12 passing tests were committed and pushed to `main` as `f8265e6`. The larger-budget result is recorded in the following results-only increment. The next concrete check is to retain the regularized projection artifact and evaluate both it and the baseline on multiple disjoint validation windows before extending the candidate to all seven projections of a single layer. There is no GPU/data blocker. Full 32-layer compilation remains gated on the failing one-layer PPL/agreement checks.
 
 Direct tensor accounting of the corrected layer checkpoint: TT cores 13,329,408 bytes; bridge A/B 10,878,976 / 9,109,504; channel scales 71,168; sparse indices 29,334,944; sparse values 7,333,736. Sparse payload alone is 36,668,680 bytes. Packing/index representation must improve to meet the intended full-model size target; simulated quantization does not provide packed storage.
 
