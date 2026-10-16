@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import random
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 import gc
 import struct
@@ -241,7 +242,8 @@ def fetch_named_tensor(repo_id, tensor_key, cache_name, save_dir, token=None, re
 
 
 def build_real_token_calibration_data(
-    embed_weight, model_id, n_calib=256, n_test=128, seq_len=128, revision="main"
+    embed_weight, model_id, n_calib=256, n_test=128, seq_len=128, revision="main",
+    calibration_sampling="prefix", calibration_seed=42,
 ):
     """Build disjoint WikiText train/validation embedding streams with the model tokenizer."""
     from transformers import AutoTokenizer
@@ -265,7 +267,14 @@ def build_real_token_calibration_data(
             f"valid={len(validation_tokens)} requested={n_test}"
         )
 
-    calib_tokens = calib_tokens[:n_calib]
+    if calibration_sampling == "uniform":
+        offsets = sample_calibration_offsets(len(calib_tokens), n_calib, seq_len, calibration_seed)
+        calib_tokens = [token for start in offsets for token in calib_tokens[start:start + seq_len]]
+    elif calibration_sampling == "prefix":
+        offsets = list(range(0, n_calib, seq_len))
+        calib_tokens = calib_tokens[:n_calib]
+    else:
+        raise ValueError(f"Unknown calibration sampling: {calibration_sampling}")
     validation_tokens = validation_tokens[:n_test]
     calib_t = torch.tensor(calib_tokens, dtype=torch.long)
     validation_t = torch.tensor(validation_tokens, dtype=torch.long)
@@ -291,6 +300,9 @@ def build_real_token_calibration_data(
         "calibration_token_ids_sha256": token_digest(calib_tokens),
         "heldout_token_ids_sha256": token_digest(validation_tokens),
         "activation_sequence_length": seq_len,
+        "calibration_sampling": calibration_sampling,
+        "calibration_seed": calibration_seed,
+        "calibration_window_offsets": offsets,
     }
     log_step(
         f"WikiText-2 activations generated: train X_calib {list(X_calib.shape)} "
@@ -298,6 +310,17 @@ def build_real_token_calibration_data(
         f"({len(validation_tokens)} tokens)."
     )
     return X_calib, X_test, data_metadata
+
+
+def sample_calibration_offsets(total_tokens, n_calib, seq_len, seed):
+    """Sample distinct complete windows from training only, reproducibly."""
+    if seq_len <= 0 or n_calib <= 0 or n_calib % seq_len:
+        raise ValueError("Calibration token count must be a positive multiple of sequence length")
+    windows = total_tokens // seq_len
+    count = n_calib // seq_len
+    if count > windows:
+        raise ValueError("Training split has too few complete windows")
+    return [index * seq_len for index in random.Random(seed).sample(range(windows), count)]
 
 
 def build_calibrated_layer_input(d_model=4096, n_calib=256, n_test=128, seed=42):

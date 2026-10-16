@@ -46,7 +46,90 @@ The next command was launched on the GPU host at base repository commit `f0415af
   --start-layer 15 --end-layer 15 --n-calib 256 --n-validation 128 --seq-len 128
 ```
 
-Its compilation is in progress. This command has no healing or alternate regime option.
+Its compilation completed in 206.217 seconds. This command has no healing or alternate regime option. The saved layer occupies 70,110,452 bytes versus 404,766,720 dense FP16 tensor bytes (5.77× for this layer, excluding unchanged model tensors). Reconstructed block relative error was 0.013957 on calibration and 0.046512 on held-out validation.
+
+### Corrected single-layer and fitting controls
+
+Source/data/normalization fixes were committed and pushed directly to `main` as `a130d3c`. Subsequent diagnostic changes are recorded by the next commit; all execution remains on the remote A10.
+
+The corrected layer-15 checkpoint was evaluated with `scripts/diagnose_reference_pipeline.py --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 --weights-dir models/diagnostic_36h_cache --output checkpoints/diagnostic_36h/corrected_raw_layer15/evaluation.json` using the same raw-test protocol above. Dense PPL was **5.2922001**, compressed PPL **5.6438818**, dense top-1 agreement **89.57896%**. Dense next-token accuracy was 61.04610%, compressed 60.37604%. The previous layer-15 checkpoint scored PPL 5.6445222 and agreement 89.40894% on the same raw text. Correcting data and normalization is necessary but does not explain most remaining layer-15 compression loss. Both single-layer results fail the agreed PPL/agreement gates.
+
+Commands (remote repository root):
+
+```bash
+.venv/bin/python -u scripts/audit_projection_fit.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+  --dense-weights-dir models/diagnostic_36h_cache \
+  --output checkpoints/diagnostic_36h/corrected_raw_layer15/projection_fit.json
+.venv/bin/python -u scripts/diagnose_projection_stages.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+  --dense-weights-dir models/diagnostic_36h_cache --projection v_proj \
+  --output checkpoints/diagnostic_36h/corrected_raw_layer15/v_proj_stages.json
+```
+
+The seven-projection audit uses the saved 256 raw train tokens and 128 distinct raw validation tokens, clean dense projection inputs, and actual saved components. All seven projections improve calibration error but worsen held-out error when the fitted TT component is added. V-projection train/validation errors are 0.155965/0.803680; removing its TT component gives 0.27637/0.76176. Down-projection held-out error is 1.02235, versus 0.89497 without the TT component.
+
+The V-projection staged control reproduced the existing quantized checkpoint within the enforced 0.001 relative matrix tolerance. Disabling quantization yields train/validation errors 0.137952/0.810554 after FP16 serialization: it does not repair generalization. In that unquantized control, TT warm-start validation error was 0.716343, worsening to 0.778723 after sweep 1 and 0.810556 after sweep 2 while calibration error decreases. This supports a fitting/generalization failure under the current calibration coverage; it does not prove a universal budget limit or a serialization fault.
+
+Next controlled experiment (base `a130d3c` plus diagnostic/sampling edits): prepare 1,024 train tokens as either eight contiguous 128-token windows or eight nonoverlapping corpus-spread windows, seed 42, keeping the same 128 validation tokens and compression budget. No held-out labels enter fitting.
+
+```bash
+.venv/bin/python -u scripts/prepare_calibration_control.py \
+  --output checkpoints/diagnostic_36h/calibration_coverage1024
+for sampling in prefix uniform; do
+  .venv/bin/python -u scripts/diagnose_projection_stages.py \
+    --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+    --dense-weights-dir models/diagnostic_36h_cache --projection v_proj \
+    --calibration-input checkpoints/diagnostic_36h/calibration_coverage1024/$sampling.pt \
+    --only-quantized \
+    --output checkpoints/diagnostic_36h/calibration_coverage1024/${sampling}_v_proj.json
+done
+```
+
+Both coverage controls completed. V-projection relative errors:
+
+| Calibration | Tokens | Calibration error | Held-out error | Held-out at TT warm-start |
+|---|---:|---:|---:|---:|
+| Prefix | 256 | 0.155965 | 0.803680 | See staged JSON |
+| Prefix | 1,024 | 0.374522 | 0.767132 | 0.712595 |
+| Corpus-spread | 1,024 | 0.408913 | 0.724945 | 0.678979 |
+
+Coverage helps at fixed budget, but the subsequent calibration fitting still worsens held-out error. These are projection errors, not full-model accuracy or PPL. Dense-FP16 round-trip controls give exactly zero error for all seven projections. Direct groupwise 4-bit quantization of the full dense matrices gives held-out errors 0.053181 / 0.047386 / 0.113340 / 0.104873 / 0.070968 / 0.092284 / 0.107434 for q/k/v/o/gate/up/down respectively. This control retains all matrix entries and is not the target compressed representation or a packed checkpoint; no size claim is made for it. Command:
+
+```bash
+.venv/bin/python -u scripts/audit_projection_fit.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+  --dense-weights-dir models/diagnostic_36h_cache \
+  --output checkpoints/diagnostic_36h/corrected_raw_layer15/projection_budget_controls.json
+```
+
+The next diagnostic adds a fixed dense-weight prior only to the TT fitting objective, leaving the sparse/bridge initialization and storage budget unchanged. In original coordinates its additional squared-error term is `N * strength * ||(W_hat - W) diag(channel_rms)||_F^2`. Deterministic basis columns implement that term exactly. Strength 1 is a single energy-matched control, not a sweep. Validation data is never used in this objective; the normal engine default remains strength 0 pending measurement.
+
+```bash
+.venv/bin/python -u scripts/diagnose_projection_stages.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+  --dense-weights-dir models/diagnostic_36h_cache --projection v_proj \
+  --calibration-input checkpoints/diagnostic_36h/calibration_coverage1024/uniform.pt \
+  --only-quantized --diagonal-prior-strength 1 \
+  --output checkpoints/diagnostic_36h/calibration_coverage1024/uniform_weight_prior_v_proj.json
+```
+
+The prior control completed: calibration error **0.449208**, held-out error **0.673847**, compared with **0.408913 / 0.724945** without the prior. The first sweep improves held-out error to 0.673074 instead of worsening it to 0.706886. This supports the regularizer as a partial remedy, not an adequate-quality engine. It remains opt-in for diagnostics. These early diagnostic results reconstruct the FP16 artifact components in memory; baseline reconstruction was separately checked against the existing disk checkpoint. Subsequent projection diagnostics now save and reload their own `.pt` artifacts and record their actual file sizes.
+
+A single larger-budget control is running with the original zero-strength fit and bridge rank 512 instead of 128, retaining identical 1,024 corpus-spread tokens and TT ranks:
+
+```bash
+.venv/bin/python -u scripts/diagnose_projection_stages.py \
+  --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+  --dense-weights-dir models/diagnostic_36h_cache --projection v_proj \
+  --calibration-input checkpoints/diagnostic_36h/calibration_coverage1024/uniform.pt \
+  --only-quantized --bridge-rank-control 512 \
+  --output checkpoints/diagnostic_36h/calibration_coverage1024/uniform_bridge512_v_proj.json
+```
+
+Direct tensor accounting of the corrected layer checkpoint: TT cores 13,329,408 bytes; bridge A/B 10,878,976 / 9,109,504; channel scales 71,168; sparse indices 29,334,944; sparse values 7,333,736. Sparse payload alone is 36,668,680 bytes. Packing/index representation must improve to meet the intended full-model size target; simulated quantization does not provide packed storage.
+
+The updated remote suite passed **12 tests** in 0.086 seconds, including the augmented objective identity and unchanged zero-strength path. These tests are engineering checks, not evidence of full-model quality. Full-model corrected PPL, MMLU, 95% agreement, and the intended compression ratio remain unverified.
 
 Correction to an intermediate status message: historical raw logs **are present** at the paths below. Git's `*.log` ignore rule hid them from the default file search. `nox_big_guns.log` lines 2860–2900 show the failed canonical dataset load, processed fallback, dense PPL 19.75, and compressed PPL 10,916.44. Those logs substantiate the recorded number, but do not by themselves isolate how much each compression defect contributed.
 

@@ -1,0 +1,214 @@
+{
+  "projection": "v_proj",
+  "layer": 15,
+  "config": {
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "r_bridge": 128,
+    "n_outliers": 524288,
+    "epsilon": 0.005,
+    "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+  },
+  "calibration_tokens": 256,
+  "validation_tokens": 128,
+  "controls": {
+    "int4_simulation": {
+      "stages": [
+        {
+          "stage": "sparse",
+          "calibration": {
+            "relative_error": 0.8196063227103451,
+            "angular_drift": 0.423539936542511,
+            "norm_ratio": 0.5127366054155712,
+            "cosine_similarity": 0.576460063457489
+          },
+          "validation": {
+            "relative_error": 0.8398723513745175,
+            "angular_drift": 0.45333582162857056,
+            "norm_ratio": 0.4816465155269352,
+            "cosine_similarity": 0.5466641783714294
+          }
+        },
+        {
+          "stage": "sparse_plus_bridge",
+          "calibration": {
+            "relative_error": 0.2763711544027724,
+            "angular_drift": 0.038928985595703125,
+            "norm_ratio": 0.9548659525939382,
+            "cosine_similarity": 0.9610710144042969
+          },
+          "validation": {
+            "relative_error": 0.7617634906870535,
+            "angular_drift": 0.35208892822265625,
+            "norm_ratio": 0.6394086628046753,
+            "cosine_similarity": 0.6479110717773438
+          }
+        },
+        {
+          "stage": "tt_warmstart",
+          "calibration": {
+            "relative_error": 0.3428441247443478,
+            "angular_drift": 0.059555649757385254,
+            "norm_ratio": 0.9849146928261767,
+            "cosine_similarity": 0.9404443502426147
+          },
+          "validation": {
+            "relative_error": 0.7176322060323095,
+            "angular_drift": 0.3035585284233093,
+            "norm_ratio": 0.6912780036723163,
+            "cosine_similarity": 0.6964414715766907
+          }
+        },
+        {
+          "stage": "sweep_1",
+          "calibration": {
+            "relative_error": 0.18390927120220335,
+            "angular_drift": 0.01705610752105713,
+            "norm_ratio": 0.9817700075405535,
+            "cosine_similarity": 0.9829438924789429
+          },
+          "validation": {
+            "relative_error": 0.7775336027574088,
+            "angular_drift": 0.36729228496551514,
+            "norm_ratio": 0.7025474574391197,
+            "cosine_similarity": 0.6327077150344849
+          }
+        },
+        {
+          "stage": "sweep_2",
+          "calibration": {
+            "relative_error": 0.15596521294188653,
+            "angular_drift": 0.012237191200256348,
+            "norm_ratio": 0.9885564333275813,
+            "cosine_similarity": 0.9877628087997437
+          },
+          "validation": {
+            "relative_error": 0.8036781808967828,
+            "angular_drift": 0.3903934955596924,
+            "norm_ratio": 0.7419646454088026,
+            "cosine_similarity": 0.6096065044403076
+          }
+        },
+        {
+          "stage": "serialized_fp16",
+          "calibration": {
+            "relative_error": 0.1559648870752678,
+            "angular_drift": 0.012237071990966797,
+            "norm_ratio": 0.9885550574463021,
+            "cosine_similarity": 0.9877629280090332
+          },
+          "validation": {
+            "relative_error": 0.8036795210073645,
+            "angular_drift": 0.3903946876525879,
+            "norm_ratio": 0.7419666040319606,
+            "cosine_similarity": 0.6096053123474121
+          }
+        }
+      ],
+      "seconds": 18.288114848997793,
+      "serialization_relative_error": 0.00035861923242919147,
+      "previous_artifact_relative_difference": 0.0
+    },
+    "no_quantization_control": {
+      "stages": [
+        {
+          "stage": "sparse",
+          "calibration": {
+            "relative_error": 0.8182980768583193,
+            "angular_drift": 0.42097973823547363,
+            "norm_ratio": 0.5091905972852715,
+            "cosine_similarity": 0.5790202617645264
+          },
+          "validation": {
+            "relative_error": 0.838764646893229,
+            "angular_drift": 0.4509039521217346,
+            "norm_ratio": 0.4781548574060507,
+            "cosine_similarity": 0.5490960478782654
+          }
+        },
+        {
+          "stage": "sparse_plus_bridge",
+          "calibration": {
+            "relative_error": 0.2628911567113563,
+            "angular_drift": 0.03506547212600708,
+            "norm_ratio": 0.9504299665204637,
+            "cosine_similarity": 0.9649345278739929
+          },
+          "validation": {
+            "relative_error": 0.7602012825476754,
+            "angular_drift": 0.3501763343811035,
+            "norm_ratio": 0.6365261364859344,
+            "cosine_similarity": 0.6498236656188965
+          }
+        },
+        {
+          "stage": "tt_warmstart",
+          "calibration": {
+            "relative_error": 0.33420865934779814,
+            "angular_drift": 0.056728899478912354,
+            "norm_ratio": 0.9814242268506708,
+            "cosine_similarity": 0.9432711005210876
+          },
+          "validation": {
+            "relative_error": 0.716342555768184,
+            "angular_drift": 0.30219823122024536,
+            "norm_ratio": 0.689201244612241,
+            "cosine_similarity": 0.6978017687797546
+          }
+        },
+        {
+          "stage": "sweep_1",
+          "calibration": {
+            "relative_error": 0.17915565569396474,
+            "angular_drift": 0.016178488731384277,
+            "norm_ratio": 0.982586484457502,
+            "cosine_similarity": 0.9838215112686157
+          },
+          "validation": {
+            "relative_error": 0.7787230024414726,
+            "angular_drift": 0.36835819482803345,
+            "norm_ratio": 0.7049960456429303,
+            "cosine_similarity": 0.6316418051719666
+          }
+        },
+        {
+          "stage": "sweep_2",
+          "calibration": {
+            "relative_error": 0.13795215713201425,
+            "angular_drift": 0.00956106185913086,
+            "norm_ratio": 0.9901455037901546,
+            "cosine_similarity": 0.9904389381408691
+          },
+          "validation": {
+            "relative_error": 0.8105559892015923,
+            "angular_drift": 0.3958078622817993,
+            "norm_ratio": 0.7526819736159036,
+            "cosine_similarity": 0.6041921377182007
+          }
+        },
+        {
+          "stage": "serialized_fp16",
+          "calibration": {
+            "relative_error": 0.13795230196162256,
+            "angular_drift": 0.009561121463775635,
+            "norm_ratio": 0.9901427520275964,
+            "cosine_similarity": 0.9904388785362244
+          },
+          "validation": {
+            "relative_error": 0.8105535666940021,
+            "angular_drift": 0.3958061933517456,
+            "norm_ratio": 0.7526769739725792,
+            "cosine_similarity": 0.6041938066482544
+          }
+        }
+      ],
+      "seconds": 18.173147797999263,
+      "serialization_relative_error": 0.0003510098613332957
+    }
+  }
+}

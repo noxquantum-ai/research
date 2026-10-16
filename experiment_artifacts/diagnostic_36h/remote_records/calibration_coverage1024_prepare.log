@@ -1,0 +1,22 @@
+[09:42:33] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[09:42:33] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[09:42:43] WikiText-2 activations generated: train X_calib [4096, 1024] (1024 tokens), validation X_test [4096, 128] (128 tokens).
+[09:42:43] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[09:42:43] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[09:42:53] WikiText-2 activations generated: train X_calib [4096, 1024] (1024 tokens), validation X_test [4096, 128] (128 tokens).
+dense_prefix_layer=0
+dense_prefix_layer=1
+dense_prefix_layer=2
+dense_prefix_layer=3
+dense_prefix_layer=4
+dense_prefix_layer=5
+dense_prefix_layer=6
+dense_prefix_layer=7
+dense_prefix_layer=8
+dense_prefix_layer=9
+dense_prefix_layer=10
+dense_prefix_layer=11
+dense_prefix_layer=12
+dense_prefix_layer=13
+dense_prefix_layer=14
+COMPLETE: checkpoints/diagnostic_36h/calibration_coverage1024

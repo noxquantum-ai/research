@@ -1,0 +1,110 @@
+{
+  "run_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "compression_path": "no_healing_independent",
+    "config": {
+      "ranks": [
+        1,
+        64,
+        128,
+        64,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 524288,
+      "epsilon": 0.005,
+      "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+    },
+    "forward_options": {
+      "n_heads": 32,
+      "n_kv_heads": 32,
+      "seq_len": 128,
+      "rms_norm_eps": 1e-05
+    },
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 256,
+      "heldout_token_count": 128,
+      "calibration_token_ids_sha256": "fb17b3233b51658a40cf7398668cf5e3904562f3d6a63a7dfbad7c645c4284ae",
+      "heldout_token_ids_sha256": "e4126a65436e2f690ad212cbbbf1643cb286b23ebcb1c82967cc88ccbab2a5f3",
+      "activation_sequence_length": 128
+    },
+    "layers": [
+      15
+    ],
+    "source_fingerprint": "d31a85bc479916b30e8042c0d8a60c3e321d5f38e37b2d8a3a0007530ad4ef5d"
+  },
+  "run_fingerprint": "c9d9b35b7b78d216262fcb96ede3afef429ed09165e6cbde674542cb8ef0bd3d",
+  "tier": "high_fidelity_10x",
+  "compression_path": "no_healing_independent",
+  "rms_norm_eps": 1e-05,
+  "history": [
+    {
+      "layer": 15,
+      "same_input_validation": {
+        "relative_error": 0.04651201185741638,
+        "angular_drift": 0.0010821819305419922,
+        "norm_ratio": 0.9990535610597756,
+        "cosine_similarity": 0.998917818069458
+      },
+      "cascade_validation": {
+        "relative_error": 0.04651201185741638,
+        "angular_drift": 0.0010821819305419922,
+        "norm_ratio": 0.9990535610597756,
+        "cosine_similarity": 0.998917818069458
+      },
+      "calibration": {
+        "relative_error": 0.013957081537741634,
+        "angular_drift": 9.721517562866211e-05,
+        "norm_ratio": 0.9998341050017342,
+        "cosine_similarity": 0.9999027848243713
+      },
+      "serialized_bytes": 70110452,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 206.21697877800034
+    }
+  ],
+  "layers_compressed": [
+    15
+  ],
+  "serialized_checkpoint_bytes": 70110452,
+  "checkpoint_file_sizes": {
+    "compressed_layer_15.pt": 70110452
+  }
+}

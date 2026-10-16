@@ -1,0 +1,54 @@
+2026-10-16 09:13:30.650141: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 09:13:30.663591: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792142010.679486    9781 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792142010.684691    9781 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792142010.697224    9781 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792142010.697242    9781 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792142010.697245    9781 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792142010.697246    9781 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 09:13:30.700742: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.41s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.15it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.05it/s]
+dense_layer_parity layer=0 relative_error=0.23142913 max_cache_error=0.00000000
+configured_epsilon=1e-05 relative_error=0.00042425
+dense_layer_parity layer=15 relative_error=0.00018317 max_cache_error=0.00000000
+configured_epsilon=1e-05 relative_error=0.00018305
+[09:13:38] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+raw dense PPL=5.2922 accuracy=0.6105
+[09:13:48] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+processed dense PPL=20.7908 accuracy=0.5112
+[09:13:57] Found 1 compressed layer checkpoints in 'checkpoints/diagnostic_36h/corrected_raw_layer15'. Injecting weights...
+[09:13:57]   Layer 15: Reconstructed and injected (68415.8 KB artifact)
+[09:13:58] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+raw compressed PPL=5.6439 agreement=0.8958
+[09:14:09] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+processed compressed PPL=22.3721 agreement=0.8606
+results=checkpoints/diagnostic_36h/corrected_raw_layer15/evaluation.json
+2026-10-16 09:14:23.013843: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-16 09:14:23.027140: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:467] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1792142063.043115    9780 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1792142063.048351    9780 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1792142063.060913    9780 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792142063.060931    9780 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792142063.060933    9780 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1792142063.060935    9780 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+2026-10-16 09:14:23.064477: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512F AVX512_VNNI, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.47s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.10it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.01it/s]
+dense_layer_parity layer=0 relative_error=0.23142913 max_cache_error=0.00000000
+configured_epsilon=1e-05 relative_error=0.00042425
+dense_layer_parity layer=15 relative_error=0.00018317 max_cache_error=0.00000000
+configured_epsilon=1e-05 relative_error=0.00018305
+[09:14:31] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+raw dense PPL=5.2922 accuracy=0.6105
+[09:14:41] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+processed dense PPL=20.7908 accuracy=0.5112
+[09:14:51] Found 1 compressed layer checkpoints in 'checkpoints/diagnostic_36h/calibration_control/train256/no_healing'. Injecting weights...
+[09:14:51]   Layer 15: Reconstructed and injected (68417.9 KB artifact)
+[09:14:52] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+raw compressed PPL=5.6445 agreement=0.8941
+[09:15:02] Computing Perplexity over 10000 tokens (seq_len=2048, stride=512)...
+processed compressed PPL=22.3997 agreement=0.8610
+results=checkpoints/diagnostic_36h/calibration_control/train256/no_healing/raw_evaluation.json

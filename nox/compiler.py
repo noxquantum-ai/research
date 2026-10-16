@@ -24,6 +24,21 @@ def quantize_4bit_grouped(tensor, group_size=64):
     return deq.reshape(orig_shape)
 
 
+def augment_diagonal_weight_prior(X, Y, W, channel_scale, strength):
+    """Add N*strength*||(W_hat-W) diag(channel_scale)||_F^2 to fit loss.
+
+    These deterministic basis columns encode a dense-weight prior, not extra
+    corpus examples. They never use validation activations or labels.
+    """
+    if strength < 0:
+        raise ValueError("Weight prior strength must be nonnegative")
+    if strength == 0:
+        return X, Y
+    scale = channel_scale * (X.shape[1] * strength) ** 0.5
+    return (torch.cat((X, torch.diag(scale)), dim=1),
+            torch.cat((Y, W * scale.unsqueeze(0)), dim=1))
+
+
 def estimate_artifact_tensor_bytes(cores, A_bridge, B_bridge, d_awt, sparse_count):
     """Estimate stored tensor payload bytes using artifact dtypes.
 
@@ -219,6 +234,9 @@ def nox_hybrid_dmrg_decompose(
     chunk_size=32,
     return_artifacts=False,
     verbose=True,
+    quantize_components=True,
+    diagnostic_callback=None,
+    diagonal_prior_strength=0.0,
 ):
     """
     Nox Hybrid Entanglement Engine (v3 - Covariance Bridge + Bidirectional Isometric Gauge):
@@ -231,6 +249,9 @@ def nox_hybrid_dmrg_decompose(
          before the final in-loop 4-bit quantization pass so gauges never collide).
     """
     d_out, d_in = W.shape
+    if diagonal_prior_strength < 0:
+        raise ValueError("Weight prior strength must be nonnegative")
+    quantize = quantize_4bit_grouped if quantize_components else lambda tensor, group_size=64: tensor
     device = W.device
     o0, o1, o2, o3 = o_modes
     i0, i1, i2, i3 = i_modes
@@ -248,7 +269,7 @@ def nox_hybrid_dmrg_decompose(
         thresh = torch.kthvalue(importance.flatten(), k_idx).values
         mask = importance >= thresh
         S_vals = torch.where(mask, W, torch.zeros_like(W))
-        S_sparse = quantize_4bit_grouped(S_vals, group_size=64) * mask.to(W.dtype)
+        S_sparse = quantize(S_vals, group_size=64) * mask.to(W.dtype)
         sparse_count = int(torch.count_nonzero(S_sparse).item())
         nz_mask = (S_sparse != 0) if return_artifacts else None
         if verbose:
@@ -263,6 +284,8 @@ def nox_hybrid_dmrg_decompose(
         sparse_count = 0
 
     W_rem = W - S_sparse
+    if diagnostic_callback is not None:
+        diagnostic_callback("sparse", S_sparse)
 
     # Step 1B: Covariance-Projected Hybrid SVD Bridge (Captures Off-Diagonal Manifold + Outliers)
     A_q = None
@@ -284,8 +307,8 @@ def nox_hybrid_dmrg_decompose(
         A_bridge = U_r / col_norms.unsqueeze(0)
         B_bridge = B_raw * col_norms.unsqueeze(1)
 
-        A_q = quantize_4bit_grouped(A_bridge, group_size=64)
-        B_q = quantize_4bit_grouped(B_bridge, group_size=64)
+        A_q = quantize(A_bridge, group_size=64)
+        B_q = quantize(B_bridge, group_size=64)
         S_bridge = A_q @ B_q
         del A_bridge, B_bridge, U_r, B_raw
         if verbose:
@@ -295,6 +318,8 @@ def nox_hybrid_dmrg_decompose(
         S_bridge = torch.zeros_like(W)
 
     S_total = S_sparse + S_bridge
+    if diagnostic_callback is not None:
+        diagnostic_callback("sparse_plus_bridge", S_total)
     W_core = W - S_total
 
     # Step 2: Exact AWT Channel Preconditioning
@@ -303,6 +328,10 @@ def nox_hybrid_dmrg_decompose(
     X_cond = X_calib / d_awt.unsqueeze(1)
 
     Y_target = Y_dense - (S_total @ X_calib)
+
+    X_cond, Y_target = augment_diagonal_weight_prior(
+        X_cond, Y_target, W_cond, ch_rms / d_awt, diagonal_prior_strength,
+    )
 
     U_x, S_x, Vh_x = torch.linalg.svd(X_cond, full_matrices=False)
     r_cov = S_x.shape[0]
@@ -345,6 +374,8 @@ def nox_hybrid_dmrg_decompose(
         return c0, c1, c2, c3
 
     c0, c1, c2, c3 = right_canonicalize(c0, c1, c2, c3)
+    if diagnostic_callback is not None:
+        diagnostic_callback("tt_warmstart", mpo_to_dense([c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]) / d_awt.unsqueeze(0) + S_total)
 
     # Step 4: Isometric DMRG Sweeps in the Conditioned Hilbert Space
     for sweep in range(n_sweeps):
@@ -380,7 +411,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c0 = quantize_4bit_grouped(c0)
+            c0 = quantize(c0)
         else:
             Q, R = torch.linalg.qr(c0.reshape(o0 * i0, r1))
             c0 = Q.reshape(o0, i0, -1)
@@ -462,7 +493,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c1 = quantize_4bit_grouped(c1)
+            c1 = quantize(c1)
         else:
             Q, R = torch.linalg.qr(c1.reshape(r1 * o1 * i1, r2))
             c1 = Q.reshape(r1, o1, i1, -1)
@@ -544,7 +575,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c2 = quantize_4bit_grouped(c2)
+            c2 = quantize(c2)
         else:
             Q, R = torch.linalg.qr(c2.reshape(r2 * o2 * i2, r3))
             c2 = Q.reshape(r2, o2, i2, -1)
@@ -576,9 +607,11 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c3 = quantize_4bit_grouped(c3)
+            c3 = quantize(c3)
         else:
             c0, c1, c2, c3 = right_canonicalize(c0, c1, c2, c3)
+        if diagnostic_callback is not None:
+            diagnostic_callback(f"sweep_{sweep + 1}", mpo_to_dense([c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]) / d_awt.unsqueeze(0) + S_total)
 
     final_cores = [c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]
 
@@ -608,6 +641,7 @@ def nox_hybrid_dmrg_decompose(
             sparse_val = None
 
         artifact = {
+            "quantization_bits": 4 if quantize_components else 16,
             "cores": [c.detach().to(dtype=torch.float16, device="cpu") for c in final_cores],
             "A_bridge": A_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and A_q is not None else None,
             "B_bridge": B_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and B_q is not None else None,

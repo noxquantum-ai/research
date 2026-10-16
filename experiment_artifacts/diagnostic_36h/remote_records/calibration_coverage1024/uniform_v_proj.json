@@ -1,0 +1,118 @@
+{
+  "projection": "v_proj",
+  "layer": 15,
+  "config": {
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "r_bridge": 128,
+    "n_outliers": 524288,
+    "epsilon": 0.005,
+    "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+  },
+  "calibration_input": "checkpoints/diagnostic_36h/calibration_coverage1024/uniform.pt",
+  "calibration_tokens": 1024,
+  "validation_tokens": 128,
+  "controls": {
+    "int4_simulation": {
+      "stages": [
+        {
+          "stage": "sparse",
+          "calibration": {
+            "relative_error": 0.8391811377032381,
+            "angular_drift": 0.45053577423095703,
+            "norm_ratio": 0.4711319483300632,
+            "cosine_similarity": 0.549464225769043
+          },
+          "validation": {
+            "relative_error": 0.8369264275167144,
+            "angular_drift": 0.44868218898773193,
+            "norm_ratio": 0.485006224298227,
+            "cosine_similarity": 0.5513178110122681
+          }
+        },
+        {
+          "stage": "sparse_plus_bridge",
+          "calibration": {
+            "relative_error": 0.5165366994805765,
+            "angular_drift": 0.14366304874420166,
+            "norm_ratio": 0.8452385317763157,
+            "cosine_similarity": 0.8563369512557983
+          },
+          "validation": {
+            "relative_error": 0.7140009702400587,
+            "angular_drift": 0.2997535467147827,
+            "norm_ratio": 0.6883139367789441,
+            "cosine_similarity": 0.7002464532852173
+          }
+        },
+        {
+          "stage": "tt_warmstart",
+          "calibration": {
+            "relative_error": 0.5181274961127036,
+            "angular_drift": 0.14431345462799072,
+            "norm_ratio": 0.881289542530748,
+            "cosine_similarity": 0.8556865453720093
+          },
+          "validation": {
+            "relative_error": 0.6789789326369683,
+            "angular_drift": 0.26583582162857056,
+            "norm_ratio": 0.7372292615825766,
+            "cosine_similarity": 0.7341641783714294
+          }
+        },
+        {
+          "stage": "sweep_1",
+          "calibration": {
+            "relative_error": 0.4284992456927693,
+            "angular_drift": 0.09644567966461182,
+            "norm_ratio": 0.8988568265774988,
+            "cosine_similarity": 0.9035543203353882
+          },
+          "validation": {
+            "relative_error": 0.7068863747039877,
+            "angular_drift": 0.29008132219314575,
+            "norm_ratio": 0.7705231235050043,
+            "cosine_similarity": 0.7099186778068542
+          }
+        },
+        {
+          "stage": "sweep_2",
+          "calibration": {
+            "relative_error": 0.40891271045430516,
+            "angular_drift": 0.08742588758468628,
+            "norm_ratio": 0.9114902324008283,
+            "cosine_similarity": 0.9125741124153137
+          },
+          "validation": {
+            "relative_error": 0.7249470450149305,
+            "angular_drift": 0.30364084243774414,
+            "norm_ratio": 0.7986549825517608,
+            "cosine_similarity": 0.6963591575622559
+          }
+        },
+        {
+          "stage": "serialized_fp16",
+          "calibration": {
+            "relative_error": 0.40891274640451153,
+            "angular_drift": 0.0874258279800415,
+            "norm_ratio": 0.9114880034880329,
+            "cosine_similarity": 0.9125741720199585
+          },
+          "validation": {
+            "relative_error": 0.7249448802209137,
+            "angular_drift": 0.30363982915878296,
+            "norm_ratio": 0.79864694188827,
+            "cosine_similarity": 0.696360170841217
+          }
+        }
+      ],
+      "seconds": 60.09421669199946,
+      "serialization_relative_error": 0.00036345430999062955
+    }
+  }
+}

@@ -8,9 +8,21 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from nox.data import WIKITEXT_REVISION, load_wikitext2_raw_split
+from benchmarks.benchmark_day3_cascade import sample_calibration_offsets
 
 
 class WikiTextSourceTests(unittest.TestCase):
+    def test_sampled_windows_are_reproducible_disjoint_and_in_bounds(self):
+        starts = sample_calibration_offsets(1001, 256, 32, 42)
+        self.assertEqual(starts, sample_calibration_offsets(1001, 256, 32, 42))
+        self.assertNotEqual(starts, sample_calibration_offsets(1001, 256, 32, 43))
+        covered = [position for start in starts for position in range(start, start + 32)]
+        self.assertEqual(len(set(covered)), 256)
+        self.assertGreaterEqual(min(covered), 0)
+        self.assertLess(max(covered), 1001)
+        with self.assertRaises(ValueError):
+            sample_calibration_offsets(100, 256, 32, 42)
+
     def test_raw_split_uses_pinned_raw_parquet_and_preserves_rows(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "split.parquet"
