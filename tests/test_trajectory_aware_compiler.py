@@ -1,13 +1,14 @@
 import unittest
 from unittest.mock import patch
 
-import torch
 import torch.nn.functional as F
+import torch
 
 from nox.block_compiler import (
     compile_attention_block,
     compile_mlp_block,
     compile_transformer_block,
+    ridge_compensated_up_target,
     scaled_dot_product_attention_2d,
 )
 
@@ -51,6 +52,50 @@ class TrajectoryAwareCompilerTests(unittest.TestCase):
         self.assertEqual(calls[2]["r_bridge"], 7)
         self.assertEqual(calls[2]["n_outliers"], 11)
         self.assertEqual(calls[2]["prior_gamma"], 0.01)
+
+    def test_ridge_compensated_up_target_minimizes_product_objective(self):
+        gate_dense = torch.randn(5, 13)
+        gate_compressed = gate_dense + 0.4 * torch.randn(5, 13)
+        up_dense = torch.randn(5, 13)
+        down = torch.randn(7, 5)
+        target, ridge, importance = ridge_compensated_up_target(
+            gate_dense, up_dense, gate_compressed, down_weight=down, ridge_ratio=0.07,
+        )
+        factor_dense = F.silu(gate_dense)
+        factor_compressed = F.silu(gate_compressed)
+        desired_product = factor_dense * up_dense
+
+        def objective(up):
+            return (
+                importance.unsqueeze(1)
+                * (factor_compressed * up - desired_product).square()
+                + ridge * (up - up_dense).square()
+            ).sum()
+
+        self.assertTrue(torch.isfinite(target).all())
+        self.assertLessEqual(float(objective(target)), float(objective(up_dense)) + 1e-6)
+
+    def test_mlp_projection_budgets_reach_each_projection(self):
+        weights = {
+            "gate_proj": torch.randn(4, 4),
+            "up_proj": torch.randn(4, 4),
+            "down_proj": torch.randn(4, 4),
+        }
+        budgets = {
+            "gate_proj": {"r_bridge": 2, "n_outliers": 3},
+            "up_proj": {"r_bridge": 4, "n_outliers": 5},
+            "down_proj": {"r_bridge": 6, "n_outliers": 7},
+        }
+        calls = []
+        with patch("nox.block_compiler.nox_hybrid_dmrg_decompose", side_effect=exact_mock(calls)):
+            compile_mlp_block(
+                weights, self.comp, causal_healing=False,
+                ranks=(1, 2, 2, 2, 1), projection_budgets=budgets,
+            )
+        self.assertEqual(
+            [(call["r_bridge"], call["n_outliers"]) for call in calls],
+            [(2, 3), (4, 5), (6, 7)],
+        )
 
     def test_attention_conditions_output_on_compressed_qkv_context_at_fixed_budget(self):
         weights = {name: torch.randn(4, 4) for name in ("q_proj", "k_proj", "v_proj", "o_proj")}

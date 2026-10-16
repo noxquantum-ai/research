@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT))
 
 from benchmarks.benchmark_day3_cascade import build_real_token_calibration_data
 from nox.artifacts import fingerprint, source_files_fingerprint
+from nox.allocation import projection_budgets
 from nox.block_compiler import compile_transformer_block
 from nox.compiler import reconstruct_from_artifact
 from nox.gauge import balanced_attention_gauge
@@ -40,17 +41,34 @@ def select_reference_activations(construction_mode, dense_activations, calibrati
     """Select clean targets for trajectory-aware initial construction."""
     if construction_mode == "independent":
         return calibration_activations
-    if construction_mode in ("trajectory_aware_mlp", "trajectory_aware_all"):
+    if construction_mode in (
+        "trajectory_aware_mlp", "trajectory_aware_all", "trajectory_aware_product",
+    ):
         return dense_activations
     raise ValueError(f"Unknown construction mode: {construction_mode}")
 
 
 def resume_identity_compatible(previous, current):
-    """Require identical science inputs while allowing a recorded source repair."""
+    """Allow source repairs and extension of an otherwise identical layer prefix."""
     previous = dict(previous)
     current = dict(current)
     previous.pop("source_fingerprint", None)
     current.pop("source_fingerprint", None)
+    previous_layers = previous.pop("layers", None)
+    current_layers = current.pop("layers", None)
+    if previous_layers is None or current_layers is None:
+        return False
+    previous_layers = list(previous_layers)
+    current_layers = list(current_layers)
+    if current_layers[:len(previous_layers)] != previous_layers:
+        return False
+    # These fields were added after the original independent compiler record;
+    # their absence means the original explicit defaults.
+    for key in (
+        "mlp_objective", "mlp_product_ridge_ratio", "budget_allocation", "projection_budgets",
+    ):
+        if key not in previous:
+            previous[key] = current.get(key)
     return json.dumps(previous, sort_keys=True) == json.dumps(current, sort_keys=True)
 
 
@@ -104,7 +122,10 @@ def main():
     )
     parser.add_argument(
         "--construction-mode",
-        choices=("independent", "trajectory_aware_mlp", "trajectory_aware_all"),
+        choices=(
+            "independent", "trajectory_aware_mlp", "trajectory_aware_all",
+            "trajectory_aware_product",
+        ),
         default="independent",
         help=("Initial zero-healing construction objective. Trajectory-aware modes regress from "
               "the actual compressed prefix toward its corresponding clean dense trajectory."),
@@ -116,6 +137,16 @@ def main():
         "--mlp-gauge", choices=("none", "balanced_up_down", "entanglement_ordered"), default="none",
         help=("Apply an exact joint SwiGLU gauge before initial compression. The entanglement-ordered "
               "variant maps calibration-correlated neurons onto the fixed MPO tensor grid."),
+    )
+    parser.add_argument(
+        "--mlp-objective", choices=("independent", "product_aware"), default="independent",
+        help=("Fit gate/up independently or fit Up to the closed-form ridge-compensated target "
+              "induced by the initially compressed gate."),
+    )
+    parser.add_argument("--mlp-product-ridge-ratio", type=float, default=0.05)
+    parser.add_argument(
+        "--budget-allocation", choices=("uniform", "interaction_aware"), default="uniform",
+        help="Keep uniform projection budgets or exchange Q/O sparse entries for Gate/Down at fixed total bytes",
     )
     parser.add_argument(
         "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
@@ -137,6 +168,8 @@ def main():
         raise ValueError("Calibration/validation counts must be positive multiples of seq-len")
     if args.construction_mode != "independent" and args.calibration_activation_mode != "compressed_prefix":
         raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
+    if args.mlp_product_ridge_ratio <= 0:
+        raise ValueError("--mlp-product-ridge-ratio must be positive")
     has_existing = bool(list(args.output.glob("compressed_layer_*.pt"))) or (args.output / "model_manifest.json").exists()
     if has_existing and not args.resume:
         raise FileExistsError("Use a fresh output directory; checkpoints will not be overwritten")
@@ -157,6 +190,9 @@ def main():
                            seq_len=args.seq_len, rms_norm_eps=config.rms_norm_eps)
     compression = get_tier_config("high_fidelity_10x")
     compression["diagonal_prior_strength"] = args.diagonal_prior_strength
+    per_projection_budgets = projection_budgets(
+        args.budget_allocation, compression["r_bridge"], compression["n_outliers"],
+    )
     compression_path = (
         "no_healing_independent"
         if args.calibration_activation_mode == "dense"
@@ -174,13 +210,17 @@ def main():
         "config": compression,
         "attention_gauge": args.attention_gauge,
         "mlp_gauge": args.mlp_gauge,
+        "mlp_objective": args.mlp_objective,
+        "mlp_product_ridge_ratio": args.mlp_product_ridge_ratio,
+        "budget_allocation": args.budget_allocation,
+        "projection_budgets": per_projection_budgets,
         "mpo_site_order": args.site_order,
         "forward_options": forward_options, "input_data": data,
         "layers": list(range(args.start_layer, args.end_layer + 1)),
         "source_fingerprint": source_files_fingerprint([
             Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
             ROOT / "nox/mlp_gauge.py", ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
-            ROOT / "nox/tensor_order.py",
+            ROOT / "nox/tensor_order.py", ROOT / "nox/allocation.py",
         ]),
     }
     if args.resume:
@@ -188,10 +228,16 @@ def main():
         if not resume_identity_compatible(manifest["run_identity"], identity):
             raise ValueError("Existing checkpoint identity does not match requested resumed run")
         manifest.setdefault("resume_events", []).append({
+            "previous_run_fingerprint": manifest["run_fingerprint"],
             "previous_source_fingerprint": manifest["run_identity"].get("source_fingerprint"),
             "resumed_source_fingerprint": identity["source_fingerprint"],
-            "reason": "resume after completed layer artifact; source change is recorded per layer",
+            "previous_layers": manifest["run_identity"].get("layers"),
+            "resumed_layers": identity["layers"],
+            "reason": "resume after completed layer artifacts; source repair or layer-prefix extension",
         })
+        manifest["run_identity"] = identity
+        manifest["run_fingerprint"] = fingerprint(identity)
+        manifest["layers_compressed"] = sorted(set(manifest.get("layers_compressed", [])))
         (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2))
     else:
         manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
@@ -271,7 +317,12 @@ def main():
             path = args.output / f"compressed_layer_{index}.pt"
             if args.resume and path.exists():
                 artifact = torch.load(path, map_location="cpu", weights_only=False)
-                if artifact.get("layer_idx") != index or artifact.get("run_fingerprint") != manifest["run_fingerprint"]:
+                accepted_fingerprints = {manifest["run_fingerprint"]}
+                accepted_fingerprints.update(
+                    event.get("previous_run_fingerprint")
+                    for event in manifest.get("resume_events", [])
+                )
+                if artifact.get("layer_idx") != index or artifact.get("run_fingerprint") not in accepted_fingerprints:
                     raise ValueError(f"Incompatible resumed artifact: {path}")
                 reconstructed = dict(dense)
                 reconstructed.update({
@@ -301,6 +352,12 @@ def main():
                 diagonal_prior_strength=args.diagonal_prior_strength,
                 trajectory_mode=("none" if args.construction_mode == "independent"
                                  else args.construction_mode.removeprefix("trajectory_aware_")),
+                mlp_product_aware=(
+                    args.mlp_objective == "product_aware"
+                    or args.construction_mode == "trajectory_aware_product"
+                ),
+                mlp_product_ridge_ratio=args.mlp_product_ridge_ratio,
+                projection_budgets=per_projection_budgets,
                 verbose=True, site_order=args.site_order, **forward_options,
             )
             artifact = {
@@ -310,6 +367,10 @@ def main():
                 "mpo_site_order": args.site_order,
                 "attention_gauge": gauge_metadata,
                 "mlp_gauge": mlp_gauge_metadata,
+                "mlp_objective": args.mlp_objective,
+                "mlp_product_aware": compiled["mlp_product_aware"],
+                "budget_allocation": args.budget_allocation,
+                "projection_budgets": per_projection_budgets,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),
@@ -342,6 +403,10 @@ def main():
                 "calibration": compute_metrics(calibration_dense_output, train_output),
                 "attention_gauge": gauge_metadata,
                 "mlp_gauge": mlp_gauge_metadata,
+                "mlp_objective": args.mlp_objective,
+                "mlp_product_aware": compiled["mlp_product_aware"],
+                "budget_allocation": args.budget_allocation,
+                "projection_budgets": per_projection_budgets,
                 "serialized_bytes": path.stat().st_size,
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
                 "seconds": time.monotonic() - started,

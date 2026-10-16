@@ -33,6 +33,7 @@ class CalibrationActivationModeTests(unittest.TestCase):
         compressed = torch.tensor([[2.0]])
         self.assertIs(select_reference_activations("trajectory_aware_mlp", dense, compressed), dense)
         self.assertIs(select_reference_activations("trajectory_aware_all", dense, compressed), dense)
+        self.assertIs(select_reference_activations("trajectory_aware_product", dense, compressed), dense)
 
     def test_independent_mode_preserves_legacy_reference(self):
         dense = torch.tensor([[1.0]])
@@ -49,6 +50,13 @@ class CalibrationActivationModeTests(unittest.TestCase):
         changed_science = {"model": "other", "layers": [0, 1], "source_fingerprint": "new"}
         self.assertTrue(resume_identity_compatible(previous, repaired))
         self.assertFalse(resume_identity_compatible(previous, changed_science))
+
+    def test_resume_compatibility_allows_layer_prefix_extension(self):
+        previous = {"model": "pinned", "layers": [0, 1], "order": [0, 1]}
+        extended = {"model": "pinned", "layers": [0, 1, 2, 3], "order": [0, 1]}
+        incompatible = {"model": "pinned", "layers": [1, 2, 3], "order": [0, 1]}
+        self.assertTrue(resume_identity_compatible(previous, extended))
+        self.assertFalse(resume_identity_compatible(previous, incompatible))
 
 
 if __name__ == "__main__":

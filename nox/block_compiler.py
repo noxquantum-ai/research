@@ -9,6 +9,18 @@ from nox.utils import compute_metrics, count_parameters, get_modes_for_projectio
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
 
 
+def _projection_budget(overrides, name, r_bridge, n_outliers):
+    if overrides is None:
+        return int(r_bridge), int(n_outliers)
+    unknown = set(overrides) - {
+        "q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj",
+    }
+    if unknown:
+        raise ValueError(f"Unknown projection budget keys: {sorted(unknown)}")
+    config = overrides.get(name, {})
+    return int(config.get("r_bridge", r_bridge)), int(config.get("n_outliers", n_outliers))
+
+
 class RMSNorm(torch.nn.Module):
     """Root Mean Square Layer Normalization."""
 
@@ -113,6 +125,51 @@ def scaled_dot_product_attention_2d(Q, K, V, n_heads=32, n_kv_heads=32, seq_len=
     return context_2d
 
 
+def ridge_compensated_up_target(
+    gate_dense,
+    up_dense,
+    gate_compressed,
+    down_weight=None,
+    ridge_ratio=0.05,
+):
+    """Closed-form up activations that compensate a fixed gate approximation.
+
+    For each intermediate channel and token this minimizes
+
+        (silu(g_hat) u - silu(g) u_dense)^2
+        + lambda (u - u_dense)^2,
+
+    weighted by the squared norm of the corresponding dense Down column, plus
+    lambda * (u - u_dense)^2. The diagonal output metric approximates
+    diag(D^T D), so channels with greater downstream effect receive stronger
+    product correction. The ridge term makes the target finite around SiLU
+    zeros.
+    """
+    if ridge_ratio <= 0:
+        raise ValueError("ridge_ratio must be positive")
+    if gate_dense.shape != up_dense.shape or gate_compressed.shape != gate_dense.shape:
+        raise ValueError("gate and up activation tensors must have identical shapes")
+    factor_dense = F.silu(gate_dense.float())
+    factor_compressed = F.silu(gate_compressed.float())
+    product_dense = factor_dense * up_dense.float()
+    if down_weight is None:
+        importance = torch.ones(
+            gate_dense.shape[0], device=gate_dense.device, dtype=torch.float32,
+        )
+    else:
+        if down_weight.ndim != 2 or down_weight.shape[1] != gate_dense.shape[0]:
+            raise ValueError("down_weight must have shape [d_model, intermediate_size]")
+        importance = down_weight.float().square().sum(dim=0)
+        importance = importance / importance.mean().clamp_min(1e-12)
+        importance = importance.clamp(0.05, 20.0)
+    ridge = ridge_ratio * factor_compressed.square().mean().clamp_min(1e-8)
+    weighted_factor = importance.unsqueeze(1) * factor_compressed
+    target = (
+        weighted_factor * product_dense + ridge * up_dense.float()
+    ) / (importance.unsqueeze(1) * factor_compressed.square() + ridge)
+    return target.to(dtype=up_dense.dtype), ridge, importance
+
+
 @torch.no_grad()
 def compile_attention_block(
     weights,
@@ -132,6 +189,7 @@ def compile_attention_block(
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
     conditional_context=False,
+    projection_budgets=None,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
@@ -147,6 +205,18 @@ def compile_attention_block(
     W_k = weights["k_proj"]
     W_v = weights["v_proj"]
     W_o = weights["o_proj"]
+    r_bridge_q, n_outliers_q = _projection_budget(
+        projection_budgets, "q_proj", r_bridge, n_outliers,
+    )
+    r_bridge_k, n_outliers_k = _projection_budget(
+        projection_budgets, "k_proj", r_bridge, n_outliers,
+    )
+    r_bridge_v, n_outliers_v = _projection_budget(
+        projection_budgets, "v_proj", r_bridge, n_outliers,
+    )
+    r_bridge_o_base, n_outliers_o_base = _projection_budget(
+        projection_budgets, "o_proj", r_bridge, n_outliers,
+    )
     d_model = W_o.shape[0]
     o_modes, i_modes = get_modes_for_projection(W_q.shape[0], W_q.shape[1])
 
@@ -164,12 +234,12 @@ def compile_attention_block(
     if return_artifacts:
         W_hat_q, kb_q, cores_q, _, art_q = compile_projection(
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_q, kb_q, cores_q, _ = compile_projection(
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, verbose=False,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -178,12 +248,12 @@ def compile_attention_block(
     if return_artifacts:
         W_hat_k, kb_k, cores_k, _, art_k = compile_projection(
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_k, kb_k, cores_k, _ = compile_projection(
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, verbose=False,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -192,12 +262,12 @@ def compile_attention_block(
     if return_artifacts:
         W_hat_v, kb_v, cores_v, _, art_v = compile_projection(
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_v, kb_v, cores_v, _ = compile_projection(
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, verbose=False,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -210,8 +280,8 @@ def compile_attention_block(
 
     if causal_healing:
         X_o_calib = A_comp
-        r_bridge_o = min(int(r_bridge * 1.5), max(64, int(X_in.shape[1] * 0.6)))
-        n_outliers_o = n_outliers // 2
+        r_bridge_o = min(int(r_bridge_o_base * 1.5), max(64, int(X_in.shape[1] * 0.6)))
+        n_outliers_o = n_outliers_o_base // 2
         if residual_drift is not None:
             Y_attn_target = Y_attn_dense + alpha_heal * residual_drift
         else:
@@ -222,8 +292,8 @@ def compile_attention_block(
         # Fit once on the context the saved Q/K/V factors actually produce.
         # Capacity stays identical to the independent zero-healing baseline.
         X_o_calib = A_comp
-        r_bridge_o = r_bridge
-        n_outliers_o = n_outliers
+        r_bridge_o = r_bridge_o_base
+        n_outliers_o = n_outliers_o_base
         Y_attn_target = Y_attn_dense
         if verbose:
             print(
@@ -235,8 +305,8 @@ def compile_attention_block(
         if verbose:
             print("  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...", flush=True)
         X_o_calib = A_dense
-        r_bridge_o = r_bridge
-        n_outliers_o = n_outliers
+        r_bridge_o = r_bridge_o_base
+        n_outliers_o = n_outliers_o_base
         Y_attn_target = Y_attn_dense
 
     gamma_o = 0.002 if causal_healing else 0.01
@@ -294,6 +364,9 @@ def compile_mlp_block(
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
     conditional_context=False,
+    product_aware=False,
+    product_ridge_ratio=0.05,
+    projection_budgets=None,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
@@ -308,6 +381,15 @@ def compile_mlp_block(
     W_gate = weights["gate_proj"]
     W_up = weights["up_proj"]
     W_down = weights["down_proj"]
+    r_bridge_gate, n_outliers_gate = _projection_budget(
+        projection_budgets, "gate_proj", r_bridge, n_outliers,
+    )
+    r_bridge_up, n_outliers_up = _projection_budget(
+        projection_budgets, "up_proj", r_bridge, n_outliers,
+    )
+    r_bridge_down_base, n_outliers_down_base = _projection_budget(
+        projection_budgets, "down_proj", r_bridge, n_outliers,
+    )
 
     o_modes_up, i_modes_up = get_modes_for_projection(W_gate.shape[0], W_gate.shape[1])
     o_modes_down, i_modes_down = get_modes_for_projection(W_down.shape[0], W_down.shape[1])
@@ -327,39 +409,71 @@ def compile_mlp_block(
     if return_artifacts:
         W_hat_gate, kb_gate, cores_gate, _, art_gate = compile_projection(
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_gate, kb_gate, cores_gate, _ = compile_projection(
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
-        )
-    if torch.cuda.is_available():
-        gc.collect()
-        torch.cuda.empty_cache()
-
-    if return_artifacts:
-        W_hat_up, kb_up, cores_up, _, art_up = compile_projection(
-            W=W_up, X_calib=M_in, Y_dense=H_up_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
-        )
-    else:
-        W_hat_up, kb_up, cores_up, _ = compile_projection(
-            W=W_up, X_calib=M_in, Y_dense=H_up_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, verbose=False,
         )
     if torch.cuda.is_available():
         gc.collect()
         torch.cuda.empty_cache()
 
     H_gate_comp = W_hat_gate @ M_in
+    product_metadata = None
+    if product_aware:
+        H_up_target, product_ridge, product_importance = ridge_compensated_up_target(
+            H_gate_dense, H_up_dense, H_gate_comp,
+            down_weight=W_down,
+            ridge_ratio=product_ridge_ratio,
+        )
+        dense_product = F.silu(H_gate_dense) * H_up_dense
+        target_product = F.silu(H_gate_comp) * H_up_target
+        product_metadata = {
+            "objective": "ridge_compensated_swiglu_product",
+            "ridge_ratio": float(product_ridge_ratio),
+            "mean_channel_ridge": float(product_ridge.float().mean()),
+            "down_channel_importance_mean": float(product_importance.mean()),
+            "down_channel_importance_p95": float(torch.quantile(product_importance, 0.95)),
+            "pre_fit_target_relative_error": compute_metrics(
+                dense_product, target_product,
+            )["relative_error"],
+        }
+        if verbose:
+            print(
+                "  [SwiGLU MLP Sub-Block] Product-aware construction: "
+                "fitting Up to a ridge-compensated compressed-gate target...",
+                flush=True,
+            )
+    else:
+        H_up_target = H_up_dense
+
+    if return_artifacts:
+        W_hat_up, kb_up, cores_up, _, art_up = compile_projection(
+            W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
+            ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, return_artifacts=True, verbose=False,
+        )
+    else:
+        W_hat_up, kb_up, cores_up, _ = compile_projection(
+            W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
+            ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, verbose=False,
+        )
+    if torch.cuda.is_available():
+        gc.collect()
+        torch.cuda.empty_cache()
+
     H_up_comp = W_hat_up @ M_in
     H_swiglu_comp = F.silu(H_gate_comp) * H_up_comp
+    if product_metadata is not None:
+        product_metadata["post_fit_product_relative_error"] = compute_metrics(
+            H_swiglu_dense, H_swiglu_comp,
+        )["relative_error"]
 
     if causal_healing:
         X_down_calib = H_swiglu_comp
-        r_bridge_down = min(int(r_bridge * 1.5), max(64, int(H_swiglu_comp.shape[1] * 0.6)))
-        n_outliers_down = n_outliers // 2
+        r_bridge_down = min(int(r_bridge_down_base * 1.5), max(64, int(H_swiglu_comp.shape[1] * 0.6)))
+        n_outliers_down = n_outliers_down_base // 2
         if residual_drift is not None:
             Y_mlp_target = Y_mlp_dense + alpha_heal * residual_drift
         else:
@@ -371,8 +485,8 @@ def compile_mlp_block(
         # activation produced by the factors that will be serialized. This is
         # part of compilation and keeps the bridge/sparse/MPO budget fixed.
         X_down_calib = H_swiglu_comp
-        r_bridge_down = r_bridge
-        n_outliers_down = n_outliers
+        r_bridge_down = r_bridge_down_base
+        n_outliers_down = n_outliers_down_base
         Y_mlp_target = Y_mlp_dense
         if verbose:
             print(
@@ -384,8 +498,8 @@ def compile_mlp_block(
         if verbose:
             print("  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...", flush=True)
         X_down_calib = H_swiglu_dense
-        r_bridge_down = r_bridge
-        n_outliers_down = n_outliers
+        r_bridge_down = r_bridge_down_base
+        n_outliers_down = n_outliers_down_base
         Y_mlp_target = Y_mlp_dense
 
     if verbose:
@@ -423,6 +537,7 @@ def compile_mlp_block(
         "Y_mlp_dense": Y_mlp_dense,
         "H_swiglu_comp": H_swiglu_comp,
         "H_swiglu_dense": H_swiglu_dense,
+        "product_aware": product_metadata,
         "total_kb": total_kb,
     }
     if return_artifacts:
@@ -453,6 +568,9 @@ def compile_transformer_block(
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
     trajectory_mode="none",
+    mlp_product_aware=False,
+    mlp_product_ridge_ratio=0.05,
+    projection_budgets=None,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -472,7 +590,7 @@ def compile_transformer_block(
     t_start = time.time()
     d_model = X_calib.shape[0]
     site_order = validate_site_order(site_order)
-    if trajectory_mode not in ("none", "mlp", "all"):
+    if trajectory_mode not in ("none", "mlp", "all", "product"):
         raise ValueError(f"Unknown trajectory_mode: {trajectory_mode}")
     if causal_healing and trajectory_mode != "none":
         raise ValueError("trajectory_mode and causal_healing are mutually exclusive")
@@ -507,7 +625,8 @@ def compile_transformer_block(
         return_artifacts=return_artifacts,
         verbose=verbose,
         site_order=site_order,
-        conditional_context=trajectory_mode == "all",
+        conditional_context=trajectory_mode in ("all", "product"),
+        projection_budgets=projection_budgets,
     )
 
     X_res1_dense = ref_calib_dense + attn_res["Y_attn_dense"]
@@ -516,7 +635,7 @@ def compile_transformer_block(
     X_norm2_dense = norm2(X_res1_dense)
     X_norm2_comp = (
         norm2(X_res1_comp)
-        if causal_healing or trajectory_mode in ("mlp", "all")
+        if causal_healing or trajectory_mode in ("mlp", "all", "product")
         else norm2(X_res1_dense)
     )
 
@@ -537,6 +656,9 @@ def compile_transformer_block(
         verbose=verbose,
         site_order=site_order,
         conditional_context=trajectory_mode in ("mlp", "all"),
+        product_aware=mlp_product_aware,
+        product_ridge_ratio=mlp_product_ridge_ratio,
+        projection_budgets=projection_budgets,
     )
 
     X_out_dense = X_res1_dense + mlp_res["Y_mlp_dense"]
@@ -569,6 +691,7 @@ def compile_transformer_block(
         "transform_metrics": transform_metrics,
         "attn_metrics": attn_metrics,
         "mlp_metrics": mlp_metrics,
+        "mlp_product_aware": mlp_res["product_aware"],
         "total_kb": total_kb,
         "time_sec": total_time,
         "causal_healing": causal_healing,
