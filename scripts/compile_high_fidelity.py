@@ -21,7 +21,7 @@ from nox.artifacts import fingerprint, source_files_fingerprint
 from nox.block_compiler import compile_transformer_block
 from nox.compiler import reconstruct_from_artifact
 from nox.gauge import balanced_attention_gauge
-from nox.mlp_gauge import balanced_swiglu_gauge
+from nox.mlp_gauge import balanced_swiglu_gauge, entanglement_ordered_swiglu_gauge
 from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
@@ -113,8 +113,9 @@ def main():
     parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
                         help="Apply an exact paired attention reparameterization before compression")
     parser.add_argument(
-        "--mlp-gauge", choices=("none", "balanced_up_down"), default="none",
-        help="Apply the exact paired SwiGLU up/down balancing gauge before initial compression",
+        "--mlp-gauge", choices=("none", "balanced_up_down", "entanglement_ordered"), default="none",
+        help=("Apply an exact joint SwiGLU gauge before initial compression. The entanglement-ordered "
+              "variant maps calibration-correlated neurons onto the fixed MPO tensor grid."),
     )
     parser.add_argument(
         "--site-order", type=parse_site_order, default=IDENTITY_SITE_ORDER,
@@ -227,10 +228,18 @@ def main():
         else:
             train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
             validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
-        if index >= args.start_layer and args.mlp_gauge == "balanced_up_down":
+        if index >= args.start_layer and args.mlp_gauge != "none":
             reference_train_next = train_next
             reference_validation_next = validation_next
-            dense, mlp_gauge_metadata = balanced_swiglu_gauge(dense)
+            if args.mlp_gauge == "balanced_up_down":
+                dense, mlp_gauge_metadata = balanced_swiglu_gauge(dense)
+            else:
+                gauge_input = select_calibration_activations(
+                    args.calibration_activation_mode, train, compressed_calibration,
+                )
+                dense, mlp_gauge_metadata = entanglement_ordered_swiglu_gauge(
+                    dense, gauge_input,
+                )
             train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
             validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
             mlp_gauge_metadata["train_parity_relative_error"] = compute_metrics(
