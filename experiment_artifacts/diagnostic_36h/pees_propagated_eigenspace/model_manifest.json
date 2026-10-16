@@ -1,0 +1,514 @@
+{
+  "run_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "compression_path": "no_healing_prefix_calibrated+pees_propagated_eigenspace",
+    "calibration_activation_mode": "compressed_prefix",
+    "construction_mode": "independent",
+    "config": {
+      "ranks": [
+        1,
+        64,
+        128,
+        64,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 524288,
+      "epsilon": 0.005,
+      "description": "High-fidelity experimental configuration; quality and serialized size require measurement",
+      "diagonal_prior_strength": 0.0
+    },
+    "attention_gauge": "none",
+    "mlp_gauge": "none",
+    "mlp_objective": "independent",
+    "mlp_product_ridge_ratio": 0.05,
+    "budget_allocation": "uniform",
+    "projection_budgets": {
+      "q_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "k_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "v_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "o_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "gate_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "up_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "down_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      }
+    },
+    "defect_bridge_mode": "none",
+    "defect_bridge_linear_rank": 512,
+    "defect_bridge_memory_size": 512,
+    "defect_bridge_memory_top_k": 8,
+    "defect_bridge_ridge_ratio": 0.01,
+    "max_checkpoint_multiplier": 1.25,
+    "pees_rank": 192,
+    "pees_projections": [
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "down_proj"
+    ],
+    "pees_tokens": 4096,
+    "pees_ridge_ratio": 0.01,
+    "mpo_site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "forward_options": {
+      "n_heads": 32,
+      "n_kv_heads": 32,
+      "seq_len": 128,
+      "rms_norm_eps": 1e-05
+    },
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 1024,
+      "heldout_token_count": 1024,
+      "calibration_token_ids_sha256": "7f60905fb0e061cc1eecb73c69167168fc23c724dc4aa7fdfb9235bbbd6e1902",
+      "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+      "activation_sequence_length": 128,
+      "calibration_sampling": "uniform",
+      "calibration_seed": 42,
+      "calibration_window_offsets": [
+        2681856,
+        466944,
+        104832,
+        1153536,
+        1027072,
+        936192,
+        585216,
+        429824
+      ],
+      "validation_sampling": "uniform",
+      "validation_seed": 43,
+      "validation_window_offsets": [
+        20096,
+        149888,
+        75392,
+        242432,
+        193920,
+        50432,
+        237568,
+        261120
+      ]
+    },
+    "layers": [
+      0,
+      1
+    ],
+    "source_fingerprint": "cccfbfd9aeae43ec398cb1b5491ecef51af758d9db0495fca3f53354c6d7da1e"
+  },
+  "run_fingerprint": "b5c7b8661fbaad602836bea16719b33c9a8b3f7724d2600d60af5b67cb04b250",
+  "tier": "high_fidelity_10x",
+  "compression_path": "no_healing_prefix_calibrated+pees_propagated_eigenspace",
+  "calibration_activation_mode": "compressed_prefix",
+  "construction_mode": "independent",
+  "mpo_site_order": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "rms_norm_eps": 1e-05,
+  "history": [
+    {
+      "layer": 0,
+      "calibration_activation_mode": "compressed_prefix",
+      "construction_mode": "independent",
+      "mpo_site_order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "same_input_validation": {
+        "relative_error": 0.25616964633590794,
+        "angular_drift": 0.03175473213195801,
+        "norm_ratio": 0.9123719539089545,
+        "cosine_similarity": 0.968245267868042
+      },
+      "cascade_validation": {
+        "relative_error": 0.25616964633590794,
+        "angular_drift": 0.03175473213195801,
+        "norm_ratio": 0.9123719539089545,
+        "cosine_similarity": 0.968245267868042
+      },
+      "calibration": {
+        "relative_error": 0.11775556886203405,
+        "angular_drift": 0.00682520866394043,
+        "norm_ratio": 0.9769732966950073,
+        "cosine_similarity": 0.9931747913360596
+      },
+      "heldout_block_output": {
+        "relative_error": 0.25616964633590794,
+        "angular_drift": 0.03175473213195801,
+        "norm_ratio": 0.9123719539089545,
+        "cosine_similarity": 0.968245267868042
+      },
+      "attention_gauge": null,
+      "mlp_gauge": null,
+      "mlp_objective": "independent",
+      "mlp_product_aware": null,
+      "budget_allocation": "uniform",
+      "projection_budgets": {
+        "q_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "k_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "v_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "o_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "gate_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "up_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "down_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        }
+      },
+      "serialized_bytes": 86865901,
+      "base_checkpoint_bytes_before_bridge": null,
+      "bridge_tensor_bytes": 0,
+      "pees": {
+        "objective": "propagated_defect_ridge_whitened_eigenspace",
+        "requested_rank_per_projection": 192,
+        "effective_rank_per_projection": 183,
+        "projections": [
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "down_proj"
+        ],
+        "sample_tokens": 1024,
+        "ridge_ratio": 0.01,
+        "base_checkpoint_bytes": 69810336,
+        "max_checkpoint_multiplier": 1.25,
+        "sidecar_budget_bytes_with_safety_margin": 17103532,
+        "conditional_projection_order": [
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "down_proj"
+        ],
+        "projection_metrics": {
+          "v_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 183,
+            "effective_rank": 183,
+            "sample_tokens": 1024,
+            "context_width": 4096,
+            "ridge_ratio": 0.01,
+            "ridge": 0.17380759119987488,
+            "calibration_relative_error_before": 0.1237044706940651,
+            "calibration_relative_error_after": 0.08554185181856155,
+            "defect_relative_residual_after": 0.6915016770362854,
+            "attainable_defect_energy_fraction": 0.9999997615814209,
+            "correction_to_defect_norm_ratio": 0.6113930940628052,
+            "serialized_tensor_bytes": 2998272,
+            "added_tensor_bytes": 2998272
+          },
+          "o_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 183,
+            "effective_rank": 183,
+            "sample_tokens": 1024,
+            "context_width": 4096,
+            "ridge_ratio": 0.01,
+            "ridge": 0.005008123815059662,
+            "calibration_relative_error_before": 0.04003908485174179,
+            "calibration_relative_error_after": 0.02215401455760002,
+            "defect_relative_residual_after": 0.5533097386360168,
+            "attainable_defect_energy_fraction": 0.9999876618385315,
+            "correction_to_defect_norm_ratio": 0.7474919557571411,
+            "serialized_tensor_bytes": 2998272,
+            "added_tensor_bytes": 2998272
+          },
+          "gate_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 183,
+            "effective_rank": 183,
+            "sample_tokens": 1024,
+            "context_width": 4096,
+            "ridge_ratio": 0.01,
+            "ridge": 0.08759410679340363,
+            "calibration_relative_error_before": 0.29909953474998474,
+            "calibration_relative_error_after": 0.19531792402267456,
+            "defect_relative_residual_after": 0.6530198454856873,
+            "attainable_defect_energy_fraction": 0.999984085559845,
+            "correction_to_defect_norm_ratio": 0.7452643513679504,
+            "serialized_tensor_bytes": 5528064,
+            "added_tensor_bytes": 5528064
+          },
+          "down_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 183,
+            "effective_rank": 183,
+            "sample_tokens": 1024,
+            "context_width": 11008,
+            "ridge_ratio": 0.01,
+            "ridge": 0.0022683239076286554,
+            "calibration_relative_error_before": 0.3342146575450897,
+            "calibration_relative_error_after": 0.2208496481180191,
+            "defect_relative_residual_after": 0.6608018279075623,
+            "attainable_defect_energy_fraction": 1.0,
+            "correction_to_defect_norm_ratio": 0.7153056859970093,
+            "serialized_tensor_bytes": 5528064,
+            "added_tensor_bytes": 5528064
+          }
+        }
+      },
+      "base_checkpoint_bytes_before_pees": 69810336,
+      "pees_tensor_bytes": 17052672,
+      "pees_checkpoint_multiplier": 1.2443128908590269,
+      "checkpoint_multiplier": 1.0,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 766.2372622609982
+    },
+    {
+      "layer": 1,
+      "calibration_activation_mode": "compressed_prefix",
+      "construction_mode": "independent",
+      "mpo_site_order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "same_input_validation": {
+        "relative_error": 0.08820926532407265,
+        "angular_drift": 0.003380000591278076,
+        "norm_ratio": 0.9644919322855433,
+        "cosine_similarity": 0.9966199994087219
+      },
+      "cascade_validation": {
+        "relative_error": 0.23627549357041613,
+        "angular_drift": 0.02560049295425415,
+        "norm_ratio": 0.9017323379280162,
+        "cosine_similarity": 0.9743995070457458
+      },
+      "calibration": {
+        "relative_error": 0.005424922189604436,
+        "angular_drift": 1.4662742614746094e-05,
+        "norm_ratio": 0.9999906323075319,
+        "cosine_similarity": 0.9999853372573853
+      },
+      "heldout_block_output": {
+        "relative_error": 0.23627549357041613,
+        "angular_drift": 0.02560049295425415,
+        "norm_ratio": 0.9017323379280162,
+        "cosine_similarity": 0.9743995070457458
+      },
+      "attention_gauge": null,
+      "mlp_gauge": null,
+      "mlp_objective": "independent",
+      "mlp_product_aware": null,
+      "budget_allocation": "uniform",
+      "projection_budgets": {
+        "q_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "k_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "v_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "o_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "gate_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "up_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "down_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        }
+      },
+      "serialized_bytes": 87188589,
+      "base_checkpoint_bytes_before_bridge": null,
+      "bridge_tensor_bytes": 0,
+      "pees": {
+        "objective": "propagated_defect_ridge_whitened_eigenspace",
+        "requested_rank_per_projection": 192,
+        "effective_rank_per_projection": 184,
+        "projections": [
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "down_proj"
+        ],
+        "sample_tokens": 1024,
+        "ridge_ratio": 0.01,
+        "base_checkpoint_bytes": 70039648,
+        "max_checkpoint_multiplier": 1.25,
+        "sidecar_budget_bytes_with_safety_margin": 17159713,
+        "conditional_projection_order": [
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "down_proj"
+        ],
+        "projection_metrics": {
+          "v_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 184,
+            "effective_rank": 184,
+            "sample_tokens": 1024,
+            "context_width": 4096,
+            "ridge_ratio": 0.01,
+            "ridge": 0.9405179619789124,
+            "calibration_relative_error_before": 0.26220399141311646,
+            "calibration_relative_error_after": 0.18117614090442657,
+            "defect_relative_residual_after": 0.6909740567207336,
+            "attainable_defect_energy_fraction": 0.9996129274368286,
+            "correction_to_defect_norm_ratio": 0.6568657755851746,
+            "serialized_tensor_bytes": 3014656,
+            "added_tensor_bytes": 3014656
+          },
+          "o_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 184,
+            "effective_rank": 184,
+            "sample_tokens": 1024,
+            "context_width": 4096,
+            "ridge_ratio": 0.01,
+            "ridge": 0.014973031356930733,
+            "calibration_relative_error_before": 0.20867842435836792,
+            "calibration_relative_error_after": 0.13223299384117126,
+            "defect_relative_residual_after": 0.6336687207221985,
+            "attainable_defect_energy_fraction": 0.9999998211860657,
+            "correction_to_defect_norm_ratio": 0.7497350573539734,
+            "serialized_tensor_bytes": 3014656,
+            "added_tensor_bytes": 3014656
+          },
+          "gate_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 184,
+            "effective_rank": 184,
+            "sample_tokens": 1024,
+            "context_width": 4096,
+            "ridge_ratio": 0.01,
+            "ridge": 0.21547164022922516,
+            "calibration_relative_error_before": 0.35475578904151917,
+            "calibration_relative_error_after": 0.24154281616210938,
+            "defect_relative_residual_after": 0.6808707118034363,
+            "attainable_defect_energy_fraction": 0.9999998807907104,
+            "correction_to_defect_norm_ratio": 0.7215269804000854,
+            "serialized_tensor_bytes": 5558272,
+            "added_tensor_bytes": 5558272
+          },
+          "down_proj": {
+            "objective": "propagated_defect_ridge_whitened_eigenspace",
+            "requested_rank": 184,
+            "effective_rank": 184,
+            "sample_tokens": 1024,
+            "context_width": 11008,
+            "ridge_ratio": 0.01,
+            "ridge": 184.49948120117188,
+            "calibration_relative_error_before": 0.007399882189929485,
+            "calibration_relative_error_after": 0.005225971341133118,
+            "defect_relative_residual_after": 0.7062236070632935,
+            "attainable_defect_energy_fraction": 0.8654866814613342,
+            "correction_to_defect_norm_ratio": 0.6895310282707214,
+            "serialized_tensor_bytes": 5558272,
+            "added_tensor_bytes": 5558272
+          }
+        }
+      },
+      "base_checkpoint_bytes_before_pees": 70039648,
+      "pees_tensor_bytes": 17145856,
+      "pees_checkpoint_multiplier": 1.244846190546246,
+      "checkpoint_multiplier": 1.0,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 772.8133918989988
+    }
+  ],
+  "layers_compressed": [
+    0,
+    1
+  ],
+  "serialized_checkpoint_bytes": 174054490,
+  "checkpoint_file_sizes": {
+    "compressed_layer_0.pt": 86865901,
+    "compressed_layer_1.pt": 87188589
+  }
+}
