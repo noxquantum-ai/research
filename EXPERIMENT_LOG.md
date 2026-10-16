@@ -139,6 +139,31 @@ Correction to an intermediate status message: historical raw logs **are present*
 
 ## Repository and execution snapshot
 
+### Broader validation and next single-layer control
+
+At `2805641` plus the subsequent sampling/plumbing changes, prepared eight disjoint raw validation windows (1,024 tokens total, sequence length 128, seed 43). Both fits reuse the exact existing 1,024-token corpus-spread train activation file. Input file hashes and diagnostic source fingerprints are now stored in results.
+
+```bash
+.venv/bin/python -u scripts/prepare_calibration_control.py \
+  --output checkpoints/diagnostic_36h/broad_validation1024 \
+  --n-validation 1024 --validation-sampling uniform
+for strength in 0 1; do
+  .venv/bin/python -u scripts/diagnose_projection_stages.py \
+    --checkpoint-dir checkpoints/diagnostic_36h/corrected_raw_layer15 \
+    --dense-weights-dir models/diagnostic_36h_cache --projection v_proj \
+    --calibration-input checkpoints/diagnostic_36h/calibration_coverage1024/uniform.pt \
+    --validation-input checkpoints/diagnostic_36h/broad_validation1024/validation.pt \
+    --only-quantized --diagonal-prior-strength "$strength" \
+    --output checkpoints/diagnostic_36h/broad_validation1024/prior${strength}_v_proj.json
+done
+```
+
+Saved/reloaded V-projection held-out error is **0.749948** without the prior and **0.696569** with it. The regularizer improves every one of the eight windows: baseline range 0.733554–0.769630; regularized range 0.682120–0.713550. Calibration errors reproduce the earlier fits. This is a reproducible partial improvement, not a sufficient quality result. The test suite now passes **14 tests**, including held-out sampling isolation and a mock-compression test proving all seven projections receive the prior while retaining dense, unhealed fitting inputs.
+
+Next command: `bash scripts/run_weight_prior_layer_control.sh` on the GPU host. It refuses an existing output directory, checks the eight-window result first, then compiles only layer 15 with strengths 0 and 1 at identical high-fidelity ranks, calibration, validation, and zero-healing settings. It evaluates each saved layer in the pinned full dense model using the same raw WikiText PPL/agreement protocol. Outputs go to `checkpoints/diagnostic_36h/layer15_uniform_prior_control/`. The full 32-layer candidate remains gated; projection improvements do not waive its PPL/agreement/MMLU requirements.
+
+Research context: [Activation-Aware Weight Tensorization](https://arxiv.org/html/2610.10085v1) distinguishes calibration-weighted objectives from held-out fidelity and reports that richer covariance objectives do not always generalize better. Its experiments concern other models and selected operator/suffix replacements; they do not establish our target. The regularizer here is an ordinary fixed weighted Frobenius penalty implemented by basis augmentation; no novelty or guaranteed accuracy claim is made.
+
 - Local repository: `/home/fluxx/Workspace/research`.
 - Initial branch/HEAD: `main` / `f0415af` (`chore: organize compressed model tiers into nested tiers directory`). This is not the suggested `debug/36h-pipeline` / `42a50aa`.
 - The worktree was clean at the start. Initial investigation edits were local and uncommitted. Later user messages explicitly authorize commits and pushes to `main`; publication will be recorded with commit IDs. No reset or clean was performed.

@@ -244,6 +244,7 @@ def fetch_named_tensor(repo_id, tensor_key, cache_name, save_dir, token=None, re
 def build_real_token_calibration_data(
     embed_weight, model_id, n_calib=256, n_test=128, seq_len=128, revision="main",
     calibration_sampling="prefix", calibration_seed=42,
+    validation_sampling="prefix", validation_seed=43,
 ):
     """Build disjoint WikiText train/validation embedding streams with the model tokenizer."""
     from transformers import AutoTokenizer
@@ -275,7 +276,14 @@ def build_real_token_calibration_data(
         calib_tokens = calib_tokens[:n_calib]
     else:
         raise ValueError(f"Unknown calibration sampling: {calibration_sampling}")
-    validation_tokens = validation_tokens[:n_test]
+    if validation_sampling == "uniform":
+        validation_offsets = sample_calibration_offsets(len(validation_tokens), n_test, seq_len, validation_seed)
+        validation_tokens = [token for start in validation_offsets for token in validation_tokens[start:start + seq_len]]
+    elif validation_sampling == "prefix":
+        validation_offsets = list(range(0, n_test, seq_len))
+        validation_tokens = validation_tokens[:n_test]
+    else:
+        raise ValueError(f"Unknown validation sampling: {validation_sampling}")
     calib_t = torch.tensor(calib_tokens, dtype=torch.long)
     validation_t = torch.tensor(validation_tokens, dtype=torch.long)
 
@@ -303,6 +311,9 @@ def build_real_token_calibration_data(
         "calibration_sampling": calibration_sampling,
         "calibration_seed": calibration_seed,
         "calibration_window_offsets": offsets,
+        "validation_sampling": validation_sampling,
+        "validation_seed": validation_seed,
+        "validation_window_offsets": validation_offsets,
     }
     log_step(
         f"WikiText-2 activations generated: train X_calib {list(X_calib.shape)} "

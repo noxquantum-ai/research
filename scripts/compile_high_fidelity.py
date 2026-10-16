@@ -58,6 +58,9 @@ def main():
     parser.add_argument("--n-calib", type=int, default=256)
     parser.add_argument("--n-validation", type=int, default=128)
     parser.add_argument("--seq-len", type=int, default=128)
+    parser.add_argument("--calibration-sampling", choices=("prefix", "uniform"), default="prefix")
+    parser.add_argument("--validation-sampling", choices=("prefix", "uniform"), default="prefix")
+    parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
     parser.add_argument("--model-id", default="NousResearch/Llama-2-7b-hf")
     parser.add_argument("--model-revision", default="8efe6c9b93655b934e27bd9981e3ec13e55aee9d")
     parser.add_argument("--device", default="cuda")
@@ -76,12 +79,14 @@ def main():
     train, validation, data = build_real_token_calibration_data(
         embedding, args.model_id, args.n_calib, args.n_validation,
         args.seq_len, revision=args.model_revision,
+        calibration_sampling=args.calibration_sampling, validation_sampling=args.validation_sampling,
     )
     del embedding
     train, validation = train.to(args.device), validation.to(args.device)
     forward_options = dict(n_heads=config.num_attention_heads, n_kv_heads=config.num_key_value_heads,
                            seq_len=args.seq_len, rms_norm_eps=config.rms_norm_eps)
     compression = get_tier_config("high_fidelity_10x")
+    compression["diagonal_prior_strength"] = args.diagonal_prior_strength
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
         "compression_path": "no_healing_independent", "config": compression,
@@ -111,6 +116,7 @@ def main():
                 dense, train, X_calib_dense=train, causal_healing=False,
                 ranks=compression["ranks"], r_bridge=compression["r_bridge"],
                 n_outliers=compression["n_outliers"], return_artifacts=True,
+                diagonal_prior_strength=args.diagonal_prior_strength,
                 verbose=True, **forward_options,
             )
             artifact = {

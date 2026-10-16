@@ -22,6 +22,8 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--layer", type=int, default=15)
     parser.add_argument("--n-calib", type=int, default=1024)
+    parser.add_argument("--n-validation", type=int, default=128)
+    parser.add_argument("--validation-sampling", choices=("prefix", "uniform"), default="prefix")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
@@ -33,11 +35,13 @@ def main():
     embedding = source.tensor("model.embed_tokens.weight")
     streams, metadata = {}, {}
     for sampling in ("prefix", "uniform"):
-        train, _, data = build_real_token_calibration_data(
-            embedding, model_id, n_calib=args.n_calib, n_test=128, seq_len=128,
+        train, validation, data = build_real_token_calibration_data(
+            embedding, model_id, n_calib=args.n_calib, n_test=args.n_validation, seq_len=128,
             revision=revision, calibration_sampling=sampling, calibration_seed=42,
+            validation_sampling=args.validation_sampling, validation_seed=43,
         )
         streams[sampling], metadata[sampling] = train.cuda(), data
+    streams["validation"] = validation.cuda()
     del embedding
     for index in range(args.layer):
         weights = source.layer(index, "cuda")

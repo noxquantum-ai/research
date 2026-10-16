@@ -1,5 +1,6 @@
 import gc
 import time
+from functools import partial
 import torch
 import torch.nn.functional as F
 from nox.compiler import nox_hybrid_dmrg_decompose
@@ -127,11 +128,13 @@ def compile_attention_block(
     causal_healing=True,
     return_artifacts=False,
     verbose=False,
+    diagonal_prior_strength=0.0,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
     causal healing where W_o absorbs Q,K,V distortion and inter-layer residual drift.
     """
+    compile_projection = partial(nox_hybrid_dmrg_decompose, diagonal_prior_strength=diagonal_prior_strength)
     W_q = weights["q_proj"]
     W_k = weights["k_proj"]
     W_v = weights["v_proj"]
@@ -151,12 +154,12 @@ def compile_attention_block(
 
     art_q = art_k = art_v = art_o = None
     if return_artifacts:
-        W_hat_q, kb_q, cores_q, _, art_q = nox_hybrid_dmrg_decompose(
+        W_hat_q, kb_q, cores_q, _, art_q = compile_projection(
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_q, kb_q, cores_q, _ = nox_hybrid_dmrg_decompose(
+        W_hat_q, kb_q, cores_q, _ = compile_projection(
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
         )
@@ -165,12 +168,12 @@ def compile_attention_block(
         torch.cuda.empty_cache()
 
     if return_artifacts:
-        W_hat_k, kb_k, cores_k, _, art_k = nox_hybrid_dmrg_decompose(
+        W_hat_k, kb_k, cores_k, _, art_k = compile_projection(
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_k, kb_k, cores_k, _ = nox_hybrid_dmrg_decompose(
+        W_hat_k, kb_k, cores_k, _ = compile_projection(
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
         )
@@ -179,12 +182,12 @@ def compile_attention_block(
         torch.cuda.empty_cache()
 
     if return_artifacts:
-        W_hat_v, kb_v, cores_v, _, art_v = nox_hybrid_dmrg_decompose(
+        W_hat_v, kb_v, cores_v, _, art_v = compile_projection(
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_v, kb_v, cores_v, _ = nox_hybrid_dmrg_decompose(
+        W_hat_v, kb_v, cores_v, _ = compile_projection(
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
         )
@@ -217,12 +220,12 @@ def compile_attention_block(
 
     gamma_o = 0.002 if causal_healing else 0.01
     if return_artifacts:
-        W_hat_o, kb_o, cores_o, _, art_o = nox_hybrid_dmrg_decompose(
+        W_hat_o, kb_o, cores_o, _, art_o = compile_projection(
             W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_target, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_o, kb_o, cores_o, _ = nox_hybrid_dmrg_decompose(
+        W_hat_o, kb_o, cores_o, _ = compile_projection(
             W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_target, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, verbose=False,
         )
@@ -267,11 +270,13 @@ def compile_mlp_block(
     causal_healing=True,
     return_artifacts=False,
     verbose=False,
+    diagonal_prior_strength=0.0,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
     causal healing where W_down absorbs non-linear distortion and residual drift.
     """
+    compile_projection = partial(nox_hybrid_dmrg_decompose, diagonal_prior_strength=diagonal_prior_strength)
     W_gate = weights["gate_proj"]
     W_up = weights["up_proj"]
     W_down = weights["down_proj"]
@@ -292,12 +297,12 @@ def compile_mlp_block(
 
     art_gate = art_up = art_down = None
     if return_artifacts:
-        W_hat_gate, kb_gate, cores_gate, _, art_gate = nox_hybrid_dmrg_decompose(
+        W_hat_gate, kb_gate, cores_gate, _, art_gate = compile_projection(
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_gate, kb_gate, cores_gate, _ = nox_hybrid_dmrg_decompose(
+        W_hat_gate, kb_gate, cores_gate, _ = compile_projection(
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
         )
@@ -306,12 +311,12 @@ def compile_mlp_block(
         torch.cuda.empty_cache()
 
     if return_artifacts:
-        W_hat_up, kb_up, cores_up, _, art_up = nox_hybrid_dmrg_decompose(
+        W_hat_up, kb_up, cores_up, _, art_up = compile_projection(
             W=W_up, X_calib=M_in, Y_dense=H_up_dense, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_up, kb_up, cores_up, _ = nox_hybrid_dmrg_decompose(
+        W_hat_up, kb_up, cores_up, _ = compile_projection(
             W=W_up, X_calib=M_in, Y_dense=H_up_dense, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge, n_outliers=n_outliers, verbose=False,
         )
@@ -347,12 +352,12 @@ def compile_mlp_block(
 
     gamma_down = 0.002 if causal_healing else 0.01
     if return_artifacts:
-        W_hat_down, kb_down, cores_down, _, art_down = nox_hybrid_dmrg_decompose(
+        W_hat_down, kb_down, cores_down, _, art_down = compile_projection(
             W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_target, o_modes=o_modes_down, i_modes=i_modes_down,
             ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, return_artifacts=True, verbose=False,
         )
     else:
-        W_hat_down, kb_down, cores_down, _ = nox_hybrid_dmrg_decompose(
+        W_hat_down, kb_down, cores_down, _ = compile_projection(
             W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_target, o_modes=o_modes_down, i_modes=i_modes_down,
             ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, verbose=False,
         )
@@ -398,6 +403,7 @@ def compile_transformer_block(
     return_artifacts=False,
     verbose=True,
     rms_norm_eps=1e-5,
+    diagonal_prior_strength=0.0,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -431,6 +437,7 @@ def compile_transformer_block(
     drift_attn = (ref_calib_dense - X_calib) if (X_calib_dense is not None and causal_healing) else None
 
     attn_res = compile_attention_block(
+        diagonal_prior_strength=diagonal_prior_strength,
         weights=layer_weights,
         X_in=X_norm1_comp,
         X_in_dense=X_norm1_dense,
@@ -456,6 +463,7 @@ def compile_transformer_block(
     drift_mlp = (X_res1_dense - X_res1_comp) if (X_calib_dense is not None and causal_healing) else None
 
     mlp_res = compile_mlp_block(
+        diagonal_prior_strength=diagonal_prior_strength,
         weights=layer_weights,
         M_in=X_norm2_comp,
         M_in_dense=X_norm2_dense,

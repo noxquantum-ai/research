@@ -3,6 +3,7 @@
 
 import argparse
 import gc
+import hashlib
 import json
 import sys
 import time
@@ -12,6 +13,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.audit_projection_fit import projection_inputs
+from nox.artifacts import source_files_fingerprint
 from nox.compiler import nox_hybrid_dmrg_decompose, reconstruct_from_artifact
 from nox.sequential_compiler import get_tier_config
 from nox.utils import compute_metrics, get_modes_for_projection
@@ -26,6 +28,7 @@ def main():
     parser.add_argument("--projection", default="v_proj")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--calibration-input", type=Path)
+    parser.add_argument("--validation-input", type=Path)
     parser.add_argument("--only-quantized", action="store_true")
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
     parser.add_argument("--bridge-rank-control", type=int,
@@ -39,7 +42,10 @@ def main():
                for name in names + ["input_layernorm", "post_attention_layernorm"]}
     calibration_path = args.calibration_input or args.checkpoint_dir / f"calibration_input_layer_{args.layer}.pt"
     train = torch.load(calibration_path, map_location="cpu", weights_only=True)
-    valid = torch.load(args.checkpoint_dir / f"dense_input_layer_{args.layer}.pt", map_location="cpu", weights_only=True)["X_test"]
+    validation_path = args.validation_input or args.checkpoint_dir / f"dense_input_layer_{args.layer}.pt"
+    valid = torch.load(validation_path, map_location="cpu", weights_only=True)
+    if isinstance(valid, dict):
+        valid = valid["X_test"]
     inputs = {split: projection_inputs(weights, x.cuda(), checkpoint["rms_norm_eps"], 128, 32, 32)[args.projection]
               for split, x in (("calibration", train), ("validation", valid))}
     weight = weights[args.projection]
@@ -54,7 +60,17 @@ def main():
     results = {"projection": args.projection, "layer": args.layer, "config": config,
                "diagonal_prior_strength": args.diagonal_prior_strength,
                "calibration_input": str(calibration_path),
+               "validation_input": str(validation_path),
                "calibration_tokens": train.shape[1], "validation_tokens": valid.shape[1], "controls": {}}
+    root = Path(__file__).resolve().parents[1]
+    results["source_fingerprint"] = source_files_fingerprint([
+        Path(__file__), root / "nox/compiler.py", root / "nox/utils.py",
+        root / "scripts/audit_projection_fit.py", root / "nox/block_compiler.py",
+    ])
+    results["input_file_sha256"] = {
+        "calibration": hashlib.sha256(calibration_path.read_bytes()).hexdigest(),
+        "validation": hashlib.sha256(validation_path.read_bytes()).hexdigest(),
+    }
     for quantized in ((True,) if args.only_quantized else (True, False)):
         control = "int4_simulation" if quantized else "no_quantization_control"
         artifact_path = args.output.with_name(args.output.stem + "_" + control + ".pt")
@@ -63,9 +79,14 @@ def main():
         records = []
 
         def measure(stage, approximation):
-            record = {"stage": stage,
-                      **{split: compute_metrics(targets[split], approximation @ x)
-                         for split, x in inputs.items()}}
+            predictions = {split: approximation @ x for split, x in inputs.items()}
+            record = {"stage": stage, **{split: compute_metrics(targets[split], prediction)
+                                         for split, prediction in predictions.items()}}
+            record["validation_window_relative_errors"] = [
+                compute_metrics(targets["validation"][:, start:start + 128],
+                                predictions["validation"][:, start:start + 128])["relative_error"]
+                for start in range(0, valid.shape[1], 128)
+            ]
             records.append(record)
             print(control, json.dumps(record), flush=True)
 

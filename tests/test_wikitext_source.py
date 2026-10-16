@@ -6,12 +6,30 @@ from unittest.mock import patch
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+import torch
 
 from nox.data import WIKITEXT_REVISION, load_wikitext2_raw_split
-from benchmarks.benchmark_day3_cascade import sample_calibration_offsets
+from benchmarks.benchmark_day3_cascade import build_real_token_calibration_data, sample_calibration_offsets
 
 
 class WikiTextSourceTests(unittest.TestCase):
+    def test_uniform_validation_samples_only_heldout_split(self):
+        source = {"source_sha256": "fixture", "source_bytes": 1}
+        embedding = torch.arange(2048 * 3).reshape(2048, 3).float()
+        with patch("benchmarks.benchmark_day3_cascade.load_wikitext2_raw_split", return_value=("fixture", source)):
+            with patch("transformers.AutoTokenizer.from_pretrained") as tokenizer:
+                tokenizer.return_value.encode.side_effect = [list(range(1024)), list(range(1024, 2048))]
+                train, valid, metadata = build_real_token_calibration_data(
+                    embedding, "fixture", n_calib=256, n_test=256, seq_len=32,
+                    calibration_sampling="uniform", validation_sampling="uniform",
+                )
+        self.assertTrue(torch.all(train[0] < 1024 * 3))
+        self.assertTrue(torch.all(valid[0] >= 1024 * 3))
+        expected_offsets = sample_calibration_offsets(1024, 256, 32, 43)
+        self.assertEqual(metadata["validation_window_offsets"], expected_offsets)
+        expected_ids = torch.tensor([1024 + offset + i for offset in expected_offsets for i in range(32)])
+        torch.testing.assert_close(valid, embedding[expected_ids].T)
+
     def test_sampled_windows_are_reproducible_disjoint_and_in_bounds(self):
         starts = sample_calibration_offsets(1001, 256, 32, 42)
         self.assertEqual(starts, sample_calibration_offsets(1001, 256, 32, 42))
