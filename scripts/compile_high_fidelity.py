@@ -67,8 +67,8 @@ def resume_identity_compatible(previous, current):
     for key in (
         "mlp_objective", "mlp_product_ridge_ratio", "budget_allocation", "projection_budgets",
     ):
-        if key not in previous:
-            previous[key] = current.get(key)
+        if key in current and key not in previous:
+            previous[key] = current[key]
     return json.dumps(previous, sort_keys=True) == json.dumps(current, sort_keys=True)
 
 
