@@ -155,6 +155,7 @@ def write_candidate(
     group_size: int,
     baseline_dir: Path,
     output_dir: Path,
+    layer_indices: list[int],
     contexts: dict[int, dict],
     validation_contexts: dict[int, dict],
     dense_weights: dict[int, dict],
@@ -167,7 +168,7 @@ def write_candidate(
     candidate_weights = {}
     total_payload_bytes = 0
 
-    for layer_index in (0, 1):
+    for layer_index in layer_indices:
         layer_data = read_checkpoint(baseline_dir, layer_index)
         artifacts = layer_data["compressed_artifacts"]
         new_artifacts = {}
@@ -257,7 +258,7 @@ def write_candidate(
         if device.type == "cuda":
             torch.cuda.empty_cache()
 
-    file_sizes = checkpoint_file_sizes(output_dir, (0, 1))
+    file_sizes = checkpoint_file_sizes(output_dir, layer_indices)
     summary = {
         "candidate": output_dir.name,
         "method": method,
@@ -275,9 +276,10 @@ def write_candidate(
 
 @torch.no_grad()
 def block_error_metrics(candidate_weights: dict, dense_weights: dict, validation_inputs: dict,
-                        *, seq_len: int, heads: int, kv_heads: int, rms_norm_eps: float) -> dict:
+                        *, layer_indices: list[int], seq_len: int, heads: int,
+                        kv_heads: int, rms_norm_eps: float) -> dict:
     local = {}
-    for layer_index in (0, 1):
+    for layer_index in layer_indices:
         dense = {
             name: tensor.to(torch.float32)
             for name, tensor in dense_weights[layer_index].items()
@@ -313,30 +315,32 @@ def block_error_metrics(candidate_weights: dict, dense_weights: dict, validation
             cascade_candidate_input = candidate_out
         del local_input, candidate, dense_attn, dense_mlp, candidate_attn, candidate_mlp
 
-    dense_layer1 = {
-        name: tensor.to(torch.float32)
-        for name, tensor in dense_weights[1].items()
-    }
-    candidate_layer1 = dict(dense_layer1)
-    candidate_layer1.update({
-        name: tensor.to(torch.float32)
-        for name, tensor in candidate_weights[1].items()
-    })
-    dense_composed, _, _ = forward_transformer_block(
-        dense_layer1, cascade_dense_input, n_heads=heads, n_kv_heads=kv_heads,
-        seq_len=seq_len, rms_norm_eps=rms_norm_eps,
+    dense_state = validation_inputs[layer_indices[0]].to(
+        device=dense_weights[layer_indices[0]]["q_proj"].device, dtype=torch.float32,
     )
-    candidate_composed, _, _ = forward_transformer_block(
-        candidate_layer1, cascade_candidate_input, n_heads=heads, n_kv_heads=kv_heads,
-        seq_len=seq_len, rms_norm_eps=rms_norm_eps,
-    )
-    local["layers_0_1_composed"] = {
-        "relative_error": norm_relative(
-            candidate_composed.float() - dense_composed.float(), dense_composed.float(),
-        ),
-        "candidate_total_hidden_drift_from_dense": norm_relative(
-            candidate_composed.float() - dense_composed.float(), dense_composed.float(),
-        ),
+    candidate_state = dense_state
+    for layer_index in layer_indices:
+        dense = {
+            name: tensor.to(torch.float32)
+            for name, tensor in dense_weights[layer_index].items()
+        }
+        candidate = dict(dense)
+        candidate.update({
+            name: tensor.to(torch.float32)
+            for name, tensor in candidate_weights[layer_index].items()
+        })
+        dense_state, _, _ = forward_transformer_block(
+            dense, dense_state, n_heads=heads, n_kv_heads=kv_heads,
+            seq_len=seq_len, rms_norm_eps=rms_norm_eps,
+        )
+        candidate_state, _, _ = forward_transformer_block(
+            candidate, candidate_state, n_heads=heads, n_kv_heads=kv_heads,
+            seq_len=seq_len, rms_norm_eps=rms_norm_eps,
+        )
+    key = f"layers_{layer_indices[0]}_{layer_indices[-1]}_composed"
+    local[key] = {
+        "relative_error": norm_relative(candidate_state - dense_state, dense_state),
+        "candidate_total_hidden_drift_from_dense": norm_relative(candidate_state - dense_state, dense_state),
     }
     return local
 
@@ -349,6 +353,10 @@ def parse_args():
     parser.add_argument("--model-revision", default=DEFAULT_MODEL_REVISION)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--group-size", type=int, default=64)
+    parser.add_argument("--layers", type=int, nargs="+", default=None,
+                        help="Contiguous zero-based compressed layer prefix; default uses the baseline manifest")
+    parser.add_argument("--candidate-set", choices=("comparison", "direct3_a05"), default="comparison",
+                        help="Run all six matched codecs or only direct 3-bit alpha=0.5 for a stack extension")
     parser.add_argument("--max-eval-tokens", type=int, default=10000)
     parser.add_argument("--seq-len", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
@@ -369,6 +377,11 @@ def main():
     log(f"CUDA device: {torch.cuda.get_device_name(0)}")
 
     baseline_manifest = json.loads((args.baseline_dir / "model_manifest.json").read_text())
+    layer_indices = args.layers or list(baseline_manifest["run_identity"]["layers"])
+    if not layer_indices or layer_indices != list(range(layer_indices[0], layer_indices[-1] + 1)):
+        raise ValueError("layers must be a nonempty contiguous range")
+    if layer_indices[0] != 0:
+        raise ValueError("this pilot evaluates a prefix and currently requires the prefix to start at layer 0")
     forward = baseline_manifest["run_identity"]["forward_options"]
     seq_len_cal = int(forward["seq_len"])
     heads = int(forward["n_heads"])
@@ -382,7 +395,7 @@ def main():
     validation_contexts = {}
     validation_inputs = {}
     spectrum_report = {}
-    for layer_index in (0, 1):
+    for layer_index in layer_indices:
         log(f"Loading pinned dense layer {layer_index} weights and saved activation windows")
         layer_weights = pinned.layer(layer_index, str(device))
         dense_weights[layer_index] = layer_weights
@@ -409,7 +422,7 @@ def main():
         gc.collect()
         torch.cuda.empty_cache()
 
-    candidate_specs = [
+    all_candidate_specs = [
         ("direct_quant", 3, 0.0, "direct_3b_a0"),
         ("direct_quant", 3, 0.5, "direct_3b_a05"),
         ("direct_quant", 4, 0.0, "direct_4b_a0"),
@@ -417,9 +430,14 @@ def main():
         ("nec_hybrid", 2, 0.0, "nec_residual_2b_a0"),
         ("nec_hybrid", 2, 0.5, "nec_residual_2b_a05"),
     ]
+    candidate_specs = (
+        [all_candidate_specs[1]]
+        if args.candidate_set == "direct3_a05"
+        else all_candidate_specs
+    )
     baseline_projection_metrics = {}
     baseline_candidate_weights = {}
-    for layer_index in (0, 1):
+    for layer_index in layer_indices:
         source_checkpoint = read_checkpoint(args.baseline_dir, layer_index)
         baseline_candidate_weights[layer_index] = {}
         for projection in PROJECTIONS:
@@ -444,6 +462,7 @@ def main():
         baseline_candidate_weights,
         dense_weights,
         validation_inputs,
+        layer_indices=layer_indices,
         seq_len=seq_len_cal,
         heads=heads,
         kv_heads=kv_heads,
@@ -463,6 +482,7 @@ def main():
             group_size=args.group_size,
             baseline_dir=args.baseline_dir,
             output_dir=args.output_dir / name,
+            layer_indices=layer_indices,
             contexts=train_contexts,
             validation_contexts=validation_contexts,
             dense_weights=dense_weights,
@@ -472,6 +492,7 @@ def main():
             weights,
             dense_weights,
             validation_inputs,
+            layer_indices=layer_indices,
             seq_len=seq_len_cal,
             heads=heads,
             kv_heads=kv_heads,
@@ -502,6 +523,7 @@ def main():
             "stride": int(args.stride),
         },
         "group_size": int(args.group_size),
+        "layers": layer_indices,
         "gradient_healing": False,
         "offline_representation_diagnostic": True,
         "qualifying_zero_healing_artifact": False,

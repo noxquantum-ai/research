@@ -14,6 +14,7 @@ from nox.residual_codec import (
     decode_groupwise,
     encode_groupwise,
 )
+from scripts.run_residual_codec_pilot import block_error_metrics
 
 
 class PackedResidualCodecTests(unittest.TestCase):
@@ -98,6 +99,43 @@ class PackedResidualCodecTests(unittest.TestCase):
         self.assertEqual(set(contexts), {"q_proj", "k_proj", "up_proj"})
         self.assertEqual(tuple(contexts["q_proj"][0].shape), (8, 8))
         self.assertEqual(tuple(contexts["up_proj"][0].shape), (8, 8))
+
+    def test_block_diagnostics_handle_a_four_layer_prefix(self):
+        torch.manual_seed(71)
+        dense_weights = {}
+        candidate_weights = {}
+        validation_inputs = {}
+        for layer_index in range(4):
+            weights = {
+                "q_proj": torch.randn(8, 8),
+                "k_proj": torch.randn(8, 8),
+                "v_proj": torch.randn(8, 8),
+                "o_proj": torch.randn(8, 8),
+                "gate_proj": torch.randn(12, 8),
+                "up_proj": torch.randn(12, 8),
+                "down_proj": torch.randn(8, 12),
+                "input_layernorm": torch.ones(8),
+                "post_attention_layernorm": torch.ones(8),
+            }
+            dense_weights[layer_index] = weights
+            candidate_weights[layer_index] = {
+                name: tensor.clone()
+                for name, tensor in weights.items()
+                if name in {"q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"}
+            }
+            validation_inputs[layer_index] = torch.randn(8, 8)
+        metrics = block_error_metrics(
+            candidate_weights,
+            dense_weights,
+            validation_inputs,
+            layer_indices=[0, 1, 2, 3],
+            seq_len=4,
+            heads=2,
+            kv_heads=2,
+            rms_norm_eps=1e-5,
+        )
+        self.assertIn("layers_0_3_composed", metrics)
+        self.assertEqual(metrics["layers_0_3_composed"]["relative_error"], 0.0)
 
     def test_direct_dispatch_and_hybrid_dispatch(self):
         matrix = torch.randn(8, 8)
