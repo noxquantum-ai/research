@@ -1,7 +1,7 @@
 {
-  "base_commit": "c7da5b0a0aef741d8769ebe9b7ee793ef72e3ebd",
-  "branch": "experiment",
-  "bundle_sha256": "e27a14b77cdc053aabd0a35d2c61053707590cebf6f7e36b2b9823acc0114e99",
+  "base_commit": "6709b3c6403688de4b3eadd7da6404eaa5d7fde4",
+  "branch": "main",
+  "bundle_sha256": "d3db208967d0e972fde9e544eda16ca09055e6b3c775fc3a17151973b5ed4a8a",
   "files": [
     {
       "path": "driver.py",
@@ -92,6 +92,10 @@
       "sha256": "1504debbe32593dc22ec964b4ce76d7ebdf60262cde77f10ff70c15475750268"
     },
     {
+      "path": "nox/hf_subset.py",
+      "sha256": "ab319826e48ac345cec0db591b5ea2c104f5351e2cb9510a68a21fe35970f137"
+    },
+    {
       "path": "nox/joint_quant_mpo.py",
       "sha256": "1306ed50aecc6ebe5dfdccbb445532ba9d49be4208a7c723c4c0529b5eb0968f"
     },
@@ -124,8 +128,24 @@
       "sha256": "60458fb103e3d31935f27b0422b9ce2fdf2e2845a1fa5599e80e3fc6d4b48b29"
     },
     {
+      "path": "nox/quant/__init__.py",
+      "sha256": "d6c1bc9972aa1c8b4ddc0afeb93c3fdac4e8fc10433c28626ed4e2a699d2c0ee"
+    },
+    {
+      "path": "nox/quant/gptq.py",
+      "sha256": "23fbec2a46c1e24fd2822100fa9a68cc843ddc154602e34fb4ec9e403c8847b9"
+    },
+    {
+      "path": "nox/quant/hessian.py",
+      "sha256": "62b3ad66edeba5addd127689f56c6a011ef89a4e2e48079b97cd82b87ebab946"
+    },
+    {
+      "path": "nox/quant/incoherence.py",
+      "sha256": "8de5d246329c07a3d8370649981e22bef9a3d1504f5d8678cb7ab7b94e38fc70"
+    },
+    {
       "path": "nox/representation_symmetries.py",
-      "sha256": "b416d647421767b165890ea20912b2a36f6f9cb03b6ea7c071b72d1047234f34"
+      "sha256": "12a921493f0e145e732dad2084179a007ebb4a246f448e378a07898273f1fc93"
     },
     {
       "path": "nox/residual_codec.py",

@@ -1,7 +1,7 @@
 """Small exact coordinate symmetries for Llama-style transformer blocks.
 
 The helpers in this module return transformed projection weights.  Their
-mathematical contracts are documented in ``docs/FUNCTION_AWARE_TN_MATHEMATICS.md``.
+mathematical contracts are documented in ``docs/experiments/function_aware_tn/FUNCTION_AWARE_TN_MATHEMATICS.md``.
 They do not optimize a task loss or add trainable parameters.
 """
 

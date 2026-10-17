@@ -331,14 +331,14 @@ The environment repair command was:
 - `benchmarks/benchmark_day3_cascade.py`
 - `benchmarks/benchmark_day4_perplexity.py`
 - `benchmarks/benchmark_day5_multitask.py`
-- `kaggle_execution/run_cascade.py`
+- `kaggle_execution/archive/legacy_cascade/run_cascade.py`
 - `nox/artifacts.py` (new)
 - `nox/compiler.py`
 - `nox/data.py` (new)
 - `nox/sequential_compiler.py`
 - `scripts/audit_checkpoint_reconstruction.py` (new)
-- `scripts/autonomous_nightly_orchestrator.py`
-- `scripts/update_docs_with_results.py`
+- `scripts/archive/legacy_presentation/autonomous_nightly_orchestrator.py`
+- `scripts/archive/legacy_presentation/update_docs_with_results.py`
 - `tests/test_pipeline_accounting.py` (new)
 
 ## Matched 1,024-token layer-15 prior control (2026-10-16)
@@ -514,7 +514,7 @@ For 4096×4096 projections at high-fidelity ranks `[1,64,128,64,1]`, the origina
 
 At FP16 storage, the matched 1,056,768 core coefficients are 2,113,536 bytes in either representation, and the new 4,096-value input scale is 8,192 bytes, comparable to legacy `d_awt`; matched bridge/sparse budgets have the same leading payload. Existing layer-15 NEC was 70,110,452 serialized bytes against 404,766,720 dense FP16 projection bytes (5.77×). This is not a measured candidate size: extra layout metadata means the new checkpoint may be slightly larger, so the assembled candidate layer byte count remains a GPU decision gate.
 
-Implementation: `nox/operator_schmidt.py`, `nox/block_compiler.py`, `nox/compiler.py`, `scripts/compile_high_fidelity.py`, `scripts/diagnose_nec_components.py`, and `tests/test_operator_schmidt.py`. Design equations, budget arithmetic, evidence, run commands, and GPU/memory estimates are in `docs/OPERATOR_SCHMIDT_REDESIGN.md`.
+Implementation: `nox/operator_schmidt.py`, `nox/block_compiler.py`, `nox/compiler.py`, `scripts/compile_high_fidelity.py`, `scripts/diagnose_nec_components.py`, and `tests/test_operator_schmidt.py`. Design equations, budget arithmetic, evidence, run commands, and GPU/memory estimates are in `docs/experiments/grouped_swiglu_tn/OPERATOR_SCHMIDT_REDESIGN.md`.
 
 **CPU verification:** full suite ran 86 tests; 83 passed and 3 pre-existing CUDA-only PEES tests skipped. The seven new synthetic tests pass, covering dense/factorized action for both cuts, full-rank reconstruction, crossed-layout screening, joint component gain objective, serialization and byte counts, zero-input stability, and all seven projections through the block compiler. Both experiment scripts pass `--help`, and changed Python sources pass `py_compile`.
 
@@ -561,7 +561,7 @@ Matched prefix evaluation shows monotonic accumulation: compressing MLPs 0–3 /
 
 The user-established practical target is approximately PPL 5–6, without requiring perfect dense parity; the user subsequently confirmed that the observed PPL 6.779 is acceptable for this iteration. The matched full 32-layer 87.5%-coefficient candidate (rank 2,612) completed on the A10. Against dense PPL 4.8597298 / next-token accuracy 0.6280830, it scored PPL **6.7788787** / accuracy **0.5621490** on the same pinned WikiText-2 raw test protocol (4,095 scored labels). The ratio of next-token accuracy is 89.50%; this is not evidence of 90% benchmark-suite retention. All 32 MLP artifacts serialize to **7,574,860,840 bytes**, versus 8,657,043,456 bytes for dense FP16 MLPs (12.50% less MLP storage; unchanged dense model components mean this is not whole-model savings). Compilation took 586.18 s and peaked at 11,090,858,496 CUDA-allocated bytes; PPL evaluation took 22.08 s and peaked at 16,437,170,176 bytes. The A10 was verified idle at 0% utilization / 0 MiB used afterward. Per-layer manifest, evaluation JSON, and raw run log are under `experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0875/`; the large `.pt` tensors remain on the A10. No further experiment was started.
 
-Reproducible output JSON, logs, and the prefix-sweep driver are in `experiment_artifacts/quality_first/grouped_swiglu_tn/` and `benchmarks/benchmark_grouped_swiglu_prefix_sweep.py`. The data/model revisions, run commands, and interpretation are in `docs/QUALITY_FIRST_GROUPED_SWIGLU_RESULTS.md`. CPU tests for the native and grouped SwiGLU modules pass (11/11). The 62.5% model artifact set is being copied locally, split between `research_backups/.../artifacts_layers_00_21/` and ChromeOS Downloads `.../grouped_full32_layers22_31/` due local disk capacity; transfer is ongoing.
+Reproducible output JSON, logs, and the prefix-sweep driver are in `experiment_artifacts/quality_first/grouped_swiglu_tn/` and `benchmarks/benchmark_grouped_swiglu_prefix_sweep.py`. The data/model revisions, run commands, and interpretation are in `docs/experiments/grouped_swiglu_tn/QUALITY_FIRST_GROUPED_SWIGLU_RESULTS.md`. CPU tests for the native and grouped SwiGLU modules pass (11/11). The 62.5% model artifact set is being copied locally, split between `research_backups/.../artifacts_layers_00_21/` and ChromeOS Downloads `.../grouped_full32_layers22_31/` due local disk capacity; transfer is ongoing.
 
 ### Session closeout and expected compression level
 

@@ -7,7 +7,7 @@ original architecture pitch. Relevant source includes `nox/compiler.py`,
 `nox/sequential_compiler.py`, `nox/block_compiler.py`, `nox/operator_schmidt.py`,
 `nox/pees.py`, `nox/residual_codec.py`, `nox/joint_swiglu.py`,
 `nox/grouped_swiglu_tn.py`, and the run drivers under `scripts/` and
-`benchmarks/`. The main result trail is `EXPERIMENT_LOG.md` and
+`benchmarks/`. The main result trail is `docs/archive/EXPERIMENT_LOG.md` and
 `experiment_artifacts/`.
 
 The repository does not contain the ignored historical `.pt` weights and
