@@ -3,9 +3,11 @@
 
 import argparse
 import gc
+import hashlib
 import io
 import json
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -29,12 +31,40 @@ from nox.sequential_compiler import forward_transformer_block, get_tier_config
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
 from nox.defect_bridge import fit_hybrid_defect_bridge, bridge_tensor_bytes
+from nox.evaluation import (
+    MODEL_ID as NEC_MODEL_ID,
+    MODEL_REVISION as NEC_MODEL_REVISION,
+    validate_llama2_config,
+)
 from nox.pees import (
     DEFAULT_PROJECTIONS as PEES_DEFAULT_PROJECTIONS,
     append_shield_to_projection_artifact,
     fit_propagated_eigenspace_shield,
     layer_projection_trajectories,
 )
+
+
+def atomic_torch_save(value, path):
+    """Write a checkpoint atomically so interrupted writes are never resumable."""
+    path = Path(path)
+    temporary = path.with_suffix(path.suffix + ".partial")
+    torch.save(value, temporary)
+    os.replace(temporary, path)
+
+
+def atomic_json_save(value, path):
+    path = Path(path)
+    temporary = path.with_suffix(path.suffix + ".partial")
+    temporary.write_text(json.dumps(value, indent=2) + "\n")
+    os.replace(temporary, path)
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def select_calibration_activations(mode, dense_activations, compressed_activations):
@@ -224,6 +254,9 @@ def main():
     )
     args = parser.parse_args()
     config = AutoConfig.from_pretrained(args.model_id, revision=args.model_revision)
+    if args.model_id != NEC_MODEL_ID or args.model_revision != NEC_MODEL_REVISION:
+        raise ValueError("This High-Fidelity production compiler run requires the pinned Llama-2-7B snapshot")
+    validate_llama2_config(config)
     if not 0 <= args.start_layer <= args.end_layer < config.num_hidden_layers:
         raise ValueError("Invalid layer interval")
     if args.seq_len < 2 or any(n < args.seq_len or n % args.seq_len for n in (args.n_calib, args.n_validation)):
@@ -343,6 +376,7 @@ def main():
         "source_fingerprint": source_files_fingerprint([
             Path(__file__), ROOT / "nox/compiler.py", ROOT / "nox/block_compiler.py", ROOT / "nox/gauge.py",
             ROOT / "nox/mlp_gauge.py", ROOT / "nox/sequential_compiler.py", ROOT / "nox/data.py", ROOT / "nox/utils.py",
+            ROOT / "nox/evaluation.py",
             ROOT / "nox/tensor_order.py", ROOT / "nox/allocation.py",
             ROOT / "nox/defect_bridge.py",
             ROOT / "nox/pees.py",
@@ -364,7 +398,9 @@ def main():
         manifest["run_identity"] = identity
         manifest["run_fingerprint"] = fingerprint(identity)
         manifest["layers_compressed"] = sorted(set(manifest.get("layers_compressed", [])))
-        (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2))
+        manifest.setdefault("checkpoint_file_sizes", {})
+        manifest.setdefault("checkpoint_file_sha256", {})
+        manifest.setdefault("intermediate_files", {})
     else:
         manifest = {"run_identity": identity, "run_fingerprint": fingerprint(identity),
                     "tier": "high_fidelity_10x", "compression_path": compression_path,
@@ -372,7 +408,11 @@ def main():
                     "construction_mode": args.construction_mode,
                     "mpo_site_order": args.site_order,
                     "rms_norm_eps": config.rms_norm_eps, "history": [], "layers_compressed": [],
-                    "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {}}
+                    "serialized_checkpoint_bytes": 0, "checkpoint_file_sizes": {},
+                    "checkpoint_file_sha256": {}, "intermediate_files": {}}
+    # A manifest must exist before expensive layer compilation begins: it is
+    # the recovery point if a worker is preempted during the first layer.
+    atomic_json_save(manifest, args.output / "model_manifest.json")
     compressed_validation = None
     compressed_calibration = None
     for index in range(args.end_layer + 1):
@@ -450,6 +490,29 @@ def main():
                 )
                 if artifact.get("layer_idx") != index or artifact.get("run_fingerprint") not in accepted_fingerprints:
                     raise ValueError(f"Incompatible resumed artifact: {path}")
+                file_size = path.stat().st_size
+                file_hash = sha256_file(path)
+                expected_size = manifest["checkpoint_file_sizes"].get(path.name)
+                expected_hash = manifest["checkpoint_file_sha256"].get(path.name)
+                if expected_size is not None and int(expected_size) != file_size:
+                    raise ValueError(f"Resumed artifact size mismatch: {path}")
+                if expected_hash is not None and expected_hash != file_hash:
+                    raise ValueError(f"Resumed artifact checksum mismatch: {path}")
+                was_manifested = index in manifest["layers_compressed"]
+                manifest["checkpoint_file_sizes"][path.name] = file_size
+                manifest["checkpoint_file_sha256"][path.name] = file_hash
+                manifest["layers_compressed"] = sorted(set(manifest["layers_compressed"] + [index]))
+                manifest["serialized_checkpoint_bytes"] = sum(
+                    int(size) for size in manifest["checkpoint_file_sizes"].values()
+                )
+                if not was_manifested:
+                    manifest.setdefault("recovered_artifacts", []).append({
+                        "layer": index,
+                        "sha256": file_hash,
+                        "serialized_bytes": file_size,
+                        "metrics_available": False,
+                    })
+                atomic_json_save(manifest, args.output / "model_manifest.json")
                 reconstructed = dict(dense)
                 reconstructed.update({
                     name: reconstruct_from_artifact(value, device=args.device)
@@ -470,9 +533,19 @@ def main():
                 torch.cuda.empty_cache()
                 print(f"layer={index} resumed_from={path}", flush=True)
                 continue
-            torch.save({"X_test": validation.cpu(), "rms_norm_eps": config.rms_norm_eps}, args.output / f"dense_input_layer_{index}.pt")
-            torch.save(calibration_input.cpu(), args.output / f"calibration_input_layer_{index}.pt")
-            torch.save(validation_calibration_input.cpu(), args.output / f"layer_input_validation_layer_{index}.pt")
+            intermediate_payloads = {
+                f"dense_input_layer_{index}.pt": {"X_test": validation.cpu(), "rms_norm_eps": config.rms_norm_eps},
+                f"calibration_input_layer_{index}.pt": calibration_input.cpu(),
+                f"layer_input_validation_layer_{index}.pt": validation_calibration_input.cpu(),
+            }
+            for filename, payload in intermediate_payloads.items():
+                intermediate_path = args.output / filename
+                atomic_torch_save(payload, intermediate_path)
+                manifest["intermediate_files"][filename] = {
+                    "bytes": intermediate_path.stat().st_size,
+                    "sha256": sha256_file(intermediate_path),
+                }
+            atomic_json_save(manifest, args.output / "model_manifest.json")
             compiled = compile_transformer_block(
                 dense, calibration_input, X_calib_dense=reference_input, causal_healing=False,
                 ranks=compression["ranks"], r_bridge=compression["r_bridge"],
@@ -598,14 +671,37 @@ def main():
                 artifact["pees"] = pees_metadata
                 del base_reconstructed
 
-            # The artifacts are sufficient for reconstruction; discard the
-            # transient dense reconstructions retained for compiler metrics.
-            compiled.pop("compressed_weights", None)
+            # Re-decode the serialized artifacts and compare them with the
+            # compiler's in-memory matrices before releasing those references.
             compiled.pop("X_out_comp", None)
             compiled.pop("X_out_dense", None)
             reconstructed = dict(dense)
             reconstructed.update({name: reconstruct_from_artifact(value, device=args.device)
                                   for name, value in artifact["compressed_artifacts"].items()})
+            projection_serialization_audit = {}
+            for name, decoded in (
+                (name, reconstructed[name])
+                for name in artifact["compressed_artifacts"]
+            ):
+                reference = compiled["compressed_weights"][name]
+                if decoded.shape != reference.shape or not torch.isfinite(decoded).all():
+                    raise FloatingPointError(
+                        f"Layer {index} {name}: serialized reconstruction has bad shape or non-finite values"
+                    )
+                relative_error = float(
+                    (torch.linalg.vector_norm(decoded.float() - reference.float())
+                     / torch.linalg.vector_norm(reference.float()).clamp_min(1e-30)).item()
+                )
+                if not math.isfinite(relative_error) or relative_error > 1e-2:
+                    raise RuntimeError(
+                        f"Layer {index} {name}: serialized artifact reconstruction disagrees "
+                        f"with compiler matrix (relative Frobenius error {relative_error})"
+                    )
+                projection_serialization_audit[name] = {
+                    "shape": list(decoded.shape),
+                    "relative_frobenius_error": relative_error,
+                }
+            compiled.pop("compressed_weights", None)
             # The bridge learns the complete composed defect on calibration
             # trajectories: dense next-layer state minus the lossy block output
             # at the actual (possibly compressed-prefix) input.
@@ -657,7 +753,7 @@ def main():
                     "validation_relative_error": validation_metrics["relative_error"],
                     "validation_cosine_similarity": validation_metrics["cosine_similarity"],
                 })
-            torch.save(artifact, path)
+            atomic_torch_save(artifact, path)
             actual_serialized_bytes = path.stat().st_size
             if args.pees_rank > 0:
                 max_allowed_bytes = pees_base_checkpoint_bytes * args.max_checkpoint_multiplier
@@ -690,6 +786,7 @@ def main():
                 "budget_allocation": args.budget_allocation,
                 "projection_budgets": per_projection_budgets,
                 "representation": args.representation,
+                "projection_serialization_audit": projection_serialization_audit,
                 "serialized_bytes": path.stat().st_size,
                 "base_checkpoint_bytes_before_bridge": (
                     baseline_buffer_bytes if args.defect_bridge_mode == "hybrid" else None
@@ -715,8 +812,9 @@ def main():
             manifest["history"].append(record)
             manifest["layers_compressed"].append(index)
             manifest["checkpoint_file_sizes"][path.name] = path.stat().st_size
+            manifest["checkpoint_file_sha256"][path.name] = sha256_file(path)
             manifest["serialized_checkpoint_bytes"] += path.stat().st_size
-            (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2))
+            atomic_json_save(manifest, args.output / "model_manifest.json")
             print(json.dumps(record), flush=True)
             if args.calibration_activation_mode == "compressed_prefix":
                 compressed_calibration, _, _ = forward_transformer_block(

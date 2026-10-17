@@ -6,12 +6,15 @@ with Nox-compressed checkpoint layers substituted in-place.
 
 import argparse
 import glob
+import hashlib
 import json
+import math
 import os
 import sys
 import time
 from pathlib import Path
 import torch
+import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -37,60 +40,157 @@ def load_wikitext2_test_text(return_metadata=False):
 
 
 @torch.no_grad()
-def compute_perplexity(model, tokenizer, text, seq_len=2048, stride=512, max_eval_tokens=10000, device="cuda", return_details=False):
+def sliding_window_specifications(num_tokens, seq_len=2048, stride=512, max_eval_tokens=10000):
+    """Return non-duplicating strided causal-LM scoring windows.
+
+    Each corpus target after the first token is scored exactly once.  The first
+    pass uses a full context window; later passes score only the newly exposed
+    ``stride`` targets while retaining up to ``seq_len - stride`` prior tokens
+    as context.  This follows the corrected token-weighted Transformers
+    perplexity reference implementation.
+    """
+    if num_tokens < 0:
+        raise ValueError("num_tokens must be nonnegative")
+    if seq_len < 2 or stride < 1 or stride >= seq_len:
+        raise ValueError("Require seq_len >= 2 and 1 <= stride < seq_len")
+    if max_eval_tokens < 0:
+        raise ValueError("max_eval_tokens must be nonnegative")
+    eval_limit = min(num_tokens, max_eval_tokens) if max_eval_tokens > 0 else num_tokens
+    windows = []
+    previous_end = 0
+    for begin in range(0, eval_limit, stride):
+        end = min(begin + seq_len, eval_limit)
+        target_length = end - previous_end
+        if target_length <= 0:
+            break
+        # Causal-LM loss shifts labels left internally, so the first label in
+        # the first window has no preceding prediction and is not scored.
+        scored = target_length - int(begin == 0)
+        windows.append({
+            "begin": begin,
+            "end": end,
+            "target_length": target_length,
+            "scored_tokens": scored,
+        })
+        previous_end = end
+        if end == eval_limit:
+            break
+    return windows, eval_limit
+
+
+def compute_perplexity(
+    model,
+    tokenizer,
+    text,
+    seq_len=2048,
+    stride=512,
+    max_eval_tokens=10000,
+    device="cuda",
+    return_details=False,
+    verify_reference_loss=False,
+):
     """
     Computes sliding-window language model perplexity across tokens.
     """
-    if seq_len < 2 or stride < 1 or stride >= seq_len:
-        raise ValueError("Require seq_len >= 2 and 1 <= stride < seq_len to score every next token")
     model.eval()
-    encodings = tokenizer(text, return_tensors="pt")
+    encodings = tokenizer(text, return_tensors="pt", add_special_tokens=True)
     total_tokens = encodings.input_ids.size(1)
-    eval_limit = min(total_tokens, max_eval_tokens) if max_eval_tokens > 0 else total_tokens
+    if total_tokens < 2:
+        raise ValueError("Tokenized evaluation text must contain at least two tokens")
+    if encodings.input_ids.min().item() < 0 or encodings.input_ids.max().item() >= len(tokenizer):
+        raise ValueError("Tokenizer emitted a token ID outside its declared vocabulary")
+    bos_token_id = getattr(tokenizer, "bos_token_id", None)
+    if bos_token_id is not None and int(encodings.input_ids[0, 0]) != int(bos_token_id):
+        raise ValueError("Raw-corpus tokenization did not begin with the pinned tokenizer BOS ID")
+    windows, eval_limit = sliding_window_specifications(
+        total_tokens, seq_len=seq_len, stride=stride,
+        max_eval_tokens=max_eval_tokens,
+    )
 
     log_step(f"Computing Perplexity over {eval_limit} tokens (seq_len={seq_len}, stride={stride})...")
 
-    nlls = []
+    total_nll = 0.0
     total_evaluated_tokens = 0
     predictions = []
     correct = 0
+    maximum_logit_abs = 0.0
+    reference_loss_crosscheck = None
 
-    for i in range(0, eval_limit, stride):
-        begin_loc = max(i + stride - seq_len, 0)
-        end_loc = min(i + stride, eval_limit)
-        trg_len = end_loc - i
+    for window in windows:
+        begin_loc, end_loc = window["begin"], window["end"]
+        trg_len = window["target_length"]
         input_ids = encodings.input_ids[:, begin_loc:end_loc].to(device)
         target_ids = input_ids.clone()
         target_ids[:, :-trg_len] = -100
 
         scored_tokens = int((target_ids[:, 1:] != -100).sum().item())
+        if scored_tokens != window["scored_tokens"]:
+            raise RuntimeError("Internal sliding-window target count mismatch")
         if scored_tokens == 0:
             continue
-        outputs = model(input_ids, labels=target_ids)
-        neg_log_likelihood = outputs.loss * scored_tokens
+        outputs = model(input_ids)
+        labels = target_ids[:, 1:]
+        logits = outputs.logits[:, :-1].float()
+        if not torch.isfinite(logits).all():
+            raise FloatingPointError("Model returned non-finite logits (possible inference overflow)")
+        maximum_logit_abs = max(maximum_logit_abs, float(logits.abs().max().item()))
+        mask = labels != -100
+        nll = F.cross_entropy(
+            logits.reshape(-1, logits.shape[-1]),
+            labels.reshape(-1),
+            ignore_index=-100,
+            reduction="sum",
+        )
+        window_nll = float(nll.item())
+        if not math.isfinite(window_nll):
+            raise FloatingPointError("Model returned non-finite shifted-token NLL")
+        if verify_reference_loss and reference_loss_crosscheck is None:
+            safe_labels = labels.clamp_min(0)
+            target_logits = logits.gather(-1, safe_labels.unsqueeze(-1)).squeeze(-1)
+            reference_per_token = torch.logsumexp(logits, dim=-1) - target_logits
+            reference_nll = float(reference_per_token[mask].sum().item())
+            gap = abs(window_nll - reference_nll)
+            tolerance = 1e-4 + 1e-6 * max(abs(window_nll), abs(reference_nll))
+            if not math.isfinite(reference_nll) or gap > tolerance:
+                raise RuntimeError(
+                    "Cross-entropy NLL disagrees with independent logsumexp-minus-target-logit check: "
+                    f"{window_nll} vs {reference_nll}"
+                )
+            reference_loss_crosscheck = {
+                "passed": True,
+                "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+                "scored_tokens": scored_tokens,
+                "cross_entropy_sum": window_nll,
+                "independent_formula_sum": reference_nll,
+                "absolute_difference": gap,
+                "absolute_relative_tolerance": tolerance,
+            }
+        total_nll += window_nll
         if return_details:
-            labels = target_ids[:, 1:]
-            mask = labels != -100
-            predicted = outputs.logits[:, :-1].argmax(dim=-1)[mask]
+            predicted = logits.argmax(dim=-1)[mask]
             correct += int((predicted == labels[mask]).sum().item())
             predictions.append(predicted.cpu())
 
-        nlls.append(neg_log_likelihood)
         total_evaluated_tokens += scored_tokens
 
-        if end_loc >= eval_limit:
-            break
-
-    if not nlls:
+    if total_evaluated_tokens == 0:
         raise ValueError("Perplexity requires at least two input tokens")
-    total_nll = torch.stack(nlls).sum()
-    ppl = torch.exp(total_nll / total_evaluated_tokens).item()
+    mean_nll = total_nll / total_evaluated_tokens
+    ppl = math.exp(mean_nll)
     if return_details:
+        token_ids = encodings.input_ids[0, :eval_limit].to(torch.int64).contiguous()
+        token_ids_sha256 = hashlib.sha256(token_ids.numpy().tobytes()).hexdigest()
         return ppl, total_evaluated_tokens, {
             "top1_predictions": torch.cat(predictions),
             "next_token_accuracy": correct / total_evaluated_tokens,
-            "mean_nll": float((total_nll / total_evaluated_tokens).item()),
+            "mean_nll": mean_nll,
             "input_tokens": eval_limit,
+            "token_ids_sha256": token_ids_sha256,
+            "bos_token_id": bos_token_id,
+            "maximum_absolute_logit": maximum_logit_abs,
+            "nll_formula_crosscheck": reference_loss_crosscheck,
+            "window_count": len(windows),
+            "window_specification": windows,
         }
     return ppl, total_evaluated_tokens
 
@@ -115,7 +215,13 @@ def generate_samples(model, tokenizer, prompts, max_new_tokens=64, device="cuda"
     return results
 
 
-def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.float16):
+def inject_nox_checkpoints(
+    model,
+    checkpoint_dir,
+    device="cuda",
+    dtype=torch.float16,
+    diagnostics: list[dict] | None = None,
+):
     """
     Loads NEC MPO, NEC-plus-packed-residual, or direct packed-codec checkpoints
     and injects their reconstructed weights into the model.
@@ -132,7 +238,7 @@ def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.flo
     injected_layers = []
 
     for ckpt_path in ckpt_files:
-        data = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+        data = torch.load(ckpt_path, map_location="cpu", weights_only=True)
         l_idx = data["layer_idx"]
         arts = data.get("compressed_artifacts", None)
 
@@ -141,25 +247,70 @@ def inject_nox_checkpoints(model, checkpoint_dir, device="cuda", dtype=torch.flo
             continue
 
         target_layer = model.model.layers[l_idx]
-        w_dev = target_layer.self_attn.q_proj.weight.device
-        w_dtype = target_layer.self_attn.q_proj.weight.dtype
-
-        # Reconstruct and assign attention projections
-        target_layer.self_attn.q_proj.weight.data.copy_(reconstruct_from_artifact(arts["q_proj"], device=w_dev, dtype=w_dtype))
-        target_layer.self_attn.k_proj.weight.data.copy_(reconstruct_from_artifact(arts["k_proj"], device=w_dev, dtype=w_dtype))
-        target_layer.self_attn.v_proj.weight.data.copy_(reconstruct_from_artifact(arts["v_proj"], device=w_dev, dtype=w_dtype))
-        target_layer.self_attn.o_proj.weight.data.copy_(reconstruct_from_artifact(arts["o_proj"], device=w_dev, dtype=w_dtype))
-
-        # Reconstruct and assign MLP projections
-        target_layer.mlp.gate_proj.weight.data.copy_(reconstruct_from_artifact(arts["gate_proj"], device=w_dev, dtype=w_dtype))
-        target_layer.mlp.up_proj.weight.data.copy_(reconstruct_from_artifact(arts["up_proj"], device=w_dev, dtype=w_dtype))
-        target_layer.mlp.down_proj.weight.data.copy_(reconstruct_from_artifact(arts["down_proj"], device=w_dev, dtype=w_dtype))
+        modules = {
+            "q_proj": target_layer.self_attn.q_proj,
+            "k_proj": target_layer.self_attn.k_proj,
+            "v_proj": target_layer.self_attn.v_proj,
+            "o_proj": target_layer.self_attn.o_proj,
+            "gate_proj": target_layer.mlp.gate_proj,
+            "up_proj": target_layer.mlp.up_proj,
+            "down_proj": target_layer.mlp.down_proj,
+        }
+        for name, module in modules.items():
+            source_weight = module.weight.detach().float()
+            if not torch.isfinite(source_weight).all():
+                raise FloatingPointError(f"Layer {l_idx} {name} source weight contains non-finite values")
+            reconstructed = reconstruct_from_artifact(
+                arts[name], device=module.weight.device, dtype=module.weight.dtype,
+            )
+            if tuple(reconstructed.shape) != tuple(module.weight.shape):
+                raise ValueError(f"Layer {l_idx} {name} reconstruction shape mismatch")
+            if not torch.isfinite(reconstructed).all():
+                raise FloatingPointError(f"Layer {l_idx} {name} reconstructed non-finite values")
+            if reconstructed.dtype != module.weight.dtype:
+                raise TypeError(
+                    f"Layer {l_idx} {name} reconstructed dtype {reconstructed.dtype} "
+                    f"does not match model dtype {module.weight.dtype}"
+                )
+            if diagnostics is not None:
+                decoded = reconstructed.float()
+                source_norm = torch.linalg.vector_norm(source_weight)
+                error = decoded - source_weight
+                nonzero = decoded != 0
+                subnormal = nonzero & (decoded.abs() < torch.finfo(torch.float16).tiny)
+                diagnostics.append({
+                    "layer": int(l_idx),
+                    "projection": name,
+                    "shape": list(module.weight.shape),
+                    "source_dtype": str(module.weight.dtype),
+                    "reconstructed_dtype": str(reconstructed.dtype),
+                    "source_rms": float(source_weight.square().mean().sqrt().item()),
+                    "reconstructed_rms": float(decoded.square().mean().sqrt().item()),
+                    "source_max_abs": float(source_weight.abs().max().item()),
+                    "reconstructed_max_abs": float(decoded.abs().max().item()),
+                    "relative_frobenius_error": float(
+                        (torch.linalg.vector_norm(error) / source_norm.clamp_min(1e-30)).item()
+                    ),
+                    "cosine_similarity": float(
+                        torch.nn.functional.cosine_similarity(
+                            source_weight.reshape(-1), decoded.reshape(-1), dim=0,
+                        ).item()
+                    ),
+                    "source_nonzero_to_reconstruction_zero_count": int(
+                        ((source_weight != 0) & ~nonzero).sum().item()
+                    ),
+                    "reconstruction_zero_fraction": float((~nonzero).float().mean().item()),
+                    "reconstruction_fp16_subnormal_count": int(subnormal.sum().item()),
+                })
+            module.weight.data.copy_(reconstructed)
 
         # Assign layer norms if present
         if data.get("input_layernorm") is not None:
-            target_layer.input_layernorm.weight.data.copy_(data["input_layernorm"].to(device=w_dev, dtype=w_dtype))
+            module = target_layer.input_layernorm
+            module.weight.data.copy_(data["input_layernorm"].to(device=module.weight.device, dtype=module.weight.dtype))
         if data.get("post_attention_layernorm") is not None:
-            target_layer.post_attention_layernorm.weight.data.copy_(data["post_attention_layernorm"].to(device=w_dev, dtype=w_dtype))
+            module = target_layer.post_attention_layernorm
+            module.weight.data.copy_(data["post_attention_layernorm"].to(device=module.weight.device, dtype=module.weight.dtype))
 
         bridge = data.get("cross_layer_bridge")
         if bridge is not None:

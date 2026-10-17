@@ -11,7 +11,7 @@ from nox.tensor_order import (
 from nox.residual_codec import CODEC_TYPE, decode_groupwise
 
 
-def quantize_4bit_grouped(tensor, group_size=64):
+def quantize_4bit_grouped(tensor, group_size=64, return_diagnostics=False):
     """Return 4-bit quantized/dequantized values in the input tensor's dtype.
 
     This simulates quantization for fitting and reconstruction. The current
@@ -19,17 +19,59 @@ def quantize_4bit_grouped(tensor, group_size=64):
     them into a half-byte representation.
     """
     orig_shape = tensor.shape
+    original_numel = tensor.numel()
     flat = tensor.reshape(-1)
     pad = (group_size - (flat.numel() % group_size)) % group_size
     if pad > 0:
         flat = torch.nn.functional.pad(flat, (0, pad))
     flat = flat.reshape(-1, group_size)
     scale = flat.abs().amax(dim=1, keepdim=True).clamp(min=1e-8) / 7.0
-    q = torch.clamp(torch.round(flat / scale), -8, 7)
+    rounded = torch.round(flat / scale)
+    q = torch.clamp(rounded, -8, 7)
     deq = (q * scale).reshape(-1)
     if pad > 0:
         deq = deq[:-pad]
-    return deq.reshape(orig_shape)
+    deq = deq.reshape(orig_shape)
+    if not return_diagnostics:
+        return deq
+
+    rounded = rounded.reshape(-1)[:original_numel]
+    q = q.reshape(-1)[:original_numel]
+    original = tensor.reshape(-1)
+    stored_fp16 = deq.to(dtype=torch.float16)
+    stored_flat = stored_fp16.reshape(-1)
+    fp16_tiny = torch.finfo(torch.float16).tiny
+    fp16_max = torch.finfo(torch.float16).max
+    # Aggregate on-device and synchronize once per component.  The counts
+    # distinguish intended 4-bit rounding-to-zero from FP16 storage underflow
+    # and detect any actual clamp/overflow instead of inferring them later.
+    counts = torch.stack((
+        ((rounded < -8) | (rounded > 7)).sum(),
+        ((original != 0) & (q == 0)).sum(),
+        (q == 7).sum(),
+        (q == -8).sum(),
+        ((deq.reshape(-1) != 0) & (stored_flat == 0)).sum(),
+        ((stored_flat != 0) & (stored_flat.abs() < fp16_tiny)).sum(),
+        (deq.abs() > fp16_max).sum(),
+        (~torch.isfinite(stored_fp16)).sum(),
+    )).to(device="cpu", dtype=torch.int64).tolist()
+    clipped, rounded_to_zero, positive_max_code, negative_min_code, underflow, subnormal, overflow, nonfinite = counts
+    diagnostics = {
+        "group_size": int(group_size),
+        "input_coefficients": int(original_numel),
+        "q4_clipped_code_count": int(clipped),
+        "q4_nonzero_input_rounded_to_zero_count": int(rounded_to_zero),
+        "q4_positive_max_code_count": int(positive_max_code),
+        "q4_negative_min_code_count": int(negative_min_code),
+        "fp16_nonzero_value_underflow_to_zero_count": int(underflow),
+        "fp16_subnormal_count": int(subnormal),
+        "fp16_overflow_count": int(overflow),
+        "fp16_nonfinite_count": int(nonfinite),
+        "input_max_abs": float(tensor.abs().max().item()),
+        "dequantized_max_abs": float(deq.abs().max().item()),
+        "stored_fp16_max_abs": float(stored_fp16.abs().max().item()),
+    }
+    return deq, diagnostics
 
 
 def augment_diagonal_weight_prior(X, Y, W, channel_scale, strength):
@@ -352,6 +394,16 @@ def nox_hybrid_dmrg_decompose(
     if diagonal_prior_strength < 0:
         raise ValueError("Weight prior strength must be nonnegative")
     quantize = quantize_4bit_grouped if quantize_components else lambda tensor, group_size=64: tensor
+    precision_diagnostics = {}
+
+    def quantize_component(tensor, component, group_size=64):
+        if not quantize_components:
+            return tensor
+        quantized, diagnostics = quantize_4bit_grouped(
+            tensor, group_size=group_size, return_diagnostics=True,
+        )
+        precision_diagnostics[component] = diagnostics
+        return quantized
     device = W.device
     o0, o1, o2, o3 = o_modes
     i0, i1, i2, i3 = i_modes
@@ -369,7 +421,7 @@ def nox_hybrid_dmrg_decompose(
         thresh = torch.kthvalue(importance.flatten(), k_idx).values
         mask = importance >= thresh
         S_vals = torch.where(mask, W, torch.zeros_like(W))
-        S_sparse = quantize(S_vals, group_size=64) * mask.to(W.dtype)
+        S_sparse = quantize_component(S_vals, "sparse_shield", group_size=64) * mask.to(W.dtype)
         sparse_count = int(torch.count_nonzero(S_sparse).item())
         nz_mask = (S_sparse != 0) if return_artifacts else None
         if verbose:
@@ -407,8 +459,8 @@ def nox_hybrid_dmrg_decompose(
         A_bridge = U_r / col_norms.unsqueeze(0)
         B_bridge = B_raw * col_norms.unsqueeze(1)
 
-        A_q = quantize(A_bridge, group_size=64)
-        B_q = quantize(B_bridge, group_size=64)
+        A_q = quantize_component(A_bridge, "bridge_A", group_size=64)
+        B_q = quantize_component(B_bridge, "bridge_B", group_size=64)
         S_bridge = A_q @ B_q
         del A_bridge, B_bridge, U_r, B_raw
         if verbose:
@@ -511,7 +563,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c0 = quantize(c0)
+            c0 = quantize_component(c0, "mpo_site_0")
         else:
             Q, R = torch.linalg.qr(c0.reshape(o0 * i0, r1))
             c0 = Q.reshape(o0, i0, -1)
@@ -593,7 +645,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c1 = quantize(c1)
+            c1 = quantize_component(c1, "mpo_site_1")
         else:
             Q, R = torch.linalg.qr(c1.reshape(r1 * o1 * i1, r2))
             c1 = Q.reshape(r1, o1, i1, -1)
@@ -675,7 +727,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c2 = quantize(c2)
+            c2 = quantize_component(c2, "mpo_site_2")
         else:
             Q, R = torch.linalg.qr(c2.reshape(r2 * o2 * i2, r3))
             c2 = Q.reshape(r2, o2, i2, -1)
@@ -707,7 +759,7 @@ def nox_hybrid_dmrg_decompose(
             torch.cuda.empty_cache()
 
         if is_final:
-            c3 = quantize(c3)
+            c3 = quantize_component(c3, "mpo_site_3")
         else:
             c0, c1, c2, c3 = right_canonicalize(c0, c1, c2, c3)
         if diagnostic_callback is not None:
@@ -754,6 +806,7 @@ def nox_hybrid_dmrg_decompose(
             "sparse_indices": sparse_idx,
             "sparse_values": sparse_val,
             "ranks": chosen_ranks,
+            "precision_diagnostics": precision_diagnostics,
             "total_kb": total_kb,
             "orig_shape": (d_out, d_in),
             "compiler_hyperparameters": {

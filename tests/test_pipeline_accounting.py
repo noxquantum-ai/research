@@ -1,3 +1,4 @@
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -5,10 +6,12 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import torch
-import torch.nn.functional as F
 
 from benchmarks.benchmark_day3_cascade import load_cached_tensor
-from benchmarks.benchmark_day4_perplexity import compute_perplexity
+from benchmarks.benchmark_day4_perplexity import (
+    compute_perplexity,
+    sliding_window_specifications,
+)
 from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, fingerprint
 from nox.compiler import estimate_artifact_tensor_bytes
 from nox.sequential_compiler import compute_dense_argmax_metrics
@@ -104,21 +107,19 @@ class PipelineAccountingTests(unittest.TestCase):
 
     def test_perplexity_counts_only_scored_next_token_labels(self):
         class Tokenizer:
-            def __call__(self, text, return_tensors):
+            def __len__(self):
+                return 4
+
+            def __call__(self, text, return_tensors, add_special_tokens=True):
                 return SimpleNamespace(input_ids=torch.tensor([[1, 2, 3, 0, 1]]))
 
         class UniformModel:
             def eval(self):
                 return self
 
-            def __call__(self, input_ids, labels):
+            def __call__(self, input_ids):
                 logits = torch.zeros((*input_ids.shape, 4), dtype=torch.float32)
-                loss = F.cross_entropy(
-                    logits[:, :-1].reshape(-1, 4),
-                    labels[:, 1:].reshape(-1),
-                    ignore_index=-100,
-                )
-                return SimpleNamespace(loss=loss, logits=logits)
+                return SimpleNamespace(logits=logits)
 
         with patch("benchmarks.benchmark_day4_perplexity.log_step"):
             ppl, scored_tokens, details = compute_perplexity(
@@ -135,6 +136,99 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertAlmostEqual(ppl, 4.0, places=5)
         self.assertEqual(details["top1_predictions"].tolist(), [0, 0, 0, 0])
         self.assertEqual(details["next_token_accuracy"], 0.25)
+
+    def test_sliding_windows_start_full_and_score_every_target_once(self):
+        windows, limit = sliding_window_specifications(
+            10_317, seq_len=2048, stride=512, max_eval_tokens=10_000,
+        )
+        self.assertEqual(limit, 10_000)
+        self.assertEqual(windows[0], {
+            "begin": 0, "end": 2048, "target_length": 2048,
+            "scored_tokens": 2047,
+        })
+        self.assertEqual(windows[1], {
+            "begin": 512, "end": 2560, "target_length": 512,
+            "scored_tokens": 512,
+        })
+        self.assertEqual(windows[-1]["end"], 10_000)
+        self.assertEqual(sum(window["scored_tokens"] for window in windows), 9_999)
+
+    def test_perplexity_is_token_weighted_across_unequal_windows(self):
+        class Tokenizer:
+            def __len__(self):
+                return 2
+
+            def __call__(self, text, return_tensors, add_special_tokens=True):
+                return SimpleNamespace(input_ids=torch.tensor([[0, 1, 0, 1, 0, 1]]))
+
+        class WindowLossModel:
+            def __init__(self):
+                self.window_lengths = []
+
+            def eval(self):
+                return self
+
+            def __call__(self, input_ids):
+                self.window_lengths.append(input_ids.shape[1])
+                # The correct next class gets logit 0 and the other class is
+                # set to produce exactly NLL 1 or 3 for each window.
+                desired_nll = 1.0 if len(self.window_lengths) == 1 else 3.0
+                incorrect_logit = math.log(math.expm1(desired_nll))
+                logits = torch.empty((*input_ids.shape, 2), dtype=torch.float32)
+                next_class = 1 - input_ids
+                logits.scatter_(-1, next_class.unsqueeze(-1), 0.0)
+                logits.scatter_(-1, (1 - next_class).unsqueeze(-1), incorrect_logit)
+                return SimpleNamespace(logits=logits)
+
+        model = WindowLossModel()
+        with patch("benchmarks.benchmark_day4_perplexity.log_step"):
+            ppl, scored, details = compute_perplexity(
+                model, Tokenizer(), "ignored", seq_len=4, stride=2,
+                max_eval_tokens=6, device="cpu", return_details=True,
+            )
+        self.assertEqual(model.window_lengths, [4, 4])
+        self.assertEqual(scored, 5)
+        self.assertAlmostEqual(details["mean_nll"], 1.8)
+        self.assertAlmostEqual(ppl, math.exp(1.8))
+
+    def test_logits_reference_matches_causal_shift_and_overlapping_windows(self):
+        class Tokenizer:
+            def __len__(self):
+                return 4
+
+            def __call__(self, text, return_tensors, add_special_tokens=True):
+                return SimpleNamespace(input_ids=torch.tensor([[0, 1, 2, 3, 0, 1]]))
+
+        class DeterministicNextTokenModel:
+            def eval(self):
+                return self
+
+            def __call__(self, input_ids):
+                target = (input_ids + 1) % 4
+                classes = torch.arange(4).view(1, 1, 4)
+                logits = -((classes - target.unsqueeze(-1)) ** 2).float()
+                return SimpleNamespace(logits=logits)
+
+        with patch("benchmarks.benchmark_day4_perplexity.log_step"):
+            ppl, scored, details = compute_perplexity(
+                DeterministicNextTokenModel(), Tokenizer(), "ignored",
+                seq_len=4, stride=2, max_eval_tokens=6, device="cpu",
+                return_details=True, verify_reference_loss=True,
+            )
+        # Independently derive the five shifted-label losses over the corpus.
+        # Each is scored once despite the overlapping two-window evaluation.
+        target_ids = [1, 2, 3, 0, 1]
+        expected_mean_nll = sum(
+            math.log(sum(math.exp(-((klass - target) ** 2)) for klass in range(4)))
+            for target in target_ids
+        ) / len(target_ids)
+        self.assertEqual(scored, 5)
+        self.assertAlmostEqual(details["mean_nll"], expected_mean_nll, places=6)
+        self.assertAlmostEqual(ppl, math.exp(expected_mean_nll), places=6)
+        self.assertEqual(details["top1_predictions"].tolist(), [1, 2, 3, 0, 1])
+        self.assertEqual(details["next_token_accuracy"], 1.0)
+        self.assertTrue(details["nll_formula_crosscheck"]["passed"])
+        self.assertEqual(details["nll_formula_crosscheck"]["scored_tokens"], 3)
 
 
 if __name__ == "__main__":
