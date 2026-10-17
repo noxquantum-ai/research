@@ -1,0 +1,2332 @@
+{
+  "format": "nox_quality_first_native_swiglu_prefix_v1",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "layers": 32,
+  "retain_fraction": 0.875,
+  "representation": "grouped_tn",
+  "groups": 1,
+  "retain_candidates": [
+    0.875
+  ],
+  "adaptive_allocation": false,
+  "selection_error_max": 0.15,
+  "allocation_metric": "module",
+  "calibration_input_sha256": "8e9f16b50016b9460607fe116129f62d66702b5484de3fd60b96327c9bd1bc73",
+  "heldout_input_sha256": "f240af3942d70fc411f0615c65921a8bfecd78c1a70b4256eb790495d076d6a4",
+  "calibration_tokens": 4096,
+  "heldout_tokens": 4096,
+  "uses_gradients": false,
+  "uses_dense_residual": false,
+  "post_compression_optimization": false,
+  "layer_records": [
+    {
+      "layer": 0,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "6f5eea851139619e8bf566d11c10c4f4d820a71573e6f212907671fbcb7a7390",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 0.09302283823490143,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 7.375868320465088
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 0.3157649338245392
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.1622280776500702
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.12397857755422592
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.12397857755422592
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.12397857755422592,
+          "module_selection_relative_error": 0.12397857755422592,
+          "prefix_selection_relative_error": 0.03986124501139774,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.11660537982233415,
+        "angular_drift": 0.006783962249755859,
+        "norm_ratio": 0.9845552946707244,
+        "cosine_similarity": 0.9932160377502441
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.06039995554822824,
+        "angular_drift": 0.0017989873886108398,
+        "norm_ratio": 0.9908717846061456,
+        "cosine_similarity": 0.9982010126113892
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.0,
+        "angular_drift": 0.0,
+        "norm_ratio": 1.0,
+        "cosine_similarity": 1.0
+      },
+      "runtime_seconds": 17.847213724999165
+    },
+    {
+      "layer": 1,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "d514a993a2cb90c775640e6de5b4973fd8e236e57ba9a6e5427708dfe931b66f",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 2.2057414054870605,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 0.013217966072261333
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 0.006025593727827072
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.0028269588947296143
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.002404056256636977
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.002404056256636977
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.002404056256636977,
+          "module_selection_relative_error": 0.002404056256636977,
+          "prefix_selection_relative_error": 0.005131712425035688,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.0016520127972063376,
+        "angular_drift": 1.430511474609375e-06,
+        "norm_ratio": 0.9999994908139332,
+        "cosine_similarity": 0.9999985694885254
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.012608110206920917,
+        "angular_drift": 7.414817810058594e-05,
+        "norm_ratio": 1.003188918625883,
+        "cosine_similarity": 0.9999258518218994
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.06039995554822824,
+        "angular_drift": 0.0017989873886108398,
+        "norm_ratio": 0.9908717846061456,
+        "cosine_similarity": 0.9982010126113892
+      },
+      "runtime_seconds": 17.849673532999077
+    },
+    {
+      "layer": 2,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "744f2cb05229232d50eb5540d08a8800e143969f68a6a512e0685f7533fab63c",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 0.48542407155036926,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 28.44546890258789
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0628098249435425
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.6148102283477783
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.34969547390937805
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.34969547390937805
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.34969547390937805,
+          "module_selection_relative_error": 0.34969547390937805,
+          "prefix_selection_relative_error": 0.005550368447815152,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.34399870033832813,
+        "angular_drift": 0.0610121488571167,
+        "norm_ratio": 0.944748113779472,
+        "cosine_similarity": 0.9389878511428833
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.012953835000254526,
+        "angular_drift": 7.867813110351562e-05,
+        "norm_ratio": 1.0031570424083585,
+        "cosine_similarity": 0.9999213218688965
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.012608110206920917,
+        "angular_drift": 7.414817810058594e-05,
+        "norm_ratio": 1.003188918625883,
+        "cosine_similarity": 0.9999258518218994
+      },
+      "runtime_seconds": 17.90116943799876
+    },
+    {
+      "layer": 3,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "c5c8ee78641a2d5f9582d43cbdb323d605a966e2cd191143f64cdab7627ec560",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 0.9044102430343628,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 14.162017822265625
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0972342491149902
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.6920570731163025
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.390438050031662
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.390438050031662
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.390438050031662,
+          "module_selection_relative_error": 0.390438050031662,
+          "prefix_selection_relative_error": 0.0064939558659811835,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.3936781086068689,
+        "angular_drift": 0.08074831962585449,
+        "norm_ratio": 0.9217502002528964,
+        "cosine_similarity": 0.9192516803741455
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.013841933636465095,
+        "angular_drift": 9.071826934814453e-05,
+        "norm_ratio": 1.0031138115611777,
+        "cosine_similarity": 0.9999092817306519
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.012953835000254526,
+        "angular_drift": 7.867813110351562e-05,
+        "norm_ratio": 1.0031570424083585,
+        "cosine_similarity": 0.9999213218688965
+      },
+      "runtime_seconds": 18.000542129999303
+    },
+    {
+      "layer": 4,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "7244a43d7678e4d423fdf666a2d43ea50a1b6d5a1c2a0ecff7a150941a6af940",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 2.1274220943450928,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 18.671802520751953
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 0.9148726463317871
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.5804226994514465
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.3331656754016876
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.3331656754016876
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.3331656754016876,
+          "module_selection_relative_error": 0.3331656754016876,
+          "prefix_selection_relative_error": 0.007969053854484279,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.32236372186555934,
+        "angular_drift": 0.0533832311630249,
+        "norm_ratio": 0.9452946120662715,
+        "cosine_similarity": 0.9466167688369751
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.015317092266111795,
+        "angular_drift": 0.00011217594146728516,
+        "norm_ratio": 1.0030987517961343,
+        "cosine_similarity": 0.9998878240585327
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.013841933636465095,
+        "angular_drift": 9.071826934814453e-05,
+        "norm_ratio": 1.0031138115611777,
+        "cosine_similarity": 0.9999092817306519
+      },
+      "runtime_seconds": 18.039967603999685
+    },
+    {
+      "layer": 5,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "216b01420fb67cb2851be10d12598ff7fa1e8e4dc6b10e902fc3a1a0dc13160b",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 2.603818416595459,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 138.97238159179688
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0956588983535767
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7352275848388672
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.40208882093429565
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.40208882093429565
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.40208882093429565,
+          "module_selection_relative_error": 0.40208882093429565,
+          "prefix_selection_relative_error": 0.009807365402234793,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4054217363544533,
+        "angular_drift": 0.08582878112792969,
+        "norm_ratio": 0.9228806667748334,
+        "cosine_similarity": 0.9141712188720703
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.01749600724324283,
+        "angular_drift": 0.00014799833297729492,
+        "norm_ratio": 1.0030558976433779,
+        "cosine_similarity": 0.9998520016670227
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.015317092266111795,
+        "angular_drift": 0.00011217594146728516,
+        "norm_ratio": 1.0030987517961343,
+        "cosine_similarity": 0.9998878240585327
+      },
+      "runtime_seconds": 18.121066718998918
+    },
+    {
+      "layer": 6,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "55a5ac49a7abdd7614e7cf1b05ed6a99d099f4decba3ed63e06fa4dbba23b85a",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 3.875851631164551,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 20.841257095336914
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0868465900421143
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7276788353919983
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.3995077908039093
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.3995077908039093
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.3995077908039093,
+          "module_selection_relative_error": 0.3995077908039093,
+          "prefix_selection_relative_error": 0.011831326787841143,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4043757347024006,
+        "angular_drift": 0.08538246154785156,
+        "norm_ratio": 0.9213407226110968,
+        "cosine_similarity": 0.9146175384521484
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.020176220474337817,
+        "angular_drift": 0.0001984238624572754,
+        "norm_ratio": 1.0029993045513532,
+        "cosine_similarity": 0.9998015761375427
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.01749600724324283,
+        "angular_drift": 0.00014799833297729492,
+        "norm_ratio": 1.0030558976433779,
+        "cosine_similarity": 0.9998520016670227
+      },
+      "runtime_seconds": 18.053338345000157
+    },
+    {
+      "layer": 7,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "fa69c1a59a1f1dda65aaa12c86020554091b2296ff6c4c833d54dc9db9ee9d36",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 5.10677433013916,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 19.06960678100586
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0630712509155273
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7183047533035278
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39479076862335205
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39479076862335205
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39479076862335205,
+          "module_selection_relative_error": 0.39479076862335205,
+          "prefix_selection_relative_error": 0.014014724823975842,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.40002192488048605,
+        "angular_drift": 0.08346766233444214,
+        "norm_ratio": 0.9235394818375621,
+        "cosine_similarity": 0.9165323376655579
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.023202561209482334,
+        "angular_drift": 0.0002639293670654297,
+        "norm_ratio": 1.0029424125920126,
+        "cosine_similarity": 0.9997360706329346
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.020176220474337817,
+        "angular_drift": 0.0001984238624572754,
+        "norm_ratio": 1.0029993045513532,
+        "cosine_similarity": 0.9998015761375427
+      },
+      "runtime_seconds": 18.18587020800078
+    },
+    {
+      "layer": 8,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "ef92f9c79d1857d9d0ebaa47a0b5081092ce2f462cbc6e5ed4798b3871dd10cf",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 6.005880355834961,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 5627.58984375
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.050544023513794
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.716604471206665
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39505162835121155
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39505162835121155
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39505162835121155,
+          "module_selection_relative_error": 0.39505162835121155,
+          "prefix_selection_relative_error": 0.016231017704722628,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.40052668695662136,
+        "angular_drift": 0.0836641788482666,
+        "norm_ratio": 0.9259659352507839,
+        "cosine_similarity": 0.9163358211517334
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.026396570674709977,
+        "angular_drift": 0.0003432631492614746,
+        "norm_ratio": 1.0028605397854664,
+        "cosine_similarity": 0.9996567368507385
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.023202561209482334,
+        "angular_drift": 0.0002639293670654297,
+        "norm_ratio": 1.0029424125920126,
+        "cosine_similarity": 0.9997360706329346
+      },
+      "runtime_seconds": 18.206189330001507
+    },
+    {
+      "layer": 9,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714393,
+      "checkpoint_sha256": "75fa141dcc485f35942f128025add8cdd06f9453a9d7477d25bdf861088551e2",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 6.732549667358398,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 221.2975616455078
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0544854402542114
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7267703413963318
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39774924516677856
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39774924516677856
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39774924516677856,
+          "module_selection_relative_error": 0.39774924516677856,
+          "prefix_selection_relative_error": 0.01857444603924086,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.40496184177180417,
+        "angular_drift": 0.0856086015701294,
+        "norm_ratio": 0.9246753282474034,
+        "cosine_similarity": 0.9143913984298706
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.029777704713440656,
+        "angular_drift": 0.0004382133483886719,
+        "norm_ratio": 1.0027826532477468,
+        "cosine_similarity": 0.9995617866516113
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.026396570674709977,
+        "angular_drift": 0.0003432631492614746,
+        "norm_ratio": 1.0028605397854664,
+        "cosine_similarity": 0.9996567368507385
+      },
+      "runtime_seconds": 18.26710167500096
+    },
+    {
+      "layer": 10,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "bb3979990126f8b1ea390f290328baadb4959ad4ecca50ed87cfb6566ad35702",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 7.453566551208496,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 46.26925277709961
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0585951805114746
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7205122709274292
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.3920668363571167
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.3920668363571167
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.3920668363571167,
+          "module_selection_relative_error": 0.3920668363571167,
+          "prefix_selection_relative_error": 0.020761630581660896,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4031243988068472,
+        "angular_drift": 0.08478504419326782,
+        "norm_ratio": 0.9265203344580181,
+        "cosine_similarity": 0.9152149558067322
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.03314689857124143,
+        "angular_drift": 0.0005442500114440918,
+        "norm_ratio": 1.0026883595127907,
+        "cosine_similarity": 0.9994557499885559
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.029777704713440656,
+        "angular_drift": 0.0004382133483886719,
+        "norm_ratio": 1.0027826532477468,
+        "cosine_similarity": 0.9995617866516113
+      },
+      "runtime_seconds": 18.29513433200009
+    },
+    {
+      "layer": 11,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "ec06e21e227468f4eda04a3717292a759d242e85ab0d62ec5b5f043fd8289291",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 8.207232475280762,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 14.136067390441895
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.082034945487976
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7370004653930664
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.40329673886299133
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.40329673886299133
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.40329673886299133,
+          "module_selection_relative_error": 0.40329673886299133,
+          "prefix_selection_relative_error": 0.022733373363952394,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.41292255073137135,
+        "angular_drift": 0.08916640281677246,
+        "norm_ratio": 0.9219244949072162,
+        "cosine_similarity": 0.9108335971832275
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.03606948674883999,
+        "angular_drift": 0.0006455183029174805,
+        "norm_ratio": 1.0025772312208021,
+        "cosine_similarity": 0.9993544816970825
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.03314689857124143,
+        "angular_drift": 0.0005442500114440918,
+        "norm_ratio": 1.0026883595127907,
+        "cosine_similarity": 0.9994557499885559
+      },
+      "runtime_seconds": 18.311130973999752
+    },
+    {
+      "layer": 12,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "af23f05bc54f0735f700971c8384d42860c955499952618741a88046bb3a71a6",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 8.880678176879883,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 12.50533676147461
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0968081951141357
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7478654980659485
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.40749192237854004
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.40749192237854004
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.40749192237854004,
+          "module_selection_relative_error": 0.40749192237854004,
+          "prefix_selection_relative_error": 0.02505173447719098,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.42032424075812774,
+        "angular_drift": 0.09253919124603271,
+        "norm_ratio": 0.9200143340109277,
+        "cosine_similarity": 0.9074608087539673
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.03948711113966057,
+        "angular_drift": 0.000774681568145752,
+        "norm_ratio": 1.0024485028518133,
+        "cosine_similarity": 0.9992253184318542
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.03606948674883999,
+        "angular_drift": 0.0006455183029174805,
+        "norm_ratio": 1.0025772312208021,
+        "cosine_similarity": 0.9993544816970825
+      },
+      "runtime_seconds": 18.343004893999023
+    },
+    {
+      "layer": 13,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "ded9f3bdc1dc162864bf5f61daa28fb9e83b1e8565e433224b5de381a4f76b8b",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 10.692092895507812,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 124.42313385009766
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0962474346160889
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7401996850967407
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4071684777736664
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4071684777736664
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4071684777736664,
+          "module_selection_relative_error": 0.4071684777736664,
+          "prefix_selection_relative_error": 0.027604632785945295,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.42148223320080336,
+        "angular_drift": 0.09310698509216309,
+        "norm_ratio": 0.91699930779327,
+        "cosine_similarity": 0.9068930149078369
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.04321890135702423,
+        "angular_drift": 0.0009292364120483398,
+        "norm_ratio": 1.0022438222412264,
+        "cosine_similarity": 0.9990707635879517
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.03948711113966057,
+        "angular_drift": 0.000774681568145752,
+        "norm_ratio": 1.0024485028518133,
+        "cosine_similarity": 0.9992253184318542
+      },
+      "runtime_seconds": 18.386497671999678
+    },
+    {
+      "layer": 14,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "1bb94209e58557ad73f528819481da67c4b239fa607ce356171e464787650643",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 12.32194709777832,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 14.748336791992188
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.1040713787078857
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.74594646692276
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4091086983680725
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4091086983680725
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4091086983680725,
+          "module_selection_relative_error": 0.4091086983680725,
+          "prefix_selection_relative_error": 0.030418137985264198,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4235496827417895,
+        "angular_drift": 0.09409201145172119,
+        "norm_ratio": 0.9138790200612673,
+        "cosine_similarity": 0.9059079885482788
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.04761214724938403,
+        "angular_drift": 0.0011290311813354492,
+        "norm_ratio": 1.0020183908066287,
+        "cosine_similarity": 0.9988709688186646
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.04321890135702423,
+        "angular_drift": 0.0009292364120483398,
+        "norm_ratio": 1.0022438222412264,
+        "cosine_similarity": 0.9990707635879517
+      },
+      "runtime_seconds": 18.356460828999843
+    },
+    {
+      "layer": 15,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "2dfd2aed5fbfe92606f580e9e23b22ac14988ceffc57fdc976695ffb30e3e228",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 15.621942520141602,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 554.9527587890625
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0908544063568115
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.73905348777771
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4069504141807556
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4069504141807556
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4069504141807556,
+          "module_selection_relative_error": 0.4069504141807556,
+          "prefix_selection_relative_error": 0.03394169385604079,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4202848512064698,
+        "angular_drift": 0.0925818681716919,
+        "norm_ratio": 0.9142778477145403,
+        "cosine_similarity": 0.9074181318283081
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.05296125978283856,
+        "angular_drift": 0.001398622989654541,
+        "norm_ratio": 1.0016838367052079,
+        "cosine_similarity": 0.9986013770103455
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.04761214724938403,
+        "angular_drift": 0.0011290311813354492,
+        "norm_ratio": 1.0020183908066287,
+        "cosine_similarity": 0.9988709688186646
+      },
+      "runtime_seconds": 18.48210653500064
+    },
+    {
+      "layer": 16,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "b44b21d9b7a1357fd5086ab4cb9953045e3d9af58185286a3334cc7b69afe4dd",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 21.666812896728516,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 16.39976692199707
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.0961132049560547
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7214309573173523
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39480850100517273
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39480850100517273
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39480850100517273,
+          "module_selection_relative_error": 0.39480850100517273,
+          "prefix_selection_relative_error": 0.03885794897628975,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4090848556728154,
+        "angular_drift": 0.0875018835067749,
+        "norm_ratio": 0.914282136829716,
+        "cosine_similarity": 0.9124981164932251
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.061140354757757955,
+        "angular_drift": 0.0018663406372070312,
+        "norm_ratio": 1.0010823818353258,
+        "cosine_similarity": 0.998133659362793
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.05296125978283856,
+        "angular_drift": 0.001398622989654541,
+        "norm_ratio": 1.0016838367052079,
+        "cosine_similarity": 0.9986013770103455
+      },
+      "runtime_seconds": 18.131080339999244
+    },
+    {
+      "layer": 17,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "6475ce49277062e337ba04f66ba71f97978deb3c7a41b94740e4c14725995182",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 23.73809242248535,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 14.459360122680664
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.1320335865020752
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7425732016563416
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4001304507255554
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4001304507255554
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4001304507255554,
+          "module_selection_relative_error": 0.4001304507255554,
+          "prefix_selection_relative_error": 0.043172634690061586,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4174990497921442,
+        "angular_drift": 0.09132254123687744,
+        "norm_ratio": 0.9089785850991903,
+        "cosine_similarity": 0.9086774587631226
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.06818582893899217,
+        "angular_drift": 0.0023232698440551758,
+        "norm_ratio": 1.000562722118908,
+        "cosine_similarity": 0.9976767301559448
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.061140354757757955,
+        "angular_drift": 0.0018663406372070312,
+        "norm_ratio": 1.0010823818353258,
+        "cosine_similarity": 0.998133659362793
+      },
+      "runtime_seconds": 18.273227671999848
+    },
+    {
+      "layer": 18,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "4a111da93428f285092a1994430b4a7385c72c31d3aa4d1c995718a6f5666d87",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 27.576501846313477,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 90.09435272216797
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.1241028308868408
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7394591569900513
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39970362186431885
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39970362186431885
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39970362186431885,
+          "module_selection_relative_error": 0.39970362186431885,
+          "prefix_selection_relative_error": 0.0487350530975921,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.42153310346498807,
+        "angular_drift": 0.09318685531616211,
+        "norm_ratio": 0.907404121353993,
+        "cosine_similarity": 0.9068131446838379
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.07730872205081504,
+        "angular_drift": 0.002988457679748535,
+        "norm_ratio": 0.9999443016010855,
+        "cosine_similarity": 0.9970115423202515
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.06818582893899217,
+        "angular_drift": 0.0023232698440551758,
+        "norm_ratio": 1.000562722118908,
+        "cosine_similarity": 0.9976767301559448
+      },
+      "runtime_seconds": 18.307107986998744
+    },
+    {
+      "layer": 19,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "478ed8439de20838327f7c1b5975189e6731fe5a03dcfeb0116b7afd8726e00d",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 29.99555778503418,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 44.194915771484375
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.1294288635253906
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.742375910282135
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39942288398742676
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39942288398742676
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39942288398742676,
+          "module_selection_relative_error": 0.39942288398742676,
+          "prefix_selection_relative_error": 0.05465290676954215,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.422578753271685,
+        "angular_drift": 0.09367305040359497,
+        "norm_ratio": 0.9075190956935424,
+        "cosine_similarity": 0.906326949596405
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.08678904847944074,
+        "angular_drift": 0.0037689208984375,
+        "norm_ratio": 0.9991870466993673,
+        "cosine_similarity": 0.9962310791015625
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.07730872205081504,
+        "angular_drift": 0.002988457679748535,
+        "norm_ratio": 0.9999443016010855,
+        "cosine_similarity": 0.9970115423202515
+      },
+      "runtime_seconds": 18.417078987999048
+    },
+    {
+      "layer": 20,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "40104015ae5a47dc1c1cf7cb72b7aaad8d153c3d4b9feae2470beba0ca7ccfe8",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 38.32919692993164,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 92.40548706054688
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.155799388885498
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7296658158302307
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.3835422992706299
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.3835422992706299
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.3835422992706299,
+          "module_selection_relative_error": 0.3835422992706299,
+          "prefix_selection_relative_error": 0.06152390392359981,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4233496299890093,
+        "angular_drift": 0.09403038024902344,
+        "norm_ratio": 0.9035591279163908,
+        "cosine_similarity": 0.9059696197509766
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.0994959487323752,
+        "angular_drift": 0.0049582719802856445,
+        "norm_ratio": 0.9977931179458327,
+        "cosine_similarity": 0.9950417280197144
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.08678904847944074,
+        "angular_drift": 0.0037689208984375,
+        "norm_ratio": 0.9991870466993673,
+        "cosine_similarity": 0.9962310791015625
+      },
+      "runtime_seconds": 18.394008736000615
+    },
+    {
+      "layer": 21,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "4686b2b4b51d91c727b47c2071a7d454deabcb0e0cc2b2b5cbee6372087dc251",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 40.697044372558594,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 85.05545043945312
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.1981087923049927
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7478400468826294
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.37793704867362976
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.37793704867362976
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.37793704867362976,
+          "module_selection_relative_error": 0.37793704867362976,
+          "prefix_selection_relative_error": 0.06795131587959537,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4165786897361897,
+        "angular_drift": 0.09090006351470947,
+        "norm_ratio": 0.9084027636186779,
+        "cosine_similarity": 0.9090999364852905
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.11055915197344916,
+        "angular_drift": 0.0061269402503967285,
+        "norm_ratio": 0.9965078967651168,
+        "cosine_similarity": 0.9938730597496033
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.0994959487323752,
+        "angular_drift": 0.0049582719802856445,
+        "norm_ratio": 0.9977931179458327,
+        "cosine_similarity": 0.9950417280197144
+      },
+      "runtime_seconds": 18.431764150000163
+    },
+    {
+      "layer": 22,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "1bd901054dbfcb22e1123235856bcace8d95485bc73642c2fd217f6b907890b5",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 44.44700241088867,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 48.97531509399414
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.227994680404663
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7629613280296326
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.38939470052719116
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.38939470052719116
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.38939470052719116,
+          "module_selection_relative_error": 0.38939470052719116,
+          "prefix_selection_relative_error": 0.07536344538954638,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.42917164777515293,
+        "angular_drift": 0.09677112102508545,
+        "norm_ratio": 0.9064889584536562,
+        "cosine_similarity": 0.9032288789749146
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.12369972541966981,
+        "angular_drift": 0.007675468921661377,
+        "norm_ratio": 0.9954083958600984,
+        "cosine_similarity": 0.9923245310783386
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.11055915197344916,
+        "angular_drift": 0.0061269402503967285,
+        "norm_ratio": 0.9965078967651168,
+        "cosine_similarity": 0.9938730597496033
+      },
+      "runtime_seconds": 18.45819419899999
+    },
+    {
+      "layer": 23,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "ae5566d63dfeb2ece8950e403d0b177f6d0a538dd647abbb4fca15c7d1d87f57",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 45.20322799682617,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 30.758066177368164
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.2327319383621216
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7772972583770752
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39818647503852844
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39818647503852844
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39818647503852844,
+          "module_selection_relative_error": 0.39818647503852844,
+          "prefix_selection_relative_error": 0.08194752626281647,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4386126285861139,
+        "angular_drift": 0.10131359100341797,
+        "norm_ratio": 0.9029707964073533,
+        "cosine_similarity": 0.898686408996582
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.13513105264041064,
+        "angular_drift": 0.009167253971099854,
+        "norm_ratio": 0.9939511836024864,
+        "cosine_similarity": 0.9908327460289001
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.12369972541966981,
+        "angular_drift": 0.007675468921661377,
+        "norm_ratio": 0.9954083958600984,
+        "cosine_similarity": 0.9923245310783386
+      },
+      "runtime_seconds": 18.4297816090002
+    },
+    {
+      "layer": 24,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "42670fedb58d38a1964fb9409db12535c04653108abc087884a0183eac694bee",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 46.42596435546875,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 44.775142669677734
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.2568310499191284
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7907619476318359
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4010623097419739
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4010623097419739
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4010623097419739,
+          "module_selection_relative_error": 0.4010623097419739,
+          "prefix_selection_relative_error": 0.08867215782992019,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.44944291905097744,
+        "angular_drift": 0.10666978359222412,
+        "norm_ratio": 0.8994863940014274,
+        "cosine_similarity": 0.8933302164077759
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.14709332709815365,
+        "angular_drift": 0.010869383811950684,
+        "norm_ratio": 0.9931093014217736,
+        "cosine_similarity": 0.9891306161880493
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.13513105264041064,
+        "angular_drift": 0.009167253971099854,
+        "norm_ratio": 0.9939511836024864,
+        "cosine_similarity": 0.9908327460289001
+      },
+      "runtime_seconds": 18.416369528998985
+    },
+    {
+      "layer": 25,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "50b2d9eff014125b8955f6c8e993a76250931ec037cbf803bf933f5e9e5144ac",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 48.244319915771484,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 50.17454147338867
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.2575504779815674
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7937639951705933
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4023876190185547
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4023876190185547
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4023876190185547,
+          "module_selection_relative_error": 0.4023876190185547,
+          "prefix_selection_relative_error": 0.09555908562326124,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.4497981923006742,
+        "angular_drift": 0.10685515403747559,
+        "norm_ratio": 0.8982568957854594,
+        "cosine_similarity": 0.8931448459625244
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.1582249933875439,
+        "angular_drift": 0.012587785720825195,
+        "norm_ratio": 0.9916485934165026,
+        "cosine_similarity": 0.9874122142791748
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.14709332709815365,
+        "angular_drift": 0.010869383811950684,
+        "norm_ratio": 0.9931093014217736,
+        "cosine_similarity": 0.9891306161880493
+      },
+      "runtime_seconds": 18.234754771001462
+    },
+    {
+      "layer": 26,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "fac2bbcffd81cb32bfa22de1506cb24e73fad24b8eb2b3b11b5b19a5412d9932",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 51.20857238769531,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 51.50576400756836
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.2353191375732422
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7871826887130737
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.40321579575538635
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.40321579575538635
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.40321579575538635,
+          "module_selection_relative_error": 0.40321579575538635,
+          "prefix_selection_relative_error": 0.10302515062885056,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.45150506512608984,
+        "angular_drift": 0.10769867897033691,
+        "norm_ratio": 0.8999608598572184,
+        "cosine_similarity": 0.8923013210296631
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.1710330169477887,
+        "angular_drift": 0.014719188213348389,
+        "norm_ratio": 0.9908292961733167,
+        "cosine_similarity": 0.9852808117866516
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.1582249933875439,
+        "angular_drift": 0.012587785720825195,
+        "norm_ratio": 0.9916485934165026,
+        "cosine_similarity": 0.9874122142791748
+      },
+      "runtime_seconds": 18.193890673999704
+    },
+    {
+      "layer": 27,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "aea29d924eb244e818a3e05b0020dbbf58c580983c9dcc512ba336a0bdb4d62f",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 56.65478515625,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 11.038784980773926
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.20442795753479
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7766410112380981
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.4021514058113098
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.4021514058113098
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.4021514058113098,
+          "module_selection_relative_error": 0.4021514058113098,
+          "prefix_selection_relative_error": 0.1108086195739438,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.44615913348305974,
+        "angular_drift": 0.10503244400024414,
+        "norm_ratio": 0.899958320307396,
+        "cosine_similarity": 0.8949675559997559
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.1831524954210518,
+        "angular_drift": 0.016895174980163574,
+        "norm_ratio": 0.9894368199122459,
+        "cosine_similarity": 0.9831048250198364
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.1710330169477887,
+        "angular_drift": 0.014719188213348389,
+        "norm_ratio": 0.9908292961733167,
+        "cosine_similarity": 0.9852808117866516
+      },
+      "runtime_seconds": 18.306059692000417
+    },
+    {
+      "layer": 28,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "32e81c98b4340ad854024997a6907a38bb54aeaf22d2944338009482c3b60877",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 63.84347152709961,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 164.55126953125
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.1697460412979126
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.7522780895233154
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.39319249987602234
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.39319249987602234
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.39319249987602234,
+          "module_selection_relative_error": 0.39319249987602234,
+          "prefix_selection_relative_error": 0.1189068935343014,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.43913159949024294,
+        "angular_drift": 0.10156017541885376,
+        "norm_ratio": 0.9039904901163094,
+        "cosine_similarity": 0.8984398245811462
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.19600656972073027,
+        "angular_drift": 0.019367694854736328,
+        "norm_ratio": 0.988247103596299,
+        "cosine_similarity": 0.9806323051452637
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.1831524954210518,
+        "angular_drift": 0.016895174980163574,
+        "norm_ratio": 0.9894368199122459,
+        "cosine_similarity": 0.9831048250198364
+      },
+      "runtime_seconds": 18.43061455700081
+    },
+    {
+      "layer": 29,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "275da7a2132bed96b9fd010c5a44b91083edf186ebcc151b2c4561a67cb1189b",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 75.83308410644531,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 43.88475799560547
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 1.07191002368927
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.6862512826919556
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.3638404905796051
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.3638404905796051
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.3638404905796051,
+          "module_selection_relative_error": 0.3638404905796051,
+          "prefix_selection_relative_error": 0.1291081100191418,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.38340152739342265,
+        "angular_drift": 0.0763927698135376,
+        "norm_ratio": 0.9304738743548621,
+        "cosine_similarity": 0.9236072301864624
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.21174795159431248,
+        "angular_drift": 0.022634506225585938,
+        "norm_ratio": 0.9863311680028943,
+        "cosine_similarity": 0.9773654937744141
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.19600656972073027,
+        "angular_drift": 0.019367694854736328,
+        "norm_ratio": 0.988247103596299,
+        "cosine_similarity": 0.9806323051452637
+      },
+      "runtime_seconds": 18.402449944000182
+    },
+    {
+      "layer": 30,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "b3e90e9c34cb729e6ae79ad8ff813dbfc389222dfe9525262443974f8d80db65",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 111.20817565917969,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 17.66378402709961
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 0.18883641064167023
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.11742552369832993
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.06485923379659653
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.06485923379659653
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.06485923379659653,
+          "module_selection_relative_error": 0.06485923379659653,
+          "prefix_selection_relative_error": 0.2888299509182481,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.04798643189639385,
+        "angular_drift": 0.00115203857421875,
+        "norm_ratio": 0.9991537063378477,
+        "cosine_similarity": 0.9988479614257812
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.4870952805355947,
+        "angular_drift": 0.12591582536697388,
+        "norm_ratio": 0.9099310836930596,
+        "cosine_similarity": 0.8740841746330261
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.21174795159431248,
+        "angular_drift": 0.022634506225585938,
+        "norm_ratio": 0.9863311680028943,
+        "cosine_similarity": 0.9773654937744141
+      },
+      "runtime_seconds": 18.39987486999962
+    },
+    {
+      "layer": 31,
+      "representation": "grouped_tn",
+      "retained_neurons": null,
+      "groups": 1,
+      "rank": 2612,
+      "float_coefficients": 118354944,
+      "payload_bytes": 236709888,
+      "artifact_schema_bytes": 236713685,
+      "checkpoint_bytes": 236714405,
+      "checkpoint_sha256": "946671b91ef5da99064047282ae62881773796ab5e52b2c41454f3db3fb7f363",
+      "ridge_selection": {
+        "objective": "calibration_only_prior_anchored_output_ridge",
+        "ridge_ratio": 1.0,
+        "ridge_absolute": 196.06080627441406,
+        "fit_tokens": 4096,
+        "selection_fit_tokens": 3072,
+        "selection_validation_tokens": 1024,
+        "trials": [
+          {
+            "ridge_ratio": 1e-06,
+            "selection_relative_error": 27.969011306762695
+          },
+          {
+            "ridge_ratio": 0.0001,
+            "selection_relative_error": 0.29324060678482056
+          },
+          {
+            "ridge_ratio": 0.01,
+            "selection_relative_error": 0.1725797802209854
+          },
+          {
+            "ridge_ratio": 1.0,
+            "selection_relative_error": 0.10064106434583664
+          }
+        ],
+        "construction_uses_validation": false,
+        "selection_relative_error": 0.10064106434583664
+      },
+      "allocation_trials": [
+        {
+          "retain_fraction": 0.875,
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 2612,
+          "allocation_score": 0.10064106434583664,
+          "module_selection_relative_error": 0.10064106434583664,
+          "prefix_selection_relative_error": 0.27402718065942044,
+          "ridge_ratio": 1.0,
+          "float_coefficients": 118354944
+        }
+      ],
+      "heldout_local_mlp_on_candidate_trajectory": {
+        "relative_error": 0.10225456039611479,
+        "angular_drift": 0.00524139404296875,
+        "norm_ratio": 0.9940032321218872,
+        "cosine_similarity": 0.9947586059570312
+      },
+      "heldout_prefix_output": {
+        "relative_error": 0.4792136551287989,
+        "angular_drift": 0.11843430995941162,
+        "norm_ratio": 0.9640501783234446,
+        "cosine_similarity": 0.8815656900405884
+      },
+      "heldout_candidate_input_vs_dense_input": {
+        "relative_error": 0.4870952805355947,
+        "angular_drift": 0.12591582536697388,
+        "norm_ratio": 0.9099310836930596,
+        "cosine_similarity": 0.8740841746330261
+      },
+      "runtime_seconds": 18.433777143000043
+    }
+  ],
+  "status": "COMPLETE",
+  "runtime_seconds": 586.1801860349988,
+  "peak_cuda_memory_bytes": 11090858496,
+  "total_checkpoint_bytes": 7574860840
+}

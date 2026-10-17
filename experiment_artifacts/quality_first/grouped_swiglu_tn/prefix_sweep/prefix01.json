@@ -1,0 +1,89 @@
+{
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "test_split": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "test",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+    "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+    "source_bytes": 732610,
+    "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+    "text_bytes": 1296370,
+    "text_join": "double_newline",
+    "rows": 4358,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "seq_len": 2048,
+  "stride": 512,
+  "max_eval_tokens": 4096,
+  "labels": 4095,
+  "dense": {
+    "ppl": 4.859729766845703,
+    "mean_nll": 1.5809828042984009,
+    "next_token_accuracy": 0.6280830280830281
+  },
+  "prefixes": [
+    {
+      "length": 1,
+      "ppl": 4.870507717132568,
+      "labels": 4095,
+      "mean_nll": 1.5831981897354126,
+      "next_token_accuracy": 0.6283272283272283,
+      "artifact_bytes": 169108889,
+      "artifacts": [
+        {
+          "layer": 0,
+          "path": "/home/shadeform/quality-first-research/experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0625/native_mlp_layer_0.pt",
+          "sha256": "272110d796d8bced147bec0c22d36d5b40296a186a9ca83c9fd292aaf6d11c7d",
+          "bytes": 169108889,
+          "codec_type": "nec_grouped_swiglu_btn_v1",
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 1866,
+          "float_coefficients": 84552192
+        }
+      ],
+      "peak_cuda_memory_bytes": 16605487104
+    },
+    {
+      "length": 2,
+      "ppl": 4.899294376373291,
+      "labels": 4095,
+      "mean_nll": 1.589091181755066,
+      "next_token_accuracy": 0.6288156288156288,
+      "artifact_bytes": 338217778,
+      "artifacts": [
+        {
+          "layer": 0,
+          "path": "/home/shadeform/quality-first-research/experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0625/native_mlp_layer_0.pt",
+          "sha256": "272110d796d8bced147bec0c22d36d5b40296a186a9ca83c9fd292aaf6d11c7d",
+          "bytes": 169108889,
+          "codec_type": "nec_grouped_swiglu_btn_v1",
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 1866,
+          "float_coefficients": 84552192
+        },
+        {
+          "layer": 1,
+          "path": "/home/shadeform/quality-first-research/experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0625/native_mlp_layer_1.pt",
+          "sha256": "a929402f36f882a92350079dfc4cd32f1bd0cf1bec0d87218eaa84bd2a75ed7f",
+          "bytes": 169108889,
+          "codec_type": "nec_grouped_swiglu_btn_v1",
+          "retained_neurons": null,
+          "groups": 1,
+          "rank": 1866,
+          "float_coefficients": 84552192
+        }
+      ],
+      "peak_cuda_memory_bytes": 16774330880
+    }
+  ],
+  "uses_gradients": false,
+  "post_compression_optimization": false,
+  "uses_dense_residual": false,
+  "runtime_seconds": 30.77110844299932
+}
