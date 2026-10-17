@@ -1,0 +1,323 @@
+{
+  "run_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "compression_path": "no_healing_independent",
+    "calibration_activation_mode": "dense",
+    "construction_mode": "independent",
+    "config": {
+      "ranks": [
+        1,
+        64,
+        128,
+        64,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 524288,
+      "epsilon": 0.005,
+      "description": "High-fidelity experimental configuration; quality and serialized size require measurement",
+      "diagonal_prior_strength": 0.0,
+      "representation": "mpo4",
+      "operator_schmidt_weight_mix": 1.0,
+      "operator_schmidt_activation_mix": 1.0,
+      "mpo_n_sweeps": 2,
+      "mpo_alpha_awt": 0.5
+    },
+    "attention_gauge": "none",
+    "mlp_gauge": "none",
+    "mlp_objective": "independent",
+    "mlp_product_ridge_ratio": 0.05,
+    "budget_allocation": "uniform",
+    "projection_budgets": {
+      "q_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "k_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "v_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "o_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "gate_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "up_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "down_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      }
+    },
+    "representation": "mpo4",
+    "operator_schmidt_weight_mix": 1.0,
+    "operator_schmidt_activation_mix": 1.0,
+    "mpo_n_sweeps": 2,
+    "mpo_alpha_awt": 0.5,
+    "defect_bridge_mode": "none",
+    "defect_bridge_linear_rank": 512,
+    "defect_bridge_memory_size": 512,
+    "defect_bridge_memory_top_k": 8,
+    "defect_bridge_ridge_ratio": 0.01,
+    "max_checkpoint_multiplier": 1.25,
+    "pees_rank": 0,
+    "pees_projections": [
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "down_proj"
+    ],
+    "pees_tokens": 4096,
+    "pees_ridge_ratio": 0.01,
+    "mpo_site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "forward_options": {
+      "n_heads": 32,
+      "n_kv_heads": 32,
+      "seq_len": 128,
+      "rms_norm_eps": 1e-05
+    },
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 256,
+      "heldout_token_count": 128,
+      "calibration_token_ids_sha256": "fb17b3233b51658a40cf7398668cf5e3904562f3d6a63a7dfbad7c645c4284ae",
+      "heldout_token_ids_sha256": "e4126a65436e2f690ad212cbbbf1643cb286b23ebcb1c82967cc88ccbab2a5f3",
+      "activation_sequence_length": 128,
+      "calibration_sampling": "prefix",
+      "calibration_seed": 42,
+      "calibration_window_offsets": [
+        0,
+        128
+      ],
+      "validation_sampling": "prefix",
+      "validation_seed": 43,
+      "validation_window_offsets": [
+        0
+      ]
+    },
+    "layers": [
+      0
+    ],
+    "source_fingerprint": "b5aad35a5332e54b706af62f8ace59d49381aab84e5cea4c1530513fd69871bc"
+  },
+  "run_fingerprint": "7a649246ebd45599299d4b9878a319ed3471b05a15083d00a657f98af920c5c0",
+  "tier": "high_fidelity_10x",
+  "compression_path": "no_healing_independent",
+  "calibration_activation_mode": "dense",
+  "construction_mode": "independent",
+  "mpo_site_order": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "rms_norm_eps": 1e-05,
+  "history": [
+    {
+      "layer": 0,
+      "calibration_activation_mode": "dense",
+      "construction_mode": "independent",
+      "mpo_site_order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "same_input_validation": {
+        "relative_error": 0.25838771081512185,
+        "angular_drift": 0.03165560960769653,
+        "norm_ratio": 0.9015978251418133,
+        "cosine_similarity": 0.9683443903923035
+      },
+      "cascade_validation": {
+        "relative_error": 0.25838771081512185,
+        "angular_drift": 0.03165560960769653,
+        "norm_ratio": 0.9015978251418133,
+        "cosine_similarity": 0.9683443903923035
+      },
+      "calibration": {
+        "relative_error": 0.0717399664670721,
+        "angular_drift": 0.0023899078369140625,
+        "norm_ratio": 0.9783097427395864,
+        "cosine_similarity": 0.9976100921630859
+      },
+      "heldout_block_output": {
+        "relative_error": 0.25838771081512185,
+        "angular_drift": 0.03165560960769653,
+        "norm_ratio": 0.9015978251418133,
+        "cosine_similarity": 0.9683443903923035
+      },
+      "attention_gauge": null,
+      "mlp_gauge": null,
+      "mlp_objective": "independent",
+      "mlp_product_aware": null,
+      "budget_allocation": "uniform",
+      "projection_budgets": {
+        "q_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "k_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "v_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "o_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "gate_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "up_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "down_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        }
+      },
+      "representation": "mpo4",
+      "projection_serialization_audit": {
+        "q_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.00023760515614412725
+        },
+        "k_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.00032063928665593266
+        },
+        "v_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.0003595388261601329
+        },
+        "o_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.0002529435441829264
+        },
+        "gate_proj": {
+          "shape": [
+            11008,
+            4096
+          ],
+          "relative_frobenius_error": 0.0003110530960839242
+        },
+        "up_proj": {
+          "shape": [
+            11008,
+            4096
+          ],
+          "relative_frobenius_error": 0.00031646364368498325
+        },
+        "down_proj": {
+          "shape": [
+            4096,
+            11008
+          ],
+          "relative_frobenius_error": 0.0004373028932604939
+        }
+      },
+      "serialized_bytes": 69813506,
+      "base_checkpoint_bytes_before_bridge": null,
+      "bridge_tensor_bytes": 0,
+      "pees": null,
+      "base_checkpoint_bytes_before_pees": null,
+      "pees_tensor_bytes": 0,
+      "pees_checkpoint_multiplier": 1.0,
+      "checkpoint_multiplier": 1.0,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 701.3602252000001
+    }
+  ],
+  "layers_compressed": [
+    0
+  ],
+  "serialized_checkpoint_bytes": 69813506,
+  "checkpoint_file_sizes": {
+    "compressed_layer_0.pt": 69813506
+  },
+  "checkpoint_file_sha256": {
+    "compressed_layer_0.pt": "a801cb2884a9ea8cc5ccdad4cf019c3dcf35cab74f6163d8efc841b1f499c656"
+  },
+  "intermediate_files": {
+    "dense_input_layer_0.pt": {
+      "bytes": 2098962,
+      "sha256": "a0c93b885bb61251cd0e088f3b183fbecce631070c64439d358fd1d0ecd2937f"
+    },
+    "calibration_input_layer_0.pt": {
+      "bytes": 4196092,
+      "sha256": "8fca87f2247e28caac1db8e79886736bb8d7ac15a92cc8959b35c0c1e11dc136"
+    },
+    "layer_input_validation_layer_0.pt": {
+      "bytes": 2099039,
+      "sha256": "f31797e795b58b5151a9969fa9afe6ac3a751e7381c27f6db011e3538613ddf2"
+    }
+  }
+}

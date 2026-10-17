@@ -1,0 +1,147 @@
+[{"stream_name":"stdout","time":9.903735575,"data":"{\n"}
+,{"stream_name":"stdout","time":9.903770212,"data":"  \"status\": \"RUNNING\",\n"}
+,{"stream_name":"stdout","time":9.903775197,"data":"  \"source_commit\": \"425cd41770855b48da7ff0bf45ee5bb46a5c0ff6\",\n"}
+,{"stream_name":"stdout","time":9.903779017,"data":"  \"source_input\": \"/kaggle/input/datasets/toheebogunade/nec-high-fidelity-source-20261017/bundle_manifest.json\",\n"}
+,{"stream_name":"stdout","time":9.903782849,"data":"  \"source_bundle_manifest_sha256\": \"98b8255d4dc1e7abd60b84d6cf69fe5fec83b4a87fe30bab3262a560021a302b\",\n"}
+,{"stream_name":"stdout","time":9.903786542,"data":"  \"runner_sha256\": \"9bc11ab20d6263f865155982319dda844f3c5c565fa531090da77e6118af4450\",\n"}
+,{"stream_name":"stdout","time":9.903790283,"data":"  \"model_id\": \"NousResearch/Llama-2-7b-hf\",\n"}
+,{"stream_name":"stdout","time":9.903793962,"data":"  \"model_revision\": \"8efe6c9b93655b934e27bd9981e3ec13e55aee9d\",\n"}
+,{"stream_name":"stdout","time":9.903797733,"data":"  \"dataset_revision\": \"b08601e04326c79dfdd32d625aee71d232d685c3\",\n"}
+,{"stream_name":"stdout","time":9.903801475,"data":"  \"prior_kernel_output\": null,\n"}
+,{"stream_name":"stdout","time":9.903805257,"data":"  \"completed_layers_before\": 0,\n"}
+,{"stream_name":"stdout","time":9.90380897,"data":"  \"target_end_layer\": 0,\n"}
+,{"stream_name":"stdout","time":9.903812643,"data":"  \"resume\": false,\n"}
+,{"stream_name":"stdout","time":9.903816283,"data":"  \"runtime\": {\n"}
+,{"stream_name":"stdout","time":9.903820028,"data":"    \"python\": \"3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]\",\n"}
+,{"stream_name":"stdout","time":9.90382465,"data":"    \"torch\": \"2.11.0+cu128\",\n"}
+,{"stream_name":"stdout","time":9.903828158,"data":"    \"cuda\": \"12.8\",\n"}
+,{"stream_name":"stdout","time":9.903832198,"data":"    \"packages\": {\n"}
+,{"stream_name":"stdout","time":9.903836168,"data":"      \"transformers\": \"5.16.1\",\n"}
+,{"stream_name":"stdout","time":9.90383989,"data":"      \"huggingface-hub\": \"1.29.0\",\n"}
+,{"stream_name":"stdout","time":9.903844258,"data":"      \"safetensors\": \"0.8.0\",\n"}
+,{"stream_name":"stdout","time":9.903847822,"data":"      \"accelerate\": \"1.14.0\",\n"}
+,{"stream_name":"stdout","time":9.903851545,"data":"      \"datasets\": \"4.8.5\",\n"}
+,{"stream_name":"stdout","time":9.903855287,"data":"      \"pyarrow\": \"23.0.1\",\n"}
+,{"stream_name":"stdout","time":9.903859031,"data":"      \"numpy\": \"2.1.3\",\n"}
+,{"stream_name":"stdout","time":9.903862555,"data":"      \"scipy\": \"1.16.3\"\n"}
+,{"stream_name":"stdout","time":9.903866142,"data":"    },\n"}
+,{"stream_name":"stdout","time":9.903869772,"data":"    \"gpu_count\": 2,\n"}
+,{"stream_name":"stdout","time":9.903873267,"data":"    \"gpus\": [\n"}
+,{"stream_name":"stdout","time":9.903888532,"data":"      {\n"}
+,{"stream_name":"stdout","time":9.903892312,"data":"        \"index\": 0,\n"}
+,{"stream_name":"stdout","time":9.90389586,"data":"        \"name\": \"Tesla T4\",\n"}
+,{"stream_name":"stdout","time":9.903900006,"data":"        \"total_vram_bytes\": 15636037632,\n"}
+,{"stream_name":"stdout","time":9.903903367,"data":"        \"compute_capability\": [\n"}
+,{"stream_name":"stdout","time":9.903921818,"data":"          7,\n"}
+,{"stream_name":"stdout","time":9.90392615,"data":"          5\n"}
+,{"stream_name":"stdout","time":9.903929885,"data":"        ]\n"}
+,{"stream_name":"stdout","time":9.903933837,"data":"      },\n"}
+,{"stream_name":"stdout","time":9.903937544,"data":"      {\n"}
+,{"stream_name":"stdout","time":9.903960691,"data":"        \"index\": 1,\n"}
+,{"stream_name":"stdout","time":9.90396359,"data":"        \"name\": \"Tesla T4\",\n"}
+,{"stream_name":"stdout","time":9.903965855,"data":"        \"total_vram_bytes\": 15636037632,\n"}
+,{"stream_name":"stdout","time":9.903968043,"data":"        \"compute_capability\": [\n"}
+,{"stream_name":"stdout","time":9.903970207,"data":"          7,\n"}
+,{"stream_name":"stdout","time":9.903972345,"data":"          5\n"}
+,{"stream_name":"stdout","time":9.903974394,"data":"        ]\n"}
+,{"stream_name":"stdout","time":9.903976442,"data":"      }\n"}
+,{"stream_name":"stdout","time":9.903978477,"data":"    ],\n"}
+,{"stream_name":"stdout","time":9.903980615,"data":"    \"ram_bytes\": 33658310656,\n"}
+,{"stream_name":"stdout","time":9.903982773,"data":"    \"working_disk_total_bytes\": 20957446144,\n"}
+,{"stream_name":"stdout","time":9.903984976,"data":"    \"working_disk_free_bytes\": 20939857920\n"}
+,{"stream_name":"stdout","time":9.90398717,"data":"  },\n"}
+,{"stream_name":"stdout","time":9.90398967,"data":"  \"started_utc\": \"2026-10-17T21:50:42.488488+00:00\"\n"}
+,{"stream_name":"stdout","time":9.903991940000001,"data":"}\n"}
+,{"stream_name":"stdout","time":23.654502243,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stdout","time":69.965552018,"data":"RESOURCE gpu='0, 0, 3, 15360\\n1, 0, 3, 15360' disk_free_bytes=20939481088 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 28652105728}\n"}
+,{"stream_name":"stdout","time":86.043239988,"data":"[21:51:58] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).\n"}
+,{"stream_name":"stdout","time":86.043271566,"data":"[21:51:58] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...\n"}
+,{"stream_name":"stdout","time":101.496572593,"data":"[21:52:14] WikiText-2 activations generated: train X_calib [4096, 256] (256 tokens), validation X_test [4096, 128] (128 tokens).\n"}
+,{"stream_name":"stdout","time":103.048335051,"data":"  [Attention Sub-Block] Compressing Q, K, V projections...\n"}
+,{"stream_name":"stdout","time":130.009877357,"data":"RESOURCE gpu='0, 100, 3633, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29598912512}\n"}
+,{"stream_name":"stdout","time":190.055329992,"data":"RESOURCE gpu='0, 100, 3715, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29743239168}\n"}
+,{"stream_name":"stdout","time":250.101133545,"data":"RESOURCE gpu='0, 100, 3773, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29739028480}\n"}
+,{"stream_name":"stdout","time":276.968117361,"data":"  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...\n"}
+,{"stream_name":"stdout","time":310.146417551,"data":"RESOURCE gpu='0, 100, 3873, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29742002176}\n"}
+,{"stream_name":"stdout","time":339.323803305,"data":"  [SwiGLU MLP Sub-Block] Compressing Gate and Up projections...\n"}
+,{"stream_name":"stdout","time":370.191104196,"data":"RESOURCE gpu='0, 100, 13661, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29717364736}\n"}
+,{"stream_name":"stdout","time":430.237205227,"data":"RESOURCE gpu='0, 100, 8157, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29739982848}\n"}
+,{"stream_name":"stdout","time":490.280303469,"data":"RESOURCE gpu='0, 100, 13663, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29717843968}\n"}
+,{"stream_name":"stdout","time":550.322599285,"data":"RESOURCE gpu='0, 88, 2919, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29743087616}\n"}
+,{"stream_name":"stdout","time":610.366225765,"data":"RESOURCE gpu='0, 100, 13883, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29724626944}\n"}
+,{"stream_name":"stdout","time":670.41121519,"data":"RESOURCE gpu='0, 100, 13885, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29733711872}\n"}
+,{"stream_name":"stdout","time":730.459771928,"data":"RESOURCE gpu='0, 92, 8383, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29735522304}\n"}
+,{"stream_name":"stdout","time":762.913141468,"data":"  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...\n"}
+,{"stream_name":"stdout","time":762.913173205,"data":"  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on clean SwiGLU context (bridge: r=128, outliers=524288)...\n"}
+,{"stream_name":"stdout","time":790.502326832,"data":"RESOURCE gpu='0, 100, 3365, 15360\\n1, 0, 3, 15360' disk_free_bytes=20931072000 ram={'memtotal_bytes': 33658310656, 'memavailable_bytes': 29716197376}\n"}
+,{"stream_name":"stdout","time":803.469971957,"data":"{\"layer\": 0, \"calibration_activation_mode\": \"dense\", \"construction_mode\": \"independent\", \"mpo_site_order\": [0, 1, 2, 3], \"same_input_validation\": {\"relative_error\": 0.25838771081512185, \"angular_drift\": 0.03165560960769653, \"norm_ratio\": 0.9015978251418133, \"cosine_similarity\": 0.9683443903923035}, \"cascade_validation\": {\"relative_error\": 0.25838771081512185, \"angular_drift\": 0.03165560960769653, \"norm_ratio\": 0.9015978251418133, \"cosine_similarity\": 0.9683443903923035}, \"calibration\": {\"relative_error\": 0.0717399664670721, \"angular_drift\": 0.0023899078369140625, \"norm_ratio\": 0.9783097427395864, \"cosine_similarity\": 0.9976100921630859}, \"heldout_block_output\": {\"relative_error\": 0.25838771081512185, \"angular_drift\": 0.03165560960769653, \"norm_ratio\": 0.9015978251418133, \"cosine_similarity\": 0.9683443903923035}, \"attention_gauge\": null, \"mlp_gauge\": null, \"mlp_objective\": \"independent\", \"mlp_product_aware\": null, \"budget_allocation\": \"uniform\", \"projection_budgets\": {\"q_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}, \"k_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}, \"v_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}, \"o_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}, \"gate_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}, \"up_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}, \"down_proj\": {\"r_bridge\": 128, \"n_outliers\": 524288}}, \"representation\": \"mpo4\", \"projection_serialization_audit\": {\"q_proj\": {\"shape\": [4096, 4096], \"relative_frobenius_error\": 0.00023760515614412725}, \"k_proj\": {\"shape\": [4096, 4096], \"relative_frobenius_error\": 0.00032063928665593266}, \"v_proj\": {\"shape\": [4096, 4096], \"relative_frobenius_error\": 0.0003595388261601329}, \"o_proj\": {\"shape\": [4096, 4096], \"relative_frobenius_error\": 0.0002529435441829264}, \"gate_proj\": {\"shape\": [11008, 4096], \"relative_frobenius_error\": 0.0003110530960839242}, \"up_proj\": {\"shape\": [11008, 4096], \"relative_frobenius_error\": 0.00031646364368498325}, \"down_proj\": {\"shape\": [4096, 11008], \"relative_frobenius_error\": 0.0004373028932604939}}, \"serialized_bytes\": 69813506, \"base_checkpoint_bytes_before_bridge\": null, \"bridge_tensor_bytes\": 0, \"pees\": null, \"base_checkpoint_bytes_before_pees\": null, \"pees_tensor_bytes\": 0, \"pees_checkpoint_multiplier\": 1.0, \"checkpoint_multiplier\": 1.0, \"dense_fp16_tensor_bytes\": 404766720, \"seconds\": 701.3602252000001}\n"}
+,{"stream_name":"stdout","time":803.733294872,"data":"layer=0 elapsed=701.81s\n"}
+,{"stream_name":"stdout","time":803.733339014,"data":"COMPLETE: /kaggle/working/nec_high_fidelity/checkpoint\n"}
+,{"stream_name":"stdout","time":807.747233528,"data":"STAGE_COMPILE_SECONDS=797.84\n"}
+,{"stream_name":"stdout","time":807.748365909,"data":"{\n"}
+,{"stream_name":"stdout","time":807.748379093,"data":"  \"status\": \"COMPLETE\",\n"}
+,{"stream_name":"stdout","time":807.748383498,"data":"  \"source_commit\": \"425cd41770855b48da7ff0bf45ee5bb46a5c0ff6\",\n"}
+,{"stream_name":"stdout","time":807.748387423,"data":"  \"source_input\": \"/kaggle/input/datasets/toheebogunade/nec-high-fidelity-source-20261017/bundle_manifest.json\",\n"}
+,{"stream_name":"stdout","time":807.748391841,"data":"  \"source_bundle_manifest_sha256\": \"98b8255d4dc1e7abd60b84d6cf69fe5fec83b4a87fe30bab3262a560021a302b\",\n"}
+,{"stream_name":"stdout","time":807.748396249,"data":"  \"runner_sha256\": \"9bc11ab20d6263f865155982319dda844f3c5c565fa531090da77e6118af4450\",\n"}
+,{"stream_name":"stdout","time":807.748400325,"data":"  \"model_id\": \"NousResearch/Llama-2-7b-hf\",\n"}
+,{"stream_name":"stdout","time":807.748404393,"data":"  \"model_revision\": \"8efe6c9b93655b934e27bd9981e3ec13e55aee9d\",\n"}
+,{"stream_name":"stdout","time":807.748408015,"data":"  \"dataset_revision\": \"b08601e04326c79dfdd32d625aee71d232d685c3\",\n"}
+,{"stream_name":"stdout","time":807.748411795,"data":"  \"prior_kernel_output\": null,\n"}
+,{"stream_name":"stdout","time":807.748415203,"data":"  \"completed_layers_before\": 0,\n"}
+,{"stream_name":"stdout","time":807.748418929,"data":"  \"target_end_layer\": 0,\n"}
+,{"stream_name":"stdout","time":807.748422308,"data":"  \"resume\": false,\n"}
+,{"stream_name":"stdout","time":807.74842566,"data":"  \"runtime\": {\n"}
+,{"stream_name":"stdout","time":807.748429108,"data":"    \"python\": \"3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]\",\n"}
+,{"stream_name":"stdout","time":807.748436308,"data":"    \"torch\": \"2.11.0+cu128\",\n"}
+,{"stream_name":"stdout","time":807.748438656,"data":"    \"cuda\": \"12.8\",\n"}
+,{"stream_name":"stdout","time":807.748441275,"data":"    \"packages\": {\n"}
+,{"stream_name":"stdout","time":807.7484435,"data":"      \"transformers\": \"5.16.1\",\n"}
+,{"stream_name":"stdout","time":807.748445882,"data":"      \"huggingface-hub\": \"1.29.0\",\n"}
+,{"stream_name":"stdout","time":807.748448101,"data":"      \"safetensors\": \"0.8.0\",\n"}
+,{"stream_name":"stdout","time":807.748450405,"data":"      \"accelerate\": \"1.14.0\",\n"}
+,{"stream_name":"stdout","time":807.748452748,"data":"      \"datasets\": \"4.8.5\",\n"}
+,{"stream_name":"stdout","time":807.748454955,"data":"      \"pyarrow\": \"23.0.1\",\n"}
+,{"stream_name":"stdout","time":807.748457117,"data":"      \"numpy\": \"2.1.3\",\n"}
+,{"stream_name":"stdout","time":807.74845934,"data":"      \"scipy\": \"1.16.3\"\n"}
+,{"stream_name":"stdout","time":807.748461488,"data":"    },\n"}
+,{"stream_name":"stdout","time":807.748463555,"data":"    \"gpu_count\": 2,\n"}
+,{"stream_name":"stdout","time":807.748465787,"data":"    \"gpus\": [\n"}
+,{"stream_name":"stdout","time":807.748467887,"data":"      {\n"}
+,{"stream_name":"stdout","time":807.748469951,"data":"        \"index\": 0,\n"}
+,{"stream_name":"stdout","time":807.748472098,"data":"        \"name\": \"Tesla T4\",\n"}
+,{"stream_name":"stdout","time":807.748482016,"data":"        \"total_vram_bytes\": 15636037632,\n"}
+,{"stream_name":"stdout","time":807.748484448,"data":"        \"compute_capability\": [\n"}
+,{"stream_name":"stdout","time":807.748486663,"data":"          7,\n"}
+,{"stream_name":"stdout","time":807.748488751,"data":"          5\n"}
+,{"stream_name":"stdout","time":807.748490841,"data":"        ]\n"}
+,{"stream_name":"stdout","time":807.748492931,"data":"      },\n"}
+,{"stream_name":"stdout","time":807.748495638,"data":"      {\n"}
+,{"stream_name":"stdout","time":807.748497854,"data":"        \"index\": 1,\n"}
+,{"stream_name":"stdout","time":807.748500059,"data":"        \"name\": \"Tesla T4\",\n"}
+,{"stream_name":"stdout","time":807.74850224,"data":"        \"total_vram_bytes\": 15636037632,\n"}
+,{"stream_name":"stdout","time":807.748504529,"data":"        \"compute_capability\": [\n"}
+,{"stream_name":"stdout","time":807.748506707,"data":"          7,\n"}
+,{"stream_name":"stdout","time":807.748508795,"data":"          5\n"}
+,{"stream_name":"stdout","time":807.748510949,"data":"        ]\n"}
+,{"stream_name":"stdout","time":807.748513014,"data":"      }\n"}
+,{"stream_name":"stdout","time":807.748515056,"data":"    ],\n"}
+,{"stream_name":"stdout","time":807.748517206,"data":"    \"ram_bytes\": 33658310656,\n"}
+,{"stream_name":"stdout","time":807.748519365,"data":"    \"working_disk_total_bytes\": 20957446144,\n"}
+,{"stream_name":"stdout","time":807.748521673,"data":"    \"working_disk_free_bytes\": 20939857920\n"}
+,{"stream_name":"stdout","time":807.748523871,"data":"  },\n"}
+,{"stream_name":"stdout","time":807.748525955,"data":"  \"started_utc\": \"2026-10-17T21:50:42.488488+00:00\",\n"}
+,{"stream_name":"stdout","time":807.74852824,"data":"  \"layers_compressed\": [\n"}
+,{"stream_name":"stdout","time":807.74853044,"data":"    0\n"}
+,{"stream_name":"stdout","time":807.74853251,"data":"  ],\n"}
+,{"stream_name":"stdout","time":807.748534843,"data":"  \"checkpoint_manifest_sha256\": \"70938512e9ecea7ba37acc51fe23015cf23c975fa1a4af8392f7d38e3244493f\",\n"}
+,{"stream_name":"stdout","time":807.748537151,"data":"  \"serialized_checkpoint_bytes\": 69813506,\n"}
+,{"stream_name":"stdout","time":807.74853937,"data":"  \"ended_utc\": \"2026-10-17T22:04:00.333032+00:00\"\n"}
+,{"stream_name":"stdout","time":807.748541623,"data":"}\n"}
+,{"stream_name":"stderr","time":810.283673545,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":810.283715988,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":810.550987664,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":810.551021747,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":811.382096546,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":812.449578718,"data":"[NbConvertApp] Writing 352800 bytes to __results__.html\n"}
+]
