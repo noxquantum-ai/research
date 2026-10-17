@@ -1,10 +1,12 @@
-# Joint SwiGLU representation and layer-0 diagnostic plan
+# Joint SwiGLU representation and layer-0 diagnostic
 
-Status: CPU implementation and synthetic CUDA validation are complete. No new
-Llama weights were compiled, no full-model inference was run, and no real-model
-result for this candidate exists. The A10 remains running; only a small
-synthetic unit test was run there. The real-model diagnostic below is a proposal
-and has not been executed.
+Status: CPU tests, synthetic CUDA validation, and the authorized single
+layer-0 real-model diagnostic are complete. The candidate failed the
+predeclared held-out MLP/block quality gate; see
+`experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/REPORT.md` for the
+full results and all eight projection combinations on both transformer
+trajectories. No layer-prefix, full-model, PPL, or MMLU run followed. The A10
+was left running, with no experiment process remaining.
 
 ## Evidence and diagnosis
 
@@ -159,21 +161,16 @@ The floating coefficient count is
 N_{\rm joint}=r(m+3d),
 \]
 
-where `m=11,008` and `d=4,096` for Llama-2-7B. The current saved layer-0 Gate,
-Up, and Down artifacts contain 7,505,964 floating tensor scalars. Matching
-that budget gives `r=322`, 7,501,312 stored floating scalars, versus
-135,266,304 dense MLP weights (5.55%). Integer sparse indices are not counted
-as floating coefficients, but are included in the serialized-byte comparison.
-
-CPU-side schema accounting gives 30,370,779 bytes for separately serialized
-saved MLP artifacts and 15,005,277 bytes for the candidate artifact schema at
-FP16 factor storage (0.494x). The candidate estimate uses empty tensors with
-the exact candidate shapes/dtypes and exact metadata schema; the actual GPU
-run will serialize the fitted candidate and record its bytes. This is an
-MLP-artifact estimate only, not a full layer or model storage result. The
-current implementation and direct apply live in `nox/joint_swiglu.py`; it is
-not yet wired into the default NEC compiler or checkpoint loader pending
-evidence.
+where `m=11,008` and `d=4,096` for Llama-2-7B. A pre-run CPU estimate used
+7,505,964 floating scalars and predicted rank 322; the real artifact count
+supersedes it. The diagnostic recursively counted 9,943,596 floating tensors
+in the saved Gate/Up/Down artifacts. At that measured budget, the candidate
+used rank 426 and 9,924,096 stored floating scalars. Actual serialized MLP
+sizes were 30,370,779 bytes for the three saved artifacts and 19,850,909 bytes
+for the candidate. These are MLP artifact sizes only, not full-layer or
+full-model storage. Sparse indices are not counted as floating coefficients,
+but are included in serialized-byte comparisons. The candidate remains opt-in
+and is not wired into the default NEC compiler or checkpoint loader.
 
 ### Main mathematical risks
 
@@ -214,29 +211,29 @@ PYTHONPATH=/tmp/nox_joint_swiglu_cuda \
   -m unittest discover -s /tmp/nox_joint_swiglu_cuda/tests -v
 ```
 
-## Proposed real-model GPU experiment — not yet run
+## Executed real-model GPU diagnostic (2026-10-17)
 
-This is the one-layer held-out diagnostic requested for review. It reuses the
-saved layer-0 checkpoint and its 4,096-token train/validation activations plus
-the pinned dense layer-0 weights. It does not compile a layer, write a new
-checkpoint, evaluate perplexity/MMLU, or touch layers 1–31.
+The authorized single layer-0 diagnostic is complete. It reused the saved
+checkpoint, 4,096 calibration and 4,096 disjoint held-out tokens, and pinned
+dense layer-0 weights. It did not compile a layer, write a checkpoint, evaluate
+perplexity/MMLU, or touch layers 1–31. Full precision results and all ablation
+tables are in
+`experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/REPORT.md` and
+`layer0_joint_swiglu.json`.
 
-1. Confirm the existing A10 is reachable, idle, and has at least 14 GiB free;
-   do not start, stop, or provision an instance. Check the checkout and Python
-   environment without changing or cleaning its existing diagnostic outputs.
-2. Transfer only `nox/joint_swiglu.py` and
-   `scripts/diagnose_swiglu_joint.py` into the existing checkout after checking
-   for local edits. Run one diagnostic with 4,096 calibration and 4,096 held-out
-   tokens, sequence length 128, and the pinned Llama-2-7B layer-0 dense weights.
-3. Save JSON under
-   `experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/`. Copy that output
-   and stdout back to local storage immediately; do not rely on the A10 as the
-   only copy.
-4. Stop after this run. Do not scale to a prefix, full model, PPL, or MMLU until
-   reviewing the results together.
+1. The existing A10 was reachable and idle with 22,599 MiB free. No start,
+   stop, or provision action was taken. The remote `main` checkout had unrelated
+   dirty user artifacts; they were left untouched.
+2. Only `nox/joint_swiglu.py` and `scripts/diagnose_swiglu_joint.py` were
+   transferred into the remote checkout. Their content hashes and the remote
+   commit are recorded in the result report.
+3. One diagnostic ran at sequence length 128. It exited successfully and saved
+   JSON and stdout under
+   `experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/`.
+4. JSON and stdout were copied to local storage and SHA-256 verified before
+   preparing the report. No follow-on evaluation was started.
 
-After confirming that the destination files do not exist or contain user
-changes, transfer the two new source files into the existing main checkout:
+The exact source-transfer commands used were:
 
 ```bash
 scp -i A10-mvc1exyr_key.pem nox/joint_swiglu.py \
@@ -245,8 +242,7 @@ scp -i A10-mvc1exyr_key.pem scripts/diagnose_swiglu_joint.py \
   shadeform@129.213.125.12:/home/shadeform/nec-crosslayer-research/scripts/diagnose_swiglu_joint.py
 ```
 
-From the remote repository root, assuming the prior checkpoint and
-dense-weight cache paths remain present:
+The executed Python command from the remote repository root was:
 
 ```bash
 mkdir -p experiment_artifacts/diagnostic_36h/joint_swiglu/layer0
@@ -261,8 +257,11 @@ set -o pipefail
   2>&1 | tee experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/run.log
 ```
 
-After the run, copy both files to local storage outside the A10 before doing
-anything to the remote checkout or instance:
+Both output files were copied outside the A10 to
+`/home/fluxx/Workspace/research_backups/nox_joint_swiglu_layer0_20261017_run01/`
+before report edits. The local backup SHA-256 values are recorded in
+`experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/REPORT.md`. The
+transfer commands were:
 
 ```bash
 mkdir -p /home/fluxx/Workspace/research_backups/nox_joint_swiglu_layer0_20261017_run01
@@ -275,25 +274,22 @@ scp -i A10-mvc1exyr_key.pem \
 sha256sum /home/fluxx/Workspace/research_backups/nox_joint_swiglu_layer0_20261017_run01/*
 ```
 
-The planned JSON records all eight Gate/Up/Down combinations on both dense and
+The JSON records all eight Gate/Up/Down combinations on both dense and
 compressed trajectories; product-versus-Down error magnitude and interference;
 saved NEC and candidate MLP/active-transform/full-block errors; shared rank and
 coefficient count; exact serialized artifact bytes; runtime; and peak CUDA
 allocation. The candidate is built once from train states at the saved MLP
 floating-coefficient budget and tested only on held-out states.
 
-Estimated run time is 2–5 minutes, not yet measured for this harness. Memory
-planning is conservative at up to 12 GiB; the A10 has 23,028 MiB total. Abort
-before execution if less than 14 GiB is free or the process would compete with
-another user. The previous small candidate screen peaked at 7.83 GiB, but this
-run also keeps dense/compressed layer weights and both activation splits
-resident, so that earlier peak is not a direct estimate.
+Measured runtime after data load was 10.073 seconds. Peak PyTorch CUDA
+allocated memory was 8,366,678,016 bytes (7.79 GiB); see the report for the
+candidate-only allocation details. This is not a runtime or speed benchmark.
 
-The predeclared advancement criterion is: at the matched MLP coefficient
-budget, the candidate must reduce held-out complete-MLP function relative
-error by at least 5% relative versus saved NEC on the compressed trajectory,
-and must not worsen held-out active-transform or full-block error. The
-serialized MLP artifact must be smaller than the saved three-artifact payload.
-If not, do not run a prefix compile; use the eight-way error/interference
-results to decide whether the limitation is Gate, Up, Down, their cancellation,
-or the single shared-subspace topology itself.
+The candidate reduced serialized MLP bytes by 34.64% but worsened held-out
+complete-MLP function error by 18.38%, active-transform error by 13.73%, and
+full-block error by 13.73%. It therefore failed the predeclared gate. The
+eight-way errors show both Gate/Up product defects and useful cancellation
+with saved Down error. For the candidate, the common activation subspace lowers
+product error but substantially worsens the Down contribution and turns
+partial cancellation into reinforcement. No redesign or workaround was tried
+after this result; further GPU work requires review.

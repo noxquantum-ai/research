@@ -1,0 +1,1509 @@
+{
+  "diagnostic": "layer_local_joint_swiglu_error_decomposition",
+  "layer": 0,
+  "checkpoint": "checkpoints/diagnostic_36h/operator_schmidt/layer0_initial/compressed_layer_0.pt",
+  "checkpoint_bytes": 65739309,
+  "checkpoint_sha256": "81d44f6b676853cbd218f0c2b22bd0a388eed7195b88153045f5c00ead2de6e9",
+  "device": "cuda",
+  "rms_norm_eps": 1e-05,
+  "calibration_tokens": 4096,
+  "heldout_tokens": 4096,
+  "fixed_inputs": "dense and compressed transformer trajectories measured separately",
+  "dense_weight_sha256": {
+    "q_proj": "653ebf507e4816778a97252d8d6d6bff0a99970e557f6dbd18e69badb99668cc",
+    "k_proj": "6434b248f72cfb95f8e262bd6555456b48c90f7507d8b87bac25a2ff571ef3ec",
+    "v_proj": "b3d7e4ef731ddb41f30a207554a94d4980c0659a02a9b4e05905698497831e16",
+    "o_proj": "00250e20dd33073a47daef7406235de7ba3c5d489b9607f47b1e1f5b06020533",
+    "gate_proj": "a547b7a8cb9c39fb3c3168a1627f84042b1601d46ecdcc76b0306c110910c5b2",
+    "up_proj": "99d7a0863755d6a767d7e2d20362291c4fd22e75e2c23920331649f41f4c83f8",
+    "down_proj": "8866cdcea6a82c59a922fa6d74966495ef42779ce04b8ab65539b436a0e5c0b8"
+  },
+  "calibration_input_sha256": "8e9f16b50016b9460607fe116129f62d66702b5484de3fd60b96327c9bd1bc73",
+  "heldout_input_sha256": "f240af3942d70fc411f0615c65921a8bfecd78c1a70b4256eb790495d076d6a4",
+  "gpu": {
+    "name": "NVIDIA A10",
+    "total_memory_bytes": 23696375808
+  },
+  "initial_cuda_memory_bytes": 1761771520,
+  "post_compression_optimization": false,
+  "projection_combinations": {
+    "calibration": {
+      "dense_trajectory": {
+        "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+        "dense_swiglu_product_norm": 34.71551513671875,
+        "compressed_swiglu_product_relative_error": 0.7837427854537964,
+        "compressed_product_through_dense_down_relative_error": 0.6649249792098999,
+        "gate_up_product_terms": {
+          "gate_only": {
+            "relative_to_dense_mlp_output": 0.5549771785736084,
+            "norm": 37.12186050415039
+          },
+          "up_only": {
+            "relative_to_dense_mlp_output": 0.5782027840614319,
+            "norm": 38.67539596557617
+          },
+          "gate_up_interaction": {
+            "relative_to_dense_mlp_output": 0.4751180112361908,
+            "norm": 31.780160903930664
+          }
+        },
+        "gate_up_pairwise_interference": {
+          "gate_only__up_only": {
+            "cosine": 0.9192392230033875,
+            "cross_energy_fraction": 0.9184671640396118
+          },
+          "gate_only__gate_up_interaction": {
+            "cosine": -0.9589185118675232,
+            "cross_energy_fraction": -0.9474605321884155
+          },
+          "up_only__gate_up_interaction": {
+            "cosine": -0.9285702705383301,
+            "cross_energy_fraction": -0.9109516143798828
+          }
+        },
+        "gate_up_product_identity_relative_residual": 2.9351072043937165e-06,
+        "combinations": {
+          "gate_dense__up_dense__down_dense": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.0,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 0.0
+          },
+          "gate_dense__up_dense__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.6169592142105103,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.6169592142105103,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.825178282568231e-06
+          },
+          "gate_dense__up_compressed__down_dense": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.7328820824623108,
+            "swiglu_product_relative_error": 0.6877069473266602,
+            "mlp_output_relative_error": 0.5782027840614319,
+            "product_error_after_dense_down_relative": 0.5782027840614319,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.720718950717128e-06
+          },
+          "gate_dense__up_compressed__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.7328820824623108,
+            "swiglu_product_relative_error": 0.6877069473266602,
+            "mlp_output_relative_error": 0.6508396863937378,
+            "product_error_after_dense_down_relative": 0.5782027840614319,
+            "down_error_on_selected_product_relative": 0.2595744729042053,
+            "product_down_error_cosine": 0.072940893471241,
+            "product_down_cross_energy_fraction": 0.05450599268078804,
+            "decomposition_identity_relative_residual": 2.6314514798286837e-06
+          },
+          "gate_compressed__up_dense__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.6282729506492615,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6638551354408264,
+            "mlp_output_relative_error": 0.5549771189689636,
+            "product_error_after_dense_down_relative": 0.5549771189689636,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.91136018151883e-06
+          },
+          "gate_compressed__up_dense__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.6282729506492615,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6638551354408264,
+            "mlp_output_relative_error": 0.6285941004753113,
+            "product_error_after_dense_down_relative": 0.5549771189689636,
+            "down_error_on_selected_product_relative": 0.28511902689933777,
+            "product_down_error_cosine": 0.01844741590321064,
+            "product_down_cross_energy_fraction": 0.014996525831520557,
+            "decomposition_identity_relative_residual": 2.6523707674641628e-06
+          },
+          "gate_compressed__up_compressed__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.6282729506492615,
+            "up_preactivation_relative_error": 0.7328820824623108,
+            "swiglu_product_relative_error": 0.7837427854537964,
+            "mlp_output_relative_error": 0.6649249792098999,
+            "product_error_after_dense_down_relative": 0.6649249792098999,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.247526592531358e-06
+          },
+          "gate_compressed__up_compressed__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.6282729506492615,
+            "up_preactivation_relative_error": 0.7328820824623108,
+            "swiglu_product_relative_error": 0.7837427854537964,
+            "mlp_output_relative_error": 0.6729791164398193,
+            "product_error_after_dense_down_relative": 0.6649249792098999,
+            "down_error_on_selected_product_relative": 0.18946488201618195,
+            "product_down_error_cosine": -0.09970343112945557,
+            "product_down_cross_energy_fraction": -0.05255250632762909,
+            "decomposition_identity_relative_residual": 2.583525656518759e-06
+          }
+        }
+      },
+      "compressed_trajectory": {
+        "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+        "dense_swiglu_product_norm": 31.737287521362305,
+        "compressed_swiglu_product_relative_error": 0.7484384775161743,
+        "compressed_product_through_dense_down_relative_error": 0.6273048520088196,
+        "gate_up_product_terms": {
+          "gate_only": {
+            "relative_to_dense_mlp_output": 0.5430923104286194,
+            "norm": 33.448360443115234
+          },
+          "up_only": {
+            "relative_to_dense_mlp_output": 0.5484693050384521,
+            "norm": 33.77952194213867
+          },
+          "gate_up_interaction": {
+            "relative_to_dense_mlp_output": 0.4710380733013153,
+            "norm": 29.01063346862793
+          }
+        },
+        "gate_up_pairwise_interference": {
+          "gate_only__up_only": {
+            "cosine": 0.9130972027778625,
+            "cross_energy_fraction": 0.9130527973175049
+          },
+          "gate_only__gate_up_interaction": {
+            "cosine": -0.9529934525489807,
+            "cross_energy_fraction": -0.9434201717376709
+          },
+          "up_only__gate_up_interaction": {
+            "cosine": -0.9299726486206055,
+            "cross_energy_fraction": -0.9193053245544434
+          }
+        },
+        "gate_up_product_identity_relative_residual": 3.0088208404777106e-06,
+        "combinations": {
+          "gate_dense__up_dense__down_dense": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.0,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 0.0
+          },
+          "gate_dense__up_dense__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.6067178845405579,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.6067179441452026,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.912807187589351e-06
+          },
+          "gate_dense__up_compressed__down_dense": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.6766066551208496,
+            "swiglu_product_relative_error": 0.6604607105255127,
+            "mlp_output_relative_error": 0.5484693050384521,
+            "product_error_after_dense_down_relative": 0.5484693050384521,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.899096100212773e-06
+          },
+          "gate_dense__up_compressed__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.6766066551208496,
+            "swiglu_product_relative_error": 0.6604607105255127,
+            "mlp_output_relative_error": 0.6197811961174011,
+            "product_error_after_dense_down_relative": 0.5484693050384521,
+            "down_error_on_selected_product_relative": 0.2801609933376312,
+            "product_down_error_cosine": 0.015684090554714203,
+            "product_down_cross_energy_fraction": 0.01270739734172821,
+            "decomposition_identity_relative_residual": 2.6731904654297978e-06
+          },
+          "gate_compressed__up_dense__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.5691199898719788,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6511958837509155,
+            "mlp_output_relative_error": 0.5430923700332642,
+            "product_error_after_dense_down_relative": 0.5430923104286194,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 4.021420409117127e-06
+          },
+          "gate_compressed__up_dense__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.5691199898719788,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6511958837509155,
+            "mlp_output_relative_error": 0.6082699298858643,
+            "product_error_after_dense_down_relative": 0.5430923104286194,
+            "down_error_on_selected_product_relative": 0.30073606967926025,
+            "product_down_error_cosine": -0.047141894698143005,
+            "product_down_cross_energy_fraction": -0.039957109838724136,
+            "decomposition_identity_relative_residual": 2.678590362847899e-06
+          },
+          "gate_compressed__up_compressed__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.5691199898719788,
+            "up_preactivation_relative_error": 0.6766066551208496,
+            "swiglu_product_relative_error": 0.7484384775161743,
+            "mlp_output_relative_error": 0.6273048520088196,
+            "product_error_after_dense_down_relative": 0.6273047924041748,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.4372731079201913e-06
+          },
+          "gate_compressed__up_compressed__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.5691199898719788,
+            "up_preactivation_relative_error": 0.6766066551208496,
+            "swiglu_product_relative_error": 0.7484384775161743,
+            "mlp_output_relative_error": 0.6368889212608337,
+            "product_error_after_dense_down_relative": 0.6273047924041748,
+            "down_error_on_selected_product_relative": 0.21630653738975525,
+            "product_down_error_cosine": -0.1277630627155304,
+            "product_down_cross_energy_fraction": -0.07874719053506851,
+            "decomposition_identity_relative_residual": 2.642695335453027e-06
+          }
+        }
+      }
+    },
+    "heldout": {
+      "dense_trajectory": {
+        "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+        "dense_swiglu_product_norm": 34.842445373535156,
+        "compressed_swiglu_product_relative_error": 0.7727286219596863,
+        "compressed_product_through_dense_down_relative_error": 0.6555423140525818,
+        "gate_up_product_terms": {
+          "gate_only": {
+            "relative_to_dense_mlp_output": 0.5524463057518005,
+            "norm": 37.08139419555664
+          },
+          "up_only": {
+            "relative_to_dense_mlp_output": 0.5700148940086365,
+            "norm": 38.26063537597656
+          },
+          "gate_up_interaction": {
+            "relative_to_dense_mlp_output": 0.47511744499206543,
+            "norm": 31.890913009643555
+          }
+        },
+        "gate_up_pairwise_interference": {
+          "gate_only__up_only": {
+            "cosine": 0.9288636445999146,
+            "cross_energy_fraction": 0.9284086227416992
+          },
+          "gate_only__gate_up_interaction": {
+            "cosine": -0.9621071815490723,
+            "cross_energy_fraction": -0.9512712955474854
+          },
+          "up_only__gate_up_interaction": {
+            "cosine": -0.9342895150184631,
+            "cross_energy_fraction": -0.9190099835395813
+          }
+        },
+        "gate_up_product_identity_relative_residual": 2.934608346549794e-06,
+        "combinations": {
+          "gate_dense__up_dense__down_dense": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.0,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 0.0
+          },
+          "gate_dense__up_dense__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.6136156916618347,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.6136156916618347,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.8441703509306535e-06
+          },
+          "gate_dense__up_compressed__down_dense": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.7504636645317078,
+            "swiglu_product_relative_error": 0.6792402267456055,
+            "mlp_output_relative_error": 0.5700148940086365,
+            "product_error_after_dense_down_relative": 0.5700148940086365,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.73969805878005e-06
+          },
+          "gate_dense__up_compressed__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.7504636645317078,
+            "swiglu_product_relative_error": 0.6792402267456055,
+            "mlp_output_relative_error": 0.6399973630905151,
+            "product_error_after_dense_down_relative": 0.5700148940086365,
+            "down_error_on_selected_product_relative": 0.2522793710231781,
+            "product_down_error_cosine": 0.07313752919435501,
+            "product_down_cross_energy_fraction": 0.05413498729467392,
+            "decomposition_identity_relative_residual": 2.6419249934406253e-06
+          },
+          "gate_compressed__up_dense__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.6377176642417908,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6606677174568176,
+            "mlp_output_relative_error": 0.5524462461471558,
+            "product_error_after_dense_down_relative": 0.5524463057518005,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.888967512466479e-06
+          },
+          "gate_compressed__up_dense__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.6377176642417908,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6606677174568176,
+            "mlp_output_relative_error": 0.6218440532684326,
+            "product_error_after_dense_down_relative": 0.5524463057518005,
+            "down_error_on_selected_product_relative": 0.2756546437740326,
+            "product_down_error_cosine": 0.018083523958921432,
+            "product_down_cross_energy_fraction": 0.014448929578065872,
+            "decomposition_identity_relative_residual": 2.6676793822844047e-06
+          },
+          "gate_compressed__up_compressed__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.6377176642417908,
+            "up_preactivation_relative_error": 0.7504636645317078,
+            "swiglu_product_relative_error": 0.7727286219596863,
+            "mlp_output_relative_error": 0.6555423140525818,
+            "product_error_after_dense_down_relative": 0.6555423140525818,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.2720022318244446e-06
+          },
+          "gate_compressed__up_compressed__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.6377176642417908,
+            "up_preactivation_relative_error": 0.7504636645317078,
+            "swiglu_product_relative_error": 0.7727286219596863,
+            "mlp_output_relative_error": 0.6622819304466248,
+            "product_error_after_dense_down_relative": 0.6555423140525818,
+            "down_error_on_selected_product_relative": 0.18573816120624542,
+            "product_down_error_cosine": -0.10519544780254364,
+            "product_down_cross_energy_fraction": -0.05518124997615814,
+            "decomposition_identity_relative_residual": 2.583102286735084e-06
+          }
+        }
+      },
+      "compressed_trajectory": {
+        "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+        "dense_swiglu_product_norm": 31.75626564025879,
+        "compressed_swiglu_product_relative_error": 0.7420071363449097,
+        "compressed_product_through_dense_down_relative_error": 0.6202334761619568,
+        "gate_up_product_terms": {
+          "gate_only": {
+            "relative_to_dense_mlp_output": 0.5390926599502563,
+            "norm": 33.4721794128418
+          },
+          "up_only": {
+            "relative_to_dense_mlp_output": 0.5450618267059326,
+            "norm": 33.842803955078125
+          },
+          "gate_up_interaction": {
+            "relative_to_dense_mlp_output": 0.4717685282230377,
+            "norm": 29.292034149169922
+          }
+        },
+        "gate_up_pairwise_interference": {
+          "gate_only__up_only": {
+            "cosine": 0.9235991835594177,
+            "cross_energy_fraction": 0.9235431551933289
+          },
+          "gate_only__gate_up_interaction": {
+            "cosine": -0.9578713178634644,
+            "cross_energy_fraction": -0.949411153793335
+          },
+          "up_only__gate_up_interaction": {
+            "cosine": -0.9355552792549133,
+            "cross_energy_fraction": -0.9258841276168823
+          }
+        },
+        "gate_up_product_identity_relative_residual": 2.9930279197287746e-06,
+        "combinations": {
+          "gate_dense__up_dense__down_dense": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.0,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 0.0
+          },
+          "gate_dense__up_dense__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.0,
+            "mlp_output_relative_error": 0.5957619547843933,
+            "product_error_after_dense_down_relative": 0.0,
+            "down_error_on_selected_product_relative": 0.5957618951797485,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 4.000385160907172e-06
+          },
+          "gate_dense__up_compressed__down_dense": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.6993175148963928,
+            "swiglu_product_relative_error": 0.6602804660797119,
+            "mlp_output_relative_error": 0.5450618267059326,
+            "product_error_after_dense_down_relative": 0.5450618267059326,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.922655650967499e-06
+          },
+          "gate_dense__up_compressed__down_compressed": {
+            "gate_source": "dense",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.0,
+            "up_preactivation_relative_error": 0.6993175148963928,
+            "swiglu_product_relative_error": 0.6602804660797119,
+            "mlp_output_relative_error": 0.6080158948898315,
+            "product_error_after_dense_down_relative": 0.5450618267059326,
+            "down_error_on_selected_product_relative": 0.26828792691230774,
+            "product_down_error_cosine": 0.0020943311974406242,
+            "product_down_cross_energy_fraction": 0.001659637549892068,
+            "decomposition_identity_relative_residual": 2.7078706352767767e-06
+          },
+          "gate_compressed__up_dense__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.5824878215789795,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6504627466201782,
+            "mlp_output_relative_error": 0.5390926599502563,
+            "product_error_after_dense_down_relative": 0.5390926599502563,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 4.010349130112445e-06
+          },
+          "gate_compressed__up_dense__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "dense",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.5824878215789795,
+            "up_preactivation_relative_error": 0.0,
+            "swiglu_product_relative_error": 0.6504627466201782,
+            "mlp_output_relative_error": 0.5960440039634705,
+            "product_error_after_dense_down_relative": 0.5390926599502563,
+            "down_error_on_selected_product_relative": 0.2869061231613159,
+            "product_down_error_cosine": -0.057114407420158386,
+            "product_down_cross_energy_fraction": -0.04737450182437897,
+            "decomposition_identity_relative_residual": 2.7119112928630784e-06
+          },
+          "gate_compressed__up_compressed__down_dense": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "dense",
+            "gate_preactivation_relative_error": 0.5824878215789795,
+            "up_preactivation_relative_error": 0.6993175148963928,
+            "swiglu_product_relative_error": 0.7420071363449097,
+            "mlp_output_relative_error": 0.6202334761619568,
+            "product_error_after_dense_down_relative": 0.6202334761619568,
+            "down_error_on_selected_product_relative": 0.0,
+            "product_down_error_cosine": 0.0,
+            "product_down_cross_energy_fraction": 0.0,
+            "decomposition_identity_relative_residual": 3.4773443076119293e-06
+          },
+          "gate_compressed__up_compressed__down_compressed": {
+            "gate_source": "compressed",
+            "up_source": "compressed",
+            "down_source": "compressed",
+            "gate_preactivation_relative_error": 0.5824878215789795,
+            "up_preactivation_relative_error": 0.6993175148963928,
+            "swiglu_product_relative_error": 0.7420071363449097,
+            "mlp_output_relative_error": 0.6261753439903259,
+            "product_error_after_dense_down_relative": 0.6202334761619568,
+            "down_error_on_selected_product_relative": 0.20968207716941833,
+            "product_down_error_cosine": -0.14056161046028137,
+            "product_down_cross_energy_fraction": -0.08529119938611984,
+            "decomposition_identity_relative_residual": 2.6764007543533808e-06
+          }
+        }
+      }
+    }
+  },
+  "candidate": {
+    "calibration": {
+      "dense_trajectory": {
+        "mlp_error_decomposition": {
+          "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+          "dense_swiglu_product_norm": 34.71551513671875,
+          "compressed_swiglu_product_relative_error": 0.5681427121162415,
+          "compressed_product_through_dense_down_relative_error": 0.4363289177417755,
+          "gate_up_product_terms": {
+            "gate_only": {
+              "relative_to_dense_mlp_output": 0.31571194529533386,
+              "norm": 21.117650985717773
+            },
+            "up_only": {
+              "relative_to_dense_mlp_output": 0.3251093029975891,
+              "norm": 21.746231079101562
+            },
+            "gate_up_interaction": {
+              "relative_to_dense_mlp_output": 0.20255915820598602,
+              "norm": 13.548975944519043
+            }
+          },
+          "gate_up_pairwise_interference": {
+            "gate_only__up_only": {
+              "cosine": 0.835706353187561,
+              "cross_energy_fraction": 0.8353469967842102
+            },
+            "gate_only__gate_up_interaction": {
+              "cosine": -0.8964634537696838,
+              "cross_energy_fraction": -0.8148887157440186
+            },
+            "up_only__gate_up_interaction": {
+              "cosine": -0.8573101162910461,
+              "cross_energy_fraction": -0.7695579528808594
+            }
+          },
+          "gate_up_product_identity_relative_residual": 2.64021923612745e-06,
+          "combinations": {
+            "gate_dense__up_dense__down_dense": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.0,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 0.0
+            },
+            "gate_dense__up_dense__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.7221402525901794,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.7221402525901794,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 2.9834677661710884e-06
+            },
+            "gate_dense__up_compressed__down_dense": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.43328091502189636,
+              "swiglu_product_relative_error": 0.42801663279533386,
+              "mlp_output_relative_error": 0.3251093029975891,
+              "product_error_after_dense_down_relative": 0.3251093029975891,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 6.653352102148347e-06
+            },
+            "gate_dense__up_compressed__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.43328091502189636,
+              "swiglu_product_relative_error": 0.42801663279533386,
+              "mlp_output_relative_error": 0.7492696046829224,
+              "product_error_after_dense_down_relative": 0.3251093029975891,
+              "down_error_on_selected_product_relative": 0.568970263004303,
+              "product_down_error_cosine": 0.35675057768821716,
+              "product_down_cross_energy_fraction": 0.3073464035987854,
+              "decomposition_identity_relative_residual": 2.315731308044633e-06
+            },
+            "gate_compressed__up_dense__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.35818490386009216,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.4193953275680542,
+              "mlp_output_relative_error": 0.31571197509765625,
+              "product_error_after_dense_down_relative": 0.31571194529533386,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 6.942198524484411e-06
+            },
+            "gate_compressed__up_dense__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.35818490386009216,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.4193953275680542,
+              "mlp_output_relative_error": 0.7455629110336304,
+              "product_error_after_dense_down_relative": 0.31571194529533386,
+              "down_error_on_selected_product_relative": 0.5763336420059204,
+              "product_down_error_cosine": 0.3408238887786865,
+              "product_down_cross_energy_fraction": 0.28721538186073303,
+              "decomposition_identity_relative_residual": 2.344737367820926e-06
+            },
+            "gate_compressed__up_compressed__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.35818490386009216,
+              "up_preactivation_relative_error": 0.43328091502189636,
+              "swiglu_product_relative_error": 0.5681427121162415,
+              "mlp_output_relative_error": 0.4363289177417755,
+              "product_error_after_dense_down_relative": 0.4363289177417755,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 4.961813374393387e-06
+            },
+            "gate_compressed__up_compressed__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.35818490386009216,
+              "up_preactivation_relative_error": 0.43328091502189636,
+              "swiglu_product_relative_error": 0.5681427121162415,
+              "mlp_output_relative_error": 0.7610694169998169,
+              "product_error_after_dense_down_relative": 0.4363289177417755,
+              "down_error_on_selected_product_relative": 0.5184580087661743,
+              "product_down_error_cosine": 0.2653302550315857,
+              "product_down_cross_energy_fraction": 0.2614326477050781,
+              "decomposition_identity_relative_residual": 2.1809730696986662e-06
+            }
+          }
+        },
+        "direct_factorized_vs_reconstructed_relative_error": 2.055384356935974e-06,
+        "dense_mlp_output_same_input": {
+          "relative_error": 0.7610694340189819,
+          "angular_drift": 0.2939413785934448,
+          "norm_ratio": 0.4272301946112634,
+          "cosine_similarity": 0.7060586214065552
+        },
+        "saved_nec_mlp_output_same_input": {
+          "relative_error": 0.672979100799064,
+          "angular_drift": 0.24730855226516724,
+          "norm_ratio": 0.6132456466223934,
+          "cosine_similarity": 0.7526914477348328
+        }
+      },
+      "compressed_trajectory": {
+        "mlp_error_decomposition": {
+          "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+          "dense_swiglu_product_norm": 31.737287521362305,
+          "compressed_swiglu_product_relative_error": 0.5107448101043701,
+          "compressed_product_through_dense_down_relative_error": 0.3898419141769409,
+          "gate_up_product_terms": {
+            "gate_only": {
+              "relative_to_dense_mlp_output": 0.2959901690483093,
+              "norm": 18.229656219482422
+            },
+            "up_only": {
+              "relative_to_dense_mlp_output": 0.2935682237148285,
+              "norm": 18.08049201965332
+            },
+            "gate_up_interaction": {
+              "relative_to_dense_mlp_output": 0.1996200978755951,
+              "norm": 12.294346809387207
+            }
+          },
+          "gate_up_pairwise_interference": {
+            "gate_only__up_only": {
+              "cosine": 0.8825213313102722,
+              "cross_energy_fraction": 0.8824915289878845
+            },
+            "gate_only__gate_up_interaction": {
+              "cosine": -0.9248862266540527,
+              "cross_energy_fraction": -0.8574948310852051
+            },
+            "up_only__gate_up_interaction": {
+              "cosine": -0.9021811485290527,
+              "cross_energy_fraction": -0.8389989733695984
+            }
+          },
+          "gate_up_product_identity_relative_residual": 2.707228532017325e-06,
+          "combinations": {
+            "gate_dense__up_dense__down_dense": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.0,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 0.0
+            },
+            "gate_dense__up_dense__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.701875627040863,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.7018755674362183,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 3.0513970159518067e-06
+            },
+            "gate_dense__up_compressed__down_dense": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.38481324911117554,
+              "swiglu_product_relative_error": 0.39144015312194824,
+              "mlp_output_relative_error": 0.2935682237148285,
+              "product_error_after_dense_down_relative": 0.2935682237148285,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 7.449817530869041e-06
+            },
+            "gate_dense__up_compressed__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.38481324911117554,
+              "swiglu_product_relative_error": 0.39144015312194824,
+              "mlp_output_relative_error": 0.7226481437683105,
+              "product_error_after_dense_down_relative": 0.2935682237148285,
+              "down_error_on_selected_product_relative": 0.5874314904212952,
+              "product_down_error_cosine": 0.2637336850166321,
+              "product_down_cross_energy_fraction": 0.21092334389686584,
+              "decomposition_identity_relative_residual": 2.3864206468715565e-06
+            },
+            "gate_compressed__up_dense__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.31002649664878845,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.3906211853027344,
+              "mlp_output_relative_error": 0.2959901690483093,
+              "product_error_after_dense_down_relative": 0.2959901690483093,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 7.3809792411339e-06
+            },
+            "gate_compressed__up_dense__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.31002649664878845,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.3906211853027344,
+              "mlp_output_relative_error": 0.722456157207489,
+              "product_error_after_dense_down_relative": 0.2959901690483093,
+              "down_error_on_selected_product_relative": 0.5857679843902588,
+              "product_down_error_cosine": 0.2630285918712616,
+              "product_down_cross_energy_fraction": 0.21175143122673035,
+              "decomposition_identity_relative_residual": 2.372165909036994e-06
+            },
+            "gate_compressed__up_compressed__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.31002649664878845,
+              "up_preactivation_relative_error": 0.38481324911117554,
+              "swiglu_product_relative_error": 0.5107448101043701,
+              "mlp_output_relative_error": 0.3898419141769409,
+              "product_error_after_dense_down_relative": 0.3898419141769409,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 5.598462848865893e-06
+            },
+            "gate_compressed__up_compressed__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.31002649664878845,
+              "up_preactivation_relative_error": 0.38481324911117554,
+              "swiglu_product_relative_error": 0.5107448101043701,
+              "mlp_output_relative_error": 0.7324926853179932,
+              "product_error_after_dense_down_relative": 0.3898419141769409,
+              "down_error_on_selected_product_relative": 0.5548587441444397,
+              "product_down_error_cosine": 0.17729529738426208,
+              "product_down_cross_energy_fraction": 0.16679640114307404,
+              "decomposition_identity_relative_residual": 2.2326964881358435e-06
+            }
+          }
+        },
+        "direct_factorized_vs_reconstructed_relative_error": 2.1139776436029933e-06,
+        "dense_mlp_output_same_input": {
+          "relative_error": 0.7324926290393371,
+          "angular_drift": 0.2780947685241699,
+          "norm_ratio": 0.4817122381421485,
+          "cosine_similarity": 0.7219052314758301
+        },
+        "saved_nec_mlp_output_same_input": {
+          "relative_error": 0.6368889064518115,
+          "angular_drift": 0.22447699308395386,
+          "norm_ratio": 0.6914789824339476,
+          "cosine_similarity": 0.7755230069160461
+        }
+      }
+    },
+    "heldout": {
+      "dense_trajectory": {
+        "mlp_error_decomposition": {
+          "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+          "dense_swiglu_product_norm": 34.842445373535156,
+          "compressed_swiglu_product_relative_error": 0.6265504956245422,
+          "compressed_product_through_dense_down_relative_error": 0.4841691255569458,
+          "gate_up_product_terms": {
+            "gate_only": {
+              "relative_to_dense_mlp_output": 0.37389838695526123,
+              "norm": 25.09687042236328
+            },
+            "up_only": {
+              "relative_to_dense_mlp_output": 0.3846566081047058,
+              "norm": 25.818986892700195
+            },
+            "gate_up_interaction": {
+              "relative_to_dense_mlp_output": 0.27731063961982727,
+              "norm": 18.613691329956055
+            }
+          },
+          "gate_up_pairwise_interference": {
+            "gate_only__up_only": {
+              "cosine": 0.8859454393386841,
+              "cross_energy_fraction": 0.8855891227722168
+            },
+            "gate_only__gate_up_interaction": {
+              "cosine": -0.9291141033172607,
+              "cross_energy_fraction": -0.8891148567199707
+            },
+            "up_only__gate_up_interaction": {
+              "cosine": -0.9018881916999817,
+              "cross_energy_fraction": -0.8556704521179199
+            }
+          },
+          "gate_up_product_identity_relative_residual": 2.758215032372391e-06,
+          "combinations": {
+            "gate_dense__up_dense__down_dense": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.0,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 0.0
+            },
+            "gate_dense__up_dense__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.7245701551437378,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.7245702147483826,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 2.9717573397647357e-06
+            },
+            "gate_dense__up_compressed__down_dense": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.4974546432495117,
+              "swiglu_product_relative_error": 0.5000362396240234,
+              "mlp_output_relative_error": 0.3846566081047058,
+              "product_error_after_dense_down_relative": 0.3846566081047058,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 5.626261554425582e-06
+            },
+            "gate_dense__up_compressed__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.4974546432495117,
+              "swiglu_product_relative_error": 0.5000362396240234,
+              "mlp_output_relative_error": 0.7568492889404297,
+              "product_error_after_dense_down_relative": 0.3846566081047058,
+              "down_error_on_selected_product_relative": 0.5376452803611755,
+              "product_down_error_cosine": 0.328316867351532,
+              "product_down_cross_energy_fraction": 0.31073328852653503,
+              "decomposition_identity_relative_residual": 2.2382905626727734e-06
+            },
+            "gate_compressed__up_dense__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.40721386671066284,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.4891680181026459,
+              "mlp_output_relative_error": 0.37389838695526123,
+              "product_error_after_dense_down_relative": 0.37389838695526123,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 5.7745173762668855e-06
+            },
+            "gate_compressed__up_dense__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.40721386671066284,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.4891680181026459,
+              "mlp_output_relative_error": 0.7522205710411072,
+              "product_error_after_dense_down_relative": 0.37389838695526123,
+              "down_error_on_selected_product_relative": 0.5469308495521545,
+              "product_down_error_cosine": 0.31028008460998535,
+              "product_down_cross_energy_fraction": 0.28911542892456055,
+              "decomposition_identity_relative_residual": 2.2495210032502655e-06
+            },
+            "gate_compressed__up_compressed__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.40721386671066284,
+              "up_preactivation_relative_error": 0.4974546432495117,
+              "swiglu_product_relative_error": 0.6265504956245422,
+              "mlp_output_relative_error": 0.4841691255569458,
+              "product_error_after_dense_down_relative": 0.4841691255569458,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 4.497419013205217e-06
+            },
+            "gate_compressed__up_compressed__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.40721386671066284,
+              "up_preactivation_relative_error": 0.4974546432495117,
+              "swiglu_product_relative_error": 0.6265504956245422,
+              "mlp_output_relative_error": 0.7676456570625305,
+              "product_error_after_dense_down_relative": 0.4841691255569458,
+              "down_error_on_selected_product_relative": 0.4892612099647522,
+              "product_down_error_cosine": 0.24375441670417786,
+              "product_down_cross_energy_fraction": 0.24374106526374817,
+              "decomposition_identity_relative_residual": 2.1594864847429562e-06
+            }
+          }
+        },
+        "direct_factorized_vs_reconstructed_relative_error": 2.098593995469855e-06,
+        "dense_mlp_output_same_input": {
+          "relative_error": 0.7676456724533428,
+          "angular_drift": 0.2982773184776306,
+          "norm_ratio": 0.4159001809194779,
+          "cosine_similarity": 0.7017226815223694
+        },
+        "saved_nec_mlp_output_same_input": {
+          "relative_error": 0.6622819336161734,
+          "angular_drift": 0.23791837692260742,
+          "norm_ratio": 0.6228491730410611,
+          "cosine_similarity": 0.7620816230773926
+        }
+      },
+      "compressed_trajectory": {
+        "mlp_error_decomposition": {
+          "decomposition": "D_hat*h_hat - D*h = D*(h_hat-h) + (D_hat-D)*h_hat",
+          "dense_swiglu_product_norm": 31.75626564025879,
+          "compressed_swiglu_product_relative_error": 0.5876863598823547,
+          "compressed_product_through_dense_down_relative_error": 0.4523811936378479,
+          "gate_up_product_terms": {
+            "gate_only": {
+              "relative_to_dense_mlp_output": 0.36518970131874084,
+              "norm": 22.674571990966797
+            },
+            "up_only": {
+              "relative_to_dense_mlp_output": 0.368362694978714,
+              "norm": 22.87158203125
+            },
+            "gate_up_interaction": {
+              "relative_to_dense_mlp_output": 0.28378042578697205,
+              "norm": 17.619882583618164
+            }
+          },
+          "gate_up_pairwise_interference": {
+            "gate_only__up_only": {
+              "cosine": 0.9163715243339539,
+              "cross_energy_fraction": 0.916337251663208
+            },
+            "gate_only__gate_up_interaction": {
+              "cosine": -0.9504375457763672,
+              "cross_energy_fraction": -0.9209884405136108
+            },
+            "up_only__gate_up_interaction": {
+              "cosine": -0.930257260799408,
+              "cross_energy_fraction": -0.8994777798652649
+            }
+          },
+          "gate_up_product_identity_relative_residual": 2.8206407023390057e-06,
+          "combinations": {
+            "gate_dense__up_dense__down_dense": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.0,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 0.0
+            },
+            "gate_dense__up_dense__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.0,
+              "mlp_output_relative_error": 0.7042796611785889,
+              "product_error_after_dense_down_relative": 0.0,
+              "down_error_on_selected_product_relative": 0.7042796611785889,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 3.0153512398101157e-06
+            },
+            "gate_dense__up_compressed__down_dense": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.46319901943206787,
+              "swiglu_product_relative_error": 0.4847855269908905,
+              "mlp_output_relative_error": 0.3683627247810364,
+              "product_error_after_dense_down_relative": 0.3683627247810364,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 5.891972705285298e-06
+            },
+            "gate_dense__up_compressed__down_compressed": {
+              "gate_source": "dense",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.0,
+              "up_preactivation_relative_error": 0.46319901943206787,
+              "swiglu_product_relative_error": 0.4847855269908905,
+              "mlp_output_relative_error": 0.7321006655693054,
+              "product_error_after_dense_down_relative": 0.3683627247810364,
+              "down_error_on_selected_product_relative": 0.5513229966163635,
+              "product_down_error_cosine": 0.23714801669120789,
+              "product_down_cross_energy_fraction": 0.2190917581319809,
+              "decomposition_identity_relative_residual": 2.2675926629744936e-06
+            },
+            "gate_compressed__up_dense__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.369889497756958,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.47639408707618713,
+              "mlp_output_relative_error": 0.36518970131874084,
+              "product_error_after_dense_down_relative": 0.36518970131874084,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 5.969513495074352e-06
+            },
+            "gate_compressed__up_dense__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "dense",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.369889497756958,
+              "up_preactivation_relative_error": 0.0,
+              "swiglu_product_relative_error": 0.47639408707618713,
+              "mlp_output_relative_error": 0.7302776575088501,
+              "product_error_after_dense_down_relative": 0.36518970131874084,
+              "down_error_on_selected_product_relative": 0.5523434281349182,
+              "product_down_error_cosine": 0.23513606190681458,
+              "product_down_cross_energy_fraction": 0.21635158360004425,
+              "decomposition_identity_relative_residual": 2.267743639094988e-06
+            },
+            "gate_compressed__up_compressed__down_dense": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "dense",
+              "gate_preactivation_relative_error": 0.369889497756958,
+              "up_preactivation_relative_error": 0.46319901943206787,
+              "swiglu_product_relative_error": 0.5876863598823547,
+              "mlp_output_relative_error": 0.4523811936378479,
+              "product_error_after_dense_down_relative": 0.4523811936378479,
+              "down_error_on_selected_product_relative": 0.0,
+              "product_down_error_cosine": 0.0,
+              "product_down_cross_energy_fraction": 0.0,
+              "decomposition_identity_relative_residual": 4.90076899950509e-06
+            },
+            "gate_compressed__up_compressed__down_compressed": {
+              "gate_source": "compressed",
+              "up_source": "compressed",
+              "down_source": "compressed",
+              "gate_preactivation_relative_error": 0.369889497756958,
+              "up_preactivation_relative_error": 0.46319901943206787,
+              "swiglu_product_relative_error": 0.5876863598823547,
+              "mlp_output_relative_error": 0.7412946820259094,
+              "product_error_after_dense_down_relative": 0.4523811936378479,
+              "down_error_on_selected_product_relative": 0.5210092663764954,
+              "product_down_error_cosine": 0.15574869513511658,
+              "product_down_cross_energy_fraction": 0.15420794486999512,
+              "decomposition_identity_relative_residual": 2.133035650331294e-06
+            }
+          }
+        },
+        "direct_factorized_vs_reconstructed_relative_error": 2.051142928394256e-06,
+        "dense_mlp_output_same_input": {
+          "relative_error": 0.7412946165264115,
+          "angular_drift": 0.28252410888671875,
+          "norm_ratio": 0.46392269704506994,
+          "cosine_similarity": 0.7174758911132812
+        },
+        "saved_nec_mlp_output_same_input": {
+          "relative_error": 0.6261753155473319,
+          "angular_drift": 0.21511852741241455,
+          "norm_ratio": 0.6946908668213324,
+          "cosine_similarity": 0.7848814725875854
+        }
+      }
+    },
+    "block_validation": {
+      "dense_block_output": {
+        "relative_error": 0.4136792819419799,
+        "angular_drift": 0.07321453094482422,
+        "norm_ratio": 0.7534015908435258,
+        "cosine_similarity": 0.9267854690551758
+      },
+      "dense_active_transform": {
+        "relative_error": 0.4899861412015763,
+        "angular_drift": 0.1172492504119873,
+        "norm_ratio": 0.743699539743958,
+        "cosine_similarity": 0.8827507495880127
+      },
+      "dense_mlp_output": {
+        "relative_error": 0.7693118774535036,
+        "angular_drift": 0.30987584590911865,
+        "norm_ratio": 0.42914119118143185,
+        "cosine_similarity": 0.6901241540908813
+      },
+      "candidate_execution": "factorized_apply_joint_swiglu"
+    },
+    "budget": {
+      "old_mlp_numeric_coefficients": 9943596,
+      "old_mlp_all_tensor_scalars": 12562052,
+      "old_mlp_nonfloating_tensor_scalars": 2618456,
+      "old_mlp_tensor_payload_bytes": 30361016,
+      "old_mlp_artifact_serialized_bytes": 30370779,
+      "shared_rank": 426,
+      "shared_factor_coefficients": 9924096,
+      "candidate_payload_bytes": 19848192,
+      "candidate_serialized_bytes": 19850909,
+      "candidate_to_old_artifact_bytes_ratio": 0.6536186971035547,
+      "candidate_construction_seconds": 0.21292344499988758,
+      "candidate_baseline_cuda_memory_bytes": 3733094400,
+      "candidate_peak_cuda_memory_bytes": 5762088960,
+      "candidate_incremental_peak_cuda_memory_bytes": 2028994560
+    }
+  },
+  "diagnostic_data_manifest_sha256": "ebe87aa13e602ac1c6780e54624961cf6d9dac22e109323a3a44d4d671bc6558",
+  "diagnostic_data_manifest": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "layer": 0,
+    "dense_projection_files": [
+      "models/diagnostic_36h_cache/layer_0_down_proj.pt",
+      "models/diagnostic_36h_cache/layer_0_gate_proj.pt",
+      "models/diagnostic_36h_cache/layer_0_input_layernorm.pt",
+      "models/diagnostic_36h_cache/layer_0_k_proj.pt",
+      "models/diagnostic_36h_cache/layer_0_o_proj.pt",
+      "models/diagnostic_36h_cache/layer_0_post_attention_layernorm.pt",
+      "models/diagnostic_36h_cache/layer_0_q_proj.pt",
+      "models/diagnostic_36h_cache/layer_0_up_proj.pt",
+      "models/diagnostic_36h_cache/layer_0_v_proj.pt"
+    ],
+    "calibration_tokens": 4096,
+    "heldout_tokens": 4096,
+    "sequence_length": 128,
+    "calibration_seed": 42,
+    "validation_seed": 43,
+    "calibration_sampling": "uniform",
+    "validation_sampling": "uniform",
+    "calibration_tensor_shape": [
+      4096,
+      4096
+    ],
+    "validation_tensor_shape": [
+      4096,
+      4096
+    ],
+    "huggingface_token_present": false,
+    "dataset_and_tokenizer": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 4096,
+      "heldout_token_count": 4096,
+      "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+      "heldout_token_ids_sha256": "65db81739a5eaa70be652a2a2b8f8de18ef49f17f0794de0c44a63a806361d66",
+      "activation_sequence_length": 128,
+      "calibration_sampling": "uniform",
+      "calibration_seed": 42,
+      "calibration_window_offsets": [
+        2681856,
+        466944,
+        104832,
+        1153536,
+        1027072,
+        936192,
+        585216,
+        429824,
+        2838272,
+        2287360,
+        364544,
+        2476672,
+        1769600,
+        133248,
+        124928,
+        392960,
+        916992,
+        975744,
+        2119552,
+        2524928,
+        111232,
+        2353920,
+        833920,
+        2725760,
+        2285568,
+        1759488,
+        924544,
+        1884032,
+        2471552,
+        1166720,
+        27136,
+        669568
+      ],
+      "validation_sampling": "uniform",
+      "validation_seed": 43,
+      "validation_window_offsets": [
+        20096,
+        149888,
+        75392,
+        242432,
+        193920,
+        50432,
+        237568,
+        261120,
+        9984,
+        269440,
+        226688,
+        195200,
+        286720,
+        227456,
+        206464,
+        92288,
+        30208,
+        56192,
+        65280,
+        196992,
+        80384,
+        50176,
+        84096,
+        268544,
+        259968,
+        67456,
+        202752,
+        265600,
+        142464,
+        95232,
+        197504,
+        33280
+      ]
+    },
+    "post_compression_optimization": false
+  },
+  "saved_nec_block_validation": {
+    "dense_block_output": {
+      "relative_error": 0.3637403957679531,
+      "angular_drift": 0.06273496150970459,
+      "norm_ratio": 0.8334730669367149,
+      "cosine_similarity": 0.9372650384902954
+    },
+    "dense_active_transform": {
+      "relative_error": 0.4308355789170767,
+      "angular_drift": 0.09570646286010742,
+      "norm_ratio": 0.8462749414611705,
+      "cosine_similarity": 0.9042935371398926
+    },
+    "mlp_function_on_compressed_trajectory": {
+      "gate_source": "compressed",
+      "up_source": "compressed",
+      "down_source": "compressed",
+      "gate_preactivation_relative_error": 0.5824878215789795,
+      "up_preactivation_relative_error": 0.6993175148963928,
+      "swiglu_product_relative_error": 0.7420071363449097,
+      "mlp_output_relative_error": 0.6261753439903259,
+      "product_error_after_dense_down_relative": 0.6202334761619568,
+      "down_error_on_selected_product_relative": 0.20968207716941833,
+      "product_down_error_cosine": -0.14056161046028137,
+      "product_down_cross_energy_fraction": -0.08529119938611984,
+      "decomposition_identity_relative_residual": 2.6764007543533808e-06
+    }
+  },
+  "overall_peak_cuda_memory_bytes": 8366678016,
+  "runtime_seconds": 10.07295558099986
+}

@@ -1,0 +1,10 @@
+run_started_utc=2026-10-17T07:48:21Z
+repo_commit=786409e3ead2432ffc13c425fccd57a2ceb3e67a
+joint_swiglu_sha256=bfbb0fdefbb9a0305e695f59d9f458561acab34ae4c703d42772996da6e8f8af
+diagnostic_script_sha256=667cb4a9c5377cdb977f837ebb9dd17422ca86c3a761bd853d3199c74386a965
+checkpoint_sha256=81d44f6b676853cbd218f0c2b22bd0a388eed7195b88153045f5c00ead2de6e9
+gpu=NVIDIA A10
+gpu_memory_before=0 MiB, 22599 MiB, 23028 MiB
+{"candidate_bytes": 19850909, "candidate_rank": 426, "output": "experiment_artifacts/diagnostic_36h/joint_swiglu/layer0/layer0_joint_swiglu.json", "runtime_seconds": 10.07295558099986}
+run_exit_code=0
+run_finished_utc=2026-10-17T07:48:34Z
