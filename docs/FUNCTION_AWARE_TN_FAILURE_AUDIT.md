@@ -89,6 +89,7 @@ MLPs retain 62.5% of their values, but model PPL rises to 22.47.
 ## Hypotheses still untested
 
 - Whether exact RoPE-commuting headwise factors or a whole-model signed hidden-coordinate permutation improve MPO cut spectra on layers 0, 15, and 31 after their parameter overhead is included.
+- Multi-stage butterfly and Kronecker-structured exact gauges were not implemented in this bounded search. A butterfly or Kronecker factor could be exact within a V/O cancellation gauge, but must be folded into the projection factors or charged as auxiliary coefficients; Q/K mixing is limited to the RoPE commutant, and residual rotations are limited by the learned diagonal RMSNorm gains.
 - Whether alternative four-site orderings produce consistent coefficient/error improvements across Q, K, V, O, Gate, Up, and Down rather than one favorable layer-0 cut.
 - Whether a function-aware Down readout, paired with fixed-rank Gate/Up approximations, reduces held-out complete-SwiGLU error at an exactly matched coefficient count.
 - Whether that improvement survives 4K, 16K, and (if feasible) 65K calibration tokens and then 1/2/4-layer prefix propagation.
