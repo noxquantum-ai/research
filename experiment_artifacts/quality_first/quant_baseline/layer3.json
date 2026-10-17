@@ -1,0 +1,888 @@
+{
+  "layer": 3,
+  "group_size": 128,
+  "rows": [
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.04674982652068138,
+      "seconds": 0.613806962966919
+    },
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.04205552488565445,
+      "seconds": 1.7157471179962158
+    },
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.03186042606830597,
+      "seconds": 1.3904392719268799
+    },
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.02842091955244541,
+      "seconds": 1.3767650127410889
+    },
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.03765035793185234,
+      "seconds": 2.6024398803710938
+    },
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.028783725574612617,
+      "seconds": 2.9649569988250732
+    },
+    {
+      "projection": "q_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.025633839890360832,
+      "seconds": 2.840242862701416
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.10870601236820221,
+      "seconds": 0.34438180923461914
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.09984090924263,
+      "seconds": 1.6303060054779053
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.07482679933309555,
+      "seconds": 1.6702239513397217
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.06645689159631729,
+      "seconds": 1.7022688388824463
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.09111490845680237,
+      "seconds": 3.0095062255859375
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.06883122026920319,
+      "seconds": 2.9762070178985596
+    },
+    {
+      "projection": "q_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.06065337732434273,
+      "seconds": 2.752578020095825
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.04016558453440666,
+      "seconds": 0.3574709892272949
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.03539572283625603,
+      "seconds": 1.4304990768432617
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.027066849172115326,
+      "seconds": 1.364271879196167
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.024127604439854622,
+      "seconds": 1.3701939582824707
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.03286890685558319,
+      "seconds": 2.5527689456939697
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.02510245330631733,
+      "seconds": 2.6184310913085938
+    },
+    {
+      "projection": "k_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.022326644510030746,
+      "seconds": 2.8642029762268066
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.09249448776245117,
+      "seconds": 0.3256988525390625
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.08545118570327759,
+      "seconds": 1.3058812618255615
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.06426062434911728,
+      "seconds": 1.3437659740447998
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.05720061436295509,
+      "seconds": 1.3020250797271729
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.07949527353048325,
+      "seconds": 2.431494951248169
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.05993102118372917,
+      "seconds": 2.419210910797119
+    },
+    {
+      "projection": "k_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.05291656777262688,
+      "seconds": 2.428985834121704
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.11979223787784576,
+      "seconds": 0.32423901557922363
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.10496482253074646,
+      "seconds": 1.391697883605957
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.08050031960010529,
+      "seconds": 1.404083013534546
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.07177615165710449,
+      "seconds": 1.3738517761230469
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.09971946477890015,
+      "seconds": 2.457885980606079
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.07617320865392685,
+      "seconds": 2.4390292167663574
+    },
+    {
+      "projection": "v_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.06772960722446442,
+      "seconds": 2.421262741088867
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.2560696601867676,
+      "seconds": 0.32384610176086426
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.2531718313694,
+      "seconds": 1.2777400016784668
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.1913960874080658,
+      "seconds": 1.2847819328308105
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.17002908885478973,
+      "seconds": 1.2772538661956787
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.24146805703639984,
+      "seconds": 2.60817813873291
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.18175464868545532,
+      "seconds": 2.4163668155670166
+    },
+    {
+      "projection": "v_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.16075585782527924,
+      "seconds": 2.419027328491211
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.08148135989904404,
+      "seconds": 0.3348710536956787
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.09591735899448395,
+      "seconds": 1.4347639083862305
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.06886156648397446,
+      "seconds": 1.403047800064087
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.05980197340250015,
+      "seconds": 1.448814868927002
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.07917375862598419,
+      "seconds": 2.4599292278289795
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.05899045616388321,
+      "seconds": 2.42928409576416
+    },
+    {
+      "projection": "o_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.052357420325279236,
+      "seconds": 2.4427828788757324
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.1906718760728836,
+      "seconds": 0.3267059326171875
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.22995351254940033,
+      "seconds": 1.28373384475708
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.16226288676261902,
+      "seconds": 1.286121129989624
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.14102044701576233,
+      "seconds": 1.2796399593353271
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.19182299077510834,
+      "seconds": 2.425117015838623
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.14256207644939423,
+      "seconds": 2.5216987133026123
+    },
+    {
+      "projection": "o_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.12585218250751495,
+      "seconds": 2.6222763061523438
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.0882468894124031,
+      "seconds": 1.2348570823669434
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.10534799098968506,
+      "seconds": 3.287137031555176
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.07755713164806366,
+      "seconds": 2.8725991249084473
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.06909830868244171,
+      "seconds": 3.0328550338745117
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.10425011068582535,
+      "seconds": 5.078058958053589
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.0765644982457161,
+      "seconds": 4.947199106216431
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.0682176873087883,
+      "seconds": 4.752800941467285
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.20558927953243256,
+      "seconds": 0.9121618270874023
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.2564035952091217,
+      "seconds": 2.496934175491333
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.1855251044034958,
+      "seconds": 2.4772469997406006
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.1617351919412613,
+      "seconds": 2.535413980484009
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.2540707290172577,
+      "seconds": 5.231585741043091
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.18339420855045319,
+      "seconds": 5.133667707443237
+    },
+    {
+      "projection": "gate_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.15993981063365936,
+      "seconds": 4.715334177017212
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.1046520248055458,
+      "seconds": 0.9616758823394775
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.12628792226314545,
+      "seconds": 2.7113101482391357
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.09251515567302704,
+      "seconds": 2.5778210163116455
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.08182225376367569,
+      "seconds": 2.5581717491149902
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.12523086369037628,
+      "seconds": 5.291262149810791
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.09159663319587708,
+      "seconds": 4.649341821670532
+    },
+    {
+      "projection": "up_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.08085763454437256,
+      "seconds": 4.6243908405303955
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.24644838273525238,
+      "seconds": 0.8789401054382324
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.3041086196899414,
+      "seconds": 2.581383228302002
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.2199309766292572,
+      "seconds": 2.5168120861053467
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.19263623654842377,
+      "seconds": 2.535933256149292
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.3015590012073517,
+      "seconds": 5.408221244812012
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.217879980802536,
+      "seconds": 5.500416994094849
+    },
+    {
+      "projection": "up_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.19091852009296417,
+      "seconds": 5.69325590133667
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.1083853617310524,
+      "seconds": 1.0922889709472656
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.1323792189359665,
+      "seconds": 8.360743761062622
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.12640655040740967,
+      "seconds": 7.70167088508606
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.09812730550765991,
+      "seconds": 8.10644793510437
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.12369365245103836,
+      "seconds": 12.307514190673828
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.11708959192037582,
+      "seconds": 11.565443754196167
+    },
+    {
+      "projection": "down_proj",
+      "bits": 4,
+      "bits_per_weight": 4.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.09221988916397095,
+      "seconds": 10.961485147476196
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "rtn",
+      "calib_tokens": null,
+      "heldout_rel_err": 0.25236213207244873,
+      "seconds": 0.9535679817199707
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.3201639652252197,
+      "seconds": 6.420886039733887
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.30631840229034424,
+      "seconds": 6.710007905960083
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.2318371832370758,
+      "seconds": 7.485166072845459
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 2048,
+      "heldout_rel_err": 0.2985312342643738,
+      "seconds": 12.672473907470703
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 16384,
+      "heldout_rel_err": 0.28291916847229004,
+      "seconds": 12.181834936141968
+    },
+    {
+      "projection": "down_proj",
+      "bits": 3,
+      "bits_per_weight": 3.125,
+      "method": "incoherent_gptq",
+      "calib_tokens": 65536,
+      "heldout_rel_err": 0.21848103404045105,
+      "seconds": 12.171409130096436
+    }
+  ]
+}

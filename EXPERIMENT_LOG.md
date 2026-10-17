@@ -568,3 +568,27 @@ Reproducible output JSON, logs, and the prefix-sweep driver are in `experiment_a
 The accepted 87.5%-coefficient setting stores 3,787,358,208 factor coefficients across the 32 MLPs instead of 4,328,521,728 dense MLP parameters: 541,163,520 fewer (12.50% reduction within MLPs; about 1.14× MLP compression). Including unchanged attention, embeddings, norms, and output head, the analytic Llama-2-7B parameter count goes from 6,738,415,616 to 6,197,252,096, a reduction of about 8.03% overall (about 1.09× whole-model parameter compression). Measured MLP artifact bytes are 7,574,860,840 versus 8,657,043,456 dense FP16 bytes. This is not a measured unified whole-model checkpoint or an inference-speed claim. The accepted WikiText-2 PPL is 6.7788787; no further experiment is planned in this session.
 
 The previously requested local copy of the 62.5%/PPL-22 artifact set is not complete yet. The two resumable `rsync` transfers remain active: layers 0–21 to `/home/fluxx/Workspace/research_backups/nox_quality_first_20261017/grouped_full32/artifacts_layers_00_21/` (last observed about 35%), and layers 22–31 to `/mnt/chromeos/MyFiles/Downloads/nox_quality_first_20261017/grouped_full32_layers22_31/` (last observed about 71%). This transfer is separate from GPU work; the A10 remains idle. The 87.5% result's compact JSON, manifest, and log are committed locally/remotely; its 32 large weight artifacts remain on the A10.
+
+# Zero-healing quantization baseline (layer 3) — 2026-10-17, CANCELLED
+
+**Status: experiment cancelled by the user after the first layer-3 result. Nothing beyond that was run.**
+
+**Question:** with a large calibration set, how do RTN, GPTQ and Hadamard-incoherent GPTQ compare per projection at equal bytes, as a baseline for the tensor-network compressor? Ran on an Apple M4 (MPS for activation capture, CPU float32 for quantization); no A10 was used. Llama-2-7B-HF revision `8efe6c9b93655b934e27bd9981e3ec13e55aee9d`, layer 3 only (first four layers fetched by HTTP Range, since deleted), raw WikiText-2 train for calibration (2,048 / 16,384 / 65,536 tokens, sequence length 2,048) and 16,384 distinct validation tokens, group size 128. No training or healing.
+
+**Code added:** `nox/quant/` (streaming Hessian, RTN, GPTQ, randomized-Hadamard incoherence), `nox/hf_subset.py` (range-fetch of the first N layers), `scripts/compare_quantizers_layer.py`, `tests/test_quant.py` (7 CPU tests pass). Results: `experiment_artifacts/quality_first/quant_baseline/layer3.json`.
+
+Held-out relative output error, averaged over the seven projections:
+
+| Bits | RTN | GPTQ 2k tok | GPTQ 16k | GPTQ 65k | Incoherent GPTQ 65k |
+|---|---:|---:|---:|---:|---:|
+| 4 | 0.0842 | 0.0918 | 0.0721 | 0.0619 | 0.0585 |
+| 3 | 0.1932 | 0.2213 | 0.1721 | 0.1458 | 0.1385 |
+
+Findings:
+- GPTQ improves on RTN by about 25% at 65k calibration tokens, not by a large factor. Per-projection 4-bit error ranges from 0.024 (k) to 0.098 (down) for GPTQ; an earlier claim in the session of "about 2.5% at 4 bits" was true only for q/k.
+- Calibration size matters: GPTQ fitted on 2k tokens is worse than RTN on o/gate/up/down, and error was still falling at 65k tokens (not saturated).
+- RTN here reproduces the earlier layer-15 direct 4-bit measurements, so the harness agrees with the earlier baseline.
+- Hadamard incoherence helps modestly (5–10% relative) on these real weights; on synthetic Gaussian weights it hurt, on heavy-tailed synthetic weights it helped.
+- 3-bit scalar quantization is not usable (average error 0.14–0.15, down_proj 0.22).
+
+**Not done:** no model-level PPL or MMLU, no layer-15 run, no tensor-network comparison. The proposed decision test (a Cholesky-weighted MPO fit must match about 6% average held-out error at about 4× stored bytes) was never run. Layer 3 may be unrepresentative because Llama-2's large activation outliers form in the first layers.
