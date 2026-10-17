@@ -40,26 +40,58 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def find_source_archive() -> Path:
-    candidates = sorted(Path("/kaggle/input").rglob("nec_source_bundle.tar.gz"))
-    if len(candidates) != 1:
-        raise FileNotFoundError(f"Expected one source bundle, found {len(candidates)}")
-    return candidates[0]
-
-
-def extract_source(archive: Path) -> dict:
-    SOURCE.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(archive, "r:gz") as bundle:
-        for member in bundle.getmembers():
-            if not (SOURCE / member.name).resolve().is_relative_to(SOURCE.resolve()):
-                raise ValueError(f"Unsafe source archive path: {member.name}")
-        bundle.extractall(SOURCE, filter="data")
-    manifest = json.loads((SOURCE / "bundle_manifest.json").read_text())
-    for relative, record in manifest["source_files"].items():
-        path = SOURCE / relative
+def verify_source_tree(root: Path) -> dict:
+    root = root.resolve()
+    manifest_path = root / "bundle_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    source_files = manifest.get("source_files")
+    if not isinstance(source_files, dict) or not source_files:
+        raise ValueError("Source bundle manifest has no source files")
+    for relative, record in source_files.items():
+        relative_path = Path(relative)
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            raise ValueError(f"Unsafe source-bundle path: {relative}")
+        path = (root / relative_path).resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            raise ValueError(f"Missing or unsafe source-bundle file: {relative}")
         if path.stat().st_size != int(record["bytes"]) or sha256_file(path) != record["sha256"]:
             raise ValueError(f"Source-bundle checksum mismatch: {relative}")
     return manifest
+
+
+def find_source_input() -> Path:
+    input_root = Path("/kaggle/input")
+    archives = sorted(input_root.rglob("nec_source_bundle.tar.gz"))
+    manifests = sorted(input_root.rglob("bundle_manifest.json"))
+    if len(archives) + len(manifests) != 1:
+        raise FileNotFoundError(
+            "Expected exactly one packed bundle or extracted bundle manifest; "
+            f"found {len(archives)} archive(s), {len(manifests)} manifest(s)"
+        )
+    return archives[0] if archives else manifests[0]
+
+
+def extract_source(source_input: Path) -> dict:
+    SOURCE.mkdir(parents=True, exist_ok=True)
+    if source_input.name == "bundle_manifest.json":
+        input_root = source_input.parent.resolve()
+        manifest = verify_source_tree(input_root)
+        shutil.copy2(source_input, SOURCE / "bundle_manifest.json")
+        for relative in manifest["source_files"]:
+            source = (input_root / relative).resolve()
+            target = (SOURCE / relative).resolve()
+            if not target.is_relative_to(SOURCE.resolve()):
+                raise ValueError(f"Unsafe source-bundle path: {relative}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    else:
+        with tarfile.open(source_input, "r:gz") as bundle:
+            for member in bundle.getmembers():
+                if not (SOURCE / member.name).resolve().is_relative_to(SOURCE.resolve()):
+                    raise ValueError(f"Unsafe source archive path: {member.name}")
+            bundle.extractall(SOURCE, filter="data")
+        manifest = json.loads((SOURCE / "bundle_manifest.json").read_text())
+    return verify_source_tree(SOURCE)
 
 
 def find_complete_checkpoint() -> Path:
@@ -137,8 +169,8 @@ def main() -> None:
     try:
         if not torch.cuda.is_available() or torch.cuda.device_count() < 1:
             raise RuntimeError("Kaggle evaluation requires CUDA")
-        source_archive = find_source_archive()
-        source_manifest = extract_source(source_archive)
+        source_input = find_source_input()
+        source_manifest = extract_source(source_input)
         source_commit = source_manifest["source_commit"]
         prior = find_complete_checkpoint()
         os.environ["NEC_SOURCE_COMMIT"] = source_commit
@@ -149,7 +181,8 @@ def main() -> None:
             "model_id": MODEL_ID,
             "model_revision": MODEL_REVISION,
             "source_commit": source_commit,
-            "source_bundle_sha256": sha256_file(source_archive),
+            "source_input": str(source_input),
+            "source_bundle_manifest_sha256": sha256_file(SOURCE / "bundle_manifest.json"),
             "checkpoint_manifest_sha256": sha256_file(prior / "model_manifest.json"),
             "checkpoint_source": str(prior),
             "runner_sha256": sha256_file(Path(__file__)),

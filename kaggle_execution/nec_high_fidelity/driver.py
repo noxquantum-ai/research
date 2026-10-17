@@ -78,31 +78,61 @@ def hardware_snapshot() -> dict:
     }
 
 
-def get_source_bundle() -> tuple[Path, str, str]:
-    candidates = sorted(Path("/kaggle/input").rglob("nec_source_bundle.tar.gz"))
-    if len(candidates) != 1:
-        raise FileNotFoundError(
-            f"Expected one source bundle in Kaggle inputs; found {len(candidates)}"
-        )
-    archive = candidates[0]
-    archive_hash = sha256_file(archive)
-    SOURCE.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(archive, "r:gz") as bundle:
-        members = bundle.getmembers()
-        for member in members:
-            target = (SOURCE / member.name).resolve()
-            if not target.is_relative_to(SOURCE.resolve()):
-                raise ValueError(f"Unsafe source archive path: {member.name}")
-        bundle.extractall(SOURCE, filter="data")
-    manifest_path = SOURCE / "bundle_manifest.json"
+def verify_source_tree(root: Path) -> dict:
+    root = root.resolve()
+    manifest_path = root / "bundle_manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    for relative, record in manifest["source_files"].items():
-        path = SOURCE / relative
+    source_files = manifest.get("source_files")
+    if not isinstance(source_files, dict) or not source_files:
+        raise ValueError("Source bundle manifest has no source files")
+    for relative, record in source_files.items():
+        relative_path = Path(relative)
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            raise ValueError(f"Unsafe source-bundle path: {relative}")
+        path = (root / relative_path).resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            raise ValueError(f"Missing or unsafe source-bundle file: {relative}")
         if path.stat().st_size != int(record["bytes"]):
             raise ValueError(f"Source-bundle size mismatch: {relative}")
         if sha256_file(path) != record["sha256"]:
             raise ValueError(f"Source-bundle checksum mismatch: {relative}")
-    return archive, str(manifest["source_commit"]), archive_hash
+    return manifest
+
+
+def get_source_bundle() -> tuple[Path, str, str]:
+    input_root = Path("/kaggle/input")
+    archives = sorted(input_root.rglob("nec_source_bundle.tar.gz"))
+    manifests = sorted(input_root.rglob("bundle_manifest.json"))
+    if len(archives) + len(manifests) != 1:
+        raise FileNotFoundError(
+            "Expected exactly one packed bundle or extracted bundle manifest in "
+            f"Kaggle inputs; found {len(archives)} archive(s), {len(manifests)} manifest(s)"
+        )
+    SOURCE.mkdir(parents=True, exist_ok=True)
+    if archives:
+        source_input = archives[0]
+        with tarfile.open(source_input, "r:gz") as bundle:
+            members = bundle.getmembers()
+            for member in members:
+                target = (SOURCE / member.name).resolve()
+                if not target.is_relative_to(SOURCE.resolve()):
+                    raise ValueError(f"Unsafe source archive path: {member.name}")
+            bundle.extractall(SOURCE, filter="data")
+    else:
+        manifest_path = manifests[0]
+        input_root = manifest_path.parent.resolve()
+        manifest = verify_source_tree(input_root)
+        shutil.copy2(manifest_path, SOURCE / "bundle_manifest.json")
+        for relative in manifest["source_files"]:
+            source = (input_root / relative).resolve()
+            target = (SOURCE / relative).resolve()
+            if not target.is_relative_to(SOURCE.resolve()):
+                raise ValueError(f"Unsafe source-bundle path: {relative}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    manifest = verify_source_tree(SOURCE)
+    manifest_hash = sha256_file(SOURCE / "bundle_manifest.json")
+    return source_input, str(manifest["source_commit"]), manifest_hash
 
 
 def locate_prior_checkpoint() -> tuple[Path | None, dict | None]:
@@ -274,7 +304,7 @@ def main() -> None:
     if not (WORK / "progress.json").exists():
         atomic_json(WORK / "progress.json", {"status": "STARTING", "started_utc": datetime.now(timezone.utc).isoformat()})
     try:
-        archive, source_commit, archive_hash = get_source_bundle()
+        source_input, source_commit, manifest_hash = get_source_bundle()
         run_config = json.loads((SOURCE / "kaggle_execution/nec_high_fidelity/run_config.json").read_text())
         if run_config["model"]["id"] != MODEL_ID or run_config["model"]["revision"] != MODEL_REVISION:
             raise ValueError("Kaggle run configuration does not use the pinned Llama-2-7B snapshot")
@@ -307,8 +337,8 @@ def main() -> None:
         stage = {
             "status": "RUNNING",
             "source_commit": source_commit,
-            "source_bundle": str(archive),
-            "source_bundle_sha256": archive_hash,
+            "source_input": str(source_input),
+            "source_bundle_manifest_sha256": manifest_hash,
             "runner_sha256": sha256_file(Path(__file__)),
             "model_id": MODEL_ID,
             "model_revision": MODEL_REVISION,
