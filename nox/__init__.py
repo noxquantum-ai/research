@@ -28,6 +28,12 @@ from nox.block_compiler import (
     compute_isobyte_multiverse_ranks,
     evaluate_compiled_block,
 )
+from nox.operator_schmidt import (
+    apply_operator_schmidt_artifact,
+    candidate_layouts,
+    nox_operator_schmidt_decompose,
+    operator_schmidt_to_dense,
+)
 
 __all__ = [
     "nox_4step_compiler",
@@ -52,4 +58,8 @@ __all__ = [
     "compile_multiverse_block",
     "compute_isobyte_multiverse_ranks",
     "evaluate_compiled_block",
+    "apply_operator_schmidt_artifact",
+    "candidate_layouts",
+    "nox_operator_schmidt_decompose",
+    "operator_schmidt_to_dense",
 ]

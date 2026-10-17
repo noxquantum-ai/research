@@ -86,10 +86,15 @@ def resume_identity_compatible(previous, current):
         "pees_projections": list(PEES_DEFAULT_PROJECTIONS),
         "pees_tokens": 4096,
         "pees_ridge_ratio": 0.01,
+        "representation": "mpo4",
+        "operator_schmidt_weight_mix": 1.0,
+        "operator_schmidt_activation_mix": 1.0,
     }
-    for key, value in legacy_defaults.items():
-        previous.setdefault(key, value)
+    for identity in (previous, current):
+        for key, value in legacy_defaults.items():
+            identity.setdefault(key, value)
     previous.setdefault("projection_budgets", current.get("projection_budgets"))
+    current.setdefault("projection_budgets", previous.get("projection_budgets"))
     return json.dumps(previous, sort_keys=True) == json.dumps(current, sort_keys=True)
 
 
@@ -152,6 +157,13 @@ def main():
               "the actual compressed prefix toward its corresponding clean dense trajectory."),
     )
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
+    parser.add_argument(
+        "--representation", choices=("mpo4", "operator_schmidt"), default="mpo4",
+        help=("Core tensor-network representation. operator_schmidt screens projection-aware "
+              "two-site MPO cuts at the legacy four-site core coefficient budget."),
+    )
+    parser.add_argument("--operator-schmidt-weight-mix", type=float, default=1.0)
+    parser.add_argument("--operator-schmidt-activation-mix", type=float, default=1.0)
     parser.add_argument("--attention-gauge", choices=("none", "balanced"), default="none",
                         help="Apply an exact paired attention reparameterization before compression")
     parser.add_argument(
@@ -211,6 +223,11 @@ def main():
         raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
     if args.mlp_product_ridge_ratio <= 0:
         raise ValueError("--mlp-product-ridge-ratio must be positive")
+    if (args.operator_schmidt_weight_mix < 0 or args.operator_schmidt_activation_mix < 0
+            or args.operator_schmidt_weight_mix + args.operator_schmidt_activation_mix <= 0):
+        raise ValueError("Operator-Schmidt objective weights must be nonnegative and not both zero")
+    if args.representation == "operator_schmidt" and args.site_order != IDENTITY_SITE_ORDER:
+        raise ValueError("--site-order applies only to the legacy four-site MPO representation")
     if args.defect_bridge_linear_rank < 0 or args.defect_bridge_memory_size < 0:
         raise ValueError("Defect bridge rank and memory size must be nonnegative")
     if args.defect_bridge_mode == "hybrid" and args.defect_bridge_linear_rank == 0:
@@ -253,6 +270,9 @@ def main():
                            seq_len=args.seq_len, rms_norm_eps=config.rms_norm_eps)
     compression = get_tier_config("high_fidelity_10x")
     compression["diagonal_prior_strength"] = args.diagonal_prior_strength
+    compression["representation"] = args.representation
+    compression["operator_schmidt_weight_mix"] = args.operator_schmidt_weight_mix
+    compression["operator_schmidt_activation_mix"] = args.operator_schmidt_activation_mix
     per_projection_budgets = projection_budgets(
         args.budget_allocation, compression["r_bridge"], compression["n_outliers"],
     )
@@ -269,6 +289,8 @@ def main():
         compression_path = f"{compression_path}+hybrid_defect_bridge"
     if args.pees_rank > 0:
         compression_path = f"{compression_path}+pees_propagated_eigenspace"
+    if args.representation == "operator_schmidt":
+        compression_path = f"{compression_path}+operator_schmidt"
     identity = {
         "model_id": args.model_id, "model_revision": args.model_revision,
         "compression_path": compression_path,
@@ -281,6 +303,9 @@ def main():
         "mlp_product_ridge_ratio": args.mlp_product_ridge_ratio,
         "budget_allocation": args.budget_allocation,
         "projection_budgets": per_projection_budgets,
+        "representation": args.representation,
+        "operator_schmidt_weight_mix": args.operator_schmidt_weight_mix,
+        "operator_schmidt_activation_mix": args.operator_schmidt_activation_mix,
         "defect_bridge_mode": args.defect_bridge_mode,
         "defect_bridge_linear_rank": args.defect_bridge_linear_rank,
         "defect_bridge_memory_size": args.defect_bridge_memory_size,
@@ -300,6 +325,7 @@ def main():
             ROOT / "nox/tensor_order.py", ROOT / "nox/allocation.py",
             ROOT / "nox/defect_bridge.py",
             ROOT / "nox/pees.py",
+            ROOT / "nox/operator_schmidt.py",
         ]),
     }
     if args.resume:
@@ -439,6 +465,9 @@ def main():
                 ),
                 mlp_product_ridge_ratio=args.mlp_product_ridge_ratio,
                 projection_budgets=per_projection_budgets,
+                representation=args.representation,
+                operator_schmidt_weight_mix=args.operator_schmidt_weight_mix,
+                operator_schmidt_activation_mix=args.operator_schmidt_activation_mix,
                 verbose=True, site_order=args.site_order, **forward_options,
             )
             artifact = {
@@ -452,6 +481,7 @@ def main():
                 "mlp_product_aware": compiled["mlp_product_aware"],
                 "budget_allocation": args.budget_allocation,
                 "projection_budgets": per_projection_budgets,
+                "representation": args.representation,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),
@@ -634,6 +664,7 @@ def main():
                 "mlp_product_aware": compiled["mlp_product_aware"],
                 "budget_allocation": args.budget_allocation,
                 "projection_budgets": per_projection_budgets,
+                "representation": args.representation,
                 "serialized_bytes": path.stat().st_size,
                 "base_checkpoint_bytes_before_bridge": (
                     baseline_buffer_bytes if args.defect_bridge_mode == "hybrid" else None

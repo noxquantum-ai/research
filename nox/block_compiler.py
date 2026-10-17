@@ -1,9 +1,9 @@
 import gc
 import time
-from functools import partial
 import torch
 import torch.nn.functional as F
 from nox.compiler import nox_hybrid_dmrg_decompose
+from nox.operator_schmidt import nox_operator_schmidt_decompose
 from nox.baselines.multiverse import multiverse_tt_svd
 from nox.utils import compute_metrics, count_parameters, get_modes_for_projection, mpo_to_dense
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
@@ -190,17 +190,34 @@ def compile_attention_block(
     site_order=IDENTITY_SITE_ORDER,
     conditional_context=False,
     projection_budgets=None,
+    representation="mpo4",
+    operator_schmidt_weight_mix=1.0,
+    operator_schmidt_activation_mix=1.0,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
     causal healing where W_o absorbs Q,K,V distortion and inter-layer residual drift.
     """
     site_order = validate_site_order(site_order)
-    compile_projection = partial(
-        nox_hybrid_dmrg_decompose,
-        diagonal_prior_strength=diagonal_prior_strength,
-        site_order=site_order,
-    )
+    if representation not in ("mpo4", "operator_schmidt"):
+        raise ValueError(f"Unknown NEC representation: {representation}")
+
+    def compile_projection(*, projection_name, **kwargs):
+        if representation == "mpo4":
+            return nox_hybrid_dmrg_decompose(
+                diagonal_prior_strength=diagonal_prior_strength,
+                site_order=site_order,
+                **kwargs,
+            )
+        if site_order != IDENTITY_SITE_ORDER:
+            raise ValueError("MPO site order is not applicable to the operator-Schmidt engine")
+        return nox_operator_schmidt_decompose(
+            projection_name=projection_name,
+            n_heads=n_heads,
+            weight_mix=operator_schmidt_weight_mix,
+            activation_mix=operator_schmidt_activation_mix,
+            **kwargs,
+        )
     W_q = weights["q_proj"]
     W_k = weights["k_proj"]
     W_v = weights["v_proj"]
@@ -233,11 +250,13 @@ def compile_attention_block(
     art_q = art_k = art_v = art_o = None
     if return_artifacts:
         W_hat_q, kb_q, cores_q, _, art_q = compile_projection(
+            projection_name="q_proj",
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_q, kb_q, cores_q, _ = compile_projection(
+            projection_name="q_proj",
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, verbose=False,
         )
@@ -247,11 +266,13 @@ def compile_attention_block(
 
     if return_artifacts:
         W_hat_k, kb_k, cores_k, _, art_k = compile_projection(
+            projection_name="k_proj",
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_k, kb_k, cores_k, _ = compile_projection(
+            projection_name="k_proj",
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, verbose=False,
         )
@@ -261,11 +282,13 @@ def compile_attention_block(
 
     if return_artifacts:
         W_hat_v, kb_v, cores_v, _, art_v = compile_projection(
+            projection_name="v_proj",
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_v, kb_v, cores_v, _ = compile_projection(
+            projection_name="v_proj",
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, verbose=False,
         )
@@ -312,11 +335,13 @@ def compile_attention_block(
     gamma_o = 0.002 if causal_healing else 0.01
     if return_artifacts:
         W_hat_o, kb_o, cores_o, _, art_o = compile_projection(
+            projection_name="o_proj",
             W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_target, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_o, kb_o, cores_o, _ = compile_projection(
+            projection_name="o_proj",
             W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_target, o_modes=o_modes, i_modes=i_modes,
             ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, verbose=False,
         )
@@ -367,17 +392,33 @@ def compile_mlp_block(
     product_aware=False,
     product_ridge_ratio=0.05,
     projection_budgets=None,
+    representation="mpo4",
+    operator_schmidt_weight_mix=1.0,
+    operator_schmidt_activation_mix=1.0,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
     causal healing where W_down absorbs non-linear distortion and residual drift.
     """
     site_order = validate_site_order(site_order)
-    compile_projection = partial(
-        nox_hybrid_dmrg_decompose,
-        diagonal_prior_strength=diagonal_prior_strength,
-        site_order=site_order,
-    )
+    if representation not in ("mpo4", "operator_schmidt"):
+        raise ValueError(f"Unknown NEC representation: {representation}")
+
+    def compile_projection(*, projection_name, **kwargs):
+        if representation == "mpo4":
+            return nox_hybrid_dmrg_decompose(
+                diagonal_prior_strength=diagonal_prior_strength,
+                site_order=site_order,
+                **kwargs,
+            )
+        if site_order != IDENTITY_SITE_ORDER:
+            raise ValueError("MPO site order is not applicable to the operator-Schmidt engine")
+        return nox_operator_schmidt_decompose(
+            projection_name=projection_name,
+            weight_mix=operator_schmidt_weight_mix,
+            activation_mix=operator_schmidt_activation_mix,
+            **kwargs,
+        )
     W_gate = weights["gate_proj"]
     W_up = weights["up_proj"]
     W_down = weights["down_proj"]
@@ -408,11 +449,13 @@ def compile_mlp_block(
     art_gate = art_up = art_down = None
     if return_artifacts:
         W_hat_gate, kb_gate, cores_gate, _, art_gate = compile_projection(
+            projection_name="gate_proj",
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_gate, kb_gate, cores_gate, _ = compile_projection(
+            projection_name="gate_proj",
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, verbose=False,
         )
@@ -451,11 +494,13 @@ def compile_mlp_block(
 
     if return_artifacts:
         W_hat_up, kb_up, cores_up, _, art_up = compile_projection(
+            projection_name="up_proj",
             W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_up, kb_up, cores_up, _ = compile_projection(
+            projection_name="up_proj",
             W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
             ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, verbose=False,
         )
@@ -514,11 +559,13 @@ def compile_mlp_block(
     gamma_down = 0.002 if causal_healing else 0.01
     if return_artifacts:
         W_hat_down, kb_down, cores_down, _, art_down = compile_projection(
+            projection_name="down_proj",
             W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_target, o_modes=o_modes_down, i_modes=i_modes_down,
             ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, return_artifacts=True, verbose=False,
         )
     else:
         W_hat_down, kb_down, cores_down, _ = compile_projection(
+            projection_name="down_proj",
             W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_target, o_modes=o_modes_down, i_modes=i_modes_down,
             ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, verbose=False,
         )
@@ -571,6 +618,9 @@ def compile_transformer_block(
     mlp_product_aware=False,
     mlp_product_ridge_ratio=0.05,
     projection_budgets=None,
+    representation="mpo4",
+    operator_schmidt_weight_mix=1.0,
+    operator_schmidt_activation_mix=1.0,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -627,6 +677,9 @@ def compile_transformer_block(
         site_order=site_order,
         conditional_context=trajectory_mode in ("all", "product"),
         projection_budgets=projection_budgets,
+        representation=representation,
+        operator_schmidt_weight_mix=operator_schmidt_weight_mix,
+        operator_schmidt_activation_mix=operator_schmidt_activation_mix,
     )
 
     X_res1_dense = ref_calib_dense + attn_res["Y_attn_dense"]
@@ -659,6 +712,9 @@ def compile_transformer_block(
         product_aware=mlp_product_aware,
         product_ridge_ratio=mlp_product_ridge_ratio,
         projection_budgets=projection_budgets,
+        representation=representation,
+        operator_schmidt_weight_mix=operator_schmidt_weight_mix,
+        operator_schmidt_activation_mix=operator_schmidt_activation_mix,
     )
 
     X_out_dense = X_res1_dense + mlp_res["Y_mlp_dense"]

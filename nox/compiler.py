@@ -219,6 +219,9 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
         artifact = unpack_artifact(artifact)
 
     codec_type = artifact.get("codec_type")
+    if codec_type == "nec_operator_schmidt_v1":
+        from nox.operator_schmidt import reconstruct_operator_schmidt
+        return reconstruct_operator_schmidt(artifact, device=device, dtype=dtype)
     if codec_type == CODEC_TYPE:
         return decode_groupwise(artifact, device=device, dtype=dtype)
     if codec_type == "nec_hybrid_residual_v1":
@@ -232,7 +235,12 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
 
     cores = [c.to(device=device, dtype=dtype) for c in artifact["cores"]]
     d_awt = artifact["d_awt"].to(device=device, dtype=dtype)
-    W_rec = mpo_to_dense(cores) / d_awt.unsqueeze(0)
+    if len(cores) == 1:
+        # A single-site operator is a valid degenerate MPO and is useful for
+        # compact composite-codec controls and tiny layer tests.
+        W_rec = cores[0].squeeze(0).squeeze(-1) / d_awt.unsqueeze(0)
+    else:
+        W_rec = mpo_to_dense(cores) / d_awt.unsqueeze(0)
     if artifact.get("A_bridge") is not None and artifact.get("B_bridge") is not None:
         A_b = artifact["A_bridge"].to(device=device, dtype=dtype)
         B_b = artifact["B_bridge"].to(device=device, dtype=dtype)
