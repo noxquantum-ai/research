@@ -1,0 +1,10 @@
+{
+  "title": "NEC High Fidelity Source 2026-10-17",
+  "id": "toheebogunade/nec-high-fidelity-source-20261017",
+  "description": "Private, commit-pinned NEC source bundle for reproducible Kaggle execution. This private source package does not grant public redistribution rights; source rights remain governed by the repository and upstream model/dataset terms.",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ]
+}
