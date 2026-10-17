@@ -50,13 +50,10 @@ def load_model(checkpoint_dir: Path, offload_folder: Path | None = None):
     gpu_count = torch.cuda.device_count()
     if gpu_count == 0:
         raise RuntimeError("Production NEC evaluation requires CUDA")
-    # Reserve activation memory instead of filling every accelerator with
-    # weights.  On Kaggle T4x2 this places the model across both GPUs; on a
-    # single GPU it uses CPU/disk offload and is expected to be much slower.
-    # Keep several GiB free on each T4 for long-context activations/logits;
-    # A 13 GiB cap can let Accelerate place nearly the entire model on GPU 0.
-    max_memory = {index: "10GiB" for index in range(gpu_count)}
-    max_memory["cpu"] = "24GiB"
+    # Keep the conservative historical T4 defaults; the RunPod runner derives
+    # larger caps from free VRAM/RAM and sets them in this process environment.
+    # Placement changes only; model dtype, logits, and token scoring do not.
+    max_memory = evaluation_memory_budget(gpu_count)
     offload = offload_folder or (checkpoint_dir / "evaluation_offload")
     offload.mkdir(exist_ok=True)
     model = AutoModelForCausalLM.from_pretrained(
@@ -79,6 +76,22 @@ def load_model(checkpoint_dir: Path, offload_folder: Path | None = None):
     if len(injected) != 32 or set(injected) != set(range(32)):
         raise RuntimeError(f"Incomplete NEC injection: {sorted(injected)}")
     return model, tokenizer, sorted(injected), compatibility, reconstruction_diagnostics
+
+
+def evaluation_memory_budget(gpu_count: int) -> dict[int | str, str]:
+    """Return Accelerate placement caps; defaults preserve historical Kaggle limits."""
+    if gpu_count < 1:
+        raise ValueError("Evaluation requires at least one CUDA GPU")
+    gpu_limit = os.environ.get("NEC_EVAL_GPU_MEMORY_GIB", "10")
+    cpu_limit = os.environ.get("NEC_EVAL_CPU_MEMORY_GIB", "24")
+    if not gpu_limit.isdigit() or int(gpu_limit) < 1:
+        raise ValueError("NEC_EVAL_GPU_MEMORY_GIB must be a positive integer")
+    if not cpu_limit.isdigit() or int(cpu_limit) < 1:
+        raise ValueError("NEC_EVAL_CPU_MEMORY_GIB must be a positive integer")
+    return {
+        **{index: f"{gpu_limit}GiB" for index in range(gpu_count)},
+        "cpu": f"{cpu_limit}GiB",
+    }
 
 
 def main() -> None:

@@ -12,6 +12,13 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
     install_pinned_mmlu_loader,
     summarize_mmlu_harness,
 )
+from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget
+from runpod_execution.nec_high_fidelity.runpod_driver import (
+    evaluation_memory_limits,
+    load_config,
+    verify_result,
+    verify_checkpoint_matches_run_config,
+)
 from nox.artifacts import fingerprint
 from nox.evaluation import (
     MMLU_REVISION,
@@ -86,6 +93,107 @@ def tiny_artifact():
 
 
 class ProductionEvaluationTests(unittest.TestCase):
+    def test_evaluation_memory_caps_keep_legacy_default_and_allow_runpod_override(self):
+        import os
+
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(
+                evaluation_memory_budget(2),
+                {0: "10GiB", 1: "10GiB", "cpu": "24GiB"},
+            )
+        with patch.dict(os.environ, {
+            "NEC_EVAL_GPU_MEMORY_GIB": "60",
+            "NEC_EVAL_CPU_MEMORY_GIB": "48",
+        }, clear=True):
+            self.assertEqual(
+                evaluation_memory_budget(1),
+                {0: "60GiB", "cpu": "48GiB"},
+            )
+        with patch.dict(os.environ, {"NEC_EVAL_GPU_MEMORY_GIB": "0"}, clear=True):
+            with self.assertRaisesRegex(ValueError, "positive integer"):
+                evaluation_memory_budget(1)
+
+    def test_runpod_memory_caps_adapt_to_hardware_and_allow_explicit_override(self):
+        gib = 1024**3
+        self.assertEqual(
+            evaluation_memory_limits([24 * gib], 32 * gib, {}),
+            (18, 24),
+        )
+        self.assertEqual(
+            evaluation_memory_limits([80 * gib], 64 * gib, {}),
+            (60, 48),
+        )
+        self.assertEqual(
+            evaluation_memory_limits(
+                [24 * gib], 32 * gib,
+                {"NEC_EVAL_GPU_MEMORY_GIB": "16", "NEC_EVAL_CPU_MEMORY_GIB": "20"},
+            ),
+            (16, 20),
+        )
+        with self.assertRaisesRegex(ValueError, "positive"):
+            evaluation_memory_limits([24 * gib], 32 * gib, {"NEC_EVAL_GPU_MEMORY_GIB": "0"})
+
+    def test_runpod_reuse_requires_same_checkpoint_and_source_commit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = Path(directory) / "result.json"
+            result.write_text(json.dumps({
+                "status": "COMPLETE",
+                "checkpoint_manifest_sha256": "checkpoint-hash",
+                "source_commit": "source-commit",
+            }))
+            self.assertIsNotNone(verify_result(
+                result, "checkpoint-hash", source_commit_hash="source-commit",
+            ))
+            with self.assertRaisesRegex(RuntimeError, "different source commit"):
+                verify_result(result, "checkpoint-hash", source_commit_hash="other-commit")
+            with self.assertRaisesRegex(RuntimeError, "different checkpoint"):
+                verify_result(result, "other-checkpoint")
+
+    def test_runpod_checkpoint_configuration_is_checked_against_pins(self):
+        config = load_config()
+        compression = config["compression"]
+        identity = {
+            "config": {
+                "ranks": compression["ranks"],
+                "r_bridge": compression["bridge_rank"],
+                "n_outliers": compression["sparse_outlier_budget"],
+                "mpo_n_sweeps": compression["mpo_sweeps"],
+                "mpo_alpha_awt": compression["activation_scale_exponent"],
+                "diagonal_prior_strength": compression["diagonal_prior_strength"],
+                "representation": compression["representation"],
+                "epsilon": 0.005,
+            },
+            "attention_gauge": compression["attention_gauge"],
+            "mlp_gauge": compression["mlp_gauge"],
+            "mlp_objective": compression["mlp_objective"],
+            "budget_allocation": compression["budget_allocation"],
+            "defect_bridge_mode": compression["defect_bridge"],
+            "pees_rank": compression["pees_rank"],
+            "mpo_site_order": compression["site_order"],
+            "calibration_activation_mode": "dense",
+            "construction_mode": compression["construction_mode"],
+            "input_data": {
+                "calibration_token_count": config["calibration"]["calibration_tokens"],
+                "heldout_token_count": config["calibration"]["heldout_tokens"],
+                "activation_sequence_length": config["calibration"]["sequence_length"],
+                "calibration_sampling": config["calibration"]["sampling"],
+                "calibration_seed": config["calibration"]["calibration_seed"],
+                "validation_sampling": config["calibration"]["sampling"],
+                "validation_seed": config["calibration"]["heldout_seed"],
+                "tokenizer_model_id": config["model"]["id"],
+                "tokenizer_model_revision": config["model"]["revision"],
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            checkpoint = Path(directory)
+            manifest_path = checkpoint / "model_manifest.json"
+            manifest_path.write_text(json.dumps({"run_identity": identity}))
+            verify_checkpoint_matches_run_config(checkpoint, config)
+            identity["input_data"]["calibration_seed"] = -1
+            manifest_path.write_text(json.dumps({"run_identity": identity}))
+            with self.assertRaisesRegex(RuntimeError, "calibration_seed"):
+                verify_checkpoint_matches_run_config(checkpoint, config)
+
     def test_harness_dataset_loader_forces_pinned_mmlu_revision(self):
         class FakeDatasets:
             def __init__(self):
