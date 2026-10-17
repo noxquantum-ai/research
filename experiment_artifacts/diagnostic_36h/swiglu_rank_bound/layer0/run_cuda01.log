@@ -1,0 +1,1 @@
+{"candidate_origin": "rebuilt_on_cuda_from_saved_calibration_and_seed_0", "candidate_rank": 426, "output": "experiment_artifacts/diagnostic_36h/swiglu_rank_bound/layer0/layer0_rank_bound_cuda_run01.json", "rank_426_tail_errors": {"compressed_trajectory": 0.24142449084371953, "dense_trajectory": 0.24279816228598813}, "runtime_seconds": 75.8605352859995}
