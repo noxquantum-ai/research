@@ -1,0 +1,16 @@
+[{"stream_name":"stdout","time":2.7709122219999998,"data":"{\n"}
+,{"stream_name":"stdout","time":2.7709753470000003,"data":"  \"status\": \"BLOCKED_DEPENDENCY_INSTALL\",\n"}
+,{"stream_name":"stdout","time":2.770983185,"data":"  \"blocker\": \"CalledProcessError: Command '['/usr/bin/python3', '-m', 'pip', 'install', '--disable-pip-version-check', '--no-warn-script-location', '-r', '/kaggle/src/requirements.txt']' returned non-zero exit status 1.\",\n"}
+,{"stream_name":"stdout","time":2.770990786,"data":"  \"model_id\": \"NousResearch/Llama-2-7b-hf\",\n"}
+,{"stream_name":"stdout","time":2.770995246,"data":"  \"model_revision\": \"8efe6c9b93655b934e27bd9981e3ec13e55aee9d\",\n"}
+,{"stream_name":"stdout","time":2.77099924,"data":"  \"dataset_id\": \"Salesforce/wikitext/wikitext-2-raw-v1\",\n"}
+,{"stream_name":"stdout","time":2.771003218,"data":"  \"dataset_revision\": \"b08601e04326c79dfdd32d625aee71d232d685c3\",\n"}
+,{"stream_name":"stdout","time":2.7710071320000003,"data":"  \"timestamp_utc\": \"2026-10-17T12:53:09Z\"\n"}
+,{"stream_name":"stdout","time":2.771011081,"data":"}\n"}
+,{"stream_name":"stderr","time":5.013513904,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":5.013540332,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":5.33633936,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":5.336372122,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":6.325962267,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":7.671636563,"data":"[NbConvertApp] Writing 557447 bytes to __results__.html\n"}
+]

@@ -1,0 +1,42 @@
+{
+  "batch_number": 2,
+  "initial_batch_limit": 2,
+  "prepared_at_utc": "2026-10-17T13:02:00Z",
+  "kernel": "toheebogunade/function-aware-tn-stage-a-and-b-diagnostics",
+  "private": true,
+  "accelerator": "NvidiaTeslaT4",
+  "gpu_quota_before_run": {
+    "used_hours": 0.21,
+    "remaining_hours": 29.79,
+    "total_hours": 30.0,
+    "refresh_at_utc": "2026-10-24T00:00:00Z"
+  },
+  "runtime_cap_seconds": 21600,
+  "runtime_estimate": "3-6 hours if package preflight passes; hard session cap is six hours",
+  "memory_estimate": {
+    "gpu_peak_budget_gb": 14,
+    "accelerator_memory_gb": 16,
+    "cpu_resumable_checkpoints_gb_max": 1.1
+  },
+  "output_estimate_mb_max": 100,
+  "model": {
+    "id": "NousResearch/Llama-2-7b-hf",
+    "revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+  },
+  "dataset": {
+    "id": "Salesforce/wikitext/wikitext-2-raw-v1",
+    "revision": "b08601e04326c79dfdd32d625aee71d232d685c3"
+  },
+  "scope": "Stage A and Stage B diagnostics only; no prefix or full-model run in this submission",
+  "changes_since_first_submission": [
+    "Reuse compatible Kaggle-image Python packages without reinstalling them.",
+    "Include captured pip output tail in any dependency-install blocker.",
+    "Align the metadata kernel id with the title-derived Kaggle URL slug."
+  ],
+  "local_preflight": {
+    "unit_tests_passed": 27,
+    "python_compile_passed": true,
+    "bundle_manifest_verified": true,
+    "metadata_private_and_gpu_verified": true
+  }
+}

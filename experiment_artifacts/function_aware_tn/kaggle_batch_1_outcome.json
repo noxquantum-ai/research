@@ -1,0 +1,15 @@
+{
+  "kernel_url": "https://www.kaggle.com/code/toheebogunade/function-aware-tn-stage-a-and-b-diagnostics",
+  "status": "COMPLETE",
+  "experiment_measurement_status": "BLOCKED_BEFORE_MODEL_OR_DATA_ACCESS",
+  "blocker": "The Kaggle Python 3.13 environment attempted to install all pinned packages even though compatible image packages may already exist; pip returned exit status 1. The original captured error omitted pip's output, so the exact package conflict was not available from this run.",
+  "model_access_attempted": false,
+  "dataset_access_attempted": false,
+  "stage_a_or_stage_b_measurements": false,
+  "gpu_quota_before_hours_remaining": 30.0,
+  "gpu_quota_after_hours_remaining": 29.79,
+  "gpu_quota_hours_used_observed": 0.21,
+  "output_artifact": "kaggle_batch_1_dependency_failure/function_aware_tn/results.json",
+  "execution_logs": "kaggle_batch_1_dependency_failure/function-aware-tn-stage-a-and-b-diagnostics.log",
+  "retry_plan": "Second and final initial batch changes the dependency preflight to reuse sufficient preinstalled packages and to include the pip error tail if installation is required."
+}

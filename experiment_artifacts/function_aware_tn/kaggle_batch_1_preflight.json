@@ -1,0 +1,45 @@
+{
+  "prepared_at_utc": "2026-10-17T12:48:54Z",
+  "kernel": "toheebogunade/function-aware-tn-diagnostics",
+  "private": true,
+  "accelerator": "NvidiaTeslaT4",
+  "kaggle_gpu_quota_before_run": {
+    "used_hours": 0.0,
+    "remaining_hours": 30.0,
+    "weekly_total_hours": 30.0,
+    "refresh_at_utc": "2026-10-24T00:00:00Z"
+  },
+  "runtime_cap_seconds": 21600,
+  "runtime_estimate": "3-6 hours; the hard Kaggle session cap is six hours",
+  "memory_estimate": {
+    "gpu_peak_budget_gb": 14,
+    "accelerator_memory_gb": 16,
+    "cpu_resumable_layer_input_checkpoints_gb_max": 1.1
+  },
+  "artifact_estimate": {
+    "final_output_mb_max": 100,
+    "checkpointed_activations_preserved_only_until_success": true
+  },
+  "model": {
+    "id": "NousResearch/Llama-2-7b-hf",
+    "revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+  },
+  "dataset": {
+    "id": "Salesforce/wikitext/wikitext-2-raw-v1",
+    "revision": "b08601e04326c79dfdd32d625aee71d232d685c3"
+  },
+  "scope": "Stage A and Stage B on layers 0, 15, and 31; no prefix or full-model run in this batch",
+  "cpu_preflight": {
+    "unit_tests_passed": 27,
+    "python_compile_passed": true,
+    "synthetic_cpu_comparison_completed": true,
+    "legacy_parameter_count_recalculation_completed": true
+  },
+  "supported_cli_commands_checked": [
+    "kaggle kernels init",
+    "kaggle kernels push",
+    "kaggle kernels status",
+    "kaggle kernels output",
+    "kaggle quota"
+  ]
+}
