@@ -99,8 +99,7 @@ def verify_source_tree(root: Path) -> dict:
     return manifest
 
 
-def get_source_bundle() -> tuple[Path, str, str]:
-    input_root = Path("/kaggle/input")
+def get_source_bundle(input_root: Path = Path("/kaggle/input")) -> tuple[Path, str, str]:
     archives = sorted(input_root.rglob("nec_source_bundle.tar.gz"))
     manifests = sorted(input_root.rglob("bundle_manifest.json"))
     if len(archives) + len(manifests) != 1:
@@ -120,6 +119,7 @@ def get_source_bundle() -> tuple[Path, str, str]:
             bundle.extractall(SOURCE, filter="data")
     else:
         manifest_path = manifests[0]
+        source_input = manifest_path
         input_root = manifest_path.parent.resolve()
         manifest = verify_source_tree(input_root)
         shutil.copy2(manifest_path, SOURCE / "bundle_manifest.json")

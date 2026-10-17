@@ -59,8 +59,7 @@ def verify_source_tree(root: Path) -> dict:
     return manifest
 
 
-def find_source_input() -> Path:
-    input_root = Path("/kaggle/input")
+def find_source_input(input_root: Path = Path("/kaggle/input")) -> Path:
     archives = sorted(input_root.rglob("nec_source_bundle.tar.gz"))
     manifests = sorted(input_root.rglob("bundle_manifest.json"))
     if len(archives) + len(manifests) != 1:
