@@ -1,0 +1,1427 @@
+{
+  "experiment": "synthetic_cpu_function_aware_swiglu_matched_budget",
+  "status": "COMPLETE",
+  "model_identity": "synthetic; not Llama-2-7B evidence",
+  "code_revision": "c7da5b0a0aef741d8769ebe9b7ee793ef72e3ebd",
+  "seed": 20261017,
+  "device": "cpu",
+  "dtype": "float32",
+  "dimensions": {
+    "d_model": 32,
+    "intermediate": 48
+  },
+  "split_counts": {
+    "fit": 192,
+    "internal_selection": 64,
+    "heldout": 256
+  },
+  "budgets": {
+    "0.75": {
+      "fraction": 0.75,
+      "dense_coefficients": 4608,
+      "coefficient_budget": 3456,
+      "equal_rank": 14,
+      "ranks": [
+        15,
+        14,
+        14
+      ],
+      "coefficient_count": 3440,
+      "actual_fraction": 0.7465277777777778,
+      "parameter_reduction": 0.2534722222222222,
+      "parameter_compression_ratio": 1.3395348837209302,
+      "candidates": {
+        "ordinary_svd": {
+          "ranks": [
+            14,
+            14,
+            15
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 3440,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "balanced",
+          "selected_ridge_ratio": 0.0,
+          "selected_internal_selection_error": 0.7429977059364319,
+          "selection_trials": [
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.7429977059364319
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.7429977059364319
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.7429977059364319
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.7523518800735474
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.7523518800735474
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.7523518800735474
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.7622553706169128
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.7622553706169128
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.7622553706169128
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.7761907577514648
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.7761907577514648
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.7761907577514648
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.795932948589325,
+                "cosine_similarity": 0.621953547000885,
+                "norm_ratio": 0.683046281337738
+              },
+              "residual_block_output": {
+                "relative_error": 0.4356917142868042,
+                "cosine_similarity": 0.9241549968719482,
+                "norm_ratio": 0.9343622922897339
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.7429977059364319,
+                "cosine_similarity": 0.6530857682228088,
+                "norm_ratio": 0.6986563801765442
+              },
+              "residual_block_output": {
+                "relative_error": 0.39945363998413086,
+                "cosine_similarity": 0.9365687966346741,
+                "norm_ratio": 0.9345950484275818
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.7550797462463379,
+                "cosine_similarity": 0.6296541690826416,
+                "norm_ratio": 0.6762307286262512
+              },
+              "residual_block_output": {
+                "relative_error": 0.430918425321579,
+                "cosine_similarity": 0.9263894557952881,
+                "norm_ratio": 0.91535884141922
+              }
+            }
+          }
+        },
+        "activation_weighted_svd": {
+          "ranks": [
+            11,
+            14,
+            18
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 3440,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_down",
+          "selected_ridge_ratio": 0.1,
+          "selected_internal_selection_error": 0.28006404638290405,
+          "selection_trials": [
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.28006404638290405
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.2801065444946289
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.280465692281723
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3321197032928467
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3321910798549652
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.33271533250808716
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.33418869972229004
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.33419132232666016
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.33450743556022644
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.334712415933609
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.3350059390068054
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.3350716829299927
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.2540905177593231,
+                "cosine_similarity": 0.9516849517822266,
+                "norm_ratio": 0.9617355465888977
+              },
+              "residual_block_output": {
+                "relative_error": 0.13908851146697998,
+                "cosine_similarity": 0.9907137751579285,
+                "norm_ratio": 0.9895917773246765
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.28006404638290405,
+                "cosine_similarity": 0.9381422400474548,
+                "norm_ratio": 0.9559626579284668
+              },
+              "residual_block_output": {
+                "relative_error": 0.15056923031806946,
+                "cosine_similarity": 0.9891759753227234,
+                "norm_ratio": 0.9899863004684448
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.29289549589157104,
+                "cosine_similarity": 0.9378730058670044,
+                "norm_ratio": 0.9568279981613159
+              },
+              "residual_block_output": {
+                "relative_error": 0.1671532839536667,
+                "cosine_similarity": 0.9877431988716125,
+                "norm_ratio": 0.9882200956344604
+              }
+            }
+          }
+        },
+        "function_aware": {
+          "ranks": [
+            11,
+            14,
+            18
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 3440,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_down",
+          "selected_ridge_ratio": 0.0,
+          "selected_internal_selection_error": 0.29117247462272644,
+          "selection_trials": [
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.29117247462272644
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.29152849316596985
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3206992447376251
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.3399670124053955
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.3401835262775421
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.3415033221244812
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.34176161885261536
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.3421880602836609
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.3421992063522339
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3634989559650421
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.364691823720932
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.36513689160346985
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.24173419177532196,
+                "cosine_similarity": 0.9532003998756409,
+                "norm_ratio": 0.9703425765037537
+              },
+              "residual_block_output": {
+                "relative_error": 0.1323246955871582,
+                "cosine_similarity": 0.9912295937538147,
+                "norm_ratio": 0.9919935464859009
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.29117247462272644,
+                "cosine_similarity": 0.9339261054992676,
+                "norm_ratio": 0.9632763266563416
+              },
+              "residual_block_output": {
+                "relative_error": 0.15654140710830688,
+                "cosine_similarity": 0.9884544610977173,
+                "norm_ratio": 0.992584228515625
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.30478259921073914,
+                "cosine_similarity": 0.9331499934196472,
+                "norm_ratio": 0.9622734785079956
+              },
+              "residual_block_output": {
+                "relative_error": 0.17393715679645538,
+                "cosine_similarity": 0.9868528842926025,
+                "norm_ratio": 0.9901193380355835
+              }
+            }
+          }
+        },
+        "modegpt_inspired": {
+          "ranks": null,
+          "selected_neuron_count": 36,
+          "coefficient_count": 3456,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "balanced",
+          "selected_ridge_ratio": 0.01,
+          "selected_internal_selection_error": 0.25412166118621826,
+          "selection_trials": [
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.25412166118621826
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.25412166118621826
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.25412166118621826
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.25412166118621826
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.254546195268631
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.254546195268631
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.254546195268631
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.254546195268631
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3003530204296112
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3003530204296112
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3003530204296112
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.3003530204296112
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.19272863864898682,
+                "cosine_similarity": 0.968778133392334,
+                "norm_ratio": 0.9725728631019592
+              },
+              "residual_block_output": {
+                "relative_error": 0.10549917072057724,
+                "cosine_similarity": 0.9943849444389343,
+                "norm_ratio": 0.9929239153862
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.25412166118621826,
+                "cosine_similarity": 0.9587205648422241,
+                "norm_ratio": 0.9661810398101807
+              },
+              "residual_block_output": {
+                "relative_error": 0.13662198185920715,
+                "cosine_similarity": 0.9921356439590454,
+                "norm_ratio": 0.9905979633331299
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.2438666969537735,
+                "cosine_similarity": 0.9593873620033264,
+                "norm_ratio": 0.9853752255439758
+              },
+              "residual_block_output": {
+                "relative_error": 0.13917291164398193,
+                "cosine_similarity": 0.991666316986084,
+                "norm_ratio": 0.9935559034347534
+              }
+            }
+          }
+        }
+      }
+    },
+    "0.5": {
+      "fraction": 0.5,
+      "dense_coefficients": 4608,
+      "coefficient_budget": 2304,
+      "equal_rank": 9,
+      "ranks": [
+        10,
+        9,
+        9
+      ],
+      "coefficient_count": 2240,
+      "actual_fraction": 0.4861111111111111,
+      "parameter_reduction": 0.5138888888888888,
+      "parameter_compression_ratio": 2.057142857142857,
+      "candidates": {
+        "ordinary_svd": {
+          "ranks": [
+            9,
+            9,
+            10
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 2240,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "balanced",
+          "selected_ridge_ratio": 0.0,
+          "selected_internal_selection_error": 0.8640034198760986,
+          "selection_trials": [
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8640034198760986
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8640034198760986
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8640034198760986
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8646194338798523
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8646194338798523
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8646194338798523
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8839963674545288
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8839963674545288
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8839963674545288
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8995937705039978
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8995937705039978
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8995937705039978
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.89967942237854,
+                "cosine_similarity": 0.417151540517807,
+                "norm_ratio": 0.46380671858787537
+              },
+              "residual_block_output": {
+                "relative_error": 0.4924822747707367,
+                "cosine_similarity": 0.8969183564186096,
+                "norm_ratio": 0.8836808800697327
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.8640034198760986,
+                "cosine_similarity": 0.4275950789451599,
+                "norm_ratio": 0.4669455289840698
+              },
+              "residual_block_output": {
+                "relative_error": 0.4645092189311981,
+                "cosine_similarity": 0.9115989208221436,
+                "norm_ratio": 0.8736961483955383
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.8876827359199524,
+                "cosine_similarity": 0.4227355420589447,
+                "norm_ratio": 0.4510861337184906
+              },
+              "residual_block_output": {
+                "relative_error": 0.5065939426422119,
+                "cosine_similarity": 0.8960001468658447,
+                "norm_ratio": 0.8608378767967224
+              }
+            }
+          }
+        },
+        "activation_weighted_svd": {
+          "ranks": [
+            7,
+            9,
+            12
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 2240,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_down",
+          "selected_ridge_ratio": 0.1,
+          "selected_internal_selection_error": 0.49743446707725525,
+          "selection_trials": [
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.49743446707725525
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.4995175302028656
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.4999045431613922
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.5319293737411499
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.5355805158615112
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5361347198486328
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.5539517998695374
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.5566975474357605
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5570439696311951
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5828296542167664
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.5832005143165588
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.5832610726356506
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.48401331901550293,
+                "cosine_similarity": 0.8337230682373047,
+                "norm_ratio": 0.8363282680511475
+              },
+              "residual_block_output": {
+                "relative_error": 0.26494768261909485,
+                "cosine_similarity": 0.9680213332176208,
+                "norm_ratio": 0.9546235799789429
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.49743446707725525,
+                "cosine_similarity": 0.8142955303192139,
+                "norm_ratio": 0.8541510701179504
+              },
+              "residual_block_output": {
+                "relative_error": 0.2674328684806824,
+                "cosine_similarity": 0.967106819152832,
+                "norm_ratio": 0.9636988043785095
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.5255978107452393,
+                "cosine_similarity": 0.8034899830818176,
+                "norm_ratio": 0.824306070804596
+              },
+              "residual_block_output": {
+                "relative_error": 0.29995477199554443,
+                "cosine_similarity": 0.961287796497345,
+                "norm_ratio": 0.9468450546264648
+              }
+            }
+          }
+        },
+        "function_aware": {
+          "ranks": [
+            7,
+            9,
+            12
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 2240,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_down",
+          "selected_ridge_ratio": 0.01,
+          "selected_internal_selection_error": 0.5058062672615051,
+          "selection_trials": [
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.5058062672615051
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.5096110105514526
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5109707713127136
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.537994384765625
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5386250019073486
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.5452830195426941
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.5648905634880066
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5682374835014343
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.569734513759613
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.5735427737236023
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.5740544199943542
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.5840839147567749
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.4352910816669464,
+                "cosine_similarity": 0.8475866317749023,
+                "norm_ratio": 0.8923624753952026
+              },
+              "residual_block_output": {
+                "relative_error": 0.23827724158763885,
+                "cosine_similarity": 0.9725399017333984,
+                "norm_ratio": 0.9682533144950867
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.5058062672615051,
+                "cosine_similarity": 0.8094530701637268,
+                "norm_ratio": 0.9158899188041687
+              },
+              "residual_block_output": {
+                "relative_error": 0.27193376421928406,
+                "cosine_similarity": 0.9660897850990295,
+                "norm_ratio": 0.9804388284683228
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.5404582619667053,
+                "cosine_similarity": 0.795266330242157,
+                "norm_ratio": 0.8767833709716797
+              },
+              "residual_block_output": {
+                "relative_error": 0.3084355294704437,
+                "cosine_similarity": 0.9595505595207214,
+                "norm_ratio": 0.9620385766029358
+              }
+            }
+          }
+        },
+        "modegpt_inspired": {
+          "ranks": null,
+          "selected_neuron_count": 24,
+          "coefficient_count": 2304,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "balanced",
+          "selected_ridge_ratio": 0.01,
+          "selected_internal_selection_error": 0.4265708327293396,
+          "selection_trials": [
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.4265708327293396
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.4265708327293396
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.4265708327293396
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.4265708327293396
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.4288627505302429
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.4288627505302429
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.4288627505302429
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.4288627505302429
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.43929368257522583
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.43929368257522583
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.43929368257522583
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.43929368257522583
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.3734808564186096,
+                "cosine_similarity": 0.8796293139457703,
+                "norm_ratio": 0.9359843134880066
+              },
+              "residual_block_output": {
+                "relative_error": 0.20444248616695404,
+                "cosine_similarity": 0.9789056777954102,
+                "norm_ratio": 0.9818935990333557
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.4265708327293396,
+                "cosine_similarity": 0.8708108067512512,
+                "norm_ratio": 0.9216256737709045
+              },
+              "residual_block_output": {
+                "relative_error": 0.22933484613895416,
+                "cosine_similarity": 0.9757171869277954,
+                "norm_ratio": 0.9808666110038757
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.45979535579681396,
+                "cosine_similarity": 0.8529828190803528,
+                "norm_ratio": 0.9281216859817505
+              },
+              "residual_block_output": {
+                "relative_error": 0.262401819229126,
+                "cosine_similarity": 0.9702192544937134,
+                "norm_ratio": 0.9827573895454407
+              }
+            }
+          }
+        }
+      }
+    },
+    "0.25": {
+      "fraction": 0.25,
+      "dense_coefficients": 4608,
+      "coefficient_budget": 1152,
+      "equal_rank": 4,
+      "ranks": [
+        5,
+        5,
+        4
+      ],
+      "coefficient_count": 1120,
+      "actual_fraction": 0.24305555555555555,
+      "parameter_reduction": 0.7569444444444444,
+      "parameter_compression_ratio": 4.114285714285714,
+      "candidates": {
+        "ordinary_svd": {
+          "ranks": [
+            3,
+            5,
+            6
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 1120,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_up",
+          "selected_ridge_ratio": 0.0,
+          "selected_internal_selection_error": 0.9814869165420532,
+          "selection_trials": [
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.9814869165420532
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.9814869165420532
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.9814869165420532
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.9861289858818054
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.9861289858818054
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.9861289858818054
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.9867660403251648
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.9867660403251648
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.9867660403251648
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.987318754196167
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.987318754196167
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.987318754196167
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.9841447472572327,
+                "cosine_similarity": 0.1589588224887848,
+                "norm_ratio": 0.17527322471141815
+              },
+              "residual_block_output": {
+                "relative_error": 0.5387183427810669,
+                "cosine_similarity": 0.875278651714325,
+                "norm_ratio": 0.8490660786628723
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.9814869165420532,
+                "cosine_similarity": 0.14549614489078522,
+                "norm_ratio": 0.15142768621444702
+              },
+              "residual_block_output": {
+                "relative_error": 0.527671217918396,
+                "cosine_similarity": 0.8844038248062134,
+                "norm_ratio": 0.8371954560279846
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.9881010055541992,
+                "cosine_similarity": 0.13940495252609253,
+                "norm_ratio": 0.16765189170837402
+              },
+              "residual_block_output": {
+                "relative_error": 0.5639019012451172,
+                "cosine_similarity": 0.869693398475647,
+                "norm_ratio": 0.8318190574645996
+              }
+            }
+          }
+        },
+        "activation_weighted_svd": {
+          "ranks": [
+            5,
+            3,
+            6
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 1120,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_gate",
+          "selected_ridge_ratio": 0.1,
+          "selected_internal_selection_error": 0.8221521377563477,
+          "selection_trials": [
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8221521377563477
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.823047935962677
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8231421709060669
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8338140845298767
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8349347114562988
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8350872993469238
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8603973984718323
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8610143065452576
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8611030578613281
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.868838369846344
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8691384196281433
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8691838383674622
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.8061138987541199,
+                "cosine_similarity": 0.4818306267261505,
+                "norm_ratio": 0.5397592782974243
+              },
+              "residual_block_output": {
+                "relative_error": 0.4412647485733032,
+                "cosine_similarity": 0.9134241938591003,
+                "norm_ratio": 0.88873291015625
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.8221521377563477,
+                "cosine_similarity": 0.4837254285812378,
+                "norm_ratio": 0.4780997037887573
+              },
+              "residual_block_output": {
+                "relative_error": 0.4420090317726135,
+                "cosine_similarity": 0.9157251715660095,
+                "norm_ratio": 0.8745726943016052
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.8575760722160339,
+                "cosine_similarity": 0.4303048253059387,
+                "norm_ratio": 0.48904702067375183
+              },
+              "residual_block_output": {
+                "relative_error": 0.4894123077392578,
+                "cosine_similarity": 0.9005993604660034,
+                "norm_ratio": 0.8652363419532776
+              }
+            }
+          }
+        },
+        "function_aware": {
+          "ranks": [
+            5,
+            3,
+            6
+          ],
+          "selected_neuron_count": null,
+          "coefficient_count": 1120,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "more_gate",
+          "selected_ridge_ratio": 0.01,
+          "selected_internal_selection_error": 0.8314722180366516,
+          "selection_trials": [
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8314722180366516
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8359619975090027
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8413740992546082
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8475757837295532
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8504757285118103
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.852205216884613
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8527211546897888
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.8541674613952637
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.8626996278762817
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8716659545898438
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.8833585381507874
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.9026675820350647
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.7210254073143005,
+                "cosine_similarity": 0.5407567620277405,
+                "norm_ratio": 0.6800886392593384
+              },
+              "residual_block_output": {
+                "relative_error": 0.3946875333786011,
+                "cosine_similarity": 0.9268279671669006,
+                "norm_ratio": 0.9206981658935547
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.8314722180366516,
+                "cosine_similarity": 0.4861356317996979,
+                "norm_ratio": 0.596829354763031
+              },
+              "residual_block_output": {
+                "relative_error": 0.44701966643333435,
+                "cosine_similarity": 0.9151260852813721,
+                "norm_ratio": 0.9012133479118347
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.852687418460846,
+                "cosine_similarity": 0.444668710231781,
+                "norm_ratio": 0.6401870250701904
+              },
+              "residual_block_output": {
+                "relative_error": 0.4866223931312561,
+                "cosine_similarity": 0.9019135236740112,
+                "norm_ratio": 0.9026404619216919
+              }
+            }
+          }
+        },
+        "modegpt_inspired": {
+          "ranks": null,
+          "selected_neuron_count": 12,
+          "coefficient_count": 1152,
+          "dense_residual": false,
+          "uses_gradients": false,
+          "selected_allocation": "balanced",
+          "selected_ridge_ratio": 0.1,
+          "selected_internal_selection_error": 0.6403602957725525,
+          "selection_trials": [
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.6403602957725525
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.6403602957725525
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.6403602957725525
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.1,
+              "relative_error": 0.6403602957725525
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.6446031332015991
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.6446031332015991
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.6446031332015991
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.01,
+              "relative_error": 0.6446031332015991
+            },
+            {
+              "allocation": "balanced",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.6467974781990051
+            },
+            {
+              "allocation": "more_gate",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.6467974781990051
+            },
+            {
+              "allocation": "more_up",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.6467974781990051
+            },
+            {
+              "allocation": "more_down",
+              "ridge_ratio": 0.0,
+              "relative_error": 0.6467974781990051
+            }
+          ],
+          "metrics": {
+            "fit": {
+              "mlp_output": {
+                "relative_error": 0.588876485824585,
+                "cosine_similarity": 0.7145686149597168,
+                "norm_ratio": 0.7764594554901123
+              },
+              "residual_block_output": {
+                "relative_error": 0.32234951853752136,
+                "cosine_similarity": 0.9512982964515686,
+                "norm_ratio": 0.9354245662689209
+              }
+            },
+            "internal_selection": {
+              "mlp_output": {
+                "relative_error": 0.6403602957725525,
+                "cosine_similarity": 0.6989377737045288,
+                "norm_ratio": 0.7320746183395386
+              },
+              "residual_block_output": {
+                "relative_error": 0.34427326917648315,
+                "cosine_similarity": 0.948017954826355,
+                "norm_ratio": 0.931613564491272
+              }
+            },
+            "heldout": {
+              "mlp_output": {
+                "relative_error": 0.6929455995559692,
+                "cosine_similarity": 0.6592473387718201,
+                "norm_ratio": 0.7189236879348755
+              },
+              "residual_block_output": {
+                "relative_error": 0.3954589366912842,
+                "cosine_similarity": 0.9362486600875854,
+                "norm_ratio": 0.9104781746864319
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

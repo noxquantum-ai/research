@@ -1,0 +1,9 @@
+{
+  "blocker": "CalledProcessError: Command '['/usr/bin/python3', '-m', 'pip', 'install', '--disable-pip-version-check', '--no-warn-script-location', '-r', '/kaggle/src/requirements.txt']' returned non-zero exit status 1.",
+  "dataset_id": "Salesforce/wikitext/wikitext-2-raw-v1",
+  "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "status": "BLOCKED_DEPENDENCY_INSTALL",
+  "timestamp_utc": "2026-10-17T12:53:09Z"
+}

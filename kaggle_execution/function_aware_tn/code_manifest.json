@@ -1,0 +1,159 @@
+{
+  "base_commit": "c7da5b0a0aef741d8769ebe9b7ee793ef72e3ebd",
+  "branch": "experiment",
+  "bundle_sha256": "e27a14b77cdc053aabd0a35d2c61053707590cebf6f7e36b2b9823acc0114e99",
+  "files": [
+    {
+      "path": "driver.py",
+      "sha256": "6b8842e4d214c231eea2c4381fbc48ccf48cd87f5c61d632e180f62c4670331d"
+    },
+    {
+      "path": "kernel-metadata.json",
+      "sha256": "5393b62d0d2dc5ba53b8c53b7f5d0dee341e67e03f20397cfa6625c1adea0ede"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "46680589e30b31c9895c20339e69af1667678ac5d01ee410813f38e38c1389b9"
+    },
+    {
+      "path": "README.md",
+      "sha256": "419a22cd7fb434631cbeb42ceb091eb90ac11f8d9d7f8c4f730cb2f357ac7ddd"
+    },
+    {
+      "path": "benchmarks/__init__.py",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "benchmarks/benchmark_day3_cascade.py",
+      "sha256": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232"
+    },
+    {
+      "path": "nox/__init__.py",
+      "sha256": "03ccc1abfcb009cd2be9743b76e170547760ee0767cdf1cd68078b254aa91cc3"
+    },
+    {
+      "path": "nox/allocation.py",
+      "sha256": "a0347af520bffd08038cb6b5d312a168b07bd1cdb84d9c0ac4e6b5b3190e8a19"
+    },
+    {
+      "path": "nox/artifacts.py",
+      "sha256": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd"
+    },
+    {
+      "path": "nox/baselines/__init__.py",
+      "sha256": "75fc518f0f63ef8062eccfc8f2bb9f2d35045f1a060ab1ff7fb06b5b168f13ae"
+    },
+    {
+      "path": "nox/baselines/awt.py",
+      "sha256": "231b4c77567d54e0987c45a04325340cdcbc754134ea23a3c5721fdfc5f1929d"
+    },
+    {
+      "path": "nox/baselines/multiverse.py",
+      "sha256": "d1a8057e671038ac8c3df009b786afb42f24a6f4c05a64b54ff74da65c538893"
+    },
+    {
+      "path": "nox/block_compiler.py",
+      "sha256": "5ddb0b9afdb8a8deef8dca1299023d04df48793dbb85c64dd72c65640e34adc5"
+    },
+    {
+      "path": "nox/block_distillation.py",
+      "sha256": "18cae3709a8318fda1b5cffd06ff471eacb8d780b4b472206303a2743cac12ca"
+    },
+    {
+      "path": "nox/compiler.py",
+      "sha256": "9b78738cc1b75e51e816cab486b2330db20f2910341b2ae98f2e4069ce55013b"
+    },
+    {
+      "path": "nox/data.py",
+      "sha256": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10"
+    },
+    {
+      "path": "nox/defect_bridge.py",
+      "sha256": "83e8b805c345155c2e795496bd5eb7d1e56de87627380816176983da8f006ea1"
+    },
+    {
+      "path": "nox/function_aware_attention.py",
+      "sha256": "17a7c8285fb6c7ee27597d7e9a7a6da421aecd8a43f327facf0b3f3a03558f1d"
+    },
+    {
+      "path": "nox/function_aware_benchmarks.py",
+      "sha256": "9fff00d4925f223cc44aa5f5e3553bd0df491240691ffc06e511f38b963b940b"
+    },
+    {
+      "path": "nox/function_aware_tn.py",
+      "sha256": "87748991cdbd859a44e83270acb17796321cd04af70c5f12bdaa5243996eb3a7"
+    },
+    {
+      "path": "nox/gauge.py",
+      "sha256": "1da89bbf64106ec6148f5361c9a524c26595412c62697d6cb593a1b932f417bb"
+    },
+    {
+      "path": "nox/grouped_swiglu_tn.py",
+      "sha256": "1504debbe32593dc22ec964b4ce76d7ebdf60262cde77f10ff70c15475750268"
+    },
+    {
+      "path": "nox/joint_quant_mpo.py",
+      "sha256": "1306ed50aecc6ebe5dfdccbb445532ba9d49be4208a7c723c4c0529b5eb0968f"
+    },
+    {
+      "path": "nox/joint_swiglu.py",
+      "sha256": "bfbb0fdefbb9a0305e695f59d9f458561acab34ae4c703d42772996da6e8f8af"
+    },
+    {
+      "path": "nox/mlp_gauge.py",
+      "sha256": "62c7e40387b9e56dc649e7e2b88a8d2ff3a8993a9b57f943eb872e60e3675ea7"
+    },
+    {
+      "path": "nox/mmlu.py",
+      "sha256": "1f382196612851382defa2d44f20e1be6a2546484ac00f1bc81244559cc4d9f1"
+    },
+    {
+      "path": "nox/native_swiglu.py",
+      "sha256": "c8d2eeedabbec4ae64cd0f48c7be9fa07bf1fbd7f479f74e0d05911d5b77f5bf"
+    },
+    {
+      "path": "nox/operator_schmidt.py",
+      "sha256": "c63eebdef1b962a0584e4c8b9449d2a9bbd658ac790d392ab1e8ab2ca9320d11"
+    },
+    {
+      "path": "nox/packing.py",
+      "sha256": "33b94441e293eacbd1dca5c2369ad8af10de03a3ee585b5c7d24030f3bb1266d"
+    },
+    {
+      "path": "nox/pees.py",
+      "sha256": "60458fb103e3d31935f27b0422b9ce2fdf2e2845a1fa5599e80e3fc6d4b48b29"
+    },
+    {
+      "path": "nox/representation_symmetries.py",
+      "sha256": "b416d647421767b165890ea20912b2a36f6f9cb03b6ea7c071b72d1047234f34"
+    },
+    {
+      "path": "nox/residual_codec.py",
+      "sha256": "685261e0d9d3b2f74d48a0dae12c37bee7420d95ade7e56d4c943495818eef60"
+    },
+    {
+      "path": "nox/sequential_compiler.py",
+      "sha256": "89628a70d04605feb8122497aa6cf99a092056ed62b1f0dde9c327f1d1b01e23"
+    },
+    {
+      "path": "nox/spectra.py",
+      "sha256": "a8d062234df88c6142ee2bdf9d4899ea4016559d4929493d4cea8af4f9ce0891"
+    },
+    {
+      "path": "nox/swiglu_rank_bound.py",
+      "sha256": "ea786737dfd074799277f15320c192db4b668e3344c741c1865d7906da2a4aab"
+    },
+    {
+      "path": "nox/swiglu_readout.py",
+      "sha256": "b85b8a45d3fb20c293428d6c07462b31a49a82a992c1ba9d418fc77173f75b4c"
+    },
+    {
+      "path": "nox/tensor_order.py",
+      "sha256": "7956132f6005c91921cf888c382c67e617255af4e41b5cc2a34c43f034c2cee6"
+    },
+    {
+      "path": "nox/utils.py",
+      "sha256": "ac86fdedbde87fe03d3c6534c73978424b7a4c6218b939f2249989c34c0a91a4"
+    }
+  ]
+}

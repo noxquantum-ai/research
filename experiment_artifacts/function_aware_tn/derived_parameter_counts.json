@@ -1,0 +1,500 @@
+{
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "dense": {
+    "projection_coefficients_per_layer": 202375168,
+    "norm_coefficients_per_layer": 8192,
+    "final_norm_coefficients": 4096,
+    "embedding_coefficients": 131072000,
+    "lm_head_coefficients": 131072000,
+    "layers": 32,
+    "total_coefficients": 6738415616
+  },
+  "legacy_nec_config_derived": {
+    "high_fidelity_10x": {
+      "tier": "high_fidelity_10x",
+      "configuration": {
+        "ranks": [
+          1,
+          64,
+          128,
+          64,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 524288,
+        "epsilon": 0.005,
+        "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+      },
+      "boundary_configuration": {
+        "ranks": [
+          1,
+          64,
+          128,
+          64,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 524288,
+        "epsilon": 0.005,
+        "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+      },
+      "interior_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "k_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "v_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "o_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3534336
+          },
+          "up_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3534336
+          },
+          "down_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 3541248
+          }
+        },
+        "tt_core_coefficients": 7444992,
+        "bridge_coefficients": 9994240,
+        "sparse_value_coefficients": 3670016,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 21144832,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 21153024
+      },
+      "boundary_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "k_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "v_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "o_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3534336
+          },
+          "up_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3534336
+          },
+          "down_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 3541248
+          }
+        },
+        "tt_core_coefficients": 7444992,
+        "bridge_coefficients": 9994240,
+        "sparse_value_coefficients": 3670016,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 21144832,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 21153024
+      },
+      "whole_model_coefficients": 939044864,
+      "dense_whole_model_coefficients": 6738415616,
+      "parameter_compression_ratio": 7.175818615626867,
+      "parameter_reduction_fraction": 0.860643077317717,
+      "assumptions": [
+        "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
+        "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
+        "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here."
+      ]
+    },
+    "production_18x": {
+      "tier": "production_18x",
+      "configuration": {
+        "ranks": [
+          1,
+          40,
+          80,
+          40,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 262144,
+        "epsilon": 0.015,
+        "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)"
+      },
+      "boundary_configuration": {
+        "ranks": [
+          1,
+          64,
+          128,
+          64,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 524288,
+        "epsilon": 0.005,
+        "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+      },
+      "interior_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "k_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "v_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "o_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 424640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2624192
+          },
+          "up_proj": {
+            "tt_core_coefficients": 424640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2624192
+          },
+          "down_proj": {
+            "tt_core_coefficients": 424640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 2631104
+          }
+        },
+        "tt_core_coefficients": 2932800,
+        "bridge_coefficients": 9994240,
+        "sparse_value_coefficients": 1835008,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 14797632,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 14805824
+      },
+      "boundary_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "k_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "v_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "o_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3534336
+          },
+          "up_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3534336
+          },
+          "down_proj": {
+            "tt_core_coefficients": 1072640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 3541248
+          }
+        },
+        "tt_core_coefficients": 7444992,
+        "bridge_coefficients": 9994240,
+        "sparse_value_coefficients": 3670016,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 21144832,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 21153024
+      },
+      "whole_model_coefficients": 761323264,
+      "dense_whole_model_coefficients": 6738415616,
+      "parameter_compression_ratio": 8.850925664081638,
+      "parameter_reduction_fraction": 0.8870174671042435,
+      "assumptions": [
+        "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
+        "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
+        "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here."
+      ]
+    },
+    "extreme_77x": {
+      "tier": "extreme_77x",
+      "configuration": {
+        "ranks": [
+          1,
+          32,
+          80,
+          32,
+          1
+        ],
+        "r_bridge": 96,
+        "n_outliers": 65536,
+        "epsilon": 0.03,
+        "description": "Extreme Stress-Test Tier (~77x compression, ~5.0 MB/layer, eps=0.030)"
+      },
+      "boundary_configuration": {
+        "ranks": [
+          1,
+          40,
+          80,
+          40,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 262144,
+        "epsilon": 0.015,
+        "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)"
+      },
+      "interior_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_coefficients": 786432,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "k_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_coefficients": 786432,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "v_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_coefficients": 786432,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "o_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_coefficients": 786432,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 339712,
+            "bridge_coefficients": 1449984,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1859328
+          },
+          "up_proj": {
+            "tt_core_coefficients": 339712,
+            "bridge_coefficients": 1449984,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1859328
+          },
+          "down_proj": {
+            "tt_core_coefficients": 339712,
+            "bridge_coefficients": 1449984,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 1866240
+          }
+        },
+        "tt_core_coefficients": 2346240,
+        "bridge_coefficients": 7495680,
+        "sparse_value_coefficients": 458752,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 10336256,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 10344448
+      },
+      "boundary_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "k_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "v_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "o_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_coefficients": 1048576,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 424640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2624192
+          },
+          "up_proj": {
+            "tt_core_coefficients": 424640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2624192
+          },
+          "down_proj": {
+            "tt_core_coefficients": 424640,
+            "bridge_coefficients": 1933312,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 2631104
+          }
+        },
+        "tt_core_coefficients": 2932800,
+        "bridge_coefficients": 9994240,
+        "sparse_value_coefficients": 1835008,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 14797632,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 14805824
+      },
+      "whole_model_coefficients": 611015936,
+      "dense_whole_model_coefficients": 6738415616,
+      "parameter_compression_ratio": 11.028215827090964,
+      "parameter_reduction_fraction": 0.9093235011284884,
+      "assumptions": [
+        "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
+        "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
+        "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here."
+      ]
+    }
+  },
+  "grouped_swiglu_0875": {
+    "rank": 2612,
+    "dense_mlp_coefficients_per_layer": 135266304,
+    "grouped_mlp_coefficients_per_layer": 118354944,
+    "mlp_retained_fraction": 0.874977289244186,
+    "whole_model_dense_coefficients": 6738415616,
+    "whole_model_compressed_coefficients": 6197252096,
+    "whole_model_parameter_compression_ratio": 1.0873231412272695,
+    "whole_model_parameter_reduction_fraction": 0.08031020210671436,
+    "assumption": "Attention, embeddings, output head, and norms remain dense; factor coefficients are counted once as stored."
+  }
+}
