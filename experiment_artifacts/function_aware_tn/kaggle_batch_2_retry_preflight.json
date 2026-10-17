@@ -5,6 +5,9 @@
   "kernel": "toheebogunade/function-aware-tn-stage-a-and-b-diagnostics",
   "private": true,
   "accelerator": "NvidiaTeslaT4",
+  "submitted_bundle_sha256": "78885cf291d0dec80d5e1de8a0183fbdd376c9a6ef36cfa5cc12a1b6bb2ffdc5",
+  "submitted_code_manifest_base_commit": "c7da5b0a0aef741d8769ebe9b7ee793ef72e3ebd",
+  "local_bundle_after_submission": "The committed bundle strips only trailing whitespace in copied Python files; the Kaggle submission remains identified by submitted_bundle_sha256.",
   "gpu_quota_before_run": {
     "used_hours": 0.21,
     "remaining_hours": 29.79,
