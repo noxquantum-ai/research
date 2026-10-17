@@ -10,6 +10,7 @@ import argparse
 import io
 import json
 import sys
+import time
 from pathlib import Path
 
 import torch
@@ -147,6 +148,7 @@ def _projection_component_ablation(weight, artifact, train_input, valid_input, *
 
 def _layer_restoration_ablation(
     dense, compressed, validation_input, options, *, operator_schmidt_artifacts=None,
+    include_individual=True, individual_projections=(), projection_sets=(),
 ):
     dense_result = forward_details(dense, validation_input, **options)
     compressed_result = forward_details(compressed, validation_input, **options)
@@ -185,11 +187,35 @@ def _layer_restoration_ablation(
                 dense_result["mlp_output"], outputs["mlp_output"]
             ),
         }
-    for group, names in RESTORE_GROUPS.items():
+    groups = {name: RESTORE_GROUPS[name] for name in ("attention", "mlp")}
+    if include_individual:
+        groups.update({
+            name.removesuffix("_proj"): RESTORE_GROUPS[name.removesuffix("_proj")]
+            for name in individual_projections
+        })
+    for group, names in groups.items():
         variant = dict(compressed)
         variant.update({name: dense[name] for name in names})
         outputs = forward_details(variant, validation_input, **options)
         result[f"restore_dense_{group}"] = {
+            "restored_projections": list(names),
+            "block_output": _metrics(dense_result["output"], outputs["output"]),
+            "active_transform": _metrics(
+                dense_result["active_transform"], outputs["active_transform"]
+            ),
+            "attention_output": _metrics(
+                dense_result["attention_output"], outputs["attention_output"]
+            ),
+            "mlp_output": _metrics(
+                dense_result["mlp_output"], outputs["mlp_output"]
+            ),
+        }
+    for names in projection_sets:
+        variant = dict(compressed)
+        variant.update({name: dense[name] for name in names})
+        outputs = forward_details(variant, validation_input, **options)
+        set_name = "_".join(name.removesuffix("_proj") for name in names)
+        result[f"restore_dense_set_{set_name}"] = {
             "restored_projections": list(names),
             "block_output": _metrics(dense_result["output"], outputs["output"]),
             "active_transform": _metrics(
@@ -225,12 +251,33 @@ def main():
     parser.add_argument("--rms-norm-eps", type=float)
     parser.add_argument("--weight-mix", type=float, default=1.0)
     parser.add_argument("--activation-mix", type=float, default=1.0)
+    parser.add_argument(
+        "--analysis-only", action="store_true",
+        help="Measure saved NEC components and block restoration without fitting candidates.",
+    )
+    parser.add_argument(
+        "--skip-projection-components", action="store_true",
+        help="Skip per-projection component and cut-spectrum calculations; retain block ablations.",
+    )
+    parser.add_argument(
+        "--restore-individual-projections", action="store_true",
+        help="Include individual dense-projection restoration after the attention/MLP group checks.",
+    )
+    parser.add_argument(
+        "--restore-projection-set", default="",
+        help="Optional comma-separated projection set to restore jointly, e.g. gate_proj,up_proj.",
+    )
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
     selected = tuple(name.strip() for name in args.projections.split(",") if name.strip())
     if not selected or set(selected) - set(PROJECTIONS) or len(set(selected)) != len(selected):
         raise ValueError(f"projections must be unique names from {PROJECTIONS}")
+    projection_set = tuple(
+        name.strip() for name in args.restore_projection_set.split(",") if name.strip()
+    )
+    if set(projection_set) - set(PROJECTIONS) or len(set(projection_set)) != len(projection_set):
+        raise ValueError(f"restore-projection-set must be unique names from {PROJECTIONS}")
 
     checkpoint_path = args.checkpoint_dir / f"compressed_layer_{args.layer}.pt"
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
@@ -261,12 +308,6 @@ def main():
         valid_layer_input = payload["X_test"]
     valid_layer_input = valid_layer_input.to(device=device, dtype=torch.float32)
 
-    train_contexts = projection_inputs(
-        dense, train_layer_input, epsilon, args.seq_len, args.n_heads, args.n_kv_heads,
-    )
-    valid_contexts = projection_inputs(
-        dense, valid_layer_input, epsilon, args.seq_len, args.n_heads, args.n_kv_heads,
-    )
     compressed = dict(dense)
     compressed.update({
         name: reconstruct_from_artifact(artifact, device=device, dtype=torch.float32)
@@ -281,6 +322,8 @@ def main():
         "rms_norm_eps": epsilon,
         "calibration_tokens": int(train_layer_input.shape[1]),
         "heldout_tokens": int(valid_layer_input.shape[1]),
+        "analysis_only": args.analysis_only,
+        "projection_components_skipped": args.skip_projection_components,
         "objective": {
             "weight_mix": args.weight_mix,
             "activation_mix": args.activation_mix,
@@ -290,98 +333,120 @@ def main():
         "projections": {},
     }
     candidate_artifacts = {}
+    runtime = {"projection_component_seconds": {}, "candidate_fit_seconds": {},
+               "block_restoration_seconds": 0.0}
+    peak_cuda_bytes = 0
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+        torch.cuda.reset_peak_memory_stats(device)
+    diagnostic_start = time.perf_counter()
 
-    for name in selected:
-        weight = dense[name]
-        artifact = checkpoint["compressed_artifacts"][name]
-        train_input = train_contexts[name].float()
-        valid_input = valid_contexts[name].float()
-        baseline = _projection_component_ablation(
-            weight, artifact, train_input, valid_input, device=device,
+    if not args.skip_projection_components:
+        train_contexts = projection_inputs(
+            dense, train_layer_input, epsilon, args.seq_len, args.n_heads, args.n_kv_heads,
         )
-        o_modes, i_modes = get_modes_for_projection(*weight.shape)
-        ranks = tuple(int(value) for value in artifact["ranks"])
-        bridge_rank = 0 if artifact.get("A_bridge") is None else artifact["A_bridge"].shape[1]
-        sparse_count = (
-            0 if artifact.get("sparse_values") is None else int(artifact["sparse_values"].numel())
+        valid_contexts = projection_inputs(
+            dense, valid_layer_input, epsilon, args.seq_len, args.n_heads, args.n_kv_heads,
         )
-        fit = nox_operator_schmidt_decompose(
-            W=weight,
-            X_calib=train_input,
-            Y_dense=weight @ train_input,
-            o_modes=o_modes,
-            i_modes=i_modes,
-            ranks=ranks,
-            r_bridge=bridge_rank,
-            n_outliers=sparse_count,
-            return_artifacts=True,
-            verbose=True,
-            projection_name=name,
-            n_heads=args.n_heads,
-            weight_mix=args.weight_mix,
-            activation_mix=args.activation_mix,
-        )
-        candidate_artifact = fit[4]
-        candidate_artifacts[name] = candidate_artifact
-        candidate = reconstruct_from_artifact(
-            candidate_artifact, device=device, dtype=torch.float32,
-        )
-        report["projections"][name] = {
-            "original_nec": baseline,
-            "original_nec_tensor_cut_spectrum": _legacy_cut_spectrum(
-                weight, artifact, name, device=device,
-            ),
-            "original_core_coefficients": sum(core.numel() for core in artifact["cores"]),
-            "candidate_operator_schmidt": {
-                "selected_layout": candidate_artifact["selected_layout"],
-                "layout_candidates": candidate_artifact["layout_candidates"],
-                "core_coefficients": candidate_artifact["core_coefficient_count"],
-                "core_coefficient_budget": four_site_parameter_count(o_modes, i_modes, ranks),
-                "payload_bytes": candidate_artifact["payload_bytes"],
-                "serialized_artifact_bytes": _serialized_bytes(candidate_artifact),
-                "joint_component_gains": candidate_artifact["component_gains"],
-                "joint_gain_condition": candidate_artifact["joint_gain_diagnostics"],
-                "mixed_objective": candidate_artifact["objective"],
-                "relative_weight_error": float(
-                    torch.linalg.vector_norm(weight - candidate)
-                    / torch.linalg.vector_norm(weight).clamp_min(1e-30)
+        for name in selected:
+            weight = dense[name]
+            artifact = checkpoint["compressed_artifacts"][name]
+            train_input = train_contexts[name].float()
+            valid_input = valid_contexts[name].float()
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+                torch.cuda.reset_peak_memory_stats(device)
+            component_start = time.perf_counter()
+            baseline = _projection_component_ablation(
+                weight, artifact, train_input, valid_input, device=device,
+            )
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+                peak_cuda_bytes = max(peak_cuda_bytes, torch.cuda.max_memory_allocated(device))
+            runtime["projection_component_seconds"][name] = time.perf_counter() - component_start
+            projection_record = {
+                "original_nec": baseline,
+                "original_nec_tensor_cut_spectrum": _legacy_cut_spectrum(
+                    weight, artifact, name, device=device,
                 ),
-                "train_output": _metrics(weight @ train_input, candidate @ train_input),
-                "heldout_output": _metrics(weight @ valid_input, candidate @ valid_input),
-            },
-        }
-        del fit, candidate, candidate_artifact
-        if device.type == "cuda":
-            torch.cuda.empty_cache()
+                "original_core_coefficients": sum(core.numel() for core in artifact["cores"]),
+                "original_serialized_artifact_bytes": _serialized_bytes(artifact),
+            }
+            if not args.analysis_only:
+                o_modes, i_modes = get_modes_for_projection(*weight.shape)
+                ranks = tuple(int(value) for value in artifact["ranks"])
+                bridge_rank = 0 if artifact.get("A_bridge") is None else artifact["A_bridge"].shape[1]
+                sparse_count = (
+                    0 if artifact.get("sparse_values") is None else int(artifact["sparse_values"].numel())
+                )
+                if device.type == "cuda":
+                    torch.cuda.reset_peak_memory_stats(device)
+                fit_start = time.perf_counter()
+                fit = nox_operator_schmidt_decompose(
+                    W=weight,
+                    X_calib=train_input,
+                    Y_dense=weight @ train_input,
+                    o_modes=o_modes,
+                    i_modes=i_modes,
+                    ranks=ranks,
+                    r_bridge=bridge_rank,
+                    n_outliers=sparse_count,
+                    return_artifacts=True,
+                    verbose=True,
+                    projection_name=name,
+                    n_heads=args.n_heads,
+                    weight_mix=args.weight_mix,
+                    activation_mix=args.activation_mix,
+                )
+                candidate_artifact = fit[4]
+                candidate_artifacts[name] = candidate_artifact
+                candidate = reconstruct_from_artifact(
+                    candidate_artifact, device=device, dtype=torch.float32,
+                )
+                candidate_components = _projection_component_ablation(
+                    weight, candidate_artifact, train_input, valid_input, device=device,
+                )
+                if device.type == "cuda":
+                    torch.cuda.synchronize(device)
+                    peak_cuda_bytes = max(peak_cuda_bytes, torch.cuda.max_memory_allocated(device))
+                runtime["candidate_fit_seconds"][name] = time.perf_counter() - fit_start
+                full_heldout_error = candidate_components["full"]["heldout_output"]["relative_error"]
+                bridge_sparse_heldout_error = candidate_components["bridge_plus_sparse"][
+                    "heldout_output"]["relative_error"]
+                projection_record["candidate_operator_schmidt"] = {
+                    "selected_layout": candidate_artifact["selected_layout"],
+                    "layout_candidates": candidate_artifact["layout_candidates"],
+                    "core_coefficients": candidate_artifact["core_coefficient_count"],
+                    "core_coefficient_budget": four_site_parameter_count(o_modes, i_modes, ranks),
+                    "payload_bytes": candidate_artifact["payload_bytes"],
+                    "serialized_artifact_bytes": _serialized_bytes(candidate_artifact),
+                    "joint_component_gains": candidate_artifact["component_gains"],
+                    "joint_gain_condition": candidate_artifact["joint_gain_diagnostics"],
+                    "mixed_objective": candidate_artifact["objective"],
+                    "relative_weight_error": float(
+                        torch.linalg.vector_norm(weight - candidate)
+                        / torch.linalg.vector_norm(weight).clamp_min(1e-30)
+                    ),
+                    "train_output": _metrics(weight @ train_input, candidate @ train_input),
+                    "heldout_output": _metrics(weight @ valid_input, candidate @ valid_input),
+                    "component_ablation": candidate_components,
+                    "mpo_incremental_heldout_relative_error_reduction": (
+                        bridge_sparse_heldout_error - full_heldout_error
+                    ),
+                    "runtime_seconds": runtime["candidate_fit_seconds"][name],
+                    "peak_cuda_memory_bytes": (
+                        int(torch.cuda.max_memory_allocated(device)) if device.type == "cuda" else None
+                    ),
+                }
+                del fit, candidate, candidate_artifact
+                if device.type == "cuda":
+                    torch.cuda.empty_cache()
+            report["projections"][name] = projection_record
 
-    candidate_checkpoint = dict(checkpoint)
-    candidate_checkpoint["representation"] = "operator_schmidt"
-    candidate_layer_artifacts = dict(checkpoint["compressed_artifacts"])
-    candidate_layer_artifacts.update(candidate_artifacts)
-    candidate_checkpoint["compressed_artifacts"] = candidate_layer_artifacts
-    candidate_checkpoint["total_kb"] = sum(
-        float(artifact.get("total_kb", 0.0))
-        for artifact in candidate_layer_artifacts.values()
-    )
-    candidate_checkpoint_bytes = _serialized_bytes(candidate_checkpoint)
-    report["storage_comparison"] = {
-        "original_layer_checkpoint_bytes": checkpoint_path.stat().st_size,
-        "candidate_layer_checkpoint_serialized_bytes": candidate_checkpoint_bytes,
-        "candidate_to_original_layer_bytes_ratio": (
-            candidate_checkpoint_bytes / checkpoint_path.stat().st_size
-        ),
-        "candidate_projection_payload_bytes": sum(
-            int(artifact["payload_bytes"])
-            for artifact in candidate_artifacts.values()
-        ),
-        "candidate_projection_serialized_artifact_bytes": sum(
-            _serialized_bytes(artifact) for artifact in candidate_artifacts.values()
-        ),
-        "replaced_projections": list(candidate_artifacts),
-        "whole_model_size_included": False,
-        "note": "Layer-only comparison; unchanged embeddings, output head, and other layers are excluded.",
-    }
-
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+        torch.cuda.reset_peak_memory_stats(device)
+    block_start = time.perf_counter()
     report["block_restoration_ablation"] = _layer_restoration_ablation(
         dense, compressed, valid_layer_input, {
             "n_heads": args.n_heads,
@@ -390,7 +455,46 @@ def main():
             "rms_norm_eps": epsilon,
         },
         operator_schmidt_artifacts=candidate_artifacts,
+        include_individual=args.restore_individual_projections,
+        individual_projections=selected,
+        projection_sets=(projection_set,) if projection_set else (),
     )
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+        peak_cuda_bytes = max(peak_cuda_bytes, torch.cuda.max_memory_allocated(device))
+    runtime["block_restoration_seconds"] = time.perf_counter() - block_start
+    runtime["total_seconds"] = time.perf_counter() - diagnostic_start
+    report["runtime_seconds"] = runtime
+    report["peak_cuda_memory_bytes"] = int(peak_cuda_bytes) if device.type == "cuda" else None
+
+    if candidate_artifacts:
+        candidate_checkpoint = dict(checkpoint)
+        candidate_checkpoint["representation"] = "operator_schmidt"
+        candidate_layer_artifacts = dict(checkpoint["compressed_artifacts"])
+        candidate_layer_artifacts.update(candidate_artifacts)
+        candidate_checkpoint["compressed_artifacts"] = candidate_layer_artifacts
+        candidate_checkpoint["total_kb"] = sum(
+            float(artifact.get("total_kb", 0.0))
+            for artifact in candidate_layer_artifacts.values()
+        )
+        candidate_checkpoint_bytes = _serialized_bytes(candidate_checkpoint)
+        report["storage_comparison"] = {
+            "original_layer_checkpoint_bytes": checkpoint_path.stat().st_size,
+            "candidate_layer_checkpoint_serialized_bytes": candidate_checkpoint_bytes,
+            "candidate_to_original_layer_bytes_ratio": (
+                candidate_checkpoint_bytes / checkpoint_path.stat().st_size
+            ),
+            "candidate_projection_payload_bytes": sum(
+                int(artifact["payload_bytes"])
+                for artifact in candidate_artifacts.values()
+            ),
+            "candidate_projection_serialized_artifact_bytes": sum(
+                _serialized_bytes(artifact) for artifact in candidate_artifacts.values()
+            ),
+            "replaced_projections": list(candidate_artifacts),
+            "whole_model_size_included": False,
+            "note": "Layer-only comparison; unchanged embeddings, output head, and other layers are excluded.",
+        }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(f"results={args.output}", flush=True)

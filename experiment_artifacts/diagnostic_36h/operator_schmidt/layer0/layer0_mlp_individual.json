@@ -1,0 +1,640 @@
+{
+  "diagnostic": "saved_nec_component_and_operator_schmidt_comparison",
+  "layer": 0,
+  "checkpoint": "checkpoints/diagnostic_36h/operator_schmidt/layer0_initial/compressed_layer_0.pt",
+  "checkpoint_bytes": 65739309,
+  "device": "cuda",
+  "rms_norm_eps": 1e-05,
+  "calibration_tokens": 4096,
+  "heldout_tokens": 4096,
+  "analysis_only": true,
+  "projection_components_skipped": false,
+  "objective": {
+    "weight_mix": 1.0,
+    "activation_mix": 1.0,
+    "formula": "weight_mix*||W-W_hat||^2/||W||^2 + activation_mix*||(W-W_hat)X||^2/||WX||^2"
+  },
+  "block_restoration_ablation": {
+    "compressed_baseline": {
+      "block_output": {
+        "relative_error": 0.3637403957679531,
+        "angular_drift": 0.06273496150970459,
+        "norm_ratio": 0.8334730669367149,
+        "cosine_similarity": 0.9372650384902954
+      },
+      "active_transform": {
+        "relative_error": 0.43083554404866625,
+        "angular_drift": 0.09570646286010742,
+        "norm_ratio": 0.8462749414611705,
+        "cosine_similarity": 0.9042935371398926
+      },
+      "attention_output": {
+        "relative_error": 0.25408211481959964,
+        "angular_drift": 0.03281593322753906,
+        "norm_ratio": 0.9688309165052199,
+        "cosine_similarity": 0.9671840667724609
+      },
+      "mlp_output": {
+        "relative_error": 0.672311955768209,
+        "angular_drift": 0.252311110496521,
+        "norm_ratio": 0.6426080637774998,
+        "cosine_similarity": 0.747688889503479
+      }
+    },
+    "restore_dense_attention": {
+      "restored_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj"
+      ],
+      "block_output": {
+        "relative_error": 0.34305277691098196,
+        "angular_drift": 0.054067373275756836,
+        "norm_ratio": 0.8342458801156347,
+        "cosine_similarity": 0.9459326267242432
+      },
+      "active_transform": {
+        "relative_error": 0.40633194294383995,
+        "angular_drift": 0.08388328552246094,
+        "norm_ratio": 0.8499699469170306,
+        "cosine_similarity": 0.9161167144775391
+      },
+      "attention_output": {
+        "relative_error": 0.0,
+        "angular_drift": -1.1920928955078125e-07,
+        "norm_ratio": 1.0,
+        "cosine_similarity": 1.0000001192092896
+      },
+      "mlp_output": {
+        "relative_error": 0.6622819336161734,
+        "angular_drift": 0.23791837692260742,
+        "norm_ratio": 0.6228491730410611,
+        "cosine_similarity": 0.7620816230773926
+      }
+    },
+    "restore_dense_mlp": {
+      "restored_projections": [
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "block_output": {
+        "relative_error": 0.18758750522528955,
+        "angular_drift": 0.01765352487564087,
+        "norm_ratio": 0.9684264661724966,
+        "cosine_similarity": 0.9823464751243591
+      },
+      "active_transform": {
+        "relative_error": 0.2221897054923375,
+        "angular_drift": 0.024831771850585938,
+        "norm_ratio": 0.957246098521252,
+        "cosine_similarity": 0.9751682281494141
+      },
+      "attention_output": {
+        "relative_error": 0.25408211481959964,
+        "angular_drift": 0.03281593322753906,
+        "norm_ratio": 0.9688309165052199,
+        "cosine_similarity": 0.9671840667724609
+      },
+      "mlp_output": {
+        "relative_error": 0.29958141984216813,
+        "angular_drift": 0.04547321796417236,
+        "norm_ratio": 0.9250273675222683,
+        "cosine_similarity": 0.9545267820358276
+      }
+    },
+    "restore_dense_gate": {
+      "restored_projections": [
+        "gate_proj"
+      ],
+      "block_output": {
+        "relative_error": 0.3555282401219894,
+        "angular_drift": 0.06055271625518799,
+        "norm_ratio": 0.844781362049375,
+        "cosine_similarity": 0.939447283744812
+      },
+      "active_transform": {
+        "relative_error": 0.42110861739987693,
+        "angular_drift": 0.09169900417327881,
+        "norm_ratio": 0.8598937057428354,
+        "cosine_similarity": 0.9083009958267212
+      },
+      "attention_output": {
+        "relative_error": 0.25408211481959964,
+        "angular_drift": 0.03281593322753906,
+        "norm_ratio": 0.9688309165052199,
+        "cosine_similarity": 0.9671840667724609
+      },
+      "mlp_output": {
+        "relative_error": 0.6562673302540061,
+        "angular_drift": 0.24073415994644165,
+        "norm_ratio": 0.6745825706932332,
+        "cosine_similarity": 0.7592658400535583
+      }
+    },
+    "restore_dense_up": {
+      "restored_projections": [
+        "up_proj"
+      ],
+      "block_output": {
+        "relative_error": 0.3491600675902403,
+        "angular_drift": 0.05913501977920532,
+        "norm_ratio": 0.8563672010691987,
+        "cosine_similarity": 0.9408649802207947
+      },
+      "active_transform": {
+        "relative_error": 0.4135657782451347,
+        "angular_drift": 0.0888068675994873,
+        "norm_ratio": 0.8750048379919517,
+        "cosine_similarity": 0.9111931324005127
+      },
+      "attention_output": {
+        "relative_error": 0.25408211481959964,
+        "angular_drift": 0.03281593322753906,
+        "norm_ratio": 0.9688309165052199,
+        "cosine_similarity": 0.9671840667724609
+      },
+      "mlp_output": {
+        "relative_error": 0.6439851636260044,
+        "angular_drift": 0.232416033744812,
+        "norm_ratio": 0.7051185422053216,
+        "cosine_similarity": 0.767583966255188
+      }
+    },
+    "restore_dense_down": {
+      "restored_projections": [
+        "down_proj"
+      ],
+      "block_output": {
+        "relative_error": 0.36415264914893714,
+        "angular_drift": 0.059821248054504395,
+        "norm_ratio": 0.8115573427849785,
+        "cosine_similarity": 0.9401787519454956
+      },
+      "active_transform": {
+        "relative_error": 0.4313238761370811,
+        "angular_drift": 0.09342741966247559,
+        "norm_ratio": 0.8176114343838946,
+        "cosine_similarity": 0.9065725803375244
+      },
+      "attention_output": {
+        "relative_error": 0.25408211481959964,
+        "angular_drift": 0.03281593322753906,
+        "norm_ratio": 0.9688309165052199,
+        "cosine_similarity": 0.9671840667724609
+      },
+      "mlp_output": {
+        "relative_error": 0.672132366171357,
+        "angular_drift": 0.2416154146194458,
+        "norm_ratio": 0.5943450645880407,
+        "cosine_similarity": 0.7583845853805542
+      }
+    }
+  },
+  "projections": {
+    "gate_proj": {
+      "original_nec": {
+        "full": {
+          "relative_weight_error": 0.9665590524673462,
+          "train_output": {
+            "relative_error": 0.6282729403590208,
+            "angular_drift": 0.2213955521583557,
+            "norm_ratio": 0.7477528347844948,
+            "cosine_similarity": 0.7786044478416443
+          },
+          "heldout_output": {
+            "relative_error": 0.6377176763841353,
+            "angular_drift": 0.22945940494537354,
+            "norm_ratio": 0.7501313210535047,
+            "cosine_similarity": 0.7705405950546265
+          },
+          "saved_checkpoint_reconstruction_difference": 0.0
+        },
+        "core_only": {
+          "relative_weight_error": 1.032961130142212,
+          "train_output": {
+            "relative_error": 1.001542127190639,
+            "angular_drift": 0.9452625662088394,
+            "norm_ratio": 0.13272927911805263,
+            "cosine_similarity": 0.054737433791160583
+          },
+          "heldout_output": {
+            "relative_error": 1.002098025938369,
+            "angular_drift": 0.9470692127943039,
+            "norm_ratio": 0.13660885026127836,
+            "cosine_similarity": 0.052930787205696106
+          }
+        },
+        "bridge_only": {
+          "relative_weight_error": 0.9647783041000366,
+          "train_output": {
+            "relative_error": 0.8850917193921537,
+            "angular_drift": 0.5209470391273499,
+            "norm_ratio": 0.36556665539963146,
+            "cosine_similarity": 0.47905296087265015
+          },
+          "heldout_output": {
+            "relative_error": 0.8985640925666217,
+            "angular_drift": 0.5514934659004211,
+            "norm_ratio": 0.3559026667593041,
+            "cosine_similarity": 0.44850653409957886
+          }
+        },
+        "sparse_only": {
+          "relative_weight_error": 0.9622074365615845,
+          "train_output": {
+            "relative_error": 0.7144352863662025,
+            "angular_drift": 0.2819651961326599,
+            "norm_ratio": 0.5568151278495145,
+            "cosine_similarity": 0.7180348038673401
+          },
+          "heldout_output": {
+            "relative_error": 0.710438027581395,
+            "angular_drift": 0.28102898597717285,
+            "norm_ratio": 0.5718605281116934,
+            "cosine_similarity": 0.7189710140228271
+          }
+        },
+        "core_plus_bridge": {
+          "relative_weight_error": 0.9993394613265991,
+          "train_output": {
+            "relative_error": 0.8871493273247374,
+            "angular_drift": 0.5318936109542847,
+            "norm_ratio": 0.38963586635119074,
+            "cosine_similarity": 0.46810638904571533
+          },
+          "heldout_output": {
+            "relative_error": 0.9011403356864528,
+            "angular_drift": 0.5629672110080719,
+            "norm_ratio": 0.381791695024987,
+            "cosine_similarity": 0.4370327889919281
+          }
+        },
+        "core_plus_sparse": {
+          "relative_weight_error": 0.9965139627456665,
+          "train_output": {
+            "relative_error": 0.7175859812251699,
+            "angular_drift": 0.2903844118118286,
+            "norm_ratio": 0.5736597528369981,
+            "cosine_similarity": 0.7096155881881714
+          },
+          "heldout_output": {
+            "relative_error": 0.714295911182607,
+            "angular_drift": 0.2897369861602783,
+            "norm_ratio": 0.5890521506177311,
+            "cosine_similarity": 0.7102630138397217
+          }
+        },
+        "bridge_plus_sparse": {
+          "relative_weight_error": 0.9306803941726685,
+          "train_output": {
+            "relative_error": 0.6242234457990078,
+            "angular_drift": 0.21726852655410767,
+            "norm_ratio": 0.7345283030349639,
+            "cosine_similarity": 0.7827314734458923
+          },
+          "heldout_output": {
+            "relative_error": 0.6330491682846306,
+            "angular_drift": 0.22492337226867676,
+            "norm_ratio": 0.7364121164022449,
+            "cosine_similarity": 0.7750766277313232
+          }
+        }
+      },
+      "original_nec_tensor_cut_spectrum": [
+        {
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            344,
+            131072
+          ],
+          "bond_rank": 64,
+          "retained_squared_spectral_energy": 0.1886783391237259,
+          "discarded_squared_spectral_energy": 0.8113216757774353
+        },
+        {
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            2048,
+            4096
+          ],
+          "bond_rank": 128,
+          "retained_squared_spectral_energy": 0.12584294378757477,
+          "discarded_squared_spectral_energy": 0.8741570711135864
+        },
+        {
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            8192,
+            64
+          ],
+          "bond_rank": 64,
+          "retained_squared_spectral_energy": 1.0000067949295044,
+          "discarded_squared_spectral_energy": -6.794929504394531e-06
+        }
+      ],
+      "original_core_coefficients": 812544,
+      "original_serialized_artifact_bytes": 10741513
+    },
+    "up_proj": {
+      "original_nec": {
+        "full": {
+          "relative_weight_error": 0.9775755405426025,
+          "train_output": {
+            "relative_error": 0.7328820546042155,
+            "angular_drift": 0.3192299008369446,
+            "norm_ratio": 0.6570207981650935,
+            "cosine_similarity": 0.6807700991630554
+          },
+          "heldout_output": {
+            "relative_error": 0.7504636818056201,
+            "angular_drift": 0.33902066946029663,
+            "norm_ratio": 0.6515247380547244,
+            "cosine_similarity": 0.6609793305397034
+          },
+          "saved_checkpoint_reconstruction_difference": 0.0
+        },
+        "core_only": {
+          "relative_weight_error": 1.0371894836425781,
+          "train_output": {
+            "relative_error": 1.0038334177605512,
+            "angular_drift": 0.9408930689096451,
+            "norm_ratio": 0.1648196663380018,
+            "cosine_similarity": 0.05910693109035492
+          },
+          "heldout_output": {
+            "relative_error": 1.0045208537055257,
+            "angular_drift": 0.9410199038684368,
+            "norm_ratio": 0.17096551876241572,
+            "cosine_similarity": 0.05898009613156319
+          }
+        },
+        "bridge_only": {
+          "relative_weight_error": 0.9679950475692749,
+          "train_output": {
+            "relative_error": 0.8872801166562461,
+            "angular_drift": 0.5346603393554688,
+            "norm_ratio": 0.40363883662840744,
+            "cosine_similarity": 0.46533966064453125
+          },
+          "heldout_output": {
+            "relative_error": 0.902580673891246,
+            "angular_drift": 0.5679646730422974,
+            "norm_ratio": 0.39589077408416745,
+            "cosine_similarity": 0.43203532695770264
+          }
+        },
+        "sparse_only": {
+          "relative_weight_error": 0.9665820002555847,
+          "train_output": {
+            "relative_error": 0.8167149686815518,
+            "angular_drift": 0.38792622089385986,
+            "norm_ratio": 0.40797195234647854,
+            "cosine_similarity": 0.6120737791061401
+          },
+          "heldout_output": {
+            "relative_error": 0.8205563704043224,
+            "angular_drift": 0.3989719748497009,
+            "norm_ratio": 0.41515873208751275,
+            "cosine_similarity": 0.6010280251502991
+          }
+        },
+        "core_plus_bridge": {
+          "relative_weight_error": 1.006771206855774,
+          "train_output": {
+            "relative_error": 0.8916578739785911,
+            "angular_drift": 0.5469743013381958,
+            "norm_ratio": 0.43611468277435,
+            "cosine_similarity": 0.4530256986618042
+          },
+          "heldout_output": {
+            "relative_error": 0.9076066854466615,
+            "angular_drift": 0.5800265073776245,
+            "norm_ratio": 0.4312709285450301,
+            "cosine_similarity": 0.4199734926223755
+          }
+        },
+        "core_plus_sparse": {
+          "relative_weight_error": 1.0050829648971558,
+          "train_output": {
+            "relative_error": 0.8223443654023462,
+            "angular_drift": 0.4126882553100586,
+            "norm_ratio": 0.4417601544914322,
+            "cosine_similarity": 0.5873117446899414
+          },
+          "heldout_output": {
+            "relative_error": 0.8270392763037823,
+            "angular_drift": 0.42410045862197876,
+            "norm_ratio": 0.4507827558552176,
+            "cosine_similarity": 0.5758995413780212
+          }
+        },
+        "bridge_plus_sparse": {
+          "relative_weight_error": 0.9375132918357849,
+          "train_output": {
+            "relative_error": 0.7264867512894643,
+            "angular_drift": 0.3106507658958435,
+            "norm_ratio": 0.6347118513378993,
+            "cosine_similarity": 0.6893492341041565
+          },
+          "heldout_output": {
+            "relative_error": 0.743289063655647,
+            "angular_drift": 0.3296506404876709,
+            "norm_ratio": 0.6273756361357569,
+            "cosine_similarity": 0.6703493595123291
+          }
+        }
+      },
+      "original_nec_tensor_cut_spectrum": [
+        {
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            344,
+            131072
+          ],
+          "bond_rank": 64,
+          "retained_squared_spectral_energy": 0.1882493793964386,
+          "discarded_squared_spectral_energy": 0.8117506504058838
+        },
+        {
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            2048,
+            4096
+          ],
+          "bond_rank": 128,
+          "retained_squared_spectral_energy": 0.124323770403862,
+          "discarded_squared_spectral_energy": 0.8756762146949768
+        },
+        {
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            8192,
+            64
+          ],
+          "bond_rank": 64,
+          "retained_squared_spectral_energy": 1.000005841255188,
+          "discarded_squared_spectral_energy": -5.841255187988281e-06
+        }
+      ],
+      "original_core_coefficients": 812544,
+      "original_serialized_artifact_bytes": 10736521
+    },
+    "down_proj": {
+      "original_nec": {
+        "full": {
+          "relative_weight_error": 1.103379487991333,
+          "train_output": {
+            "relative_error": 0.6169592300821384,
+            "angular_drift": 0.2105116844177246,
+            "norm_ratio": 0.852181117207143,
+            "cosine_similarity": 0.7894883155822754
+          },
+          "heldout_output": {
+            "relative_error": 0.6136157103160607,
+            "angular_drift": 0.20748615264892578,
+            "norm_ratio": 0.8603544257526048,
+            "cosine_similarity": 0.7925138473510742
+          },
+          "saved_checkpoint_reconstruction_difference": 0.0
+        },
+        "core_only": {
+          "relative_weight_error": 1.1185462474822998,
+          "train_output": {
+            "relative_error": 1.0171048625952297,
+            "angular_drift": 0.9718293659389019,
+            "norm_ratio": 0.21604180684234459,
+            "cosine_similarity": 0.0281706340610981
+          },
+          "heldout_output": {
+            "relative_error": 1.0173092545360716,
+            "angular_drift": 0.972239637747407,
+            "norm_ratio": 0.21667456444124877,
+            "cosine_similarity": 0.02776036225259304
+          }
+        },
+        "bridge_only": {
+          "relative_weight_error": 0.9911491870880127,
+          "train_output": {
+            "relative_error": 0.8520112240145697,
+            "angular_drift": 0.40611904859542847,
+            "norm_ratio": 0.31349271888762786,
+            "cosine_similarity": 0.5938809514045715
+          },
+          "heldout_output": {
+            "relative_error": 0.8500577471485194,
+            "angular_drift": 0.399289071559906,
+            "norm_ratio": 0.3118308795673403,
+            "cosine_similarity": 0.600710928440094
+          }
+        },
+        "sparse_only": {
+          "relative_weight_error": 0.9883826971054077,
+          "train_output": {
+            "relative_error": 0.6492516544197854,
+            "angular_drift": 0.22311532497406006,
+            "norm_ratio": 0.6185263080093492,
+            "cosine_similarity": 0.7768846750259399
+          },
+          "heldout_output": {
+            "relative_error": 0.6419078348462146,
+            "angular_drift": 0.21681815385818481,
+            "norm_ratio": 0.6237474051860759,
+            "cosine_similarity": 0.7831818461418152
+          }
+        },
+        "core_plus_bridge": {
+          "relative_weight_error": 1.1116526126861572,
+          "train_output": {
+            "relative_error": 0.8729443009245733,
+            "angular_drift": 0.49778324365615845,
+            "norm_ratio": 0.3828295012599791,
+            "cosine_similarity": 0.5022167563438416
+          },
+          "heldout_output": {
+            "relative_error": 0.8710946792944546,
+            "angular_drift": 0.4931085705757141,
+            "norm_ratio": 0.381413380357022,
+            "cosine_similarity": 0.5068914294242859
+          }
+        },
+        "core_plus_sparse": {
+          "relative_weight_error": 1.1082326173782349,
+          "train_output": {
+            "relative_error": 0.676763230710383,
+            "angular_drift": 0.2589842677116394,
+            "norm_ratio": 0.656679220551253,
+            "cosine_similarity": 0.7410157322883606
+          },
+          "heldout_output": {
+            "relative_error": 0.6701010146016473,
+            "angular_drift": 0.25284767150878906,
+            "norm_ratio": 0.6618764930516495,
+            "cosine_similarity": 0.7471523284912109
+          }
+        },
+        "bridge_plus_sparse": {
+          "relative_weight_error": 0.9817931056022644,
+          "train_output": {
+            "relative_error": 0.5852787406072474,
+            "angular_drift": 0.18908965587615967,
+            "norm_ratio": 0.8221636305838799,
+            "cosine_similarity": 0.8109103441238403
+          },
+          "heldout_output": {
+            "relative_error": 0.5815881221713842,
+            "angular_drift": 0.1863400936126709,
+            "norm_ratio": 0.8306023400979153,
+            "cosine_similarity": 0.8136599063873291
+          }
+        }
+      },
+      "original_nec_tensor_cut_spectrum": [
+        {
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            344,
+            131072
+          ],
+          "bond_rank": 64,
+          "retained_squared_spectral_energy": 0.1889665126800537,
+          "discarded_squared_spectral_energy": 0.8110334873199463
+        },
+        {
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            2048,
+            4096
+          ],
+          "bond_rank": 128,
+          "retained_squared_spectral_energy": 0.12471071630716324,
+          "discarded_squared_spectral_energy": 0.875289261341095
+        },
+        {
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            8192,
+            64
+          ],
+          "bond_rank": 64,
+          "retained_squared_spectral_energy": 1.0000066757202148,
+          "discarded_squared_spectral_energy": -6.67572021484375e-06
+        }
+      ],
+      "original_core_coefficients": 812544,
+      "original_serialized_artifact_bytes": 8892745
+    }
+  },
+  "runtime_seconds": {
+    "projection_component_seconds": {
+      "gate_proj": 0.7943491380000296,
+      "up_proj": 0.7636090159999185,
+      "down_proj": 0.7617959140000039
+    },
+    "candidate_fit_seconds": {},
+    "block_restoration_seconds": 0.9367101200000434,
+    "total_seconds": 3.715129610999952
+  },
+  "peak_cuda_memory_bytes": 8045232128
+}
