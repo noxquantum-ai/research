@@ -59,15 +59,33 @@ def verify_source_tree(root: Path) -> dict:
     return manifest
 
 
+def choose_extracted_source_manifest(manifests: list[Path]) -> Path:
+    if not manifests:
+        raise FileNotFoundError("No extracted source bundle manifest found in Kaggle inputs")
+    by_hash: dict[str, list[Path]] = {}
+    for path in manifests:
+        verify_source_tree(path.parent)
+        by_hash.setdefault(sha256_file(path), []).append(path)
+    if len(by_hash) != 1:
+        raise ValueError("Kaggle inputs contain conflicting verified NEC source bundles")
+    identical = next(iter(by_hash.values()))
+    return sorted(
+        identical,
+        key=lambda path: ("datasets" not in path.parts, len(str(path)), str(path)),
+    )[0]
+
+
 def find_source_input(input_root: Path = Path("/kaggle/input")) -> Path:
     archives = sorted(input_root.rglob("nec_source_bundle.tar.gz"))
     manifests = sorted(input_root.rglob("bundle_manifest.json"))
-    if len(archives) + len(manifests) != 1:
+    if len(archives) > 1 or (archives and manifests):
         raise FileNotFoundError(
-            "Expected exactly one packed bundle or extracted bundle manifest; "
+            "Expected a single packed bundle or extracted bundles, not mixed inputs; "
             f"found {len(archives)} archive(s), {len(manifests)} manifest(s)"
         )
-    return archives[0] if archives else manifests[0]
+    if archives:
+        return archives[0]
+    return choose_extracted_source_manifest(manifests)
 
 
 def extract_source(source_input: Path) -> dict:

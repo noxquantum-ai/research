@@ -66,6 +66,44 @@ def test_evaluation_launcher_copies_and_verifies_kaggle_extracted_dataset(tmp_pa
 
 
 @pytest.mark.parametrize("module", [driver, evaluation_driver])
+def test_duplicate_identical_source_manifests_are_validated_and_deduplicated(
+    tmp_path, module, monkeypatch,
+):
+    dataset_root, _, payload = write_bundle(tmp_path / "datasets" / "owner" / "source")
+    kernel_root, _, _ = write_bundle(tmp_path / "kernels" / "owner" / "prior" / "nec_source")
+    manifests = [dataset_root / "bundle_manifest.json", kernel_root / "bundle_manifest.json"]
+
+    if module is driver:
+        monkeypatch.setattr(driver, "SOURCE", tmp_path / "work-source")
+        selected, commit, _ = driver.get_source_bundle(tmp_path)
+        assert commit == "a" * 40
+    else:
+        selected = evaluation_driver.find_source_input(tmp_path)
+
+    assert selected == manifests[0]
+    assert (selected.parent / "code" / "module.py").read_bytes() == payload
+
+
+@pytest.mark.parametrize("module", [driver, evaluation_driver])
+def test_conflicting_source_manifests_fail_closed(tmp_path, module):
+    first_root, _, _ = write_bundle(tmp_path / "datasets" / "source-a")
+    second_root, _, _ = write_bundle(tmp_path / "kernels" / "source-b")
+    alternate = b"different source bytes\n"
+    (second_root / "code" / "module.py").write_bytes(alternate)
+    manifest = json.loads((second_root / "bundle_manifest.json").read_text())
+    manifest["source_files"]["code/module.py"] = {
+        "bytes": len(alternate),
+        "sha256": hashlib.sha256(alternate).hexdigest(),
+    }
+    (second_root / "bundle_manifest.json").write_text(json.dumps(manifest))
+
+    with pytest.raises(ValueError, match="conflicting verified NEC source bundles"):
+        module.choose_extracted_source_manifest([
+            first_root / "bundle_manifest.json", second_root / "bundle_manifest.json",
+        ])
+
+
+@pytest.mark.parametrize("module", [driver, evaluation_driver])
 def test_kaggle_source_bundle_rejects_path_traversal(tmp_path, module):
     manifest = {
         "bundle_format": 1,

@@ -99,14 +99,32 @@ def verify_source_tree(root: Path) -> dict:
     return manifest
 
 
+def choose_extracted_source_manifest(manifests: list[Path]) -> Path:
+    if not manifests:
+        raise FileNotFoundError("No extracted source bundle manifest found in Kaggle inputs")
+    by_hash: dict[str, list[Path]] = {}
+    for path in manifests:
+        verify_source_tree(path.parent)
+        by_hash.setdefault(sha256_file(path), []).append(path)
+    if len(by_hash) != 1:
+        raise ValueError("Kaggle inputs contain conflicting verified NEC source bundles")
+    identical = next(iter(by_hash.values()))
+    return sorted(
+        identical,
+        key=lambda path: ("datasets" not in path.parts, len(str(path)), str(path)),
+    )[0]
+
+
 def get_source_bundle(input_root: Path = Path("/kaggle/input")) -> tuple[Path, str, str]:
     archives = sorted(input_root.rglob("nec_source_bundle.tar.gz"))
     manifests = sorted(input_root.rglob("bundle_manifest.json"))
-    if len(archives) + len(manifests) != 1:
+    if len(archives) > 1 or (archives and manifests):
         raise FileNotFoundError(
-            "Expected exactly one packed bundle or extracted bundle manifest in "
-            f"Kaggle inputs; found {len(archives)} archive(s), {len(manifests)} manifest(s)"
+            "Expected a single packed bundle or extracted bundles, not mixed inputs; "
+            f"found {len(archives)} archive(s), {len(manifests)} manifest(s)"
         )
+    if not archives and not manifests:
+        raise FileNotFoundError("No packed NEC source bundle or extracted manifest found in Kaggle inputs")
     SOURCE.mkdir(parents=True, exist_ok=True)
     if archives:
         source_input = archives[0]
@@ -118,7 +136,7 @@ def get_source_bundle(input_root: Path = Path("/kaggle/input")) -> tuple[Path, s
                     raise ValueError(f"Unsafe source archive path: {member.name}")
             bundle.extractall(SOURCE, filter="data")
     else:
-        manifest_path = manifests[0]
+        manifest_path = choose_extracted_source_manifest(manifests)
         source_input = manifest_path
         input_root = manifest_path.parent.resolve()
         manifest = verify_source_tree(input_root)
