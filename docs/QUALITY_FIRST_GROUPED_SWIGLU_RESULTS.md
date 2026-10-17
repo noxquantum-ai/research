@@ -46,9 +46,17 @@ The compressed model retains 89.50% of dense next-token accuracy on this evaluat
 
 The 32 serialized MLP artifacts total **7,574,860,840 bytes** (about 7.06 GiB), versus 8,657,043,456 bytes for dense FP16 MLP matrices, a 12.50% MLP storage reduction. This excludes the unchanged dense model components, so it is not a 12.5% whole-model reduction. Each artifact is 236,714,393–236,714,405 bytes. The completed compile took **586.18 s** and peaked at **11,090,858,496 CUDA-allocated bytes**; evaluation took **22.08 s** and peaked at **16,437,170,176 CUDA-allocated bytes**.
 
+### Parameter and storage reduction
+
+For Llama-2-7B dimensions (32 layers, hidden size 4,096, intermediate size 11,008, vocabulary 32,000), the three dense MLP matrices contain `32 × 3 × 4,096 × 11,008 = 4,328,521,728` scalar parameters. The grouped-TN factors contain `32 × 118,354,944 = 3,787,358,208` coefficients, saving **541,163,520 parameters**, or **12.50% of MLP parameters** (about 1.14× compression of the MLP portion). The unchanged attention, embeddings, norms, and output head account for another 2,409,893,888 parameters. Thus the analytic total falls from 6,738,415,616 to 6,197,252,096 parameters: about **8.03% fewer parameters overall**, or only about **1.09× whole-model parameter compression**. These counts describe stored factor coefficients, not runtime speed or memory.
+
+At FP16 for unchanged components, substituting the measured MLP artifact bytes gives an estimated whole-model serialization reduction of about 8.03% (approximately 13.48 GB to 12.39 GB decimal). This is a projection, not a measured unified checkpoint: the unchanged components were not repacked into one artifact, and serialization metadata/container overhead may differ.
+
 The matched benchmark used Llama-2-7B-HF revision `8efe6c9b93655b934e27bd9981e3ec13e55aee9d` and the `Salesforce/wikitext` raw WikiText-2 test split at revision `b08601e04326c79dfdd32d625aee71d232d685c3`. It scored 4,095 next-token labels from a 4,096-token cap, with sequence length 2,048 and stride 512. The dataset source SHA-256 is `5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91`.
 
 Reproducibility artifacts: [manifest](../experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0875/manifest.json), [evaluation JSON](../experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0875/ppl4096/evaluation.json), and [evaluation log](../experiment_artifacts/quality_first/grouped_swiglu_tn/full32_groups1_0875/ppl4096/run.log). The manifest records compilation inputs, layerwise records, runtime, memory, and total bytes. The 32 large `.pt` weight artifacts remain on the A10; they are not committed to Git.
+
+**Closeout:** the user accepts PPL 6.7789 for this iteration. The result and all compact reproducibility outputs are committed on `main`; the A10 was verified idle after the run. No further GPU experiment is planned as part of this session.
 
 ## Reproduction
 
