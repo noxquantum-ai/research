@@ -62,7 +62,7 @@ No pretrained-model conclusion yet. On the single synthetic CPU draw, the functi
 
 **4. What is the highest full-model parameter reduction actually demonstrated?**
 
-For the new method, none. The historical highest reported ratio is the rank-1866 grouped SwiGLU point at 1.317× coefficient compression (24.1% reduction), with WikiText-2 PPL 22.4716; the quality-first reference is 1.087× at PPL 6.7789. Neither reaches the requested quality/compression target.
+For the new method, none. The highest full-model coefficient reduction in the repository with a corresponding full-model WikiText-2 measurement is the rank-1866 grouped SwiGLU point at 1.317× coefficient compression (24.1% reduction), with PPL 22.4716. The quality-first grouped reference is 1.087× at PPL 6.7789. Legacy NEC configs imply larger coefficient ratios (up to 11.028×), but there is no corresponding audited full-model coefficient artifact and full-model PPL result for those configs in the retained evidence. Neither measured grouped point meets the requested quality/compression target.
 
 **5. Is there a credible path toward 50–70% whole-model parameter reduction without healing?**
 
