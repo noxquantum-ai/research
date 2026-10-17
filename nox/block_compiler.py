@@ -1,4 +1,5 @@
 import gc
+import math
 import time
 import torch
 import torch.nn.functional as F
@@ -19,6 +20,13 @@ def _projection_budget(overrides, name, r_bridge, n_outliers):
         raise ValueError(f"Unknown projection budget keys: {sorted(unknown)}")
     config = overrides.get(name, {})
     return int(config.get("r_bridge", r_bridge)), int(config.get("n_outliers", n_outliers))
+
+
+def _validate_mpo_fit_options(n_sweeps, alpha_awt):
+    if not isinstance(n_sweeps, int) or n_sweeps < 0:
+        raise ValueError("mpo_n_sweeps must be a nonnegative integer")
+    if not math.isfinite(float(alpha_awt)):
+        raise ValueError("mpo_alpha_awt must be finite")
 
 
 class RMSNorm(torch.nn.Module):
@@ -193,12 +201,15 @@ def compile_attention_block(
     representation="mpo4",
     operator_schmidt_weight_mix=1.0,
     operator_schmidt_activation_mix=1.0,
+    mpo_n_sweeps=2,
+    mpo_alpha_awt=0.5,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
     causal healing where W_o absorbs Q,K,V distortion and inter-layer residual drift.
     """
     site_order = validate_site_order(site_order)
+    _validate_mpo_fit_options(mpo_n_sweeps, mpo_alpha_awt)
     if representation not in ("mpo4", "operator_schmidt"):
         raise ValueError(f"Unknown NEC representation: {representation}")
 
@@ -207,6 +218,8 @@ def compile_attention_block(
             return nox_hybrid_dmrg_decompose(
                 diagonal_prior_strength=diagonal_prior_strength,
                 site_order=site_order,
+                n_sweeps=mpo_n_sweeps,
+                alpha_awt=mpo_alpha_awt,
                 **kwargs,
             )
         if site_order != IDENTITY_SITE_ORDER:
@@ -395,12 +408,15 @@ def compile_mlp_block(
     representation="mpo4",
     operator_schmidt_weight_mix=1.0,
     operator_schmidt_activation_mix=1.0,
+    mpo_n_sweeps=2,
+    mpo_alpha_awt=0.5,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
     causal healing where W_down absorbs non-linear distortion and residual drift.
     """
     site_order = validate_site_order(site_order)
+    _validate_mpo_fit_options(mpo_n_sweeps, mpo_alpha_awt)
     if representation not in ("mpo4", "operator_schmidt"):
         raise ValueError(f"Unknown NEC representation: {representation}")
 
@@ -409,6 +425,8 @@ def compile_mlp_block(
             return nox_hybrid_dmrg_decompose(
                 diagonal_prior_strength=diagonal_prior_strength,
                 site_order=site_order,
+                n_sweeps=mpo_n_sweeps,
+                alpha_awt=mpo_alpha_awt,
                 **kwargs,
             )
         if site_order != IDENTITY_SITE_ORDER:
@@ -621,6 +639,8 @@ def compile_transformer_block(
     representation="mpo4",
     operator_schmidt_weight_mix=1.0,
     operator_schmidt_activation_mix=1.0,
+    mpo_n_sweeps=2,
+    mpo_alpha_awt=0.5,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -680,6 +700,8 @@ def compile_transformer_block(
         representation=representation,
         operator_schmidt_weight_mix=operator_schmidt_weight_mix,
         operator_schmidt_activation_mix=operator_schmidt_activation_mix,
+        mpo_n_sweeps=mpo_n_sweeps,
+        mpo_alpha_awt=mpo_alpha_awt,
     )
 
     X_res1_dense = ref_calib_dense + attn_res["Y_attn_dense"]
@@ -715,6 +737,8 @@ def compile_transformer_block(
         representation=representation,
         operator_schmidt_weight_mix=operator_schmidt_weight_mix,
         operator_schmidt_activation_mix=operator_schmidt_activation_mix,
+        mpo_n_sweeps=mpo_n_sweeps,
+        mpo_alpha_awt=mpo_alpha_awt,
     )
 
     X_out_dense = X_res1_dense + mlp_res["Y_mlp_dense"]

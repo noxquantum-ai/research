@@ -5,6 +5,7 @@ import argparse
 import gc
 import io
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -158,6 +159,14 @@ def main():
     )
     parser.add_argument("--diagonal-prior-strength", type=float, default=0.0)
     parser.add_argument(
+        "--mpo-sweeps", type=int, default=2,
+        help="Number of activation-space local MPO sweeps; 0 evaluates the TT-SVD initialization.",
+    )
+    parser.add_argument(
+        "--mpo-alpha-awt", type=float, default=0.5,
+        help="Diagonal activation-scaling exponent used before MPO TT-SVD.",
+    )
+    parser.add_argument(
         "--representation", choices=("mpo4", "operator_schmidt"), default="mpo4",
         help=("Core tensor-network representation. operator_schmidt screens projection-aware "
               "two-site MPO cuts at the legacy four-site core coefficient budget."),
@@ -223,11 +232,19 @@ def main():
         raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
     if args.mlp_product_ridge_ratio <= 0:
         raise ValueError("--mlp-product-ridge-ratio must be positive")
+    if args.mpo_sweeps < 0:
+        raise ValueError("--mpo-sweeps must be nonnegative")
+    if not math.isfinite(args.mpo_alpha_awt):
+        raise ValueError("--mpo-alpha-awt must be finite")
     if (args.operator_schmidt_weight_mix < 0 or args.operator_schmidt_activation_mix < 0
             or args.operator_schmidt_weight_mix + args.operator_schmidt_activation_mix <= 0):
         raise ValueError("Operator-Schmidt objective weights must be nonnegative and not both zero")
     if args.representation == "operator_schmidt" and args.site_order != IDENTITY_SITE_ORDER:
         raise ValueError("--site-order applies only to the legacy four-site MPO representation")
+    if args.representation != "mpo4" and (
+        args.mpo_sweeps != 2 or args.mpo_alpha_awt != 0.5
+    ):
+        raise ValueError("MPO sweep and AWT options apply only to --representation mpo4")
     if args.defect_bridge_linear_rank < 0 or args.defect_bridge_memory_size < 0:
         raise ValueError("Defect bridge rank and memory size must be nonnegative")
     if args.defect_bridge_mode == "hybrid" and args.defect_bridge_linear_rank == 0:
@@ -273,6 +290,8 @@ def main():
     compression["representation"] = args.representation
     compression["operator_schmidt_weight_mix"] = args.operator_schmidt_weight_mix
     compression["operator_schmidt_activation_mix"] = args.operator_schmidt_activation_mix
+    compression["mpo_n_sweeps"] = args.mpo_sweeps
+    compression["mpo_alpha_awt"] = args.mpo_alpha_awt
     per_projection_budgets = projection_budgets(
         args.budget_allocation, compression["r_bridge"], compression["n_outliers"],
     )
@@ -306,6 +325,8 @@ def main():
         "representation": args.representation,
         "operator_schmidt_weight_mix": args.operator_schmidt_weight_mix,
         "operator_schmidt_activation_mix": args.operator_schmidt_activation_mix,
+        "mpo_n_sweeps": args.mpo_sweeps,
+        "mpo_alpha_awt": args.mpo_alpha_awt,
         "defect_bridge_mode": args.defect_bridge_mode,
         "defect_bridge_linear_rank": args.defect_bridge_linear_rank,
         "defect_bridge_memory_size": args.defect_bridge_memory_size,
@@ -468,6 +489,8 @@ def main():
                 representation=args.representation,
                 operator_schmidt_weight_mix=args.operator_schmidt_weight_mix,
                 operator_schmidt_activation_mix=args.operator_schmidt_activation_mix,
+                mpo_n_sweeps=args.mpo_sweeps,
+                mpo_alpha_awt=args.mpo_alpha_awt,
                 verbose=True, site_order=args.site_order, **forward_options,
             )
             artifact = {
@@ -482,6 +505,8 @@ def main():
                 "budget_allocation": args.budget_allocation,
                 "projection_budgets": per_projection_budgets,
                 "representation": args.representation,
+                "mpo_n_sweeps": args.mpo_sweeps,
+                "mpo_alpha_awt": args.mpo_alpha_awt,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),

@@ -741,7 +741,12 @@ def nox_hybrid_dmrg_decompose(
             sparse_val = None
 
         artifact = {
-            "quantization_bits": 4 if quantize_components else 16,
+            # With zero sweeps the TT-SVD cores never enter the historical
+            # final in-loop quantization pass.  Record that distinction rather
+            # than labeling an FP16 warm start as a simulated 4-bit core.
+            "quantization_bits": 4 if quantize_components and n_sweeps > 0 else 16,
+            "core_quantization_bits": 4 if quantize_components and n_sweeps > 0 else 16,
+            "sparse_bridge_quantization_bits": 4 if quantize_components else 16,
             "cores": [c.detach().to(dtype=torch.float16, device="cpu") for c in final_cores],
             "A_bridge": A_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and A_q is not None else None,
             "B_bridge": B_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and B_q is not None else None,
@@ -751,6 +756,17 @@ def nox_hybrid_dmrg_decompose(
             "ranks": chosen_ranks,
             "total_kb": total_kb,
             "orig_shape": (d_out, d_in),
+            "compiler_hyperparameters": {
+                "n_sweeps": int(n_sweeps),
+                "prior_gamma": float(prior_gamma),
+                "alpha_awt": float(alpha_awt),
+                "chunk_size": int(chunk_size),
+                "diagonal_prior_strength": float(diagonal_prior_strength),
+                "requested_bridge_rank": int(r_bridge),
+                "requested_sparse_budget": int(n_outliers),
+                "realized_sparse_count": int(sparse_count),
+                "quantize_components": bool(quantize_components),
+            },
         }
         del S_sparse, d_awt
         return W_hat, total_kb, final_cores, chosen_ranks, artifact

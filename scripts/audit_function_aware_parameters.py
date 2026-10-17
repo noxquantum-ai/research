@@ -19,6 +19,7 @@ HIDDEN = 4096
 INTERMEDIATE = 11008
 VOCAB = 32000
 LAYERS = 32
+CALIBRATION_TOKENS = 256
 
 PROJECTIONS = {
     "q_proj": (HIDDEN, HIDDEN),
@@ -48,7 +49,20 @@ def dense_model_coefficients():
     }
 
 
-def nec_layer_coefficients(config):
+def projection_budget(name, config, calibration_tokens=CALIBRATION_TOKENS):
+    """Return the effective historical compiler budget for one projection."""
+    bridge = int(config["r_bridge"])
+    sparse = int(config["n_outliers"])
+    if name in ("o_proj", "down_proj"):
+        bridge = min(
+            int(bridge * 1.5),
+            max(64, int(int(calibration_tokens) * 0.6)),
+        )
+        sparse //= 2
+    return bridge, sparse
+
+
+def nec_layer_coefficients(config, calibration_tokens=CALIBRATION_TOKENS):
     core = 0
     bridges = 0
     sparse_values = 0
@@ -58,12 +72,16 @@ def nec_layer_coefficients(config):
         o_modes, i_modes = llama_projection_modes(d_out, d_in)
         physical = tuple(o * i for o, i in zip(o_modes, i_modes))
         core_count = tt_parameter_count(physical, tuple(config["ranks"]))
-        bridge_count = (d_out + d_in) * int(config["r_bridge"])
-        sparse_count = int(config["n_outliers"])
+        bridge_rank, sparse_count = projection_budget(
+            name, config, calibration_tokens=calibration_tokens,
+        )
+        bridge_count = (d_out + d_in) * bridge_rank
         scale_count = d_in
         details[name] = {
             "tt_core_coefficients": core_count,
+            "bridge_rank": bridge_rank,
             "bridge_coefficients": bridge_count,
+            "sparse_budget": sparse_count,
             "sparse_value_coefficients": sparse_count,
             "input_scale_coefficients": scale_count,
             "total_coefficients": core_count + bridge_count + sparse_count + scale_count,
@@ -116,6 +134,8 @@ def tier_counts(tier_name):
             "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
             "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
             "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here.",
+            "Output and Down use the compiler's bridge-rank expansion and halved sparse budget at 256 calibration tokens.",
+            "Llama intermediate-width modes use the compiler's historical (43,4,8,8) boundary placement.",
         ],
     }
 
@@ -142,6 +162,8 @@ def grouped_count(rank=2612):
 
 def build_report():
     return {
+        "calculation_version": "compiler_accurate_v2",
+        "calibration_tokens": CALIBRATION_TOKENS,
         "model_id": "NousResearch/Llama-2-7b-hf",
         "revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
         "dense": dense_model_coefficients(),
@@ -157,7 +179,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--output", type=Path,
-        default=Path("experiment_artifacts/function_aware_tn/derived_parameter_counts.json"),
+        default=Path(
+            "experiment_artifacts/function_aware_tn/"
+            "derived_parameter_counts_compiler_accurate.json"
+        ),
     )
     args = parser.parse_args()
     result = build_report()

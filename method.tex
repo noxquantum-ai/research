@@ -22,7 +22,7 @@
 \fontsize{9}{9.7}\selectfont
 
 \begin{abstract}
-The Nox Entanglement Compiler (NEC) is a gradient-free, post-training compiler for replacing the seven linear operators of each Llama-2 block by a four-site matrix-product operator (MPO), a sparse coordinate shield, an activation-derived low-rank bridge, and a diagonal input scale.  TT--SVD initializes the MPO; two activation-weighted alternating local sweeps solve ridge-regularized normal equations, with quantization simulated inside the last sweep.  Layers are compiled sequentially on the trajectory produced by already-compressed layers, but no parameters are updated after compilation.  We reconstruct the algorithm from the implementation and audit all 96 historical tier artifacts.  Nominal configurations contain 939M, 761M, and 611M coefficients; the serialized artifacts actually contain 916M, 759M, and 634M when unchanged embeddings and heads are included.  This structural reduction did not preserve capability: legacy WikiText-2 perplexity rose from 19.75 to 16,518.61, 10,916.44, and 8,135.61.  The result is therefore a negative one: the representation is compact in coefficient count, but its calibration fit does not generalize to full-model language modeling.
+The Nox Entanglement Compiler (NEC) is a gradient-free, post-training compiler for replacing the seven linear operators of each Llama-2 block by a four-site matrix-product operator (MPO), a sparse coordinate shield, an activation-derived low-rank bridge, and a diagonal input scale.  TT--SVD initializes the MPO; two activation-weighted alternating local sweeps solve ridge-regularized normal equations, with quantization simulated inside the last sweep.  Layers are compiled sequentially on the trajectory produced by already-compressed layers, but no parameters are updated after compilation.  We reconstruct the algorithm from the implementation and audit all 96 historical tier artifacts.  Compiler-derived budgets contain 915.94M, 758.91M, and 633.76M coefficients; the serialized artifacts contain 915.83M, 758.84M, and 633.75M when unchanged embeddings and heads are included.  This structural reduction did not preserve capability: legacy WikiText-2 perplexity rose from 19.75 to 16,518.61, 10,916.44, and 8,135.61.  The result is therefore a negative one: the representation is compact in coefficient count, but its calibration fit does not generalize to full-model language modeling.
 \end{abstract}
 
 \section{Method}
@@ -106,8 +106,8 @@ The WikiText evaluator attempted the raw dataset, failed, and downloaded the pro
 \section{Results and Analysis}
 For dense coefficients,
 $C_d=32(4h^2+3h\,11008+2h)+2(32000)h+h=6{,}738{,}415{,}616$.
-Applying \eqref{eq:count} to nominal tier budgets gives the configuration counts below.  We also loaded every serialized artifact and counted core, bridge, scale, sparse-value, and norm tensors, then added the unchanged embedding, head, and final norm.  The two counts differ because the nominal audit did not model the output/down budget change, and actual sparse quantization creates zeros.
-Exact nominal/audited pairs are 939,044,864/915,831,029 (High-Fidelity), 761,323,264/758,835,532 (Production), and 611,015,936/633,747,267 (Extreme).
+Applying \eqref{eq:count} to the actual tier, boundary-layer, and output/down budgets gives the configuration counts below.  We also loaded every serialized artifact and counted core, bridge, scale, sparse-value, and norm tensors, then added the unchanged embedding, head, and final norm.  The small remaining differences arise because threshold ties and quantization-to-zero change realized sparse cardinalities.
+Exact configuration/artifact pairs are 915,935,232/915,831,029 (High-Fidelity), 758,907,648/758,835,532 (Production), and 633,763,072/633,747,267 (Extreme).
 
 \begin{table}[t]
 \centering
@@ -121,9 +121,9 @@ Exact nominal/audited pairs are 939,044,864/915,831,029 (High-Fidelity), 761,323
 Model & Coeff. (M), cfg./art. & Red. (\%) & Ratio & PPL ($\times$ dense) & Agree. (\%)\\
 \midrule
 Dense Llama-2-7B & 6738.416/6738.416 & 0/0 & 1.000/1.000 & 19.75 ($1.0\times$) & 100.00\\
-High-Fidelity NEC & 939.045/915.831 & 86.06/86.41 & 7.176/7.358 & 16,518.61 ($836.4\times$) & 4.69\\
-Production NEC & 761.323/758.836 & 88.70/88.74 & 8.851/8.880 & 10,916.44 ($552.7\times$) & 3.91\\
-Extreme NEC & 611.016/633.747 & 90.93/90.60 & 11.028/10.633 & 8,135.61 ($411.9\times$) & 7.03\\
+High-Fidelity NEC & 915.935/915.831 & 86.41/86.41 & 7.357/7.358 & 16,518.61 ($836.4\times$) & 4.69\\
+Production NEC & 758.908/758.836 & 88.74/88.74 & 8.879/8.880 & 10,916.44 ($552.7\times$) & 3.91\\
+Extreme NEC & 633.763/633.747 & 90.59/90.60 & 10.632/10.633 & 8,135.61 ($411.9\times$) & 7.03\\
 \bottomrule
 \end{tabular}
 }

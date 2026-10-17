@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import itertools
 import math
 
 import torch
@@ -13,9 +12,9 @@ def llama_projection_modes(d_out: int, d_in: int):
     if (d_out, d_in) == (4096, 4096):
         return (8, 8, 8, 8), (8, 8, 8, 8)
     if (d_out, d_in) == (11008, 4096):
-        return (4, 8, 8, 43), (8, 8, 8, 8)
+        return (43, 4, 8, 8), (8, 8, 8, 8)
     if (d_out, d_in) == (4096, 11008):
-        return (8, 8, 8, 8), (4, 8, 8, 43)
+        return (8, 8, 8, 8), (43, 4, 8, 8)
     raise ValueError(f"no audited Llama-2-7B mode factorization for {(d_out, d_in)}")
 
 
@@ -251,7 +250,18 @@ def tt_rank_profile(
     }
 
 
-def spectra_summary(spectrum: dict, residual_targets=(0.01, 0.05, 0.10, 0.20)):
+def spectra_summary(
+    spectrum: dict,
+    residual_targets=(0.01, 0.05, 0.10, 0.20),
+    retained_rank: int | None = None,
+):
+    """Return JSON-safe energy and entropy diagnostics for one Schmidt cut.
+
+    Randomized spectra do not contain the unresolved tail.  Their reported
+    partial entropy uses the exact Frobenius energy for normalization but is
+    not labeled as the entropy of the unknown full spectrum.  Exact spectra
+    report the true operator-Schmidt entropy.
+    """
     values = spectrum["singular_values"]
     total = spectrum["frobenius_norm_squared"]
     rank_records = {}
@@ -267,14 +277,107 @@ def spectra_summary(spectrum: dict, residual_targets=(0.01, 0.05, 0.10, 0.20)):
             ),
             "target_reached_with_spectrum": reached,
         }
-    return {
+    probabilities = values.double().square() / max(float(total), torch.finfo(torch.float64).tiny)
+    nonzero = probabilities > 0
+    entropy = float(-(probabilities[nonzero] * probabilities[nonzero].log()).sum())
+    result = {
         "method": spectrum["method"],
         "estimated": spectrum["estimated"],
         "singular_value_count": int(values.numel()),
         "captured_energy_fraction": float(spectrum["captured_energy_fraction"]),
+        "schmidt_entropy_nats": entropy if not spectrum["estimated"] else None,
+        "reported_spectrum_partial_entropy_nats": entropy,
+        "effective_schmidt_rank": math.exp(entropy) if not spectrum["estimated"] else None,
+        "reported_spectrum_partial_entropy_exp": math.exp(entropy),
         "tail_energy_by_rank": {
             str(rank): tail_energy_fraction(values, rank, total)
             for rank in sorted({1, min(8, values.numel()), min(64, values.numel()), min(256, values.numel()), values.numel()})
         },
         "min_rank_by_residual_energy_fraction": rank_records,
+    }
+    if retained_rank is not None:
+        result["configured_retained_rank"] = int(retained_rank)
+        result["configured_rank_residual_energy_fraction"] = tail_energy_fraction(
+            values, retained_rank, total,
+        )
+    return result
+
+
+@torch.no_grad()
+def named_tt_spectrum_audit(
+    matrices: dict[str, torch.Tensor],
+    output_modes: tuple[int, int, int, int],
+    input_modes: tuple[int, int, int, int],
+    ranks: tuple[int, int, int, int, int],
+    *,
+    site_order: tuple[int, int, int, int] = (0, 1, 2, 3),
+    exact_large_cuts: bool = False,
+    seed: int = 0,
+    max_rank: int = 512,
+    oversample: int = 32,
+    power_iterations: int = 2,
+):
+    """Measure matched operator-Schmidt spectra for named matrix variants.
+
+    The same modes, site order, ranks, and numerical method are used for every
+    variant, making before/after comparisons meaningful.  Cuts with a smaller
+    dimension of at most 256 are always exact; larger cuts are randomized
+    unless ``exact_large_cuts`` is requested.  Randomized reports retain the
+    unresolved Frobenius energy instead of renormalizing the observed Ritz
+    values.
+    """
+    if not matrices:
+        raise ValueError("at least one named matrix is required")
+    ranks = tuple(map(int, ranks))
+    if len(ranks) != 5 or ranks[0] != 1 or ranks[-1] != 1:
+        raise ValueError("ranks must contain five TT ranks with unit boundaries")
+    expected_shape = (math.prod(output_modes), math.prod(input_modes))
+    report = {}
+    reference_physical = None
+    for name, matrix in matrices.items():
+        if tuple(matrix.shape) != expected_shape:
+            raise ValueError(
+                f"matrix {name!r} has shape {tuple(matrix.shape)}, expected {expected_shape}"
+            )
+        cuts, physical = tt_site_unfoldings(
+            matrix, output_modes, input_modes, site_order,
+        )
+        if reference_physical is None:
+            reference_physical = physical
+        elif physical != reference_physical:
+            raise RuntimeError("matched spectrum variants produced different physical dimensions")
+        cut_records = []
+        for cut_index, unfolding in enumerate(cuts):
+            spectrum = singular_spectrum(
+                unfolding,
+                exact=bool(exact_large_cuts),
+                # Use the same random test subspace seed for every named
+                # variant at a given cut.  This makes before/after deltas a
+                # matched numerical comparison instead of adding sketch noise.
+                seed=int(seed) + cut_index,
+                max_rank=max_rank,
+                oversample=oversample,
+                power_iterations=power_iterations,
+            )
+            summary = spectra_summary(spectrum, retained_rank=ranks[cut_index + 1])
+            summary.update({
+                "cut_after_site": cut_index,
+                "unfolding_shape": [int(value) for value in unfolding.shape],
+            })
+            cut_records.append(summary)
+        report[name] = cut_records
+    return {
+        "output_modes": list(map(int, output_modes)),
+        "input_modes": list(map(int, input_modes)),
+        "site_order": list(map(int, site_order)),
+        "physical_dimensions": list(map(int, reference_physical)),
+        "configured_ranks": list(ranks),
+        "exact_large_cuts": bool(exact_large_cuts),
+        "randomized_settings": {
+            "seed": int(seed),
+            "max_rank": int(max_rank),
+            "oversample": int(oversample),
+            "power_iterations": int(power_iterations),
+        },
+        "variants": report,
     }

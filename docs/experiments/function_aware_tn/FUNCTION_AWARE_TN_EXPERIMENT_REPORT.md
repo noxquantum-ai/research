@@ -34,7 +34,7 @@ The function-aware factor candidate used 3,440, 2,240, and 1,120 coefficients ag
 
 ## Recalculated historical and reference counts
 
-The pinned dense model has 6,738,415,616 numerical coefficients under the repository’s untied embedding/head layout. Recomputed legacy NEC configuration counts are 939,044,864 (7.176×), 761,323,264 (8.851×), and 611,015,936 (11.028×), respectively. These are configuration-derived counts because ignored historical tensor checkpoints are absent; byte ratios and sparse index storage are reported separately in the failure audit.
+The pinned dense model has 6,738,415,616 numerical coefficients under the repository’s untied embedding/head layout. Compiler-accurate legacy NEC configuration counts are 915,935,232 (7.357×), 758,907,648 (8.879×), and 633,763,072 (10.632×), respectively. They include the Output/Down bridge and sparse overrides and the historical `(43,4,8,8)` mode placement. The earlier 939M/761M/611M record used an incomplete audit model and is superseded, not deleted. These remain configuration-derived counts because ignored historical tensor checkpoints are absent from the committed repository; byte ratios and sparse index storage are reported separately in the failure audit.
 
 The best measured complete-model reference remains the prior grouped SwiGLU model: 6,197,252,096 coefficients, 1.087× compression (8.03% reduction), WikiText-2 PPL 6.7789 vs 4.8597 dense on its 4,096-token/4,095-label protocol. The rank-1866 point stored 5,115,564,032 coefficients (1.317×) but reached PPL 22.4716. These are historical measurements, not results from the new function-aware candidate.
 
@@ -62,7 +62,7 @@ There is no pretrained-model comparison. On the single synthetic CPU draw, the f
 
 **4. What is the highest full-model parameter reduction actually demonstrated?**
 
-For the new method, none. The highest full-model coefficient reduction in the repository with a corresponding full-model WikiText-2 measurement is the rank-1866 grouped SwiGLU point at 1.317× coefficient compression (24.1% reduction), with PPL 22.4716. The quality-first grouped reference is 1.087× at PPL 6.7789. Legacy NEC configs imply larger coefficient ratios (up to 11.028×), but there is no corresponding audited full-model coefficient artifact and full-model PPL result for those configs in the retained evidence. Neither measured grouped point meets the requested quality/compression target.
+For the new method, none. The highest full-model coefficient reduction in the repository with a corresponding full-model WikiText-2 measurement is the rank-1866 grouped SwiGLU point at 1.317× coefficient compression (24.1% reduction), with PPL 22.4716. The quality-first grouped reference is 1.087× at PPL 6.7789. Legacy NEC configs imply larger coefficient ratios (up to 10.632×), but there is no corresponding audited full-model coefficient artifact and full-model PPL result for those configs in the retained evidence. Neither measured grouped point meets the requested quality/compression target.
 
 **5. Is there a credible path toward 50–70% whole-model parameter reduction without healing?**
 

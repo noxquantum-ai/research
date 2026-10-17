@@ -97,6 +97,21 @@ class TrajectoryAwareCompilerTests(unittest.TestCase):
             [(2, 3), (4, 5), (6, 7)],
         )
 
+    def test_mpo_fit_ablation_options_reach_every_projection(self):
+        weights = {
+            "gate_proj": torch.randn(4, 4),
+            "up_proj": torch.randn(4, 4),
+            "down_proj": torch.randn(4, 4),
+        }
+        calls = []
+        with patch("nox.block_compiler.nox_hybrid_dmrg_decompose", side_effect=exact_mock(calls)):
+            compile_mlp_block(
+                weights, self.comp, causal_healing=False,
+                ranks=(1, 2, 2, 2, 1), mpo_n_sweeps=0, mpo_alpha_awt=1.0,
+            )
+        self.assertEqual([call["n_sweeps"] for call in calls], [0, 0, 0])
+        self.assertEqual([call["alpha_awt"] for call in calls], [1.0, 1.0, 1.0])
+
     def test_attention_conditions_output_on_compressed_qkv_context_at_fixed_budget(self):
         weights = {name: torch.randn(4, 4) for name in ("q_proj", "k_proj", "v_proj", "o_proj")}
         calls = []

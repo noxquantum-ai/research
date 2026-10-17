@@ -13,9 +13,30 @@ from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, finge
 from nox.compiler import estimate_artifact_tensor_bytes
 from nox.sequential_compiler import compute_dense_argmax_metrics
 from scripts.audit_checkpoint_reconstruction import compare_weights
+from scripts.audit_function_aware_parameters import projection_budget, tier_counts
 
 
 class PipelineAccountingTests(unittest.TestCase):
+    def test_legacy_nec_counts_follow_actual_projection_overrides(self):
+        high = tier_counts("high_fidelity_10x")
+        production = tier_counts("production_18x")
+        extreme = tier_counts("extreme_77x")
+        self.assertEqual(high["whole_model_coefficients"], 915_935_232)
+        self.assertEqual(production["whole_model_coefficients"], 758_907_648)
+        self.assertEqual(extreme["whole_model_coefficients"], 633_763_072)
+        self.assertEqual(
+            projection_budget(
+                "o_proj", {"r_bridge": 128, "n_outliers": 524_288}, 256,
+            ),
+            (153, 262_144),
+        )
+        self.assertEqual(
+            projection_budget(
+                "down_proj", {"r_bridge": 96, "n_outliers": 65_536}, 256,
+            ),
+            (144, 32_768),
+        )
+
     def test_weight_audit_promotes_fp16_before_reductions(self):
         reference = torch.ones(100_000, dtype=torch.float16)
         identical = reference.clone()

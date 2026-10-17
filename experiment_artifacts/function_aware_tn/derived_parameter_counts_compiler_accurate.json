@@ -1,0 +1,592 @@
+{
+  "calculation_version": "compiler_accurate_v2",
+  "calibration_tokens": 256,
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "dense": {
+    "projection_coefficients_per_layer": 202375168,
+    "norm_coefficients_per_layer": 8192,
+    "final_norm_coefficients": 4096,
+    "embedding_coefficients": 131072000,
+    "lm_head_coefficients": 131072000,
+    "layers": 32,
+    "total_coefficients": 6738415616
+  },
+  "legacy_nec_config_derived": {
+    "high_fidelity_10x": {
+      "tier": "high_fidelity_10x",
+      "configuration": {
+        "ranks": [
+          1,
+          64,
+          128,
+          64,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 524288,
+        "epsilon": 0.005,
+        "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+      },
+      "boundary_configuration": {
+        "ranks": [
+          1,
+          64,
+          128,
+          64,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 524288,
+        "epsilon": 0.005,
+        "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+      },
+      "interior_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "k_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "v_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "o_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 153,
+            "bridge_coefficients": 1253376,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2576384
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3274240
+          },
+          "up_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3274240
+          },
+          "down_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 153,
+            "bridge_coefficients": 2310912,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 3396608
+          }
+        },
+        "tt_core_coefficients": 6664704,
+        "bridge_coefficients": 10576640,
+        "sparse_value_coefficients": 3145728,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 20422656,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 20430848
+      },
+      "boundary_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "k_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "v_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "o_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 153,
+            "bridge_coefficients": 1253376,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2576384
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3274240
+          },
+          "up_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3274240
+          },
+          "down_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 153,
+            "bridge_coefficients": 2310912,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 3396608
+          }
+        },
+        "tt_core_coefficients": 6664704,
+        "bridge_coefficients": 10576640,
+        "sparse_value_coefficients": 3145728,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 20422656,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 20430848
+      },
+      "whole_model_coefficients": 915935232,
+      "dense_whole_model_coefficients": 6738415616,
+      "parameter_compression_ratio": 7.356869111024654,
+      "parameter_reduction_fraction": 0.8640726122880931,
+      "assumptions": [
+        "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
+        "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
+        "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here.",
+        "Output and Down use the compiler's bridge-rank expansion and halved sparse budget at 256 calibration tokens.",
+        "Llama intermediate-width modes use the compiler's historical (43,4,8,8) boundary placement."
+      ]
+    },
+    "production_18x": {
+      "tier": "production_18x",
+      "configuration": {
+        "ranks": [
+          1,
+          40,
+          80,
+          40,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 262144,
+        "epsilon": 0.015,
+        "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)"
+      },
+      "boundary_configuration": {
+        "ranks": [
+          1,
+          64,
+          128,
+          64,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 524288,
+        "epsilon": 0.005,
+        "description": "High-fidelity experimental configuration; quality and serialized size require measurement"
+      },
+      "interior_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "k_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "v_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "o_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 153,
+            "bridge_coefficients": 1253376,
+            "sparse_budget": 131072,
+            "sparse_value_coefficients": 131072,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1803264
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 323520,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2523072
+          },
+          "up_proj": {
+            "tt_core_coefficients": 323520,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2523072
+          },
+          "down_proj": {
+            "tt_core_coefficients": 323520,
+            "bridge_rank": 153,
+            "bridge_coefficients": 2310912,
+            "sparse_budget": 131072,
+            "sparse_value_coefficients": 131072,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 2776512
+          }
+        },
+        "tt_core_coefficients": 2629440,
+        "bridge_coefficients": 10576640,
+        "sparse_value_coefficients": 1572864,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 14814528,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 14822720
+      },
+      "boundary_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "k_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "v_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2633728
+          },
+          "o_proj": {
+            "tt_core_coefficients": 1056768,
+            "bridge_rank": 153,
+            "bridge_coefficients": 1253376,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2576384
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3274240
+          },
+          "up_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 524288,
+            "sparse_value_coefficients": 524288,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 3274240
+          },
+          "down_proj": {
+            "tt_core_coefficients": 812544,
+            "bridge_rank": 153,
+            "bridge_coefficients": 2310912,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 3396608
+          }
+        },
+        "tt_core_coefficients": 6664704,
+        "bridge_coefficients": 10576640,
+        "sparse_value_coefficients": 3145728,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 20422656,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 20430848
+      },
+      "whole_model_coefficients": 758907648,
+      "dense_whole_model_coefficients": 6738415616,
+      "parameter_compression_ratio": 8.879098311577431,
+      "parameter_reduction_fraction": 0.8873759513737896,
+      "assumptions": [
+        "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
+        "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
+        "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here.",
+        "Output and Down use the compiler's bridge-rank expansion and halved sparse budget at 256 calibration tokens.",
+        "Llama intermediate-width modes use the compiler's historical (43,4,8,8) boundary placement."
+      ]
+    },
+    "extreme_77x": {
+      "tier": "extreme_77x",
+      "configuration": {
+        "ranks": [
+          1,
+          32,
+          80,
+          32,
+          1
+        ],
+        "r_bridge": 96,
+        "n_outliers": 65536,
+        "epsilon": 0.03,
+        "description": "Extreme Stress-Test Tier (~77x compression, ~5.0 MB/layer, eps=0.030)"
+      },
+      "boundary_configuration": {
+        "ranks": [
+          1,
+          40,
+          80,
+          40,
+          1
+        ],
+        "r_bridge": 128,
+        "n_outliers": 262144,
+        "epsilon": 0.015,
+        "description": "Production CompactifAI-Killer Tier (~18-20x compression, ~16-18 MB/layer, eps=0.015)"
+      },
+      "interior_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_rank": 96,
+            "bridge_coefficients": 786432,
+            "sparse_budget": 65536,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "k_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_rank": 96,
+            "bridge_coefficients": 786432,
+            "sparse_budget": 65536,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "v_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_rank": 96,
+            "bridge_coefficients": 786432,
+            "sparse_budget": 65536,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1187840
+          },
+          "o_proj": {
+            "tt_core_coefficients": 331776,
+            "bridge_rank": 144,
+            "bridge_coefficients": 1179648,
+            "sparse_budget": 32768,
+            "sparse_value_coefficients": 32768,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1548288
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 258816,
+            "bridge_rank": 96,
+            "bridge_coefficients": 1449984,
+            "sparse_budget": 65536,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1778432
+          },
+          "up_proj": {
+            "tt_core_coefficients": 258816,
+            "bridge_rank": 96,
+            "bridge_coefficients": 1449984,
+            "sparse_budget": 65536,
+            "sparse_value_coefficients": 65536,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1778432
+          },
+          "down_proj": {
+            "tt_core_coefficients": 258816,
+            "bridge_rank": 144,
+            "bridge_coefficients": 2174976,
+            "sparse_budget": 32768,
+            "sparse_value_coefficients": 32768,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 2477568
+          }
+        },
+        "tt_core_coefficients": 2103552,
+        "bridge_coefficients": 8613888,
+        "sparse_value_coefficients": 393216,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 11146240,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 11154432
+      },
+      "boundary_layer": {
+        "projection_details": {
+          "q_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "k_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "v_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1048576,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1729536
+          },
+          "o_proj": {
+            "tt_core_coefficients": 414720,
+            "bridge_rank": 153,
+            "bridge_coefficients": 1253376,
+            "sparse_budget": 131072,
+            "sparse_value_coefficients": 131072,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 1803264
+          },
+          "gate_proj": {
+            "tt_core_coefficients": 323520,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2523072
+          },
+          "up_proj": {
+            "tt_core_coefficients": 323520,
+            "bridge_rank": 128,
+            "bridge_coefficients": 1933312,
+            "sparse_budget": 262144,
+            "sparse_value_coefficients": 262144,
+            "input_scale_coefficients": 4096,
+            "total_coefficients": 2523072
+          },
+          "down_proj": {
+            "tt_core_coefficients": 323520,
+            "bridge_rank": 153,
+            "bridge_coefficients": 2310912,
+            "sparse_budget": 131072,
+            "sparse_value_coefficients": 131072,
+            "input_scale_coefficients": 11008,
+            "total_coefficients": 2776512
+          }
+        },
+        "tt_core_coefficients": 2629440,
+        "bridge_coefficients": 10576640,
+        "sparse_value_coefficients": 1572864,
+        "input_scale_coefficients": 35584,
+        "layer_projection_coefficients": 14814528,
+        "layer_norm_coefficients": 8192,
+        "layer_total_coefficients": 14822720
+      },
+      "whole_model_coefficients": 633763072,
+      "dense_whole_model_coefficients": 6738415616,
+      "parameter_compression_ratio": 10.632389158830636,
+      "parameter_reduction_fraction": 0.9059477615932202,
+      "assumptions": [
+        "All FP16/quantized TT, bridge, sparse-value, and diagonal-scale entries count as one numerical model coefficient.",
+        "Sparse coordinate indices and container metadata are not numerical coefficients; they remain part of checkpoint bytes.",
+        "Counts are configuration-derived; dynamic rank reductions, threshold ties, and unavailable historical checkpoint tensors are not observed here.",
+        "Output and Down use the compiler's bridge-rank expansion and halved sparse budget at 256 calibration tokens.",
+        "Llama intermediate-width modes use the compiler's historical (43,4,8,8) boundary placement."
+      ]
+    }
+  },
+  "grouped_swiglu_0875": {
+    "rank": 2612,
+    "dense_mlp_coefficients_per_layer": 135266304,
+    "grouped_mlp_coefficients_per_layer": 118354944,
+    "mlp_retained_fraction": 0.874977289244186,
+    "whole_model_dense_coefficients": 6738415616,
+    "whole_model_compressed_coefficients": 6197252096,
+    "whole_model_parameter_compression_ratio": 1.0873231412272695,
+    "whole_model_parameter_reduction_fraction": 0.08031020210671436,
+    "assumption": "Attention, embeddings, output head, and norms remain dense; factor coefficients are counted once as stored."
+  }
+}

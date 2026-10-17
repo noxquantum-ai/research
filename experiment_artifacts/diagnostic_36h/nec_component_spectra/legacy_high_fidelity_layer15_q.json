@@ -1,0 +1,715 @@
+{
+  "diagnostic": "nec_component_operator_schmidt_spectra",
+  "projection": "q_proj",
+  "checkpoint": "compressed_models/tiers/high_fidelity_10x/compressed_layer_15.pt",
+  "dense_weight": "models/Llama-2-7b-hf/layer_15_q_proj.pt",
+  "input_sha256": {
+    "checkpoint": "872ff2010bc48b2b8feed14fd7f410700b316ccc8674a554b4ad427e667ef28b",
+    "dense_weight": "266c4848aa09db40bb26d48088a82056f423b55920d97abc76a775115bf32c45"
+  },
+  "source_fingerprint": "bc401ede6991f50a5a7437f9764023a40283408b2fa52666a235981ed4561ccf",
+  "component_norms": {
+    "weight": 97.30044555664062,
+    "sparse": 45.60066604614258,
+    "bridge": 18.20130729675293,
+    "weight_minus_sparse": 86.04723358154297,
+    "weight_minus_sparse_bridge": 84.3295669555664,
+    "conditioned_residual": 49.836631774902344
+  },
+  "spectrum_audit": {
+    "output_modes": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "input_modes": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "physical_dimensions": [
+      64,
+      64,
+      64,
+      64
+    ],
+    "configured_ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "exact_large_cuts": false,
+    "randomized_settings": {
+      "seed": 42,
+      "max_rank": 256,
+      "oversample": 32,
+      "power_iterations": 2
+    },
+    "variants": {
+      "weight": [
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.157427880646164,
+          "reported_spectrum_partial_entropy_nats": 4.157427880646164,
+          "effective_schmidt_rank": 63.9069347571555,
+          "reported_spectrum_partial_entropy_exp": 63.9069347571555,
+          "tail_energy_by_rank": {
+            "1": 0.982847733690947,
+            "8": 0.8650174104243562,
+            "64": 0.0
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 0.0,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04199688631239197,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 57,
+              "rank_lower_bound": 57,
+              "residual_energy_at_reported_rank": 0.09883272672562442,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.18601961916765164,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 0.0,
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            64,
+            262144
+          ]
+        },
+        {
+          "method": "randomized_range_svd_fp32_ritz_values",
+          "estimated": true,
+          "singular_value_count": 256,
+          "captured_energy_fraction": 0.20719354275146298,
+          "schmidt_entropy_nats": null,
+          "reported_spectrum_partial_entropy_nats": 1.4730791675258488,
+          "effective_schmidt_rank": null,
+          "reported_spectrum_partial_entropy_exp": 4.3626478039920205,
+          "tail_energy_by_rank": {
+            "1": 0.9989390194809761,
+            "8": 0.991677318102249,
+            "64": 0.9383609755888803,
+            "256": 0.792806457248537
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.792806457248537,
+              "target_reached_with_spectrum": false
+            },
+            "0.05": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.792806457248537,
+              "target_reached_with_spectrum": false
+            },
+            "0.1": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.792806457248537,
+              "target_reached_with_spectrum": false
+            },
+            "0.2": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.792806457248537,
+              "target_reached_with_spectrum": false
+            }
+          },
+          "configured_retained_rank": 128,
+          "configured_rank_residual_energy_fraction": 0.8842173762107599,
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.157987278568001,
+          "reported_spectrum_partial_entropy_nats": 4.157987278568001,
+          "effective_schmidt_rank": 63.94269416458621,
+          "reported_spectrum_partial_entropy_exp": 63.94269416458621,
+          "tail_energy_by_rank": {
+            "1": 0.9831511221862839,
+            "8": 0.867023411567836,
+            "64": 0.0
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 0.0,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04368698900655101,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 58,
+              "rank_lower_bound": 58,
+              "residual_energy_at_reported_rank": 0.08773625712707751,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.1919499441130562,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 0.0,
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            262144,
+            64
+          ]
+        }
+      ],
+      "weight_minus_sparse": [
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.157701055586571,
+          "reported_spectrum_partial_entropy_nats": 4.157701055586571,
+          "effective_schmidt_rank": 63.92439491497959,
+          "reported_spectrum_partial_entropy_exp": 63.92439491497959,
+          "tail_energy_by_rank": {
+            "1": 0.9832194911564524,
+            "8": 0.8669032261316091,
+            "64": 0.0
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 0.0,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04219917851495427,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 57,
+              "rank_lower_bound": 57,
+              "residual_energy_at_reported_rank": 0.09934073050039631,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.18751435031405922,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 0.0,
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            64,
+            262144
+          ]
+        },
+        {
+          "method": "randomized_range_svd_fp32_ritz_values",
+          "estimated": true,
+          "singular_value_count": 256,
+          "captured_energy_fraction": 0.19713927950844642,
+          "schmidt_entropy_nats": null,
+          "reported_spectrum_partial_entropy_nats": 1.4116668950583133,
+          "effective_schmidt_rank": null,
+          "reported_spectrum_partial_entropy_exp": 4.102788625442565,
+          "tail_energy_by_rank": {
+            "1": 0.9990134074596377,
+            "8": 0.9922411935643791,
+            "64": 0.9420773128002732,
+            "256": 0.8028607204915535
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028607204915535,
+              "target_reached_with_spectrum": false
+            },
+            "0.05": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028607204915535,
+              "target_reached_with_spectrum": false
+            },
+            "0.1": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028607204915535,
+              "target_reached_with_spectrum": false
+            },
+            "0.2": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028607204915535,
+              "target_reached_with_spectrum": false
+            }
+          },
+          "configured_retained_rank": 128,
+          "configured_rank_residual_energy_fraction": 0.8906614515039192,
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.1583077589643,
+          "reported_spectrum_partial_entropy_nats": 4.1583077589643,
+          "effective_schmidt_rank": 63.963189828606346,
+          "reported_spectrum_partial_entropy_exp": 63.963189828606346,
+          "tail_energy_by_rank": {
+            "1": 0.9834355532520489,
+            "8": 0.8686682981298528,
+            "64": 0.0
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 0.0,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04427331455721019,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 58,
+              "rank_lower_bound": 58,
+              "residual_energy_at_reported_rank": 0.08891868799690102,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.19396549291112639,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 0.0,
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            262144,
+            64
+          ]
+        }
+      ],
+      "weight_minus_sparse_bridge": [
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.157692107993599,
+          "reported_spectrum_partial_entropy_nats": 4.157692107993599,
+          "effective_schmidt_rank": 63.92382294807175,
+          "reported_spectrum_partial_entropy_exp": 63.92382294807175,
+          "tail_energy_by_rank": {
+            "1": 0.9831967403451706,
+            "8": 0.8669766862605296,
+            "64": 3.830930512917878e-16
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 3.830930512917878e-16,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04219034520279193,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 57,
+              "rank_lower_bound": 57,
+              "residual_energy_at_reported_rank": 0.09925550626723957,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.18733794565053744,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 3.830930512917878e-16,
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            64,
+            262144
+          ]
+        },
+        {
+          "method": "randomized_range_svd_fp32_ritz_values",
+          "estimated": true,
+          "singular_value_count": 256,
+          "captured_energy_fraction": 0.19726674747830694,
+          "schmidt_entropy_nats": null,
+          "reported_spectrum_partial_entropy_nats": 1.412449566977611,
+          "effective_schmidt_rank": null,
+          "reported_spectrum_partial_entropy_exp": 4.106001019851975,
+          "tail_energy_by_rank": {
+            "1": 0.9990140703090831,
+            "8": 0.9922373440260098,
+            "64": 0.9420583301335793,
+            "256": 0.8027332525216931
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8027332525216931,
+              "target_reached_with_spectrum": false
+            },
+            "0.05": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8027332525216931,
+              "target_reached_with_spectrum": false
+            },
+            "0.1": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8027332525216931,
+              "target_reached_with_spectrum": false
+            },
+            "0.2": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8027332525216931,
+              "target_reached_with_spectrum": false
+            }
+          },
+          "configured_retained_rank": 128,
+          "configured_rank_residual_energy_fraction": 0.8905680514541621,
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.158305072654992,
+          "reported_spectrum_partial_entropy_nats": 4.158305072654992,
+          "effective_schmidt_rank": 63.96301800392491,
+          "reported_spectrum_partial_entropy_exp": 63.96301800392491,
+          "tail_energy_by_rank": {
+            "1": 0.9834300254558681,
+            "8": 0.8686205659201828,
+            "64": 6.384884188196464e-16
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 6.384884188196464e-16,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.0442458759607677,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 58,
+              "rank_lower_bound": 58,
+              "residual_energy_at_reported_rank": 0.08887777103336127,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.19396292415158906,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 6.384884188196464e-16,
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            262144,
+            64
+          ]
+        }
+      ],
+      "conditioned_residual": [
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.15771617521961,
+          "reported_spectrum_partial_entropy_nats": 4.15771617521961,
+          "effective_schmidt_rank": 63.92536143567963,
+          "reported_spectrum_partial_entropy_exp": 63.92536143567963,
+          "tail_energy_by_rank": {
+            "1": 0.9832469004608466,
+            "8": 0.8670173397650236,
+            "64": 3.655737858009344e-16
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 3.655737858009344e-16,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04223971251948141,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 57,
+              "rank_lower_bound": 57,
+              "residual_energy_at_reported_rank": 0.09943773093523234,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.18761022128252675,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 3.655737858009344e-16,
+          "cut_after_site": 0,
+          "unfolding_shape": [
+            64,
+            262144
+          ]
+        },
+        {
+          "method": "randomized_range_svd_fp32_ritz_values",
+          "estimated": true,
+          "singular_value_count": 256,
+          "captured_energy_fraction": 0.1971741412503268,
+          "schmidt_entropy_nats": null,
+          "reported_spectrum_partial_entropy_nats": 1.4118828061563349,
+          "effective_schmidt_rank": null,
+          "reported_spectrum_partial_entropy_exp": 4.103674558677602,
+          "tail_energy_by_rank": {
+            "1": 0.9990117983585112,
+            "8": 0.9922407819201998,
+            "64": 0.9420948914340804,
+            "256": 0.8028258587496732
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028258587496732,
+              "target_reached_with_spectrum": false
+            },
+            "0.05": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028258587496732,
+              "target_reached_with_spectrum": false
+            },
+            "0.1": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028258587496732,
+              "target_reached_with_spectrum": false
+            },
+            "0.2": {
+              "minimum_rank": null,
+              "rank_lower_bound": 256,
+              "residual_energy_at_reported_rank": 0.8028258587496732,
+              "target_reached_with_spectrum": false
+            }
+          },
+          "configured_retained_rank": 128,
+          "configured_rank_residual_energy_fraction": 0.8906343075705494,
+          "cut_after_site": 1,
+          "unfolding_shape": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "method": "exact_gram_eigenvalues_fp64",
+          "estimated": false,
+          "singular_value_count": 64,
+          "captured_energy_fraction": 1.0,
+          "schmidt_entropy_nats": 4.158283408848469,
+          "reported_spectrum_partial_entropy_nats": 4.158283408848469,
+          "effective_schmidt_rank": 63.96163233648772,
+          "reported_spectrum_partial_entropy_exp": 63.96163233648772,
+          "tail_energy_by_rank": {
+            "1": 0.9833177502513821,
+            "8": 0.8682430819445968,
+            "64": 3.655737858009344e-16
+          },
+          "min_rank_by_residual_energy_fraction": {
+            "0.01": {
+              "minimum_rank": 64,
+              "rank_lower_bound": 64,
+              "residual_energy_at_reported_rank": 3.655737858009344e-16,
+              "target_reached_with_spectrum": true
+            },
+            "0.05": {
+              "minimum_rank": 61,
+              "rank_lower_bound": 61,
+              "residual_energy_at_reported_rank": 0.04426694290433012,
+              "target_reached_with_spectrum": true
+            },
+            "0.1": {
+              "minimum_rank": 58,
+              "rank_lower_bound": 58,
+              "residual_energy_at_reported_rank": 0.08887522707869835,
+              "target_reached_with_spectrum": true
+            },
+            "0.2": {
+              "minimum_rank": 51,
+              "rank_lower_bound": 51,
+              "residual_energy_at_reported_rank": 0.19388377229398296,
+              "target_reached_with_spectrum": true
+            }
+          },
+          "configured_retained_rank": 64,
+          "configured_rank_residual_energy_fraction": 3.655737858009344e-16,
+          "cut_after_site": 2,
+          "unfolding_shape": [
+            262144,
+            64
+          ]
+        }
+      ]
+    }
+  },
+  "successive_deltas": [
+    {
+      "before": "weight",
+      "after": "weight_minus_sparse",
+      "cuts": [
+        {
+          "cut_after_site": 0,
+          "configured_rank_residual_energy_delta": 0.0,
+          "reported_partial_entropy_delta_nats": 0.0002731749404070172
+        },
+        {
+          "cut_after_site": 1,
+          "configured_rank_residual_energy_delta": 0.006444075293159268,
+          "reported_partial_entropy_delta_nats": -0.061412272467535445
+        },
+        {
+          "cut_after_site": 2,
+          "configured_rank_residual_energy_delta": 0.0,
+          "reported_partial_entropy_delta_nats": 0.000320480396299061
+        }
+      ]
+    },
+    {
+      "before": "weight_minus_sparse",
+      "after": "weight_minus_sparse_bridge",
+      "cuts": [
+        {
+          "cut_after_site": 0,
+          "configured_rank_residual_energy_delta": 3.830930512917878e-16,
+          "reported_partial_entropy_delta_nats": -8.947592972319285e-06
+        },
+        {
+          "cut_after_site": 1,
+          "configured_rank_residual_energy_delta": -9.340004975710858e-05,
+          "reported_partial_entropy_delta_nats": 0.000782671919297595
+        },
+        {
+          "cut_after_site": 2,
+          "configured_rank_residual_energy_delta": 6.384884188196464e-16,
+          "reported_partial_entropy_delta_nats": -2.686309308330692e-06
+        }
+      ]
+    },
+    {
+      "before": "weight_minus_sparse_bridge",
+      "after": "conditioned_residual",
+      "cuts": [
+        {
+          "cut_after_site": 0,
+          "configured_rank_residual_energy_delta": -1.7519265490853385e-17,
+          "reported_partial_entropy_delta_nats": 2.406722601122624e-05
+        },
+        {
+          "cut_after_site": 1,
+          "configured_rank_residual_energy_delta": 6.625611638733098e-05,
+          "reported_partial_entropy_delta_nats": -0.0005667608212760467
+        },
+        {
+          "cut_after_site": 2,
+          "configured_rank_residual_energy_delta": -2.7291463301871197e-16,
+          "reported_partial_entropy_delta_nats": -2.1663806522909113e-05
+        }
+      ]
+    }
+  ],
+  "interpretation_rule": "A positive configured-rank residual-energy delta means the named NEC step made that specific cut harder at the configured rank. Entropy deltas are interpretable as full-spectrum changes only for exact cuts; randomized partial entropy is descriptive."
+}

@@ -30,20 +30,24 @@ shapes:
 | Representation | Coefficients | Ratio vs dense | Reduction vs dense |
 |---|---:|---:|---:|
 | Dense Llama-2-7B | 6,738,415,616 | 1.000× | 0% |
-| Legacy high-fidelity config, formula-derived | 939,044,864 | 7.176× | 86.1% |
-| Legacy production config, formula-derived | 761,323,264 | 8.851× | 88.7% |
-| Legacy extreme config, formula-derived | 611,015,936 | 11.028× | 90.9% |
+| Legacy high-fidelity config, compiler-derived | 915,935,232 | 7.357× | 86.4% |
+| Legacy production config, compiler-derived | 758,907,648 | 8.879× | 88.7% |
+| Legacy extreme config, compiler-derived | 633,763,072 | 10.632× | 90.6% |
 | Grouped SwiGLU, rank 2612 in all 32 MLPs | 6,197,252,096 | 1.087× | 8.03% |
 | Grouped SwiGLU, rank 1866 in all 32 MLPs | 5,115,564,032 | 1.317× | 24.1% |
 | Direct packed 3-bit weights | 6,738,415,616 | 1.000× | 0% |
 
-The old tier formula counts each TT-core scalar, each bridge factor scalar,
+The corrected tier formula counts each TT-core scalar, each bridge factor scalar,
 each sparse residual value, and each `d_awt` scale. Sparse coordinates and
 checkpoint metadata are bytes but not numerical model coefficients. It keeps
 all 32 layers’ norms, embeddings, and the language-model head dense, and uses
-the saved boundary-layer upgrade rules. Its ratios are much lower than the
-77×/18×/10× labels because the labels described a byte estimate, not the
-number of independent scalar values.
+the saved boundary-layer upgrade rules, the Output/Down bridge expansion and
+sparse-budget halving, and the compiler's `(43,4,8,8)` intermediate-width
+layout. The earlier `derived_parameter_counts.json` omitted those details and
+is retained as a superseded record; the corrected output is
+`derived_parameter_counts_compiler_accurate.json`. Its ratios are much lower
+than the 77×/18×/10× labels because the labels described a byte estimate, not
+the number of independent scalar values.
 
 There is a second accounting issue in the old estimates. At the original
 artifact-writing commit, `total_kb` counted bridge values at 0.5 byte per

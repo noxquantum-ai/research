@@ -132,6 +132,25 @@ class TensorSiteOrderTests(unittest.TestCase):
         decoded = reconstruct_from_artifact(reordered[4], dtype=torch.float32)
         torch.testing.assert_close(decoded, reordered[0], atol=2e-3, rtol=2e-3)
 
+    def test_zero_sweep_artifact_records_unquantized_ttsvd_control(self):
+        torch.manual_seed(10)
+        weight = torch.randn(16, 16)
+        inputs = torch.randn(16, 8)
+        result = nox_hybrid_dmrg_decompose(
+            W=weight, X_calib=inputs, Y_dense=weight @ inputs,
+            o_modes=(2, 2, 2, 2), i_modes=(2, 2, 2, 2),
+            ranks=(1, 2, 4, 2, 1), r_bridge=0, n_outliers=0,
+            n_sweeps=0, alpha_awt=1.0, return_artifacts=True,
+            quantize_components=True, verbose=False,
+        )
+        artifact = result[4]
+        self.assertEqual(artifact["core_quantization_bits"], 16)
+        self.assertEqual(artifact["sparse_bridge_quantization_bits"], 4)
+        self.assertEqual(artifact["compiler_hyperparameters"]["n_sweeps"], 0)
+        self.assertEqual(artifact["compiler_hyperparameters"]["alpha_awt"], 1.0)
+        decoded = reconstruct_from_artifact(artifact, dtype=torch.float32)
+        torch.testing.assert_close(decoded, result[0], atol=2e-3, rtol=2e-3)
+
 
 if __name__ == "__main__":
     unittest.main()
