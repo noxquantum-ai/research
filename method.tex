@@ -1,0 +1,150 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[letterpaper,margin=0.62in,columnsep=0.22in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,graphicx,microtype,newtxtext,newtxmath,enumitem,url}
+\setlength{\parindent}{0.8em}
+\setlength{\parskip}{0pt}
+\setlength{\abovedisplayskip}{3pt plus 1pt minus 1pt}
+\setlength{\belowdisplayskip}{3pt plus 1pt minus 1pt}
+\setlength{\textfloatsep}{5pt plus 1pt minus 1pt}
+\setlength{\floatsep}{4pt plus 1pt minus 1pt}
+\setlist{nosep,leftmargin=*}
+\renewcommand{\baselinestretch}{0.955}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathcal{Q}_4}
+\newcommand{\M}{\mathcal{M}}
+\title{\vspace{-1.4em}\textbf{NEC}\vspace{-0.6em}}
+\author{NoxQuantum AI}
+\date{October 17, 2026}
+
+\begin{document}
+\maketitle
+\vspace{-1.5em}
+\fontsize{9}{9.7}\selectfont
+
+\begin{abstract}
+The Nox Entanglement Compiler (NEC) is a gradient-free, post-training compiler for replacing the seven linear operators of each Llama-2 block by a four-site matrix-product operator (MPO), a sparse coordinate shield, an activation-derived low-rank bridge, and a diagonal input scale.  TT--SVD initializes the MPO; two activation-weighted alternating local sweeps solve ridge-regularized normal equations, with quantization simulated inside the last sweep.  Layers are compiled sequentially on the trajectory produced by already-compressed layers, but no parameters are updated after compilation.  We reconstruct the algorithm from the implementation and audit all 96 historical tier artifacts.  Nominal configurations contain 939M, 761M, and 611M coefficients; the serialized artifacts actually contain 916M, 759M, and 634M when unchanged embeddings and heads are included.  This structural reduction did not preserve capability: legacy WikiText-2 perplexity rose from 19.75 to 16,518.61, 10,916.44, and 8,135.61.  The result is therefore a negative one: the representation is compact in coefficient count, but its calibration fit does not generalize to full-model language modeling.
+\end{abstract}
+
+\section{Method}
+\textbf{Objective.}
+For a pretrained linear map $W\in\R^{d_o\times d_i}$, calibration inputs $X\in\R^{d_i\times N}$, and dense targets $Y\in\R^{d_o\times N}$, NEC seeks
+\begin{equation}
+ \min_{\theta:\,C(\theta)\le B}\|\widehat W_\theta X-Y\|_F^2,
+ \qquad \widehat W_\theta=S+AB+\M(G)D^{-1},                 \label{eq:obj}
+\end{equation}
+without back-propagation or post-compilation updates.  Here $S$ is sparse, $AB$ is low rank, $D$ is diagonal, and $\M(G)$ is an MPO.  This combines established tensorized-network and MPO compression ideas \cite{novikov2015,compactifai}; NEC's specific construction is given below.  For ordinary projections $Y=WX$; during sequential compilation $X$ can lie on the compressed trajectory while $Y$ is the corresponding dense-trajectory output.  Thus the repository's term ``causal healing'' denotes closed-form conditioning \emph{inside} compilation, not subsequent fine-tuning.
+
+\textbf{Tensorization, MPOs, and operator Schmidt rank.}
+Choose four output and input modes with $d_o=\prod_{m=0}^3o_m$ and $d_i=\prod_{m=0}^3i_m$.  NEC reshapes $W$ to $(o_0,o_1,o_2,o_3,i_0,i_1,i_2,i_3)$ and interleaves it as $(o_0,i_0,\ldots,o_3,i_3)$.  Cores $G^{(m)}\in\R^{r_m\times o_m\times i_m\times r_{m+1}}$, $r_0=r_4=1$, represent
+\begin{equation}
+\begin{aligned}
+ \M(G)_{\boldsymbol o,\boldsymbol i}
+ &=\sum_{a_1,a_2,a_3}\prod_{m=0}^3
+ G^{(m)}_{a_m,o_m,i_m,a_{m+1}},\\
+ C_{\rm MPO}&=\sum_{m=0}^3r_mo_mi_mr_{m+1}.
+\end{aligned}                                                   \label{eq:mpo}
+\end{equation}
+Across cut $\ell$, matricizing the interleaved tensor gives the operator-Schmidt expansion $T^{\langle\ell\rangle}=\sum_{s=1}^{\rho_\ell}\sigma_s u_sv_s^\top$; the exact minimal bond is $\rho_\ell=\operatorname{rank}T^{\langle\ell\rangle}$ and a normalized spectrum $p_s=\sigma_s^2/\sum_j\sigma_j^2$ defines entropy $-\sum_sp_s\log p_s$ \cite{schmidt1907,oseledets2011}.  NEC uses this identity operationally: TT--SVD successively truncates these unfoldings to prescribed $r_\ell$, with larger middle bonds.  This is a mathematical motivation, not evidence that Llama weights obey an area law.  The historical runs did not measure the required spectra, and their failure shows that the selected bonds were insufficient.  Modes are $(8,8,8,8)$ for 4096; the prime factor in $11008=43\cdot4\cdot8\cdot8$ is placed at the boundary, giving $(43,4,8,8)$ and avoiding an interior local dimension proportional to 43.
+
+\textbf{Sparse--bridge--MPO construction.}
+Let $c_j=(N^{-1}\sum_nX_{jn}^2+10^{-8})^{1/2}$.  The shield selects a thresholded top-$k$ set under $I_{ij}=|W_{ij}|c_j$, and stores
+$S_{ij}=\Q(W_{ij})$ on that set and zero otherwise.  $\Q$ is symmetric groupwise quantize--dequantize with groups of 64, scale $\max|z|/7$, and rounded levels clipped to $[-8,7]$.  Threshold ties and values rounded to zero make the realized cardinality differ from $k$.
+
+The bridge is the exact implemented ridge construction, not an unconstrained SVD of $W$.  Write $X=U\Sigma V^\top$, let $a=\min(\operatorname{rank}X,\max(2r_b,64))$, $R=Y-SX$, and
+\begin{equation}
+ P\Lambda Q^\top=RV_a,\quad
+ B_0=P_{r_b}^{\top}RV_a
+ \operatorname{diag}\!\left(\frac{\sigma_t}{\sigma_t^2+(0.02\sigma_1)^2}\right)U_a^\top . \label{eq:bridge}
+\end{equation}
+Before quantization, columns of $A_0=P_{r_b}$ and rows of $B_0$ are reciprocally rescaled to balance their norms, leaving $A_0B_0$ unchanged; $A=\Q(A_0)$ and $B=\Q(B_0)$.  This sparse-plus-low-rank bypass is NEC's distinctive combination, intended to remove coordinate spikes and calibration-active global directions before MPO fitting.  No historical measurement establishes that it actually bounds entanglement.
+
+Set $W_c=(W-S-AB)D$, $D=\operatorname{diag}(d)$, $d_j=(c_j+10^{-6})^{\alpha}$, $\alpha=1/2$, and $X_c=D^{-1}X$.  With $X_c=U_x\Sigma_xV_x^\top$, the historical $N=256$ runs retain all modes and minimize exactly
+\begin{equation}
+\begin{aligned}
+ &\|\M(G)U_x\Sigma_x-(Y-(S+AB)X)V_x\|_F^2\\
+ &\hspace{1.2em}=\|\M(G)X_c-Y+(S+AB)X\|_F^2.
+\end{aligned}                                                   \label{eq:weighted}
+\end{equation}
+This diagonal conditioning follows the activation-aware tensorization principle \cite{awt2026}; unlike post-hoc low-rank compression \cite{svdllm}, the off-diagonal empirical covariance enters the local least-squares designs.
+
+\textbf{Local compiler.}
+TT--SVD of $W_c$ initializes $G$.  With all but site $m$ fixed, contractions form a design $Z_m$ of width $q_m=r_mi_mr_{m+1}$ and target $Y_m$.  The update is
+\begin{equation}
+\begin{aligned}
+ (H_m+\rho_mI)g_m&=Z_m^\top Y_m+\rho_mg_m^{\rm prior},\\
+ H_m&=Z_m^\top Z_m,\quad
+ \rho_m=\gamma_m(\operatorname{tr}H_m/q_m+10^{-6}).
+\end{aligned}                                                   \label{eq:als}
+\end{equation}
+Systems with $q_m\le4096$ use Cholesky (with a direct-solve fallback in the historical code); larger systems use six matrix-free conjugate-gradient iterations warm-started at $g_m^{\rm prior}$.  The first left-to-right sweep moves the orthogonality center by QR and ends with right canonicalization; in sweep two, $\gamma_m$ is divided by four and each solved core is immediately quantized before constructing the next environment.  Consequently later sites fit the realized upstream rounding error.  Defaults are two sweeps, chunk size 32 (8 for large interior systems), $\gamma=.01$, and $\gamma=.002$ for the conditioned $o$ and down projections.  This is one-site alternating ridge optimization (DMRG terminology), not gradient descent \cite{schollwock2011}.
+
+\textbf{Layerwise compilation.}
+For each layer, NEC (i) fits $q,k,v$ on RMS-normalized compressed inputs to dense $q,k,v$ targets; (ii) computes causal attention with the fitted maps and fits $o$ on that corrupted context to the dense attention output; (iii) fits gate/up on the compressed post-attention stream to their dense targets; and (iv) fits down on $\operatorname{SiLU}(\widehat W_gx)\odot(\widehat W_ux)$ to the dense MLP output.  The raw-residual correction coefficient is zero.  The resulting compressed calibration stream is passed to the next layer.  Output/down use $r_b'=\min(1.5r_b,\max(64,0.6N))$ and $k'=\lfloor k/2\rfloor$.  Layers 0, 1, 30, and 31 are promoted by one tier.  In compact pseudocode: \emph{for layers $0{:}31$, form dense targets; for projections in $q,k,v,o,g,u,d$, build $S,AB,D$, TT--SVD, sweep twice using \eqref{eq:als}, save; then advance dense and compressed streams.}
+
+\textbf{Reconstruction and cost.}
+For one projection,
+\begin{equation}
+ C= C_{\rm MPO}+r_b(d_o+d_i)+|S|+d_i,                  \label{eq:count}
+\end{equation}
+excluding sparse indices.  Separate execution would cost $O(|S|N+r_b(d_o+d_i)N)$ plus the MPO contraction.  The evaluated implementation instead reconstructs a dense matrix: two partial-chain contractions followed by a central contraction costing $O(r_2d_od_i)$ and $O(d_od_i)$ memory, adds $AB$ and $S$, and injects it into Hugging Face.  A four-site \texttt{einsum} application utility exists, but there is no fused compressed Llama inference path or verified latency/memory saving.  Historical ``4-bit'' tensors are dequantized values serialized as FP16, with FP16 sparse values and two int32 coordinates; they are not bit-packed checkpoints.
+
+\section{Experimental Setup}
+We report only the historical three-tier run and its committed records.  It used \texttt{NousResearch/Llama-2-7b-hf} \cite{llama2}, 32 layers, $h=4096$, MLP width 11008, vocabulary 32000, and seven projections per layer.  The run fetched \texttt{main}; no model/tokenizer commit was recorded (the later counting audit uses revision \texttt{8efe6c9b93655b934e27bd9981e3ec13e55aee9d}, but this cannot retroactively pin the evaluated weights).  Calibration comprised 256 tokens from two hard-coded prose/mathematics passages; validation used 128 tokens from a third passage, sequence length 128.  Logs show successful tokenization, so the seeded random-ID fallback was not used.
+
+The tier tuples $(r_0,\ldots,r_4;r_b;k)$ were
+\begin{center}\vspace{-2pt}\scriptsize
+\begin{tabular}{@{}lc@{}}
+High-Fidelity & $(1,64,128,64,1;128;524288)$\\
+Production & $(1,40,80,40,1;128;262144)$\\
+Extreme & $(1,32,80,32,1;96;65536)$
+\end{tabular}\vspace{-2pt}
+\end{center}
+with the boundary promotion above.  Compilation used FP32 weights/activations on an NVIDIA A10 with TF32 enabled; local Gram products at boundary sites used FP16 multiply and FP32 accumulation.  Saved factors were FP16.  The historical block emulator used RMSNorm $\epsilon=10^{-6}$, later found inconsistent with Llama-2's $10^{-5}$.
+
+The WikiText evaluator attempted the raw dataset, failed, and downloaded the processed PyTorch-examples test file (SHA-256 \texttt{d790b833...e239eca0}); hence these are matched \emph{legacy processed-text} results, not canonical raw WikiText-2.  It used the first 10,000 tokenizer tokens, context 2048, stride 512, FP16 inference, and the legacy sliding-window loss denominator.  Only Production reran the dense model; the same dense value is the matched reference for the other tier invocations.  No full-model independent/no-healing PPL was recorded.
+
+\section{Results and Analysis}
+For dense coefficients,
+$C_d=32(4h^2+3h\,11008+2h)+2(32000)h+h=6{,}738{,}415{,}616$.
+Applying \eqref{eq:count} to nominal tier budgets gives the configuration counts below.  We also loaded every serialized artifact and counted core, bridge, scale, sparse-value, and norm tensors, then added the unchanged embedding, head, and final norm.  The two counts differ because the nominal audit did not model the output/down budget change, and actual sparse quantization creates zeros.
+Exact nominal/audited pairs are 939,044,864/915,831,029 (High-Fidelity), 761,323,264/758,835,532 (Production), and 611,015,936/633,747,267 (Extreme).
+
+\begin{table}[t]
+\centering
+\caption{Historical full-model result. Cfg./art. separates formula-derived and artifact-audited coefficient counts (indices excluded). Reduction and ratio are structural, not byte compression. Agreement is compressed versus dense top-1 on 128 held-out tokens.}
+\label{tab:results}
+\scriptsize
+\setlength{\tabcolsep}{2.2pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Coeff. (M), cfg./art. & Red. (\%) & Ratio & PPL ($\times$ dense) & Agree. (\%)\\
+\midrule
+Dense Llama-2-7B & 6738.416/6738.416 & 0/0 & 1.000/1.000 & 19.75 ($1.0\times$) & 100.00\\
+High-Fidelity NEC & 939.045/915.831 & 86.06/86.41 & 7.176/7.358 & 16,518.61 ($836.4\times$) & 4.69\\
+Production NEC & 761.323/758.836 & 88.70/88.74 & 8.851/8.880 & 10,916.44 ($552.7\times$) & 3.91\\
+Extreme NEC & 611.016/633.747 & 90.93/90.60 & 11.028/10.633 & 8,135.61 ($411.9\times$) & 7.03\\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+The ordering among compressed PPLs is not a fidelity trend: all three are catastrophically worse than dense, and even the best is over $400\times$ the matched PPL.  Extreme's final residual relative error was 0.816 and its logit cosine 0.514; High-Fidelity's were 0.807 and 0.607.  The 3.9--7.0\% top-1 agreement and degenerate generations confirm severe capability loss.  Later repository diagnostics identify a consistent mechanism: local sweeps reduce calibration error while worsening held-out projection error; increasing calibration coverage helps but does not close the gap.  The historical run also compounds approximation through all 32 nonlinear blocks and was calibrated on only two short passages.  These observations explain the failure without asserting a universal MPO limit.
+
+Serialized layer files occupy 2.113, 1.447, and 0.883 GB (decimal) for High-Fidelity, Production, and Extreme.  They exclude unchanged embeddings/head and are respectively far larger than the manifests' 359, 263, and 185 MB simulated-packed estimates.  Thus coefficient reduction, quantization level, and checkpoint-byte reduction are three different quantities; no lossless or successful capability-preservation claim follows from Table~\ref{tab:results}.
+
+\section{Limitations}
+Exact reproduction of the historical numbers is bounded by the unpinned model revision, unavailable package versions, processed-text fallback, legacy perplexity denominator, and incorrect RMSNorm epsilon.  The saved artifacts permit exact reconstruction and coefficient/byte audit, but are not standalone models and have no native compressed inference kernel.  Entanglement/area-law language is interpretive: neither the tier run nor its manifests measured operator-Schmidt entropy after shielding.  Finally, the reported checkpoints use compilation-time trajectory conditioning; the repository contains no matched full-model PPL for independently compiled, strictly no-conditioning NEC.
+
+\begin{thebibliography}{9}\scriptsize
+\bibitem{schmidt1907} E. Schmidt. Zur Theorie der linearen und nichtlinearen Integralgleichungen, I. \emph{Math. Ann.}, 63:433--476, 1907.
+\bibitem{oseledets2011} I. V. Oseledets. Tensor-train decomposition. \emph{SIAM J. Sci. Comput.}, 33(5):2295--2317, 2011.
+\bibitem{schollwock2011} U. Schollw\"ock. The density-matrix renormalization group in the age of matrix product states. \emph{Ann. Phys.}, 326:96--192, 2011.
+\bibitem{novikov2015} A. Novikov, D. Podoprikhin, A. Osokin, and D. Vetrov. Tensorizing neural networks. In \emph{NeurIPS}, 2015.
+\bibitem{compactifai} A. Tomut et al. CompactifAI: Extreme compression of large language models using quantum-inspired tensor networks. arXiv:2401.14109, 2024.
+\bibitem{svdllm} X. Wang, Y. Zheng, Z. Wan, and M. Zhang. SVD-LLM: Truncation-aware singular value decomposition for large language model compression. In \emph{ICLR}, 2025.
+\bibitem{awt2026} A. Beatini, M. Maronese, and E. Rodol\`a. Activation-aware weight tensorization. arXiv:2610.10085, 2026.
+\bibitem{llama2} H. Touvron et al. Llama 2: Open foundation and fine-tuned chat models. arXiv:2307.09288, 2023.
+\end{thebibliography}
+
+\end{document}
