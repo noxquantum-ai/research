@@ -6,7 +6,7 @@ This report covers the repository audit, exact-symmetry implementation, CPU spec
 
 The target remains `NousResearch/Llama-2-7b-hf` at revision `8efe6c9b93655b934e27bd9981e3ec13e55aee9d`; calibration and held-out data remain the pinned raw WikiText-2 revision in the Kaggle driver. The private T4 job is capped at 21,600 seconds, streams one layer at a time, and tests layers 0, 15, and 31. The initial job stopped before model or dataset access when pip exited with status 1 while installing pinned dependencies in the Kaggle Python 3.13 image. That run captured only the `CalledProcessError`, so the exact package conflict is unknown; its JSON and logs are preserved in `experiment_artifacts/function_aware_tn/kaggle_batch_1_dependency_failure/`. The second and final initial submission has been pushed and remains queued; no Stage A/B Llama measurements are available yet.
 
-The retry reuses compatible image packages, records their versions, and includes the pip output tail if installation is still required. The local bundle manifest verifies all 38 source/config files. The job is private and uses `NvidiaTeslaT4`. No token value is stored in the source or logs.
+The retry reuses compatible image packages, records their versions, and includes the pip output tail if installation is still required. The local bundle manifest verifies all 38 source/config files. The job is private and uses `NvidiaTeslaT4`. No token value is stored in the source or logs. At the 2026-10-17 13:31 UTC snapshot, Kaggle still reported version 2 as `QUEUED` after about 30 minutes; quota was unchanged, with no logs, output, or model/data access. The machine-readable snapshot is `experiment_artifacts/function_aware_tn/kaggle_batch_2_queued_status.json`.
 
 ## Local implementation and verification
 
@@ -40,9 +40,9 @@ The best measured complete-model reference remains the prior grouped SwiGLU mode
 
 ## Stage A and B results
 
-**Pending the second Kaggle run.** The first run accessed neither the pinned checkpoint nor WikiText and therefore provides no spectra, equivalence error, or module-output measurements. The first-run preflight failure is an environment/install issue, not evidence for or against the research hypothesis.
+**No Llama measurements are available; Stage A and Stage B do not pass their evidence gates, and Stage C does not advance.** Version 2 remains queued, so the pinned checkpoint and WikiText have not been accessed. The first run accessed neither source either and provides no spectra, real-activation equivalence error, or module-output measurements. The first-run pip failure is an environment/install issue with an uncaptured package error; it is not evidence for or against the research hypothesis.
 
-The retry writes exact gauge errors and empirical FP16 tolerances; direct and four-site spectra for the seven projection matrices; original and two alternative NEC site orders; coefficient counts at 1%, 5%, 10%, and 20% residual-energy targets; matched ordinary-SVD coefficients; and 4K/16K fitting, internal-selection, held-out, residual-block, cosine, and norm metrics at 75/50/25% module budgets. A Stage A pass requires a coherent legal gauge group or a coherent site-order result to save at least 20% coefficients at the 10% residual-energy target in at least two representative layers. A Stage B pass requires at least 15% lower median held-out module-output error than the strongest matched structural baseline across all three layers, with no layer more than 10% worse.
+The queued retry is programmed to write exact gauge errors and empirical FP16 tolerances; direct and four-site spectra for the seven projection matrices; original and two alternative NEC site orders; coefficient counts at 1%, 5%, 10%, and 20% residual-energy targets; matched ordinary-SVD coefficients; and 4K/16K fitting, internal-selection, held-out, residual-block, cosine, and norm metrics at 75/50/25% module budgets. A Stage A pass requires a coherent legal gauge group or a coherent site-order result to save at least 20% coefficients at the 10% residual-energy target in at least two representative layers. A Stage B pass requires at least 15% lower median held-out module-output error than the strongest matched structural baseline across all three layers, with no layer more than 10% worse. The current record therefore supports neither gate; this is a scheduling-blocked result, not a measured scientific NO-GO.
 
 The 65,536-token calibration point, prefix tests, and full-model Stage C are not part of this first successful diagnostic run. Prefix tests should only be prepared if a candidate passes the module gate. The full-model benchmark has not been run for this new method.
 
@@ -54,11 +54,11 @@ Pending no new Llama batch is needed to answer the historical part: the old coef
 
 **2. Did we discover a better function-preserving representation?**
 
-The mathematical candidates are implemented and pass the local synthetic equivalence suite; pinned-model real-activation equivalence, randomized Schmidt spectra, and coefficient counts remain pending Kaggle batch 2.
+Not established on Llama. Implemented exact symmetries pass the local numerical equivalence tests, but no real-activation errors, Llama Schmidt spectra, or transformed coefficient counts are available because Kaggle batch 2 has not started.
 
 **3. Did function-aware compression beat ordinary structural baselines?**
 
-No pretrained-model conclusion yet. On the single synthetic CPU draw, the function-aware factor candidate lost to the matched MoDeGPT-inspired shared-neuron baseline at all three budgets.
+There is no pretrained-model comparison. On the single synthetic CPU draw, the function-aware factor candidate lost to the matched MoDeGPT-inspired shared-neuron baseline at all three budgets, so it is not advanced to a full-model test.
 
 **4. What is the highest full-model parameter reduction actually demonstrated?**
 

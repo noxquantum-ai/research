@@ -1,0 +1,15 @@
+{
+  "experiment": "function_aware_tn_stage_a_stage_b",
+  "batch_number": 2,
+  "kernel": "toheebogunade/function-aware-tn-stage-a-and-b-diagnostics",
+  "kernel_version": 2,
+  "observed_at_utc": "2026-10-17T13:31:40Z",
+  "status": "KernelWorkerStatus.QUEUED",
+  "gpu_quota_used_hours": 0.42,
+  "gpu_quota_remaining_hours": 29.58,
+  "model_or_dataset_access_attempted": false,
+  "logs_available": false,
+  "outputs_downloaded": false,
+  "stage_a_or_stage_b_measurements": false,
+  "note": "The submitted private T4 version had been queued since 2026-10-17T13:02:00Z. This is a status snapshot, not a terminal experiment result."
+}
