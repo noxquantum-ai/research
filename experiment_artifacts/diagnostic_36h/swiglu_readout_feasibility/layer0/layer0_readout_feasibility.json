@@ -1,0 +1,251 @@
+{
+  "diagnostic": "final_shared_swiglu_fixed_feature_readout_feasibility",
+  "decision": "NO-GO",
+  "layer": 0,
+  "device": "cuda",
+  "ranks": [
+    426,
+    651
+  ],
+  "thresholds": {
+    "heldout_compressed_trajectory_mlp_relative_error_max": 0.47,
+    "heldout_full_block_relative_error_max": 0.273,
+    "active_transform": "no regression versus saved NEC baseline"
+  },
+  "ridge_ratios": [
+    0.0,
+    1e-08,
+    1e-06,
+    0.0001,
+    0.01,
+    1.0
+  ],
+  "checkpoint_sha256": "81d44f6b676853cbd218f0c2b22bd0a388eed7195b88153045f5c00ead2de6e9",
+  "calibration_input_sha256": "8e9f16b50016b9460607fe116129f62d66702b5484de3fd60b96327c9bd1bc73",
+  "heldout_input_sha256": "f240af3942d70fc411f0615c65921a8bfecd78c1a70b4256eb790495d076d6a4",
+  "dense_weight_sha256": {
+    "q_proj": "653ebf507e4816778a97252d8d6d6bff0a99970e557f6dbd18e69badb99668cc",
+    "k_proj": "6434b248f72cfb95f8e262bd6555456b48c90f7507d8b87bac25a2ff571ef3ec",
+    "v_proj": "b3d7e4ef731ddb41f30a207554a94d4980c0659a02a9b4e05905698497831e16",
+    "o_proj": "00250e20dd33073a47daef7406235de7ba3c5d489b9607f47b1e1f5b06020533",
+    "gate_proj": "a547b7a8cb9c39fb3c3168a1627f84042b1601d46ecdcc76b0306c110910c5b2",
+    "up_proj": "99d7a0863755d6a767d7e2d20362291c4fd22e75e2c23920331649f41f4c83f8",
+    "down_proj": "8866cdcea6a82c59a922fa6d74966495ef42779ce04b8ab65539b436a0e5c0b8"
+  },
+  "calibration_tokens": 4096,
+  "heldout_tokens": 4096,
+  "saved_nec_budget": {
+    "mlp_float_coefficients": 9943596,
+    "mlp_serialized_artifact_bytes": 30370779
+  },
+  "saved_nec_heldout": {
+    "mlp_on_compressed_trajectory": {
+      "relative_error": 0.6261753155473319,
+      "angular_drift": 0.21511852741241455,
+      "norm_ratio": 0.6946908668213324,
+      "cosine_similarity": 0.7848814725875854
+    },
+    "active_transform": {
+      "relative_error": 0.43083554404866625,
+      "angular_drift": 0.09570646286010742,
+      "norm_ratio": 0.8462749414611705,
+      "cosine_similarity": 0.9042935371398926
+    },
+    "full_block": {
+      "relative_error": 0.3637403957679531,
+      "angular_drift": 0.06273496150970459,
+      "norm_ratio": 0.8334730669367149,
+      "cosine_similarity": 0.9372650384902954
+    }
+  },
+  "post_compression_optimization": false,
+  "uses_gradients": false,
+  "uses_dense_residual": false,
+  "rank_results": {
+    "426": {
+      "rank": 426,
+      "budget_kind": "floating_coefficients",
+      "float_coefficients": 9924096,
+      "initial_serialized_bytes": 19850909,
+      "budget_pass": true,
+      "oracle": {
+        "diagnostic_only": true,
+        "uses_heldout_targets": true,
+        "mlp_relative_error": 0.3939363658428192,
+        "active_transform": {
+          "relative_error": 0.3165187978738888,
+          "angular_drift": 0.05124783515930176,
+          "norm_ratio": 0.9310060157073827,
+          "cosine_similarity": 0.9487521648406982
+        },
+        "full_block": {
+          "relative_error": 0.2672264744152069,
+          "angular_drift": 0.03533363342285156,
+          "norm_ratio": 0.9200420967105696,
+          "cosine_similarity": 0.9646663665771484
+        },
+        "mlp_threshold_pass": true
+      },
+      "calibration_only_readout": {
+        "selection": {
+          "selection": "whole_sequence_internal_calibration_split",
+          "validation_stride": 4,
+          "fit_samples": 3072,
+          "selection_samples": 1024,
+          "grid": [
+            {
+              "ridge_ratio": 0.0,
+              "selection_relative_error": 0.5088077187538147
+            },
+            {
+              "ridge_ratio": 1e-08,
+              "selection_relative_error": 0.508807897567749
+            },
+            {
+              "ridge_ratio": 1e-06,
+              "selection_relative_error": 0.5088015794754028
+            },
+            {
+              "ridge_ratio": 0.0001,
+              "selection_relative_error": 0.508230984210968
+            },
+            {
+              "ridge_ratio": 0.01,
+              "selection_relative_error": 0.4871477484703064
+            },
+            {
+              "ridge_ratio": 1.0,
+              "selection_relative_error": 0.5178592801094055
+            }
+          ],
+          "selected_ridge_ratio": 0.01,
+          "selected_internal_relative_error": 0.4871477484703064,
+          "heldout_used_for_selection": false
+        },
+        "heldout_pre_fp16_readout_mlp_relative_error": 0.47759243845939636,
+        "heldout_mlp": {
+          "relative_error": 0.47759239098379225,
+          "angular_drift": 0.12141680717468262,
+          "norm_ratio": 0.8768915023395741,
+          "cosine_similarity": 0.8785831928253174
+        },
+        "heldout_active_transform": {
+          "relative_error": 0.35794923396542694,
+          "angular_drift": 0.06609559059143066,
+          "norm_ratio": 0.916434367504818,
+          "cosine_similarity": 0.9339044094085693
+        },
+        "heldout_full_block": {
+          "relative_error": 0.3022048372947394,
+          "angular_drift": 0.045191287994384766,
+          "norm_ratio": 0.9001480744434704,
+          "cosine_similarity": 0.9548087120056152
+        },
+        "serialized_bytes": 19851421,
+        "payload_bytes": 19848192,
+        "passes": {
+          "mlp": false,
+          "full_block": false,
+          "active_transform_no_regression": true,
+          "budget": true
+        },
+        "overall_pass": false
+      },
+      "runtime_seconds": 0.5289168969993625
+    },
+    "651": {
+      "rank": 651,
+      "budget_kind": "serialized_bytes",
+      "float_coefficients": 15165696,
+      "initial_serialized_bytes": 30334109,
+      "budget_pass": true,
+      "oracle": {
+        "diagnostic_only": true,
+        "uses_heldout_targets": true,
+        "mlp_relative_error": 0.34846553206443787,
+        "active_transform": {
+          "relative_error": 0.29855522043913424,
+          "angular_drift": 0.04544174671173096,
+          "norm_ratio": 0.9367606981687884,
+          "cosine_similarity": 0.954558253288269
+        },
+        "full_block": {
+          "relative_error": 0.25206041319540334,
+          "angular_drift": 0.031518399715423584,
+          "norm_ratio": 0.9298668801921735,
+          "cosine_similarity": 0.9684816002845764
+        },
+        "mlp_threshold_pass": true
+      },
+      "calibration_only_readout": {
+        "selection": {
+          "selection": "whole_sequence_internal_calibration_split",
+          "validation_stride": 4,
+          "fit_samples": 3072,
+          "selection_samples": 1024,
+          "grid": [
+            {
+              "ridge_ratio": 0.0,
+              "selection_relative_error": 0.5135383009910583
+            },
+            {
+              "ridge_ratio": 1e-08,
+              "selection_relative_error": 0.513538122177124
+            },
+            {
+              "ridge_ratio": 1e-06,
+              "selection_relative_error": 0.513525128364563
+            },
+            {
+              "ridge_ratio": 0.0001,
+              "selection_relative_error": 0.5123255848884583
+            },
+            {
+              "ridge_ratio": 0.01,
+              "selection_relative_error": 0.47108936309814453
+            },
+            {
+              "ridge_ratio": 1.0,
+              "selection_relative_error": 0.49776768684387207
+            }
+          ],
+          "selected_ridge_ratio": 0.01,
+          "selected_internal_relative_error": 0.47108936309814453,
+          "heldout_used_for_selection": false
+        },
+        "heldout_pre_fp16_readout_mlp_relative_error": 0.4589301347732544,
+        "heldout_mlp": {
+          "relative_error": 0.45892963343424864,
+          "angular_drift": 0.11152374744415283,
+          "norm_ratio": 0.8909665972003792,
+          "cosine_similarity": 0.8884762525558472
+        },
+        "heldout_active_transform": {
+          "relative_error": 0.34873992886983424,
+          "angular_drift": 0.0626404881477356,
+          "norm_ratio": 0.9211591765950404,
+          "cosine_similarity": 0.9373595118522644
+        },
+        "heldout_full_block": {
+          "relative_error": 0.29442972204395496,
+          "angular_drift": 0.042962849140167236,
+          "norm_ratio": 0.9059581858967195,
+          "cosine_similarity": 0.9570371508598328
+        },
+        "serialized_bytes": 30334621,
+        "payload_bytes": 30331392,
+        "passes": {
+          "mlp": true,
+          "full_block": false,
+          "active_transform_no_regression": true,
+          "budget": true
+        },
+        "overall_pass": false
+      },
+      "runtime_seconds": 0.5724967530004506
+    }
+  },
+  "decision_reason": "no calibration-only candidate meets all declared gates",
+  "runtime_seconds": 2.680220747000021,
+  "peak_cuda_memory_bytes": 6285204480
+}

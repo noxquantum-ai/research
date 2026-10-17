@@ -2,6 +2,8 @@
 
 **Status (2026-10-17):** mathematical diagnosis and CPU/CUDA diagnostic harness complete; six synthetic CPU tests pass. The real layer-0 rank-floor / Down-crossover diagnostic has now run on the existing A10 using the saved checkpoint and 4,096 held-out activations on both dense and compressed trajectories. No layer compilation, perplexity evaluation, new compressor, or instance power action was performed. Raw results are backed up locally in `experiment_artifacts/diagnostic_36h/swiglu_rank_bound/layer0/`.
 
+**Superseding decision:** the final fixed-feature readout experiment at ranks 426 and 651 is complete and returned **NO-GO**. Rank 651's calibration-only readout passed the MLP and storage gates but missed the full-block gate (0.29443 versus 0.273). The shared-neuron line is closed rather than extended with another workaround. See `experiment_artifacts/diagnostic_36h/swiglu_readout_feasibility/layer0/REPORT.md`. The immediate milestone is now a quality-first structural compression baseline at a more conservative reduction rate.
+
 ## 1. The shared-neuron candidate has a hard output-rank ceiling
 
 The failed joint candidate stores \(Z\in\mathbb R^{m\times r}\), \(G_r,U_r\in\mathbb R^{r\times d}\), and \(D_r\in\mathbb R^{d\times r}\), and represents
@@ -134,7 +136,7 @@ N_{\rm total}=N_{\rm MPO}(G)+N_{\rm MPO}(U)+N_{\rm MPO}(D)\le 9{,}943{,}596.
 
 This count is only a budget constraint; actual artifact bytes must include core dtype, shapes, sparse/index data if retained, serialization overhead, and any auxiliary tensors. No speedup follows from coefficient reduction alone; the runtime would need a direct factorized contraction benchmark.
 
-## 5. One prioritized next candidate (proposal only)
+## 5. Historical next-candidate proposal (superseded; do not implement)
 
 **Native-neuron, whole-function output-sensitive MPO.** Keep the coordinatewise SwiGLU operation on all native neuron channels. Represent Gate, Up, and Down as separate MPOs so that no shared linear projector forces ρ(\(\widehat D\)) ≤ 426. Couple them only through a module-level calibration objective and a shared coefficient budget, not through a low-rank neuron basis.
 
