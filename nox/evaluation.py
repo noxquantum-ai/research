@@ -280,8 +280,14 @@ def validate_high_fidelity_checkpoint(
     *,
     reconstruct: bool = False,
     reconstruction_device: str = "cpu",
+    expected_calibration_tokens: int = 256,
+    expected_heldout_tokens: int = 128,
 ) -> dict:
-    """Audit a complete 32-layer current High-Fidelity NEC checkpoint."""
+    """Audit a complete High-Fidelity checkpoint for an explicit data protocol.
+
+    Defaults preserve the historical 256/128-token checkpoint contract. New
+    RunPod experiments must pass their configured token counts explicitly.
+    """
     directory = Path(checkpoint_dir)
     manifest_path = directory / "model_manifest.json"
     if not manifest_path.is_file():
@@ -319,8 +325,24 @@ def validate_high_fidelity_checkpoint(
     if forward != {"n_heads": 32, "n_kv_heads": 32, "seq_len": 128, "rms_norm_eps": 1e-5}:
         raise ValueError(f"Llama-2 forward configuration mismatch: {forward}")
     inputs = identity.get("input_data", {})
-    if inputs.get("calibration_token_count") != 256 or inputs.get("heldout_token_count") != 128:
-        raise ValueError("Calibration token counts differ from current High-Fidelity defaults")
+    if (
+        not isinstance(expected_calibration_tokens, int)
+        or not isinstance(expected_heldout_tokens, int)
+        or expected_calibration_tokens <= 0
+        or expected_heldout_tokens <= 0
+        or expected_calibration_tokens % forward["seq_len"]
+        or expected_heldout_tokens % forward["seq_len"]
+    ):
+        raise ValueError("Expected calibration counts must be positive multiples of seq_len")
+    if (
+        inputs.get("calibration_token_count") != expected_calibration_tokens
+        or inputs.get("heldout_token_count") != expected_heldout_tokens
+    ):
+        raise ValueError(
+            "Calibration token counts differ from the requested protocol: "
+            f"got {inputs.get('calibration_token_count')}/{inputs.get('heldout_token_count')}, "
+            f"expected {expected_calibration_tokens}/{expected_heldout_tokens}"
+        )
     for key in ("calibration_source", "heldout_source"):
         if inputs.get(key, {}).get("dataset_revision") != WIKITEXT_REVISION:
             raise ValueError(f"Unpinned calibration provenance in {key}")

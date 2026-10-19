@@ -1,42 +1,42 @@
-# RunPod: High-Fidelity NEC, full Llama-2-7B
+# RunPod High-Fidelity NEC evaluation
 
-This folder compiles the existing High-Fidelity NEC configuration and then performs a matched, in-run comparison against the pinned dense model. It does not change the compression method or fine-tune/heal either model. Dense and NEC scores are produced by the same evaluator source, model revision, tokenizer, dataset bytes, prompts, precision, and scoring code in separate processes.
+This run compiles all 32 layers and seven supported projections of the pinned Llama-2-7B model using the existing High-Fidelity NEC ranks and zero-healing independent construction. It then measures dense and NEC models with the same WikiText-2 and MMLU evaluators. NEC artifacts are reconstructed to dense FP16 matrices for evaluation; this run does not establish native compressed inference speed or packed checkpoint savings.
 
-## Pod and persistence
+## RunPod resources
 
-Use a RunPod GPU pod with at least one CUDA 12.8-compatible GPU with 24 GiB VRAM, at least 32 GiB system RAM, and a 100 GB persistent network volume mounted at `/workspace`. Preflight also requires 20 GiB free VRAM by default (`NEC_MIN_GPU_FREE_GIB` can lower this only when intentionally accepting less headroom). The verified NEC layer-0 smoke succeeded on a 15 GiB T4; the larger minimum is for full compression and evaluation headroom. An A100 80 GB is a practical single-GPU choice if available. Keep the model cache, environment, checkpoints, logs, and reports under `/workspace`; the scripts refuse to proceed if `/workspace` is not mounted or if fewer than 50 GiB are free. The RunPod environment must be able to download the pinned model/tokenizer and datasets; provide Hugging Face credentials through the pod's private environment/secret mechanism if your account requires them, never by committing a token.
+The quality-max profile uses 65,536 uniformly sampled WikiText-2 train tokens and a disjoint 16,384-token validation cache, in 128-token windows. This is a new calibration protocol, not an exact replay of the historical 256/128 prefix-token experiment. It raises the sample count above each supported projection's input width (including 11,008 for `down_proj`) but cannot guarantee generalization or a target retention percentage.
 
-RunPod documents network volumes as persistent across pod replacement and requires the consuming pod to be in the volume's data center. Select the GPU and volume in the same data center. Avoid multiple writers on one checkpoint volume.
+Because the compiler repeatedly factors and fits large calibration matrices, the runner requires a B200/B300-class GPU: at least 160 GiB total VRAM, 150 GiB free VRAM, 128 GiB effective RAM, and 150 GiB free on the persistent volume mounted at `/workspace`. These are conservative qualification gates, not a measured runtime estimate. The script refuses to start compilation on smaller resources. Use a persistent network volume in the same data center as the pod.
 
 ## Install and run
 
-Place a clean checkout of the committed `main` repository at `/workspace/research` (or set `NEC_REPO_ROOT`), then run exactly one command from that checkout:
+Use a clean committed checkout at `/workspace/research` (or set `NEC_REPO_ROOT`) and run one command:
 
 ```bash
 bash runpod_execution/nec_high_fidelity/run.sh
 ```
 
-`run.sh` creates the pinned persistent runtime if it is absent, runs the fail-closed preflight, compiles or resumes all 32 NEC layers, and evaluates dense and NEC WikiText-2 followed by dense and NEC MMLU. For a detached job, run that same command inside `tmux` or use the pod provider's persistent terminal. `bootstrap.sh` installs Python 3.13.15, PyTorch 2.11.0+cu128, and the locked requirements. Preflight loads only the pinned model configuration and tokenizer—not the 7B weight tensors—and checks Llama-2 dimensions, architecture, vocabulary, RMSNorm epsilon, vocabulary/special IDs, a fixed tokenizer probe, GPU/RAM/disk, package versions, mounted persistence, and a clean committed source tree.
+The script creates or repairs the Python 3.13.15 environment, installs the pinned PyTorch/CUDA and requirements plus the pinned `lm-evaluation-harness` commit, and runs `pip check` before model compilation. Preflight verifies the model architecture/tokenizer, package versions, RunPod persistence, resources, and clean source commit. It then loads the pinned dense model and qualifies PPL batch equivalence at batch size 1 versus the selected batch, scans all 14,042 MMLU prompts for five-shot fit, tests the longest prompt and 4,096-token context at the selected MMLU batch, and initializes the pinned harness on one question per subject. Finally it compiles one actual pinned `down_proj` matrix with a synthetic 65,536-token activation matrix at the full High-Fidelity rank and Q4 settings, then checks artifact decoding against the compiler reconstruction. This last stage validates compiler memory and artifact mechanics, not model quality. No 32-layer compilation starts unless every qualification passes.
 
-The runner compiles all 32 layers and seven projections using the existing `run_config.json`. It writes directly to `/workspace/runs/nec-high-fidelity-20261017/checkpoint`, uses the compiler's `--resume` validation when the manifest exists, and reuses completed evaluation JSON only when both the checkpoint-manifest SHA-256 and evaluator source commit match. Before accepting an already-complete checkpoint, it re-audits the manifest, all layer hashes, all persisted layer inputs, and the full recorded calibration/configuration against `run_config.json`. Every invocation has a separate log/attempt directory; it will not overwrite completed PPL/MMLU reports. If the pod or SSH session stops, reattach the same network volume and run the same command again. The compiler skips integrity-checked completed layers and resumes at the first missing layer.
+Run the command inside `tmux` or a persistent pod terminal. Resume with the same command after interruption. Checkpoints, intermediate calibration states, configuration, logs, resource telemetry, preflight qualification, and reports live below:
 
-Monitor from another shell:
-
-```bash
-tail -f /workspace/runs/nec-high-fidelity-20261017/logs/resources.jsonl
-cat /workspace/runs/nec-high-fidelity-20261017/compile_progress.json
-cat /workspace/runs/nec-high-fidelity-20261017/evaluation/evaluation_progress.json
+```text
+/workspace/runs/nec-high-fidelity-quality-max-20261019/
 ```
 
-The final matched result is written under `evaluation/results/<checkpoint-manifest-sha256>/<source-commit>/final_results.json`. Four immutable reports are retained beside it: dense and NEC WikiText-2, and dense and NEC MMLU. Keying by both artifact and source commit prevents reuse across checkpoint or evaluator changes. The final report is not emitted unless the protocol fingerprints match, WikiText token IDs/windows/counts match, all independent NLL checks pass, the MMLU subject sets and per-subject counts match, and both 57-question adapter smokes plus both complete 57-subject/14,042-question runs pass.
+The compiler resumes only after verifying checkpoint hashes and run configuration. Its inputs include a 65,536-token train calibration cache and 16,384-token validation cache. These add substantial persistent storage; preflight requires 150 GiB free. Run progress is recorded in `compile_progress.json`; GPU/RAM/disk telemetry is appended to `logs/resources.jsonl`. Evaluation stage status is in `evaluation/evaluation_progress.json`.
 
-## Evaluated protocols
+The output includes dense and NEC WikiText-2 raw PPL on the 10,000-token primary prefix and full test split. Each report records mean token NLL, next-token accuracy, and exact top-1 predictions in SHA-256-verified sidecars; the final matched audit calculates dense/NEC prediction agreement. Full 5-shot MMLU uses all 57 subjects and all 14,042 questions. Both variants use the pinned model revision, tokenizer, dataset revisions, FP16 weights, SDPA, identical scoring code, and preflight-qualified shared batch sizes.
+
+The final result distinguishes benchmark completion from quality acceptance. The strict quality gate requires full-test PPL ratio at most 1.7, primary WikiText next-token accuracy retention at least 90%, MMLU accuracy retention at least 90%, and full-test WikiText-2 dense top-1 agreement at least 90%. It also reports 70%, 80%, 90%, and 95% retention thresholds. A completed benchmark may fail the scientific gate without being mislabeled as an execution failure.
+
+## Reproducibility and interpretation
 
 - Model: `NousResearch/Llama-2-7b-hf`, revision `8efe6c9b93655b934e27bd9981e3ec13e55aee9d`.
-- Compression: existing High-Fidelity NEC only; all 32 layers; seven projections/layer; no healing.
-- Calibration: pinned WikiText-2 raw v1 revision `b08601e04326c79dfdd32d625aee71d232d685c3`, 256 train tokens, 128 validation tokens, prefix sampling, length 128, fixed seeds recorded in `run_config.json`.
-- Comparison model: the unmodified dense `NousResearch/Llama-2-7b-hf` at the same pinned revision; this is measured in the same run, not copied from a publication.
-- PPL: pinned WikiText-2 raw test revision, 2048 context, stride 512, 10,000 input tokens and full split, each shifted target scored once; float32 token NLL is summed, divided by the exact number of scored labels, then exponentiated. Dense and NEC token-stream SHA-256 values and window specifications must match.
-- MMLU: pinned `cais/mmlu` revision `c30699e8356da336a370243923dbaf21066bb9fe`, lm-evaluation-harness commit `ddd67220430a2470529f25fd5c05a576ca1057a0`, standard 5-shot, all 57 subjects, deterministic seeds, no chat template. Dense and NEC use the identical harness adapter, task definitions, and hardware-selected batch size.
+- NEC: ranks `[1,64,128,64,1]`, bridge rank 128, sparse budget 524,288, two DMRG sweeps, Q4 simulation with group size 64, independent construction, dense activation mode, no post-compression healing.
+- Calibration: `Salesforce/wikitext` raw v1 revision `b08601e04326c79dfdd32d625aee71d232d685c3`, train split; 65,536 tokens, uniform distinct 128-token windows, seed 42. Validation: validation split, 16,384 tokens, same sampling policy, seed 43.
+- WikiText-2 test: raw test split at the same dataset revision, pinned model tokenizer, 2,048 context, stride 512, float32 shifted cross-entropy, each target scored once.
+- MMLU: `cais/mmlu` revision `c30699e8356da336a370243923dbaf21066bb9fe`; `lm-evaluation-harness` version 0.4.13 at commit `ddd67220430a2470529f25fd5c05a576ca1057a0`; five-shot, 57 subjects, deterministic seeds, no chat template.
+- Comparison: dense model measured in this run under the same evaluation procedures. The experiment is a new independent zero-healing configuration due to its expanded, uniformly sampled calibration and validation caches; results should not be described as the historical trajectory-conditioned rerun.
 
-The runner derives evaluator placement caps as at most 75% of the least-free GPU VRAM and 75% of effective container RAM, capped at 60 GiB/GPU and 48 GiB CPU, leaving space for runtime allocations. With an idle 24 GiB GPU / 32 GiB RAM pod this is about 18 GiB / 24 GiB; an idle 80 GiB / 64 GiB pod gets at most 60 GiB / 48 GiB. It also batches independent evaluation examples: at least 70/42/28 GiB of free VRAM selects WikiText batches 8/4/2 and MMLU batches 16/8/4, falling back to 1 and 2 below 28 GiB. The choice is made once, recorded, and shared by dense and NEC. `NEC_PPL_BATCH_SIZE` and `NEC_MMLU_BATCH_SIZE` may override a batch only for a hardware type that has been qualified with the smoke tests; memory caps may be overridden with `NEC_EVAL_GPU_MEMORY_GIB` and `NEC_EVAL_CPU_MEMORY_GIB`. These controls change scheduling/placement, not precision or scoring. Resource telemetry continues through compilation and evaluation; `compile_progress.json` tracks the last compiled layer, while `evaluation_progress.json` records the chosen batches, PPL/MMLU stage state, and failures.
+The sole configuration for this RunPod experiment is [run_config.json](run_config.json). The final JSON is keyed by checkpoint manifest hash and source commit under `evaluation/results/`; it records structural coefficients separately from serialized bytes and explicitly marks packed-byte savings and native compressed inference as unevaluated.

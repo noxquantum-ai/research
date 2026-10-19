@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -13,6 +14,7 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
 import torch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +48,24 @@ def source_commit() -> str:
 
 
 MODEL_VARIANTS = ("dense", "high_fidelity_nec")
+
+
+def save_top1_predictions(predictions: torch.Tensor, path: Path) -> dict:
+    """Persist exact ordered predictions in a compact, hash-audited sidecar."""
+    if path.exists():
+        raise FileExistsError(f"Refusing to overwrite prediction sidecar {path}")
+    values = predictions.detach().cpu().numpy().astype("<i4", copy=False)
+    payload = values.tobytes(order="C")
+    temporary = path.with_suffix(path.suffix + ".partial")
+    temporary.write_bytes(payload)
+    temporary.replace(path)
+    return {
+        "path": str(path.resolve()),
+        "sha256": hashlib.sha256(payload).hexdigest(),
+        "dtype": "int32_little_endian",
+        "count": int(values.size),
+        "bytes": len(payload),
+    }
 
 
 def load_model(
@@ -135,6 +155,8 @@ def main() -> None:
                         help=("Skip the redundant dense reconstruction pass in the metadata audit; "
                               "the subsequent model injection still reconstructs and shape/finite-checks "
                               "every projection before evaluation."))
+    parser.add_argument("--expected-calibration-tokens", type=int, default=256)
+    parser.add_argument("--expected-heldout-tokens", type=int, default=128)
     args = parser.parse_args()
     if args.variant == "high_fidelity_nec" and args.checkpoint_dir is None:
         parser.error("--checkpoint-dir is required for --variant high_fidelity_nec")
@@ -162,6 +184,8 @@ def main() -> None:
             args.checkpoint_dir,
             reconstruct=not args.skip_reconstruct_audit,
             reconstruction_device="cuda" if torch.cuda.is_available() else "cpu",
+            expected_calibration_tokens=args.expected_calibration_tokens,
+            expected_heldout_tokens=args.expected_heldout_tokens,
         )
         audit_temp = audit_path.with_suffix(audit_path.suffix + ".partial")
         audit_temp.write_text(json.dumps(audit, indent=2) + "\n")
@@ -199,6 +223,10 @@ def main() -> None:
     if abs(ppl - float(torch.exp(torch.tensor(details["mean_nll"], dtype=torch.float64)))) > 1e-9 * max(1.0, ppl):
         raise RuntimeError("Perplexity is inconsistent with exp(mean NLL)")
 
+    primary_predictions = save_top1_predictions(
+        details["top1_predictions"],
+        args.output.with_name(args.output.stem + ".primary_10k.top1.i32"),
+    )
     full_result = None
     if args.full_test:
         if args.max_eval_tokens != 10_000:
@@ -234,6 +262,10 @@ def main() -> None:
             "forward_passes": full_details["forward_passes"],
             "window_specification": full_details["window_specification"],
             "nll_formula_crosscheck": full_details["nll_formula_crosscheck"],
+            "top1_prediction_sidecar": save_top1_predictions(
+                full_details["top1_predictions"],
+                args.output.with_name(args.output.stem + ".full_test.top1.i32"),
+            ),
         }
 
     versions = {}
@@ -273,6 +305,7 @@ def main() -> None:
         "forward_passes": details["forward_passes"],
         "window_specification": details["window_specification"],
         "nll_formula_crosscheck": details["nll_formula_crosscheck"],
+        "top1_prediction_sidecar": primary_predictions,
     }
     result = {
         "status": "COMPLETE",

@@ -146,6 +146,8 @@ def main() -> None:
     parser.add_argument("--checkpoint-dir", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--expected-calibration-tokens", type=int, default=256)
+    parser.add_argument("--expected-heldout-tokens", type=int, default=128)
     parser.add_argument("--smoke-limit", type=int, default=0,
                         help="Nonzero is adapter validation only and cannot produce a complete score")
     parser.add_argument("--smoke-first", action="store_true",
@@ -179,7 +181,11 @@ def main() -> None:
         if len(subjects) != 57:
             raise RuntimeError("Pinned MMLU audit did not find 57 subjects")
         audit = (
-            validate_high_fidelity_checkpoint(args.checkpoint_dir)
+            validate_high_fidelity_checkpoint(
+                args.checkpoint_dir,
+                expected_calibration_tokens=args.expected_calibration_tokens,
+                expected_heldout_tokens=args.expected_heldout_tokens,
+            )
             if args.variant == "high_fidelity_nec" else None
         )
         model, tokenizer, injected, compatibility, _ = load_model(

@@ -19,14 +19,15 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 import torch
 
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from nox.evaluation import validate_high_fidelity_checkpoint  # noqa: E402
+from nox.evaluation import PROJECTION_SHAPES, validate_high_fidelity_checkpoint  # noqa: E402
 
-CONFIG_PATH = ROOT / "kaggle_execution/nec_high_fidelity/run_config.json"
+CONFIG_PATH = ROOT / "runpod_execution/nec_high_fidelity/run_config.json"
 COMPILER = ROOT / "scripts/compile_high_fidelity.py"
 PPL_EVALUATOR = ROOT / "benchmarks/evaluate_high_fidelity_nec.py"
 MMLU_EVALUATOR = ROOT / "benchmarks/evaluate_high_fidelity_mmlu.py"
@@ -58,6 +59,13 @@ def atomic_json(path: Path, value: dict) -> None:
 
 def load_config() -> dict:
     config = json.loads(CONFIG_PATH.read_text())
+    experiment = config["experiment"]
+    if (
+        experiment.get("id") != "nec-high-fidelity-quality-max-20261019"
+        or experiment.get("historical_exact_reproduction") is not False
+        or experiment.get("retention_guarantee") is not False
+    ):
+        raise RuntimeError("run_config.json experiment identity is not the quality-max run")
     model = config["model"]
     compression = config["compression"]
     calibration = config["calibration"]
@@ -79,6 +87,11 @@ def load_config() -> dict:
         "construction_mode": "independent",
         "representation": "mpo4",
         "post_compression_healing": False,
+        "local_fit_prior_gamma": 0.01,
+        "final_sweep_gamma_multiplier": 0.25,
+        "dmrg_chunk_size": 32,
+        "matrix_free_cg_iterations": 6,
+        "activation_mode": "dense",
     }
     for key, value in expected.items():
         if compression.get(key) != value:
@@ -97,10 +110,10 @@ def load_config() -> dict:
         or calibration["dataset"] != "Salesforce/wikitext/wikitext-2-raw-v1"
         or calibration["calibration_split"] != "train"
         or calibration["heldout_split"] != "validation"
-        or calibration["calibration_tokens"] != 256
-        or calibration["heldout_tokens"] != 128
+        or calibration["calibration_tokens"] != 65_536
+        or calibration["heldout_tokens"] != 16_384
         or calibration["sequence_length"] != 128
-        or calibration["sampling"] != "prefix"
+        or calibration["sampling"] != "uniform"
         or calibration["calibration_seed"] != 42
         or calibration["heldout_seed"] != 43
         or calibration["target"] != "independent dense model activations"
@@ -120,7 +133,7 @@ def load_config() -> dict:
         or wikitext["text_join"] != "two newline characters"
         or wikitext["token_loss_precision"] != "float32_cross_entropy_from_logits"
         or wikitext["chat_template"] is not False
-        or wikitext["inference_batch_size_policy"] != "shared_hardware_adaptive"
+        or wikitext["inference_batch_size_policy"] != "preflight_qualified_shared_batch"
         or wikitext["batch_size_tiers_by_minimum_free_vram_gib"] != {
             "70": 8, "42": 4, "28": 2, "0": 1,
         }
@@ -136,7 +149,7 @@ def load_config() -> dict:
         or mmlu["shots"] != 5
         or mmlu["subjects"] != 57
         or mmlu["expected_test_questions"] != 14042
-        or mmlu["batch_size_policy"] != "shared_hardware_adaptive"
+        or mmlu["batch_size_policy"] != "preflight_qualified_shared_batch"
         or mmlu["batch_size_tiers_by_minimum_free_vram_gib"] != {
             "70": 16, "42": 8, "28": 4, "0": 2,
         }
@@ -168,6 +181,15 @@ def load_config() -> dict:
     }.items():
         if compression.get(key) != expected_value:
             raise RuntimeError(f"run_config.json compression.{key} differs from High-Fidelity NEC")
+    if config.get("acceptance") != {
+        "full_test_ppl_ratio_nec_over_dense_max": 1.7,
+        "primary_10k_next_token_accuracy_retention_min": 0.90,
+        "mmlu_accuracy_retention_strict_min": 0.90,
+        "wikitext_dense_top1_agreement_strict_min": 0.90,
+        "report_retention_thresholds": [0.70, 0.80, 0.90, 0.95],
+        "quality_failure_is_software_failure": False,
+    }:
+        raise RuntimeError("run_config.json acceptance criteria differ from the audited gates")
     return config
 
 
@@ -230,7 +252,7 @@ def verify_checkpoint_matches_run_config(checkpoint: Path, config: dict) -> None
 def roots() -> tuple[Path, Path]:
     workspace = Path(os.environ.get("NEC_WORKSPACE_ROOT", "/workspace")).resolve()
     run_root = Path(os.environ.get(
-        "NEC_RUN_ROOT", str(workspace / "runs/nec-high-fidelity-20261017"),
+        "NEC_RUN_ROOT", str(workspace / "runs/nec-high-fidelity-quality-max-20261019"),
     )).resolve()
     if not run_root.is_relative_to(workspace):
         raise RuntimeError(f"Run root {run_root} must be under persistent volume {workspace}")
@@ -319,6 +341,45 @@ def evaluation_batch_sizes(
     if ppl_batch < 1 or mmlu_batch < 1:
         raise ValueError("Evaluation batch sizes must be positive integers")
     return ppl_batch, mmlu_batch
+
+
+def preflight_qualified_batch_sizes(
+    run_root: Path, commit: str, config_hash: str,
+) -> tuple[int, int, int, int]:
+    """Return only batch sizes and placement caps proven by current preflight."""
+    path = run_root / "runpod_preflight.json"
+    if not path.is_file():
+        raise RuntimeError("Missing runpod_preflight.json; refusing unqualified evaluation")
+    record = json.loads(path.read_text())
+    qualification = record.get("gpu_qualification", {})
+    if (
+        record.get("status") != "PASS"
+        or record.get("source_commit") != commit
+        or record.get("run_config", {}).get("sha256") != config_hash
+        or qualification.get("status") != "PASS"
+        or qualification.get("source_commit") != commit
+        or qualification.get("run_config_sha256") != config_hash
+        or qualification.get("ppl_batch_equivalence", {}).get("status") != "PASS"
+        or qualification.get("mmlu_gpu_qualification", {}).get("status") != "PASS"
+        or qualification.get("compiler_capacity_smoke", {}).get("status") != "PASS"
+    ):
+        raise RuntimeError("RunPod preflight does not qualify this source/configuration")
+    ppl_batch = qualification["ppl_batch_equivalence"].get("qualified_batch_size")
+    mmlu_batch = qualification["mmlu_gpu_qualification"].get("qualified_batch_size")
+    caps = record.get("evaluation_memory_caps_gib", {})
+    gpu_cap = caps.get("gpu_per_device")
+    cpu_cap = caps.get("cpu")
+    if not isinstance(ppl_batch, int) or ppl_batch < 1:
+        raise RuntimeError("Preflight contains an invalid PPL batch size")
+    if not isinstance(mmlu_batch, int) or mmlu_batch < 1:
+        raise RuntimeError("Preflight contains an invalid MMLU batch size")
+    if not isinstance(gpu_cap, int) or gpu_cap < 1 or not isinstance(cpu_cap, int) or cpu_cap < 1:
+        raise RuntimeError("Preflight contains invalid evaluation memory caps")
+    if qualification.get("evaluation_memory_caps_gib") != {
+        "gpu_per_device_gib": gpu_cap, "cpu_gib": cpu_cap,
+    }:
+        raise RuntimeError("Preflight memory caps differ from those used for GPU qualification")
+    return ppl_batch, mmlu_batch, gpu_cap, cpu_cap
 
 
 def effective_ram_bytes() -> int:
@@ -447,7 +508,10 @@ def run_compile(workspace: Path, run_root: Path, commit: str, config: dict) -> P
             # Do not trust the manifest's layer list alone: re-hash and inspect
             # all 32 serialized layers and their calibration artifacts on resume.
             checkpoint_audit = validate_high_fidelity_checkpoint(
-                checkpoint, reconstruct=False,
+                checkpoint,
+                reconstruct=False,
+                expected_calibration_tokens=config["calibration"]["calibration_tokens"],
+                expected_heldout_tokens=config["calibration"]["heldout_tokens"],
             )
             verify_checkpoint_matches_run_config(checkpoint, config)
             record = {
@@ -541,7 +605,12 @@ def run_compile(workspace: Path, run_root: Path, commit: str, config: dict) -> P
         expected_hash = manifest["checkpoint_file_sha256"].get(name)
         if path.stat().st_size != int(expected_size or -1) or sha256_file(path) != expected_hash:
             raise RuntimeError(f"Layer {index} failed persisted size/SHA-256 verification")
-    checkpoint_audit = validate_high_fidelity_checkpoint(checkpoint, reconstruct=False)
+    checkpoint_audit = validate_high_fidelity_checkpoint(
+        checkpoint,
+        reconstruct=False,
+        expected_calibration_tokens=config["calibration"]["calibration_tokens"],
+        expected_heldout_tokens=config["calibration"]["heldout_tokens"],
+    )
     verify_checkpoint_matches_run_config(checkpoint, config)
     progress.update({
         "status": "COMPLETE",
@@ -590,39 +659,6 @@ def publish_json(source: Path, destination: Path) -> None:
     temporary.replace(destination)
 
 
-def install_harness(env: dict[str, str], log_path: Path) -> None:
-    specification = (
-        "lm_eval[hf] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git@"
-        + LM_EVAL_COMMIT
-    )
-    run_logged(
-        [sys.executable, "-m", "pip", "install", specification],
-        log_path,
-        env,
-    )
-    actual = importlib.metadata.version("lm_eval")
-    if actual != "0.4.13":
-        raise RuntimeError(f"Expected lm-evaluation-harness 0.4.13, found {actual}")
-    expected_runtime = {
-        "torch": "2.11.0+cu128",
-        "transformers": "5.16.1",
-        "huggingface-hub": "1.29.0",
-        "safetensors": "0.8.0",
-        "accelerate": "1.14.0",
-        "datasets": "4.8.5",
-        "pyarrow": "23.0.1",
-        "numpy": "2.1.3",
-        "scipy": "1.16.3",
-    }
-    for package, expected in expected_runtime.items():
-        installed = importlib.metadata.version(package)
-        if installed != expected:
-            raise RuntimeError(
-                f"Installing lm-eval changed pinned {package}: {installed}, expected {expected}"
-            )
-    run_logged([sys.executable, "-m", "pip", "check"], log_path, env)
-
-
 def validate_ppl_report(record: dict, variant: str, checkpoint_hash: str | None, commit: str) -> None:
     if record.get("status") != "COMPLETE" or record.get("model_variant") != variant:
         raise RuntimeError(f"{variant} PPL evaluator did not produce a complete report")
@@ -635,6 +671,39 @@ def validate_ppl_report(record: dict, variant: str, checkpoint_hash: str | None,
     protocol_batch = record.get("protocol_identity", {}).get("inference_batch_size")
     if not isinstance(protocol_batch, int) or protocol_batch < 1:
         raise RuntimeError(f"{variant} PPL report has an invalid batch size")
+    expected_layers = list(range(32)) if variant == "high_fidelity_nec" else []
+    if record.get("compressed_layers") != expected_layers:
+        raise RuntimeError(f"{variant} PPL report has an incomplete or unexpected layer injection")
+    reconstruction = record.get("projection_reconstruction_audit", [])
+    if variant == "high_fidelity_nec":
+        expected_pairs = {
+            (layer, projection)
+            for layer in range(32)
+            for projection in PROJECTION_SHAPES
+        }
+        observed_pairs = {
+            (item.get("layer"), item.get("projection"))
+            for item in reconstruction
+            if isinstance(item, dict)
+        }
+        if len(reconstruction) != 224 or observed_pairs != expected_pairs:
+            raise RuntimeError("NEC PPL report lacks one reconstruction audit per layer/projection")
+        for item in reconstruction:
+            for key in (
+                "relative_frobenius_error", "cosine_similarity", "source_rms",
+                "reconstructed_rms", "source_max_abs", "reconstructed_max_abs",
+                "reconstruction_zero_fraction",
+            ):
+                if not isinstance(item.get(key), (int, float)) or not math.isfinite(item[key]):
+                    raise RuntimeError(f"NEC reconstruction diagnostic {key} is invalid")
+            for key in (
+                "source_nonzero_to_reconstruction_zero_count",
+                "reconstruction_fp16_subnormal_count",
+            ):
+                if not isinstance(item.get(key), int) or item[key] < 0:
+                    raise RuntimeError(f"NEC reconstruction diagnostic {key} is invalid")
+    elif reconstruction:
+        raise RuntimeError("Dense PPL report unexpectedly contains NEC projection reconstructions")
     for label in ("primary_10k", "full_test"):
         metric = record.get("metrics", {}).get(label)
         if metric is None or metric["scored_tokens"] != metric["input_tokens"] - 1:
@@ -651,15 +720,38 @@ def validate_ppl_report(record: dict, variant: str, checkpoint_hash: str | None,
             raise RuntimeError(f"{variant} PPL batch metadata is inconsistent for {label}")
         if not 0 < metric.get("forward_passes", 0) <= metric.get("window_count", 0):
             raise RuntimeError(f"{variant} PPL forward-pass count is invalid for {label}")
+        load_top1_predictions(metric, variant, label)
+
+
+def load_top1_predictions(metric: dict, variant: str, label: str) -> np.ndarray:
+    """Read and verify an evaluator prediction sidecar before comparison."""
+    sidecar = metric.get("top1_prediction_sidecar", {})
+    path = Path(sidecar.get("path", ""))
+    count = metric.get("scored_tokens")
+    if (
+        sidecar.get("dtype") != "int32_little_endian"
+        or sidecar.get("count") != count
+        or sidecar.get("bytes") != 4 * count
+        or not path.is_file()
+        or path.stat().st_size != 4 * count
+        or sha256_file(path) != sidecar.get("sha256")
+    ):
+        raise RuntimeError(f"{variant} {label} top-1 prediction sidecar is missing or corrupt")
+    values = np.fromfile(path, dtype="<i4")
+    if values.size != count:
+        raise RuntimeError(f"{variant} {label} top-1 prediction count is inconsistent")
+    return values
 
 
 def validate_mmlu_report(record: dict, variant: str, checkpoint_hash: str | None, commit: str) -> None:
+    expected_layers = list(range(32)) if variant == "high_fidelity_nec" else []
     if (
         record.get("status") != "COMPLETE"
         or record.get("model_variant") != variant
         or record.get("dense_model_evaluated") is not (variant == "dense")
         or record.get("checkpoint_manifest_sha256") != checkpoint_hash
         or record.get("source_commit") != commit
+        or record.get("compressed_layers") != expected_layers
         or record.get("total_questions") != 14_042
         or len(record.get("per_subject", {})) != 57
         or record.get("adapter_smoke", {}).get("status") != "PASS"
@@ -689,6 +781,7 @@ def validate_matched_evaluations(
     """Prove that both variants used the same model inputs and benchmark protocols."""
     if dense_ppl["protocol_fingerprint"] != nec_ppl["protocol_fingerprint"]:
         raise RuntimeError("Dense and NEC WikiText-2 protocol fingerprints differ")
+    top1_agreement = {}
     for label in ("primary_10k", "full_test"):
         dense_metric = dense_ppl["metrics"][label]
         nec_metric = nec_ppl["metrics"][label]
@@ -698,6 +791,11 @@ def validate_matched_evaluations(
         ):
             if dense_metric[key] != nec_metric[key]:
                 raise RuntimeError(f"Dense and NEC WikiText-2 {label} differ in {key}")
+        dense_predictions = load_top1_predictions(dense_metric, "dense", label)
+        nec_predictions = load_top1_predictions(nec_metric, "high_fidelity_nec", label)
+        if dense_predictions.shape != nec_predictions.shape:
+            raise RuntimeError(f"Dense and NEC WikiText-2 {label} prediction shapes differ")
+        top1_agreement[label] = float(np.mean(dense_predictions == nec_predictions))
     if dense_mmlu["protocol_fingerprint"] != nec_mmlu["protocol_fingerprint"]:
         raise RuntimeError("Dense and NEC MMLU protocol fingerprints differ")
     if dense_mmlu["evaluation_input_identity"] != nec_mmlu["evaluation_input_identity"]:
@@ -722,6 +820,7 @@ def validate_matched_evaluations(
         "same_tokenizer_and_architecture_validation": True,
         "wikitext2_protocol_fingerprint": dense_ppl["protocol_fingerprint"],
         "wikitext2_identical_token_streams": True,
+        "wikitext2_dense_top1_prediction_agreement": top1_agreement,
         "mmlu_protocol_fingerprint": dense_mmlu["protocol_fingerprint"],
         "mmlu_evaluation_input_sha256": dense_mmlu["evaluation_input_identity"]["sha256"],
         "mmlu_identical_subject_question_counts": True,
@@ -735,7 +834,15 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
     if manifest.get("layers_compressed") != list(range(32)):
         raise RuntimeError("Refusing evaluation: checkpoint is not complete through layer 31")
     checkpoint_hash = sha256_file(manifest_path)
-    results = run_root / "evaluation/results" / checkpoint_hash / commit
+    env = os.environ.copy()
+    env["NEC_SOURCE_COMMIT"] = commit
+    ppl_batch, mmlu_batch, gpu_cap, cpu_cap = preflight_qualified_batch_sizes(
+        run_root, commit, sha256_file(CONFIG_PATH),
+    )
+    results = (
+        run_root / "evaluation/results" / checkpoint_hash / commit
+        / f"ppl-batch-{ppl_batch}_mmlu-batch-{mmlu_batch}"
+    )
     results.mkdir(parents=True, exist_ok=True)
     report_paths = {
         ("dense", "ppl"): results / "dense_wikitext2.json",
@@ -743,11 +850,6 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
         ("dense", "mmlu"): results / "dense_mmlu_5shot.json",
         ("high_fidelity_nec", "mmlu"): results / "nec_mmlu_5shot.json",
     }
-    env = os.environ.copy()
-    env["NEC_SOURCE_COMMIT"] = commit
-    available_gpu_memory = [torch.cuda.mem_get_info(index)[0] for index in range(torch.cuda.device_count())]
-    gpu_cap, cpu_cap = evaluation_memory_limits(available_gpu_memory, effective_ram_bytes(), env)
-    ppl_batch, mmlu_batch = evaluation_batch_sizes(available_gpu_memory, env)
     env.update({
         "NEC_EVAL_GPU_MEMORY_GIB": str(gpu_cap),
         "NEC_EVAL_CPU_MEMORY_GIB": str(cpu_cap),
@@ -794,10 +896,18 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
                     "--max-eval-tokens", "10000", "--batch-size", str(ppl_batch), "--full-test",
                 ]
                 if variant == "high_fidelity_nec":
-                    command.extend(["--checkpoint-dir", str(checkpoint), "--skip-reconstruct-audit"])
+                    command.extend([
+                        "--checkpoint-dir", str(checkpoint), "--skip-reconstruct-audit",
+                        "--expected-calibration-tokens",
+                        str(load_config()["calibration"]["calibration_tokens"]),
+                        "--expected-heldout-tokens",
+                        str(load_config()["calibration"]["heldout_tokens"]),
+                    ])
                 run_logged(command, attempt / "wikitext2.log", env)
                 evaluated = json.loads(output.read_text())
                 validate_ppl_report(evaluated, variant, expected_hash, commit)
+                if evaluated["protocol_identity"]["inference_batch_size"] != ppl_batch:
+                    raise RuntimeError("PPL evaluator used a batch size different from preflight qualification")
                 publish_json(output, result_path)
                 progress["stages"][stage] = {
                     "status": "COMPLETE", "attempt": str(attempt), "report": str(result_path),
@@ -805,25 +915,9 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
                 }
             else:
                 validate_ppl_report(existing, variant, expected_hash, commit)
+                if existing["protocol_identity"]["inference_batch_size"] != ppl_batch:
+                    raise RuntimeError("Reused PPL report batch differs from this hardware qualification")
                 progress["stages"][stage] = {"status": "REUSED_VERIFIED_RESULT"}
-            atomic_json(evaluation_progress, progress)
-
-        missing_mmlu = any(
-            verify_result(
-                report_paths[(variant, "mmlu")], None if variant == "dense" else checkpoint_hash,
-                source_commit_hash=commit, model_variant=variant,
-            ) is None
-            for variant in ("dense", "high_fidelity_nec")
-        )
-        if missing_mmlu:
-            install_attempt = run_root / "evaluation/attempts" / f"install-mmlu-{utc_id()}"
-            install_attempt.mkdir(parents=True, exist_ok=False)
-            progress["stages"]["install_mmlu_harness"] = {
-                "status": "RUNNING", "attempt": str(install_attempt),
-            }
-            atomic_json(evaluation_progress, progress)
-            install_harness(env, install_attempt / "install_lm_eval.log")
-            progress["stages"]["install_mmlu_harness"]["status"] = "COMPLETE"
             atomic_json(evaluation_progress, progress)
 
         for variant in ("dense", "high_fidelity_nec"):
@@ -847,10 +941,19 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
                     "--output", str(output), "--batch-size", str(mmlu_batch), "--smoke-first",
                 ]
                 if variant == "high_fidelity_nec":
-                    command.extend(["--checkpoint-dir", str(checkpoint)])
+                    run_config = load_config()
+                    command.extend([
+                        "--checkpoint-dir", str(checkpoint),
+                        "--expected-calibration-tokens",
+                        str(run_config["calibration"]["calibration_tokens"]),
+                        "--expected-heldout-tokens",
+                        str(run_config["calibration"]["heldout_tokens"]),
+                    ])
                 run_logged(command, attempt / "mmlu_5shot.log", env)
                 evaluated = json.loads(output.read_text())
                 validate_mmlu_report(evaluated, variant, expected_hash, commit)
+                if evaluated["protocol_identity"]["batch_size"] != mmlu_batch:
+                    raise RuntimeError("MMLU evaluator used a batch size different from preflight qualification")
                 publish_json(output, result_path)
                 progress["stages"][stage] = {
                     "status": "COMPLETE", "attempt": str(attempt), "report": str(result_path),
@@ -858,6 +961,8 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
                 }
             else:
                 validate_mmlu_report(existing, variant, expected_hash, commit)
+                if existing["protocol_identity"]["batch_size"] != mmlu_batch:
+                    raise RuntimeError("Reused MMLU report batch differs from this hardware qualification")
                 progress["stages"][stage] = {"status": "REUSED_VERIFIED_RESULT"}
             atomic_json(evaluation_progress, progress)
     except BaseException as error:
@@ -889,6 +994,20 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
     nec_full = nec_ppl["metrics"]["full_test"]
     dense_mmlu_accuracy = dense_mmlu["overall_5shot_accuracy"]
     nec_mmlu_accuracy = nec_mmlu["overall_5shot_accuracy"]
+    config = load_config()
+    acceptance = config["acceptance"]
+    primary_ppl_ratio = nec_primary["perplexity"] / dense_primary["perplexity"]
+    full_ppl_ratio = nec_full["perplexity"] / dense_full["perplexity"]
+    primary_accuracy_retention = nec_primary["next_token_accuracy"] / dense_primary["next_token_accuracy"]
+    mmlu_retention = nec_mmlu_accuracy / dense_mmlu_accuracy
+    primary_top1_agreement = matched_audit["wikitext2_dense_top1_prediction_agreement"]["primary_10k"]
+    full_top1_agreement = matched_audit["wikitext2_dense_top1_prediction_agreement"]["full_test"]
+    strict_quality_pass = (
+        full_ppl_ratio <= acceptance["full_test_ppl_ratio_nec_over_dense_max"]
+        and primary_accuracy_retention >= acceptance["primary_10k_next_token_accuracy_retention_min"]
+        and mmlu_retention >= acceptance["mmlu_accuracy_retention_strict_min"]
+        and full_top1_agreement >= acceptance["wikitext_dense_top1_agreement_strict_min"]
+    )
     report_hashes = {f"{variant}_{benchmark}_sha256": sha256_file(path) for (variant, benchmark), path in report_paths.items()}
     final = {
         "status": "COMPLETE",
@@ -896,6 +1015,8 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
         "model_revision": MODEL_REVISION,
         "source_commit": commit,
         "run_config_sha256": sha256_file(CONFIG_PATH),
+        "experiment": config["experiment"],
+        "calibration": config["calibration"],
         "checkpoint_manifest_sha256": checkpoint_hash,
         "matched_protocol_audit": matched_audit,
         "reports": {f"{variant}_{benchmark}": str(path) for (variant, benchmark), path in report_paths.items()},
@@ -921,14 +1042,41 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
             "mmlu_per_subject": nec_mmlu["per_subject"],
         },
         "comparison": {
-            "primary_10k_ppl_ratio_nec_over_dense": nec_primary["perplexity"] / dense_primary["perplexity"],
+            "primary_10k_ppl_ratio_nec_over_dense": primary_ppl_ratio,
             "primary_10k_mean_nll_delta_nec_minus_dense": nec_primary["mean_nll"] - dense_primary["mean_nll"],
-            "primary_10k_next_token_accuracy_retention": nec_primary["next_token_accuracy"] / dense_primary["next_token_accuracy"],
-            "full_test_ppl_ratio_nec_over_dense": nec_full["perplexity"] / dense_full["perplexity"],
+            "primary_10k_next_token_accuracy_retention": primary_accuracy_retention,
+            "primary_10k_dense_top1_prediction_agreement": primary_top1_agreement,
+            "full_test_ppl_ratio_nec_over_dense": full_ppl_ratio,
             "full_test_mean_nll_delta_nec_minus_dense": nec_full["mean_nll"] - dense_full["mean_nll"],
-            "mmlu_accuracy_retention": nec_mmlu_accuracy / dense_mmlu_accuracy,
+            "full_test_dense_top1_prediction_agreement": full_top1_agreement,
+            "mmlu_accuracy_retention": mmlu_retention,
             "mmlu_accuracy_percentage_point_delta": 100.0 * (nec_mmlu_accuracy - dense_mmlu_accuracy),
-            "mmlu_preserves_at_least_90_percent": nec_mmlu_accuracy / dense_mmlu_accuracy >= 0.90,
+            "retention_thresholds": {
+                f"{int(threshold * 100)}_percent": {
+                    "primary_10k_next_token_accuracy_retention_pass": primary_accuracy_retention >= threshold,
+                    "mmlu_accuracy_retention_pass": mmlu_retention >= threshold,
+                    "full_test_dense_top1_agreement_pass": full_top1_agreement >= threshold,
+                }
+                for threshold in acceptance["report_retention_thresholds"]
+            },
+        },
+        "quality_assessment": {
+            "status": "PASS" if strict_quality_pass else "FAIL",
+            "benchmark_completion_status": "COMPLETE",
+            "scientific_failure_is_not_a_software_failure": True,
+            "strict_gate": {
+                "full_test_ppl_ratio_max": acceptance["full_test_ppl_ratio_nec_over_dense_max"],
+                "primary_10k_next_token_accuracy_retention_min": acceptance["primary_10k_next_token_accuracy_retention_min"],
+                "mmlu_accuracy_retention_min": acceptance["mmlu_accuracy_retention_strict_min"],
+                "full_test_dense_top1_prediction_agreement_min": acceptance["wikitext_dense_top1_agreement_strict_min"],
+                "passed": strict_quality_pass,
+            },
+        },
+        "deployment_scope": {
+            "coefficient_reduction_is_structural": True,
+            "packed_checkpoint_byte_reduction_established": False,
+            "native_compressed_inference_evaluated": False,
+            "evaluation_execution": "NEC artifacts reconstructed to dense FP16 projection matrices and injected into the pinned Hugging Face model",
         },
         "dense_model_evaluated": True,
         "completed_utc": datetime.now(timezone.utc).isoformat(),

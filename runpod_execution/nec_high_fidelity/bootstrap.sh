@@ -11,7 +11,7 @@ if ! mountpoint -q "$WORKSPACE_ROOT"; then
   echo "Attach a RunPod network volume at $WORKSPACE_ROOT before bootstrapping." >&2
   exit 2
 fi
-if [[ ! -f "$REPO_ROOT/kaggle_execution/nec_high_fidelity/run_config.json" ]]; then
+if [[ ! -f "$SCRIPT_DIR/run_config.json" ]]; then
   echo "ERROR: NEC repository not found at $REPO_ROOT" >&2
   exit 2
 fi
@@ -24,13 +24,23 @@ mkdir -p "$UV_CACHE_DIR" "$UV_PYTHON_INSTALL_DIR" "$PIP_CACHE_DIR" "$(dirname "$
 python3 -m pip install --user --disable-pip-version-check "uv==0.8.17"
 export PATH="$HOME/.local/bin:$PATH"
 uv python install 3.13.15
-uv venv --python 3.13.15 "$VENV_DIR"
+uv venv --python 3.13.15 --seed --allow-existing "$VENV_DIR"
+uv pip install --python "$VENV_DIR/bin/python" "pip==25.2"
 uv pip install --python "$VENV_DIR/bin/python" \
   --index-url https://download.pytorch.org/whl/cu128 \
   "torch==2.11.0"
 uv pip install --python "$VENV_DIR/bin/python" \
   -r "$SCRIPT_DIR/requirements.txt"
+uv pip install --python "$VENV_DIR/bin/python" \
+  "lm_eval[hf] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git@ddd67220430a2470529f25fd5c05a576ca1057a0"
+# Reassert the audited numerical/runtime pins after resolving harness extras.
+uv pip install --python "$VENV_DIR/bin/python" \
+  -r "$SCRIPT_DIR/requirements.txt"
 "$VENV_DIR/bin/python" -m pip check
+"$VENV_DIR/bin/python" - <<'PY'
+import importlib.metadata
+assert importlib.metadata.version("lm_eval") == "0.4.13"
+PY
 
 echo "Environment ready: $VENV_DIR"
 echo "Activate with: source $VENV_DIR/bin/activate"

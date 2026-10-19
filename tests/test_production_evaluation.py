@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
 import torch
 
 from nox.compiler import nox_hybrid_dmrg_decompose, quantize_4bit_grouped
@@ -13,11 +14,13 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
     install_pinned_mmlu_loader,
     summarize_mmlu_harness,
 )
-from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget
+from runpod_execution.nec_high_fidelity.gpu_qualification import compare_mmlu_smokes
+from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget, save_top1_predictions
 from runpod_execution.nec_high_fidelity.runpod_driver import (
     evaluation_batch_sizes,
     evaluation_memory_limits,
     load_config,
+    preflight_qualified_batch_sizes,
     validate_matched_evaluations,
     verify_result,
     verify_checkpoint_matches_run_config,
@@ -96,6 +99,36 @@ def tiny_artifact():
 
 
 class ProductionEvaluationTests(unittest.TestCase):
+    def test_mmlu_batch_smoke_requires_same_prompts_predictions_and_scores(self):
+        sample = {
+            "doc_id": 0,
+            "doc_hash": "doc",
+            "prompt_hash": "prompt",
+            "target_hash": "target",
+            "resps": [[(-1.0, True), (-2.0, True), (-3.0, True), (-4.0, True)]],
+            "filtered_resps": ["A"],
+        }
+        serial = {"samples": {"mmlu_subject": [sample]}}
+        batched = json.loads(json.dumps(serial))
+        audit = compare_mmlu_smokes(serial, batched, ["subject"])
+        self.assertEqual(audit["status"], "PASS")
+        self.assertEqual(audit["numerical_likelihood_values_compared"], 4)
+        batched["samples"]["mmlu_subject"][0]["filtered_resps"] = ["B"]
+        with self.assertRaisesRegex(RuntimeError, "answer choice changed"):
+            compare_mmlu_smokes(serial, batched, ["subject"])
+
+    def test_top1_prediction_sidecar_is_exact_and_hash_audited(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "predictions.i32"
+            metadata = save_top1_predictions(torch.tensor([1, 31999, 7]), path)
+            self.assertEqual(metadata["count"], 3)
+            self.assertEqual(metadata["bytes"], 12)
+            self.assertEqual(metadata["sha256"], sha256_file(path))
+            values = np.fromfile(path, dtype="<i4")
+            self.assertEqual(values.tolist(), [1, 31999, 7])
+            with self.assertRaises(FileExistsError):
+                save_top1_predictions(torch.tensor([0]), path)
+
     def test_evaluation_memory_caps_keep_legacy_default_and_allow_runpod_override(self):
         import os
 
@@ -169,40 +202,83 @@ class ProductionEvaluationTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "different model variant"):
                 verify_result(result, "checkpoint-hash", model_variant="dense")
 
+    def test_evaluation_requires_batches_qualified_for_same_source_and_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            record = {
+                "status": "PASS",
+                "source_commit": "commit",
+                "run_config": {"sha256": "config"},
+                "gpu_qualification": {
+                    "status": "PASS",
+                    "source_commit": "commit",
+                    "run_config_sha256": "config",
+                    "ppl_batch_equivalence": {"status": "PASS", "qualified_batch_size": 8},
+                    "mmlu_gpu_qualification": {"status": "PASS", "qualified_batch_size": 16},
+                    "compiler_capacity_smoke": {"status": "PASS"},
+                    "evaluation_memory_caps_gib": {"gpu_per_device_gib": 60, "cpu_gib": 48},
+                },
+                "evaluation_memory_caps_gib": {"gpu_per_device": 60, "cpu": 48},
+            }
+            (root / "runpod_preflight.json").write_text(json.dumps(record))
+            self.assertEqual(
+                preflight_qualified_batch_sizes(root, "commit", "config"),
+                (8, 16, 60, 48),
+            )
+            with self.assertRaisesRegex(RuntimeError, "does not qualify"):
+                preflight_qualified_batch_sizes(root, "other", "config")
+
     def test_matched_comparison_requires_identical_token_and_task_inputs(self):
-        metric = {
-            "input_tokens": 10,
-            "scored_tokens": 9,
-            "token_ids_sha256": "tokens",
-            "bos_token_id": 1,
-            "inference_batch_size": 2,
-            "window_specification": [{"begin": 0, "end": 10}],
-        }
-        compatibility = {"model_config": {"rms_norm_eps": 1e-5}, "tokenizer": {"vocab_size": 32000}}
-        dense_ppl = {
-            "protocol_fingerprint": "ppl-protocol",
-            "metrics": {"primary_10k": dict(metric), "full_test": dict(metric)},
-            "model_tokenizer_compatibility": compatibility,
-            "independent_numerical_coefficients": 100,
-        }
-        nec_ppl = json.loads(json.dumps(dense_ppl))
-        subject = {"accuracy": 0.5, "questions": 2}
-        dense_mmlu = {
-            "protocol_fingerprint": "mmlu-protocol",
-            "evaluation_input_identity": {"samples": 2, "sha256": "mmlu-inputs"},
-            "per_subject": {"subject": dict(subject)},
-            "model_tokenizer_compatibility": compatibility,
-            "independent_numerical_coefficients": 100,
-        }
-        nec_mmlu = json.loads(json.dumps(dense_mmlu))
-        audit = validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
-        self.assertEqual(audit["status"], "PASS")
-        nec_ppl["metrics"]["primary_10k"]["token_ids_sha256"] = "different"
-        with self.assertRaisesRegex(RuntimeError, "token_ids_sha256"):
-            validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
+        with tempfile.TemporaryDirectory() as directory:
+            predictions = Path(directory) / "predictions.i32"
+            predictions.write_bytes(torch.arange(9, dtype=torch.int32).numpy().astype("<i4").tobytes())
+            metric = {
+                "input_tokens": 10,
+                "scored_tokens": 9,
+                "token_ids_sha256": "tokens",
+                "bos_token_id": 1,
+                "inference_batch_size": 2,
+                "window_specification": [{"begin": 0, "end": 10}],
+                "top1_prediction_sidecar": {
+                    "path": str(predictions),
+                    "sha256": sha256_file(predictions),
+                    "dtype": "int32_little_endian",
+                    "count": 9,
+                    "bytes": 36,
+                },
+            }
+            compatibility = {"model_config": {"rms_norm_eps": 1e-5}, "tokenizer": {"vocab_size": 32000}}
+            dense_ppl = {
+                "protocol_fingerprint": "ppl-protocol",
+                "metrics": {"primary_10k": dict(metric), "full_test": dict(metric)},
+                "model_tokenizer_compatibility": compatibility,
+                "independent_numerical_coefficients": 100,
+            }
+            nec_ppl = json.loads(json.dumps(dense_ppl))
+            subject = {"accuracy": 0.5, "questions": 2}
+            dense_mmlu = {
+                "protocol_fingerprint": "mmlu-protocol",
+                "evaluation_input_identity": {"samples": 2, "sha256": "mmlu-inputs"},
+                "per_subject": {"subject": dict(subject)},
+                "model_tokenizer_compatibility": compatibility,
+                "independent_numerical_coefficients": 100,
+            }
+            nec_mmlu = json.loads(json.dumps(dense_mmlu))
+            audit = validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
+            self.assertEqual(audit["status"], "PASS")
+            self.assertEqual(audit["wikitext2_dense_top1_prediction_agreement"]["full_test"], 1.0)
+            nec_ppl["metrics"]["primary_10k"]["token_ids_sha256"] = "different"
+            with self.assertRaisesRegex(RuntimeError, "token_ids_sha256"):
+                validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
 
     def test_runpod_checkpoint_configuration_is_checked_against_pins(self):
         config = load_config()
+        self.assertEqual(config["calibration"]["calibration_tokens"], 65_536)
+        self.assertEqual(config["calibration"]["heldout_tokens"], 16_384)
+        self.assertEqual(config["calibration"]["sampling"], "uniform")
+        self.assertEqual(
+            config["acceptance"]["primary_10k_next_token_accuracy_retention_min"], 0.90,
+        )
         compression = config["compression"]
         identity = {
             "config": {
@@ -443,8 +519,8 @@ class ProductionEvaluationTests(unittest.TestCase):
                 "rms_norm_eps": 1e-5,
             },
             "input_data": {
-                "calibration_token_count": 256,
-                "heldout_token_count": 128,
+                "calibration_token_count": 65_536,
+                "heldout_token_count": 16_384,
                 "calibration_source": {"dataset_revision": WIKITEXT_REVISION},
                 "heldout_source": {"dataset_revision": WIKITEXT_REVISION},
             },
@@ -488,7 +564,13 @@ class ProductionEvaluationTests(unittest.TestCase):
             }
             (directory / "model_manifest.json").write_text(json.dumps(manifest))
             with patch("nox.evaluation.PROJECTION_SHAPES", projection_shapes):
-                report = validate_high_fidelity_checkpoint(directory)
+                with self.assertRaisesRegex(ValueError, "requested protocol"):
+                    validate_high_fidelity_checkpoint(directory)
+                report = validate_high_fidelity_checkpoint(
+                    directory,
+                    expected_calibration_tokens=65_536,
+                    expected_heldout_tokens=16_384,
+                )
             self.assertEqual(report["status"], "PASS")
             self.assertEqual(report["projection_coefficients"], 32 * 7 * 17_219)
             self.assertEqual(

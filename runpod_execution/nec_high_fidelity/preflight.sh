@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${NEC_REPO_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd)}"
 WORKSPACE_ROOT="${NEC_WORKSPACE_ROOT:-/workspace}"
-RUN_ROOT="${NEC_RUN_ROOT:-$WORKSPACE_ROOT/runs/nec-high-fidelity-20261017}"
+RUN_ROOT="${NEC_RUN_ROOT:-$WORKSPACE_ROOT/runs/nec-high-fidelity-quality-max-20261019}"
 VENV_DIR="${NEC_VENV_DIR:-$WORKSPACE_ROOT/venvs/nec-hf}"
 
 export NEC_WORKSPACE_ROOT="$WORKSPACE_ROOT"
