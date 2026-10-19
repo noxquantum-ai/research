@@ -195,8 +195,8 @@ def main() -> None:
             ).hexdigest(),
             "revision": MODEL_REVISION,
         },
-        "dense_model_weights_loaded": False,
-        "dense_benchmark_run": False,
+        "dense_model_weights_loaded_during_preflight": False,
+        "matched_dense_and_nec_benchmarks_planned": True,
     }
     target = run_root / "runpod_preflight.json"
     temporary = target.with_suffix(".json.partial")

@@ -18,9 +18,9 @@ export PYTHONUNBUFFERED=1
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  echo "ERROR: pinned runtime missing; run bootstrap.sh first." >&2
-  exit 2
+  echo "Pinned runtime not found; bootstrapping it on the persistent volume." >&2
+  bash "$SCRIPT_DIR/bootstrap.sh"
 fi
-"$SCRIPT_DIR/preflight.sh"
+bash "$SCRIPT_DIR/preflight.sh"
 cd "$REPO_ROOT"
 exec "$VENV_DIR/bin/python" "$SCRIPT_DIR/runpod_driver.py" --mode all

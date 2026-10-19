@@ -8,6 +8,7 @@ import fcntl
 import hashlib
 import importlib.metadata
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -267,7 +268,7 @@ def environment_snapshot(workspace: Path, run_root: Path, commit: str) -> dict:
         "workspace_total_bytes": disk.total,
         "workspace_free_bytes": disk.free,
         "run_root": str(run_root),
-        "dense_model_evaluated": False,
+        "dense_model_evaluation_planned": True,
     }
 
 
@@ -533,8 +534,8 @@ def run_compile(workspace: Path, run_root: Path, commit: str, config: dict) -> P
 
 
 def verify_result(
-    path: Path, manifest_hash: str, required_status: str = "COMPLETE",
-    source_commit_hash: str | None = None,
+    path: Path, manifest_hash: str | None, required_status: str = "COMPLETE",
+    source_commit_hash: str | None = None, model_variant: str | None = None,
 ) -> dict | None:
     if not path.is_file():
         return None
@@ -545,6 +546,8 @@ def verify_result(
         raise RuntimeError(f"Existing result at {path} belongs to a different checkpoint")
     if source_commit_hash is not None and record.get("source_commit") != source_commit_hash:
         raise RuntimeError(f"Existing result at {path} belongs to a different source commit")
+    if model_variant is not None and record.get("model_variant") != model_variant:
+        raise RuntimeError(f"Existing result at {path} belongs to a different model variant")
     return record
 
 
@@ -570,6 +573,120 @@ def install_harness(env: dict[str, str], log_path: Path) -> None:
     actual = importlib.metadata.version("lm_eval")
     if actual != "0.4.13":
         raise RuntimeError(f"Expected lm-evaluation-harness 0.4.13, found {actual}")
+    expected_runtime = {
+        "torch": "2.11.0+cu128",
+        "transformers": "5.16.1",
+        "huggingface-hub": "1.29.0",
+        "safetensors": "0.8.0",
+        "accelerate": "1.14.0",
+        "datasets": "4.8.5",
+        "pyarrow": "23.0.1",
+        "numpy": "2.1.3",
+        "scipy": "1.16.3",
+    }
+    for package, expected in expected_runtime.items():
+        installed = importlib.metadata.version(package)
+        if installed != expected:
+            raise RuntimeError(
+                f"Installing lm-eval changed pinned {package}: {installed}, expected {expected}"
+            )
+    run_logged([sys.executable, "-m", "pip", "check"], log_path, env)
+
+
+def validate_ppl_report(record: dict, variant: str, checkpoint_hash: str | None, commit: str) -> None:
+    if record.get("status") != "COMPLETE" or record.get("model_variant") != variant:
+        raise RuntimeError(f"{variant} PPL evaluator did not produce a complete report")
+    if record.get("dense_model_evaluated") is not (variant == "dense"):
+        raise RuntimeError(f"{variant} PPL report has an inconsistent dense-model marker")
+    if record.get("checkpoint_manifest_sha256") != checkpoint_hash or record.get("source_commit") != commit:
+        raise RuntimeError(f"{variant} PPL report checkpoint/source identity mismatch")
+    if not isinstance(record.get("protocol_fingerprint"), str):
+        raise RuntimeError(f"{variant} PPL report has no protocol fingerprint")
+    for label in ("primary_10k", "full_test"):
+        metric = record.get("metrics", {}).get(label)
+        if metric is None or metric["scored_tokens"] != metric["input_tokens"] - 1:
+            raise RuntimeError(f"{variant} PPL report failed scored-token checks for {label}")
+        if metric.get("nll_formula_crosscheck", {}).get("passed") is not True:
+            raise RuntimeError(f"{variant} PPL independent NLL cross-check failed for {label}")
+        if not math.isfinite(metric["mean_nll"]) or not math.isfinite(metric["perplexity"]):
+            raise RuntimeError(f"{variant} PPL report contains non-finite metrics for {label}")
+        if abs(metric["perplexity"] - math.exp(metric["mean_nll"])) > 1e-9 * max(1.0, metric["perplexity"]):
+            raise RuntimeError(f"{variant} PPL is inconsistent with exp(mean NLL) for {label}")
+        if not 0.0 <= metric["next_token_accuracy"] <= 1.0:
+            raise RuntimeError(f"{variant} next-token accuracy is invalid for {label}")
+
+
+def validate_mmlu_report(record: dict, variant: str, checkpoint_hash: str | None, commit: str) -> None:
+    if (
+        record.get("status") != "COMPLETE"
+        or record.get("model_variant") != variant
+        or record.get("dense_model_evaluated") is not (variant == "dense")
+        or record.get("checkpoint_manifest_sha256") != checkpoint_hash
+        or record.get("source_commit") != commit
+        or record.get("total_questions") != 14_042
+        or len(record.get("per_subject", {})) != 57
+        or record.get("adapter_smoke", {}).get("status") != "PASS"
+        or not isinstance(record.get("protocol_fingerprint"), str)
+        or record.get("evaluation_input_identity", {}).get("samples") != 14_042
+        or not isinstance(record.get("evaluation_input_identity", {}).get("sha256"), str)
+        or record.get("response_finiteness_audit", {}).get("status") != "PASS"
+        or record.get("response_finiteness_audit", {}).get("finite_numerical_values_checked", 0) <= 0
+    ):
+        raise RuntimeError(f"{variant} MMLU report is incomplete or inconsistent")
+    accuracy = record.get("overall_5shot_accuracy")
+    if not isinstance(accuracy, (int, float)) or not math.isfinite(accuracy) or not 0.0 <= accuracy <= 1.0:
+        raise RuntimeError(f"{variant} MMLU accuracy is invalid")
+    if sum(item["questions"] for item in record["per_subject"].values()) != 14_042:
+        raise RuntimeError(f"{variant} per-subject MMLU counts do not sum to 14,042")
+    raw_path = Path(record.get("raw_harness_results", ""))
+    if (
+        not raw_path.is_file()
+        or sha256_file(raw_path) != record.get("raw_harness_results_sha256")
+    ):
+        raise RuntimeError(f"{variant} raw MMLU harness result is missing or corrupt")
+
+
+def validate_matched_evaluations(
+    dense_ppl: dict, nec_ppl: dict, dense_mmlu: dict, nec_mmlu: dict,
+) -> dict:
+    """Prove that both variants used the same model inputs and benchmark protocols."""
+    if dense_ppl["protocol_fingerprint"] != nec_ppl["protocol_fingerprint"]:
+        raise RuntimeError("Dense and NEC WikiText-2 protocol fingerprints differ")
+    for label in ("primary_10k", "full_test"):
+        dense_metric = dense_ppl["metrics"][label]
+        nec_metric = nec_ppl["metrics"][label]
+        for key in ("input_tokens", "scored_tokens", "token_ids_sha256", "bos_token_id", "window_specification"):
+            if dense_metric[key] != nec_metric[key]:
+                raise RuntimeError(f"Dense and NEC WikiText-2 {label} differ in {key}")
+    if dense_mmlu["protocol_fingerprint"] != nec_mmlu["protocol_fingerprint"]:
+        raise RuntimeError("Dense and NEC MMLU protocol fingerprints differ")
+    if dense_mmlu["evaluation_input_identity"] != nec_mmlu["evaluation_input_identity"]:
+        raise RuntimeError("Dense and NEC MMLU prompt/document identities differ")
+    if set(dense_mmlu["per_subject"]) != set(nec_mmlu["per_subject"]):
+        raise RuntimeError("Dense and NEC MMLU subject sets differ")
+    for subject in dense_mmlu["per_subject"]:
+        if dense_mmlu["per_subject"][subject]["questions"] != nec_mmlu["per_subject"][subject]["questions"]:
+            raise RuntimeError(f"Dense and NEC MMLU question counts differ for {subject}")
+    for variant, ppl, mmlu in (
+        ("dense", dense_ppl, dense_mmlu),
+        ("high_fidelity_nec", nec_ppl, nec_mmlu),
+    ):
+        if ppl["model_tokenizer_compatibility"] != mmlu["model_tokenizer_compatibility"]:
+            raise RuntimeError(f"{variant} PPL and MMLU model/tokenizer audits differ")
+        if ppl["independent_numerical_coefficients"] != mmlu["independent_numerical_coefficients"]:
+            raise RuntimeError(f"{variant} PPL and MMLU coefficient counts differ")
+    return {
+        "status": "PASS",
+        "same_model_id_and_revision": True,
+        "same_fp16_loading_and_sdpa_backend": True,
+        "same_tokenizer_and_architecture_validation": True,
+        "wikitext2_protocol_fingerprint": dense_ppl["protocol_fingerprint"],
+        "wikitext2_identical_token_streams": True,
+        "mmlu_protocol_fingerprint": dense_mmlu["protocol_fingerprint"],
+        "mmlu_evaluation_input_sha256": dense_mmlu["evaluation_input_identity"]["sha256"],
+        "mmlu_identical_subject_question_counts": True,
+        "separate_processes_prevent_cross_variant_weight_contamination": True,
+    }
 
 
 def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Path) -> None:
@@ -580,24 +697,25 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
     checkpoint_hash = sha256_file(manifest_path)
     results = run_root / "evaluation/results" / checkpoint_hash / commit
     results.mkdir(parents=True, exist_ok=True)
-    ppl_result = results / "wikitext2.json"
-    mmlu_result = results / "mmlu_5shot.json"
+    report_paths = {
+        ("dense", "ppl"): results / "dense_wikitext2.json",
+        ("high_fidelity_nec", "ppl"): results / "nec_wikitext2.json",
+        ("dense", "mmlu"): results / "dense_mmlu_5shot.json",
+        ("high_fidelity_nec", "mmlu"): results / "nec_mmlu_5shot.json",
+    }
     env = os.environ.copy()
     env["NEC_SOURCE_COMMIT"] = commit
-    available_gpu_memory = [
-        torch.cuda.mem_get_info(index)[0]
-        for index in range(torch.cuda.device_count())
-    ]
-    ram_bytes = effective_ram_bytes()
-    gpu_cap, cpu_cap = evaluation_memory_limits(available_gpu_memory, ram_bytes, env)
-    env["NEC_EVAL_GPU_MEMORY_GIB"] = str(gpu_cap)
-    env["NEC_EVAL_CPU_MEMORY_GIB"] = str(cpu_cap)
-    env["HF_HOME"] = str(workspace / "cache/huggingface")
-    env["HF_HUB_CACHE"] = str(workspace / "cache/huggingface/hub")
-    env["HF_DATASETS_CACHE"] = str(workspace / "cache/huggingface/datasets")
-    env["PYTHONPATH"] = str(ROOT) + os.pathsep + env.get("PYTHONPATH", "")
-    env["PYTHONUNBUFFERED"] = "1"
-
+    available_gpu_memory = [torch.cuda.mem_get_info(index)[0] for index in range(torch.cuda.device_count())]
+    gpu_cap, cpu_cap = evaluation_memory_limits(available_gpu_memory, effective_ram_bytes(), env)
+    env.update({
+        "NEC_EVAL_GPU_MEMORY_GIB": str(gpu_cap),
+        "NEC_EVAL_CPU_MEMORY_GIB": str(cpu_cap),
+        "HF_HOME": str(workspace / "cache/huggingface"),
+        "HF_HUB_CACHE": str(workspace / "cache/huggingface/hub"),
+        "HF_DATASETS_CACHE": str(workspace / "cache/huggingface/datasets"),
+        "PYTHONPATH": str(ROOT) + os.pathsep + env.get("PYTHONPATH", ""),
+        "PYTHONUNBUFFERED": "1",
+    })
     evaluation_progress = run_root / "evaluation/evaluation_progress.json"
     progress = {
         "status": "RUNNING",
@@ -610,106 +728,125 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
     }
     atomic_json(evaluation_progress, progress)
     try:
-        if verify_result(ppl_result, checkpoint_hash, source_commit_hash=commit) is None:
-            attempt = run_root / "evaluation/attempts" / f"ppl-{utc_id()}"
-            attempt.mkdir(parents=True, exist_ok=False)
-            output = attempt / "wikitext2.json"
-            progress["stages"]["wikitext2"] = {
-                "status": "RUNNING", "attempt": str(attempt),
-                "started_utc": datetime.now(timezone.utc).isoformat(),
-            }
-            atomic_json(evaluation_progress, progress)
-            run_logged([
-                sys.executable, str(PPL_EVALUATOR),
-                "--checkpoint-dir", str(checkpoint),
-                "--offload-folder", str(attempt / "offload"),
-                "--output", str(output),
-                "--context-length", "2048",
-                "--stride", "512",
-                "--max-eval-tokens", "10000",
-                "--full-test",
-                "--skip-reconstruct-audit",
-            ], attempt / "wikitext2.log", env)
-            evaluated = json.loads(output.read_text())
-            if evaluated.get("status") != "COMPLETE" or evaluated.get("dense_model_evaluated") is not False:
-                raise RuntimeError("PPL evaluator did not produce a complete NEC-only report")
-            if (
-                evaluated.get("checkpoint_manifest_sha256") != checkpoint_hash
-                or evaluated.get("source_commit") != commit
-            ):
-                raise RuntimeError("PPL report checkpoint/source identity mismatch")
-            for label in ("primary_10k", "full_test"):
-                metric = evaluated["metrics"].get(label)
-                if metric is None or metric["scored_tokens"] != metric["input_tokens"] - 1:
-                    raise RuntimeError(f"PPL report failed scored-token checks for {label}")
-                if metric["nll_formula_crosscheck"].get("passed") is not True:
-                    raise RuntimeError(f"PPL report independent NLL cross-check failed for {label}")
-            publish_json(output, ppl_result)
-            progress["stages"]["wikitext2"] = {
-                "status": "COMPLETE", "attempt": str(attempt),
-                "report": str(ppl_result), "completed_utc": datetime.now(timezone.utc).isoformat(),
-            }
-            atomic_json(evaluation_progress, progress)
-        else:
-            progress["stages"]["wikitext2"] = {"status": "REUSED_VERIFIED_RESULT"}
+        for variant in ("dense", "high_fidelity_nec"):
+            expected_hash = None if variant == "dense" else checkpoint_hash
+            result_path = report_paths[(variant, "ppl")]
+            stage = f"{variant}_wikitext2"
+            existing = verify_result(
+                result_path, expected_hash, source_commit_hash=commit, model_variant=variant,
+            )
+            if existing is None:
+                attempt = run_root / "evaluation/attempts" / f"{stage}-{utc_id()}"
+                attempt.mkdir(parents=True, exist_ok=False)
+                output = attempt / result_path.name
+                progress["stages"][stage] = {
+                    "status": "RUNNING", "attempt": str(attempt),
+                    "started_utc": datetime.now(timezone.utc).isoformat(),
+                }
+                atomic_json(evaluation_progress, progress)
+                command = [
+                    sys.executable, str(PPL_EVALUATOR), "--variant", variant,
+                    "--offload-folder", str(attempt / "offload"),
+                    "--output", str(output), "--context-length", "2048", "--stride", "512",
+                    "--max-eval-tokens", "10000", "--full-test",
+                ]
+                if variant == "high_fidelity_nec":
+                    command.extend(["--checkpoint-dir", str(checkpoint), "--skip-reconstruct-audit"])
+                run_logged(command, attempt / "wikitext2.log", env)
+                evaluated = json.loads(output.read_text())
+                validate_ppl_report(evaluated, variant, expected_hash, commit)
+                publish_json(output, result_path)
+                progress["stages"][stage] = {
+                    "status": "COMPLETE", "attempt": str(attempt), "report": str(result_path),
+                    "completed_utc": datetime.now(timezone.utc).isoformat(),
+                }
+            else:
+                validate_ppl_report(existing, variant, expected_hash, commit)
+                progress["stages"][stage] = {"status": "REUSED_VERIFIED_RESULT"}
             atomic_json(evaluation_progress, progress)
 
-        if verify_result(mmlu_result, checkpoint_hash, source_commit_hash=commit) is None:
-            attempt = run_root / "evaluation/attempts" / f"mmlu-{utc_id()}"
-            attempt.mkdir(parents=True, exist_ok=False)
-            progress["stages"]["mmlu_5shot"] = {
-                "status": "INSTALLING_HARNESS", "attempt": str(attempt),
-                "started_utc": datetime.now(timezone.utc).isoformat(),
+        missing_mmlu = any(
+            verify_result(
+                report_paths[(variant, "mmlu")], None if variant == "dense" else checkpoint_hash,
+                source_commit_hash=commit, model_variant=variant,
+            ) is None
+            for variant in ("dense", "high_fidelity_nec")
+        )
+        if missing_mmlu:
+            install_attempt = run_root / "evaluation/attempts" / f"install-mmlu-{utc_id()}"
+            install_attempt.mkdir(parents=True, exist_ok=False)
+            progress["stages"]["install_mmlu_harness"] = {
+                "status": "RUNNING", "attempt": str(install_attempt),
             }
             atomic_json(evaluation_progress, progress)
-            install_harness(env, attempt / "install_lm_eval.log")
-            output = attempt / "mmlu_5shot.json"
-            progress["stages"]["mmlu_5shot"]["status"] = "RUNNING"
+            install_harness(env, install_attempt / "install_lm_eval.log")
+            progress["stages"]["install_mmlu_harness"]["status"] = "COMPLETE"
             atomic_json(evaluation_progress, progress)
-            run_logged([
-                sys.executable, str(MMLU_EVALUATOR),
-                "--checkpoint-dir", str(checkpoint),
-                "--output", str(output),
-                "--batch-size", "1",
-                "--smoke-first",
-            ], attempt / "mmlu_5shot.log", env)
-            evaluated = json.loads(output.read_text())
-            if (
-                evaluated.get("status") != "COMPLETE"
-                or evaluated.get("dense_model_evaluated") is not False
-                or evaluated.get("total_questions") != 14_042
-                or len(evaluated.get("per_subject", {})) != 57
-                or evaluated.get("adapter_smoke", {}).get("status") != "PASS"
-            ):
-                raise RuntimeError("MMLU report is incomplete or its adapter smoke failed")
-            if (
-                evaluated.get("checkpoint_manifest_sha256") != checkpoint_hash
-                or evaluated.get("source_commit") != commit
-            ):
-                raise RuntimeError("MMLU report checkpoint/source identity mismatch")
-            publish_json(output, mmlu_result)
-            progress["stages"]["mmlu_5shot"] = {
-                "status": "COMPLETE", "attempt": str(attempt),
-                "report": str(mmlu_result), "completed_utc": datetime.now(timezone.utc).isoformat(),
-            }
-            atomic_json(evaluation_progress, progress)
-        else:
-            progress["stages"]["mmlu_5shot"] = {"status": "REUSED_VERIFIED_RESULT"}
+
+        for variant in ("dense", "high_fidelity_nec"):
+            expected_hash = None if variant == "dense" else checkpoint_hash
+            result_path = report_paths[(variant, "mmlu")]
+            stage = f"{variant}_mmlu_5shot"
+            existing = verify_result(
+                result_path, expected_hash, source_commit_hash=commit, model_variant=variant,
+            )
+            if existing is None:
+                attempt = run_root / "evaluation/attempts" / f"{stage}-{utc_id()}"
+                attempt.mkdir(parents=True, exist_ok=False)
+                output = attempt / result_path.name
+                progress["stages"][stage] = {
+                    "status": "RUNNING", "attempt": str(attempt),
+                    "started_utc": datetime.now(timezone.utc).isoformat(),
+                }
+                atomic_json(evaluation_progress, progress)
+                command = [
+                    sys.executable, str(MMLU_EVALUATOR), "--variant", variant,
+                    "--output", str(output), "--batch-size", "1", "--smoke-first",
+                ]
+                if variant == "high_fidelity_nec":
+                    command.extend(["--checkpoint-dir", str(checkpoint)])
+                run_logged(command, attempt / "mmlu_5shot.log", env)
+                evaluated = json.loads(output.read_text())
+                validate_mmlu_report(evaluated, variant, expected_hash, commit)
+                publish_json(output, result_path)
+                progress["stages"][stage] = {
+                    "status": "COMPLETE", "attempt": str(attempt), "report": str(result_path),
+                    "completed_utc": datetime.now(timezone.utc).isoformat(),
+                }
+            else:
+                validate_mmlu_report(existing, variant, expected_hash, commit)
+                progress["stages"][stage] = {"status": "REUSED_VERIFIED_RESULT"}
             atomic_json(evaluation_progress, progress)
     except BaseException as error:
         progress.update({
-            "status": "FAILED",
-            "error": f"{type(error).__name__}: {error}",
-            "traceback": traceback.format_exc(),
-            "failed_utc": datetime.now(timezone.utc).isoformat(),
+            "status": "FAILED", "error": f"{type(error).__name__}: {error}",
+            "traceback": traceback.format_exc(), "failed_utc": datetime.now(timezone.utc).isoformat(),
         })
         atomic_json(evaluation_progress, progress)
         raise
 
-    ppl = verify_result(ppl_result, checkpoint_hash, source_commit_hash=commit)
-    mmlu = verify_result(mmlu_result, checkpoint_hash, source_commit_hash=commit)
-    if ppl is None or mmlu is None:
-        raise RuntimeError("Evaluation output missing one or more complete result files")
+    reports = {
+        key: verify_result(
+            path, None if key[0] == "dense" else checkpoint_hash,
+            source_commit_hash=commit, model_variant=key[0],
+        )
+        for key, path in report_paths.items()
+    }
+    if any(value is None for value in reports.values()):
+        raise RuntimeError("Evaluation output is missing one or more complete result files")
+    dense_ppl = reports[("dense", "ppl")]
+    nec_ppl = reports[("high_fidelity_nec", "ppl")]
+    dense_mmlu = reports[("dense", "mmlu")]
+    nec_mmlu = reports[("high_fidelity_nec", "mmlu")]
+    matched_audit = validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
+
+    dense_primary = dense_ppl["metrics"]["primary_10k"]
+    nec_primary = nec_ppl["metrics"]["primary_10k"]
+    dense_full = dense_ppl["metrics"]["full_test"]
+    nec_full = nec_ppl["metrics"]["full_test"]
+    dense_mmlu_accuracy = dense_mmlu["overall_5shot_accuracy"]
+    nec_mmlu_accuracy = nec_mmlu["overall_5shot_accuracy"]
+    report_hashes = {f"{variant}_{benchmark}_sha256": sha256_file(path) for (variant, benchmark), path in report_paths.items()}
     final = {
         "status": "COMPLETE",
         "model_id": MODEL_ID,
@@ -717,37 +854,57 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
         "source_commit": commit,
         "run_config_sha256": sha256_file(CONFIG_PATH),
         "checkpoint_manifest_sha256": checkpoint_hash,
-        "wikitext2_report": str(ppl_result),
-        "wikitext2_report_sha256": sha256_file(ppl_result),
-        "mmlu_5shot_report": str(mmlu_result),
-        "mmlu_5shot_report_sha256": sha256_file(mmlu_result),
-        "wikitext2_primary_10k": ppl["metrics"]["primary_10k"],
-        "wikitext2_full_test": ppl["metrics"]["full_test"],
-        "mmlu_5shot_accuracy": mmlu["overall_5shot_accuracy"],
-        "mmlu_total_questions": mmlu["total_questions"],
-        "mmlu_per_subject": mmlu["per_subject"],
-        "dense_model_evaluated": False,
+        "matched_protocol_audit": matched_audit,
+        "reports": {f"{variant}_{benchmark}": str(path) for (variant, benchmark), path in report_paths.items()},
+        "report_hashes": report_hashes,
+        "dense": {
+            "independent_numerical_coefficients": dense_ppl["independent_numerical_coefficients"],
+            "structural_parameter_reduction": 0.0,
+            "parameter_compression_ratio": 1.0,
+            "wikitext2_primary_10k": dense_primary,
+            "wikitext2_full_test": dense_full,
+            "mmlu_5shot_accuracy": dense_mmlu_accuracy,
+            "mmlu_total_questions": dense_mmlu["total_questions"],
+            "mmlu_per_subject": dense_mmlu["per_subject"],
+        },
+        "high_fidelity_nec": {
+            "independent_numerical_coefficients": nec_ppl["independent_numerical_coefficients"],
+            "structural_parameter_reduction": nec_ppl["structural_parameter_reduction"],
+            "parameter_compression_ratio": nec_ppl["parameter_compression_ratio"],
+            "wikitext2_primary_10k": nec_primary,
+            "wikitext2_full_test": nec_full,
+            "mmlu_5shot_accuracy": nec_mmlu_accuracy,
+            "mmlu_total_questions": nec_mmlu["total_questions"],
+            "mmlu_per_subject": nec_mmlu["per_subject"],
+        },
+        "comparison": {
+            "primary_10k_ppl_ratio_nec_over_dense": nec_primary["perplexity"] / dense_primary["perplexity"],
+            "primary_10k_mean_nll_delta_nec_minus_dense": nec_primary["mean_nll"] - dense_primary["mean_nll"],
+            "primary_10k_next_token_accuracy_retention": nec_primary["next_token_accuracy"] / dense_primary["next_token_accuracy"],
+            "full_test_ppl_ratio_nec_over_dense": nec_full["perplexity"] / dense_full["perplexity"],
+            "full_test_mean_nll_delta_nec_minus_dense": nec_full["mean_nll"] - dense_full["mean_nll"],
+            "mmlu_accuracy_retention": nec_mmlu_accuracy / dense_mmlu_accuracy,
+            "mmlu_accuracy_percentage_point_delta": 100.0 * (nec_mmlu_accuracy - dense_mmlu_accuracy),
+            "mmlu_preserves_at_least_90_percent": nec_mmlu_accuracy / dense_mmlu_accuracy >= 0.90,
+        },
+        "dense_model_evaluated": True,
         "completed_utc": datetime.now(timezone.utc).isoformat(),
     }
     final_path = results / "final_results.json"
     if final_path.exists():
         existing = json.loads(final_path.read_text())
-        expected_hashes = {
-            "wikitext2_report_sha256": sha256_file(ppl_result),
-            "mmlu_5shot_report_sha256": sha256_file(mmlu_result),
-        }
         if (
             existing.get("checkpoint_manifest_sha256") != checkpoint_hash
             or existing.get("source_commit") != commit
-            or any(existing.get(key) != value for key, value in expected_hashes.items())
+            or existing.get("report_hashes") != report_hashes
         ):
             raise RuntimeError("Existing final result does not match checkpoint/source/report identities")
+        final = existing
     else:
         atomic_json(final_path, final)
     progress.update({
-        "status": "COMPLETE",
-        "completed_utc": datetime.now(timezone.utc).isoformat(),
-        "final_result": str(final_path),
+        "status": "COMPLETE", "completed_utc": datetime.now(timezone.utc).isoformat(),
+        "matched_protocol_audit": matched_audit, "final_result": str(final_path),
     })
     atomic_json(evaluation_progress, progress)
     print(json.dumps(final, indent=2), flush=True)

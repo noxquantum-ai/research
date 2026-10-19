@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Strict WikiText-2 evaluation of a complete High-Fidelity NEC checkpoint."""
+"""Strict matched WikiText-2 evaluation of dense or High-Fidelity NEC Llama-2-7B."""
 
 from __future__ import annotations
 
@@ -23,7 +23,9 @@ from benchmarks.benchmark_day4_perplexity import (
     inject_nox_checkpoints,
     load_wikitext2_test_text,
 )
+from nox.artifacts import fingerprint
 from nox.evaluation import (
+    DENSE_LLAMA2_7B_COEFFICIENTS,
     MODEL_ID,
     MODEL_REVISION,
     validate_high_fidelity_checkpoint,
@@ -43,9 +45,24 @@ def source_commit() -> str:
         return "unavailable"
 
 
-def load_model(checkpoint_dir: Path, offload_folder: Path | None = None):
+MODEL_VARIANTS = ("dense", "high_fidelity_nec")
+
+
+def load_model(
+    checkpoint_dir: Path | None,
+    offload_folder: Path | None = None,
+    *,
+    variant: str = "high_fidelity_nec",
+):
+    """Load the identical pinned base model, optionally replacing all linear weights with NEC."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
+    if variant not in MODEL_VARIANTS:
+        raise ValueError(f"Unknown model variant: {variant}")
+    if variant == "high_fidelity_nec" and checkpoint_dir is None:
+        raise ValueError("High-Fidelity NEC evaluation requires --checkpoint-dir")
+    if variant == "dense" and checkpoint_dir is not None:
+        raise ValueError("Dense evaluation must not receive --checkpoint-dir")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
     gpu_count = torch.cuda.device_count()
     if gpu_count == 0:
@@ -54,7 +71,10 @@ def load_model(checkpoint_dir: Path, offload_folder: Path | None = None):
     # larger caps from free VRAM/RAM and sets them in this process environment.
     # Placement changes only; model dtype, logits, and token scoring do not.
     max_memory = evaluation_memory_budget(gpu_count)
-    offload = offload_folder or (checkpoint_dir / "evaluation_offload")
+    offload = offload_folder or (
+        (checkpoint_dir / "evaluation_offload")
+        if checkpoint_dir is not None else (ROOT / ".evaluation_offload")
+    )
     offload.mkdir(exist_ok=True)
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
@@ -68,13 +88,15 @@ def load_model(checkpoint_dir: Path, offload_folder: Path | None = None):
     ).eval()
     model.config.use_cache = False
     compatibility = validate_llama2_model_tokenizer(model, tokenizer)
-    reconstruction_diagnostics = []
-    injected = inject_nox_checkpoints(
-        model, str(checkpoint_dir), dtype=torch.float16,
-        diagnostics=reconstruction_diagnostics,
-    )
-    if len(injected) != 32 or set(injected) != set(range(32)):
-        raise RuntimeError(f"Incomplete NEC injection: {sorted(injected)}")
+    reconstruction_diagnostics: list[dict] = []
+    injected: list[int] = []
+    if variant == "high_fidelity_nec":
+        injected = inject_nox_checkpoints(
+            model, str(checkpoint_dir), dtype=torch.float16,
+            diagnostics=reconstruction_diagnostics,
+        )
+        if len(injected) != 32 or set(injected) != set(range(32)):
+            raise RuntimeError(f"Incomplete NEC injection: {sorted(injected)}")
     return model, tokenizer, sorted(injected), compatibility, reconstruction_diagnostics
 
 
@@ -96,7 +118,8 @@ def evaluation_memory_budget(gpu_count: int) -> dict[int | str, str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--checkpoint-dir", type=Path, required=True)
+    parser.add_argument("--variant", choices=MODEL_VARIANTS, required=True)
+    parser.add_argument("--checkpoint-dir", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--context-length", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
@@ -111,10 +134,17 @@ def main() -> None:
                               "the subsequent model injection still reconstructs and shape/finite-checks "
                               "every projection before evaluation."))
     args = parser.parse_args()
+    if args.variant == "high_fidelity_nec" and args.checkpoint_dir is None:
+        parser.error("--checkpoint-dir is required for --variant high_fidelity_nec")
+    if args.variant == "dense" and args.checkpoint_dir is not None:
+        parser.error("--checkpoint-dir is forbidden for --variant dense")
     if args.output.exists():
         raise FileExistsError(f"Refusing to overwrite {args.output}")
-    audit_path = args.output.with_name(args.output.stem + ".checkpoint_audit.json")
-    if audit_path.exists():
+    audit_path = (
+        args.output.with_name(args.output.stem + ".checkpoint_audit.json")
+        if args.variant == "high_fidelity_nec" else None
+    )
+    if audit_path is not None and audit_path.exists():
         raise FileExistsError(f"Refusing to overwrite {audit_path}")
     if args.context_length != 2048 or args.stride != 512:
         raise ValueError("The production protocol is fixed at context=2048, stride=512")
@@ -122,20 +152,22 @@ def main() -> None:
         raise ValueError("Production evaluation requires 10,000 tokens or the full split")
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    audit = validate_high_fidelity_checkpoint(
-        args.checkpoint_dir,
-        reconstruct=not args.skip_reconstruct_audit,
-        reconstruction_device="cuda" if torch.cuda.is_available() else "cpu",
-    )
-    audit_temp = audit_path.with_suffix(audit_path.suffix + ".partial")
-    audit_temp.write_text(json.dumps(audit, indent=2) + "\n")
-    audit_temp.replace(audit_path)
+    audit = None
+    if args.variant == "high_fidelity_nec":
+        audit = validate_high_fidelity_checkpoint(
+            args.checkpoint_dir,
+            reconstruct=not args.skip_reconstruct_audit,
+            reconstruction_device="cuda" if torch.cuda.is_available() else "cpu",
+        )
+        audit_temp = audit_path.with_suffix(audit_path.suffix + ".partial")
+        audit_temp.write_text(json.dumps(audit, indent=2) + "\n")
+        audit_temp.replace(audit_path)
 
     for index in range(torch.cuda.device_count()):
         torch.cuda.reset_peak_memory_stats(index)
     started = time.monotonic()
     model, tokenizer, injected, compatibility, reconstruction_diagnostics = load_model(
-        args.checkpoint_dir, offload_folder=args.offload_folder,
+        args.checkpoint_dir, offload_folder=args.offload_folder, variant=args.variant,
     )
     text, dataset = load_wikitext2_test_text(return_metadata=True)
     ppl, scored_tokens, details = compute_perplexity(
@@ -200,22 +232,59 @@ def main() -> None:
     for package in ("torch", "transformers", "accelerate", "safetensors", "huggingface_hub"):
         module = __import__(package)
         versions[package] = getattr(module, "__version__", "unknown")
+    protocol_identity = {
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+        "dtype": "float16",
+        "attention_implementation": "sdpa",
+        "dataset": dataset,
+        "tokenizer": compatibility["tokenizer"],
+        "context_length": args.context_length,
+        "stride": args.stride,
+        "primary_input_tokens": args.max_eval_tokens,
+        "full_test": args.full_test,
+        "text_policy": "raw WikiText-2 text joined with two newlines; no instruction/chat template",
+        "causal_shift": "logits[:, :-1] predict labels[:, 1:]",
+        "overlap_masking": "each corpus target after the first is scored exactly once",
+        "loss": "sum float32 shifted cross entropy divided by exact scored-token count",
+        "use_cache": False,
+    }
+    is_dense = args.variant == "dense"
+    primary_result = {
+        "perplexity": ppl,
+        "mean_nll": details["mean_nll"],
+        "next_token_accuracy": details["next_token_accuracy"],
+        "maximum_absolute_logit": details["maximum_absolute_logit"],
+        "input_tokens": details["input_tokens"],
+        "scored_tokens": scored_tokens,
+        "token_ids_sha256": details["token_ids_sha256"],
+        "bos_token_id": details["bos_token_id"],
+        "window_count": details["window_count"],
+        "window_specification": details["window_specification"],
+        "nll_formula_crosscheck": details["nll_formula_crosscheck"],
+    }
     result = {
         "status": "COMPLETE",
-        "evaluation": "high_fidelity_nec_wikitext2_raw",
+        "evaluation": f"{args.variant}_wikitext2_raw",
+        "model_variant": args.variant,
         "model_id": MODEL_ID,
         "model_revision": MODEL_REVISION,
         "model_tokenizer_compatibility": compatibility,
         "source_commit": source_commit(),
-        "checkpoint_dir": str(args.checkpoint_dir.resolve()),
-        "checkpoint_audit": str(audit_path.resolve()),
-        "checkpoint_manifest_sha256": audit["manifest_sha256"],
+        "checkpoint_dir": str(args.checkpoint_dir.resolve()) if args.checkpoint_dir else None,
+        "checkpoint_audit": str(audit_path.resolve()) if audit_path else None,
+        "checkpoint_manifest_sha256": audit["manifest_sha256"] if audit else None,
         "compressed_layers": injected,
-        "independent_numerical_coefficients": audit["independent_numerical_coefficients"],
-        "structural_parameter_reduction": audit["structural_parameter_reduction"],
-        "parameter_compression_ratio": audit["parameter_compression_ratio"],
-        "serialized_layer_checkpoint_bytes": audit["serialized_layer_checkpoint_bytes"],
+        "independent_numerical_coefficients": (
+            DENSE_LLAMA2_7B_COEFFICIENTS if is_dense
+            else audit["independent_numerical_coefficients"]
+        ),
+        "structural_parameter_reduction": 0.0 if is_dense else audit["structural_parameter_reduction"],
+        "parameter_compression_ratio": 1.0 if is_dense else audit["parameter_compression_ratio"],
+        "serialized_layer_checkpoint_bytes": None if is_dense else audit["serialized_layer_checkpoint_bytes"],
         "dataset": dataset,
+        "protocol_identity": protocol_identity,
+        "protocol_fingerprint": fingerprint(protocol_identity),
         "protocol": {
             "context_length": args.context_length,
             "stride": args.stride,
@@ -242,14 +311,7 @@ def main() -> None:
             "perplexity": ppl,
             "mean_nll": details["mean_nll"],
             "next_token_accuracy": details["next_token_accuracy"],
-            "primary_10k": {
-                "perplexity": ppl,
-                "mean_nll": details["mean_nll"],
-                "next_token_accuracy": details["next_token_accuracy"],
-                "maximum_absolute_logit": details["maximum_absolute_logit"],
-                "input_tokens": details["input_tokens"],
-                "scored_tokens": scored_tokens,
-            },
+            "primary_10k": primary_result,
             "full_test": full_result,
         },
         "runtime": {
@@ -264,7 +326,7 @@ def main() -> None:
             "hf_device_map": getattr(model, "hf_device_map", None),
         },
         "projection_reconstruction_audit": reconstruction_diagnostics,
-        "precision_audit": {
+        "precision_audit": None if is_dense else {
             "quantizer": "NEC groupwise Q4 simulation, group_size=64, signed codes [-8,7], followed by FP16 serialization",
             "per_component": {
                 f"layer_{layer['layer']}.{projection}": artifact["precision_diagnostics"]
@@ -273,7 +335,7 @@ def main() -> None:
             },
             "reconstruction_error": "per-projection dense reference versus decoded NEC matrix; separate from language-model metrics",
         },
-        "dense_model_evaluated": False,
+        "dense_model_evaluated": is_dense,
     }
     temporary = args.output.with_suffix(args.output.suffix + ".partial")
     temporary.write_text(json.dumps(result, indent=2) + "\n")

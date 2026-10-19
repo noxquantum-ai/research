@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pinned lm-evaluation-harness MMLU evaluation for full High-Fidelity NEC."""
+"""Pinned matched lm-evaluation-harness MMLU evaluation for dense or NEC Llama-2-7B."""
 
 from __future__ import annotations
 
@@ -17,11 +17,14 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from benchmarks.evaluate_high_fidelity_nec import load_model, source_commit
+from benchmarks.evaluate_high_fidelity_nec import MODEL_VARIANTS, load_model, source_commit
+from nox.artifacts import fingerprint
 from nox.evaluation import (
+    DENSE_LLAMA2_7B_COEFFICIENTS,
     MMLU_REVISION,
     MODEL_ID,
     MODEL_REVISION,
+    sha256_file,
     validate_high_fidelity_checkpoint,
 )
 from nox.mmlu import load_full_mmlu
@@ -84,9 +87,63 @@ def summarize_mmlu_harness(results: dict, subjects: list[str], *, full_test: boo
     }
 
 
+def mmlu_sample_identity(results: dict, subjects: list[str]) -> dict:
+    """Hash only harness input identities, excluding model responses and metrics."""
+    samples = results.get("samples", {})
+    rows = []
+    for subject in sorted(subjects):
+        task = f"mmlu_{subject}"
+        task_samples = samples.get(task)
+        if not isinstance(task_samples, list) or not task_samples:
+            raise ValueError(f"Harness did not log samples for {task}")
+        for sample in task_samples:
+            identity = {
+                "task": task,
+                "doc_id": sample.get("doc_id"),
+                "doc_hash": sample.get("doc_hash"),
+                "prompt_hash": sample.get("prompt_hash"),
+                "target_hash": sample.get("target_hash"),
+            }
+            if not isinstance(identity["doc_id"], int) or any(
+                not isinstance(identity[key], str) or not identity[key]
+                for key in ("doc_hash", "prompt_hash", "target_hash")
+            ):
+                raise ValueError(f"Harness sample identity is incomplete for {task}")
+            rows.append(identity)
+    rows.sort(key=lambda item: (item["task"], item["doc_id"]))
+    return {"samples": len(rows), "sha256": fingerprint(rows)}
+
+
+def audit_mmlu_response_finiteness(results: dict, subjects: list[str]) -> dict:
+    """Reject NaN/Inf likelihoods in every logged MMLU model response."""
+    checked = 0
+
+    def inspect(value) -> None:
+        nonlocal checked
+        if isinstance(value, bool) or value is None:
+            return
+        if isinstance(value, (int, float)):
+            if not math.isfinite(float(value)):
+                raise FloatingPointError("MMLU harness logged a non-finite model response")
+            checked += 1
+            return
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                inspect(item)
+
+    for subject in subjects:
+        for sample in results.get("samples", {}).get(f"mmlu_{subject}", []):
+            inspect(sample.get("resps"))
+            inspect(sample.get("filtered_resps"))
+    if checked == 0:
+        raise RuntimeError("MMLU response audit found no numerical likelihood values")
+    return {"status": "PASS", "finite_numerical_values_checked": checked}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--checkpoint-dir", type=Path, required=True)
+    parser.add_argument("--variant", choices=MODEL_VARIANTS, required=True)
+    parser.add_argument("--checkpoint-dir", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--smoke-limit", type=int, default=0,
@@ -94,6 +151,10 @@ def main() -> None:
     parser.add_argument("--smoke-first", action="store_true",
                         help="Run and verify one example per subject before the full benchmark")
     args = parser.parse_args()
+    if args.variant == "high_fidelity_nec" and args.checkpoint_dir is None:
+        parser.error("--checkpoint-dir is required for --variant high_fidelity_nec")
+    if args.variant == "dense" and args.checkpoint_dir is not None:
+        parser.error("--checkpoint-dir is forbidden for --variant dense")
     if args.output.exists():
         raise FileExistsError(f"Refusing to overwrite {args.output}")
     raw_path = args.output.with_name(args.output.stem + ".lm_eval_raw.json")
@@ -117,10 +178,14 @@ def main() -> None:
         subjects = sorted({row["subject"] for row in splits["test"]})
         if len(subjects) != 57:
             raise RuntimeError("Pinned MMLU audit did not find 57 subjects")
-        audit = validate_high_fidelity_checkpoint(args.checkpoint_dir)
+        audit = (
+            validate_high_fidelity_checkpoint(args.checkpoint_dir)
+            if args.variant == "high_fidelity_nec" else None
+        )
         model, tokenizer, injected, compatibility, _ = load_model(
             args.checkpoint_dir,
             offload_folder=args.output.parent / "evaluation_offload",
+            variant=args.variant,
         )
         lm = HFLM(
             pretrained=model,
@@ -186,19 +251,58 @@ def main() -> None:
         raise RuntimeError("Harness did not use the pinned MMLU dataset loader")
     full_test = args.smoke_limit == 0
     summary = summarize_mmlu_harness(results, subjects, full_test=full_test)
+    sample_identity = mmlu_sample_identity(results, subjects)
+    response_finiteness = audit_mmlu_response_finiteness(results, subjects)
+    if sample_identity["samples"] != summary["total_questions"]:
+        raise RuntimeError("MMLU logged-sample count disagrees with the evaluated question count")
 
     raw_temp = raw_path.with_suffix(raw_path.suffix + ".partial")
     raw_temp.write_text(json.dumps(results, indent=2, default=str) + "\n")
     raw_temp.replace(raw_path)
+    protocol_identity = {
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+        "dtype": "float16",
+        "attention_implementation": "sdpa",
+        "tokenizer": compatibility["tokenizer"],
+        "framework": {
+            "name": "EleutherAI/lm-evaluation-harness",
+            "version": installed,
+            "git_commit": LM_EVAL_COMMIT,
+            "task_versions": results.get("versions"),
+        },
+        "dataset": pinned_data,
+        "shots": 5,
+        "fewshot_split": "dev",
+        "test_split": "test",
+        "choice_scoring": "lm-eval multiple_choice loglikelihood over A/B/C/D",
+        "prompt_template": "{question.strip()}\\nA. {choices[0]}\\nB. {choices[1]}\\nC. {choices[2]}\\nD. {choices[3]}\\nAnswer:",
+        "answer_choices": ["A", "B", "C", "D"],
+        "fewshot_sampler": "first_n",
+        "apply_chat_template": False,
+        "fewshot_as_multiturn": False,
+        "batch_size": args.batch_size,
+        "max_context_length": 4096,
+        "use_cache": False,
+        "seeds": {"python": 0, "numpy": 1234, "torch": 1234, "fewshot": 1234},
+    }
+    is_dense = args.variant == "dense"
     report = {
         "status": "COMPLETE" if full_test else "SMOKE_ONLY",
-        "evaluation": "high_fidelity_nec_mmlu_5shot",
+        "evaluation": f"{args.variant}_mmlu_5shot",
+        "model_variant": args.variant,
         "model_id": MODEL_ID,
         "model_revision": MODEL_REVISION,
         "model_tokenizer_compatibility": compatibility,
         "source_commit": source_commit(),
-        "checkpoint_manifest_sha256": audit["manifest_sha256"],
+        "checkpoint_manifest_sha256": audit["manifest_sha256"] if audit else None,
         "compressed_layers": injected,
+        "independent_numerical_coefficients": (
+            DENSE_LLAMA2_7B_COEFFICIENTS if is_dense
+            else audit["independent_numerical_coefficients"]
+        ),
+        "structural_parameter_reduction": 0.0 if is_dense else audit["structural_parameter_reduction"],
+        "parameter_compression_ratio": 1.0 if is_dense else audit["parameter_compression_ratio"],
         "framework": {
             "name": "EleutherAI/lm-evaluation-harness",
             "version": installed,
@@ -207,6 +311,10 @@ def main() -> None:
             "task_versions": results.get("versions"),
         },
         "dataset": pinned_data,
+        "protocol_identity": protocol_identity,
+        "protocol_fingerprint": fingerprint(protocol_identity),
+        "evaluation_input_identity": sample_identity,
+        "response_finiteness_audit": response_finiteness,
         "dataset_revision_enforcement_calls": loader_calls,
         "protocol": {
             "shots": 5,
@@ -231,7 +339,8 @@ def main() -> None:
         "total_runtime_seconds": time.monotonic() - started,
         "adapter_smoke": smoke_record,
         "raw_harness_results": str(raw_path.resolve()),
-        "dense_model_evaluated": False,
+        "raw_harness_results_sha256": sha256_file(raw_path),
+        "dense_model_evaluated": is_dense,
     }
     temporary = args.output.with_suffix(args.output.suffix + ".partial")
     temporary.write_text(json.dumps(report, indent=2) + "\n")

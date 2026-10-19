@@ -1,6 +1,6 @@
 # RunPod: High-Fidelity NEC, full Llama-2-7B
 
-This folder runs only the existing High-Fidelity NEC configuration and NEC-only evaluations. It does not launch a dense-model benchmark, change the compression method, or fine-tune/heal the model.
+This folder compiles the existing High-Fidelity NEC configuration and then performs a matched, in-run comparison against the pinned dense model. It does not change the compression method or fine-tune/heal either model. Dense and NEC scores are produced by the same evaluator source, model revision, tokenizer, dataset bytes, prompts, precision, and scoring code in separate processes.
 
 ## Pod and persistence
 
@@ -10,38 +10,33 @@ RunPod documents network volumes as persistent across pod replacement and requir
 
 ## Install and run
 
-Place a clean checkout of the committed `main` repository at `/workspace/research` (or set `NEC_REPO_ROOT`), then from that checkout run:
+Place a clean checkout of the committed `main` repository at `/workspace/research` (or set `NEC_REPO_ROOT`), then run exactly one command from that checkout:
 
 ```bash
-bash runpod_execution/nec_high_fidelity/bootstrap.sh
-source /workspace/venvs/nec-hf/bin/activate
-bash runpod_execution/nec_high_fidelity/preflight.sh
-nohup bash runpod_execution/nec_high_fidelity/run.sh \
-  > /workspace/runs/nec-high-fidelity-20261017/console.log 2>&1 < /dev/null &
-echo $! > /workspace/runs/nec-high-fidelity-20261017/runner.pid
+bash runpod_execution/nec_high_fidelity/run.sh
 ```
 
-`bootstrap.sh` creates a persistent Python 3.13.15 environment and installs the versions recorded in the successful layer-0 smoke (PyTorch 2.11.0+cu128 and the pinned requirements file). The preflight loads only the pinned model configuration and tokenizer—not the 7B weight tensors—and checks Llama-2 dimensions, architecture, vocabulary, special IDs, the tokenizer probe, GPU/RAM/disk, package versions, and a clean committed source tree.
+`run.sh` creates the pinned persistent runtime if it is absent, runs the fail-closed preflight, compiles or resumes all 32 NEC layers, and evaluates dense and NEC WikiText-2 followed by dense and NEC MMLU. For a detached job, run that same command inside `tmux` or use the pod provider's persistent terminal. `bootstrap.sh` installs Python 3.13.15, PyTorch 2.11.0+cu128, and the locked requirements. Preflight loads only the pinned model configuration and tokenizer—not the 7B weight tensors—and checks Llama-2 dimensions, architecture, vocabulary, RMSNorm epsilon, vocabulary/special IDs, a fixed tokenizer probe, GPU/RAM/disk, package versions, mounted persistence, and a clean committed source tree.
 
 The runner compiles all 32 layers and seven projections using the existing `run_config.json`. It writes directly to `/workspace/runs/nec-high-fidelity-20261017/checkpoint`, uses the compiler's `--resume` validation when the manifest exists, and reuses completed evaluation JSON only when both the checkpoint-manifest SHA-256 and evaluator source commit match. Before accepting an already-complete checkpoint, it re-audits the manifest, all layer hashes, all persisted layer inputs, and the full recorded calibration/configuration against `run_config.json`. Every invocation has a separate log/attempt directory; it will not overwrite completed PPL/MMLU reports. If the pod or SSH session stops, reattach the same network volume and run the same command again. The compiler skips integrity-checked completed layers and resumes at the first missing layer.
 
 Monitor from another shell:
 
 ```bash
-tail -f /workspace/runs/nec-high-fidelity-20261017/console.log
 tail -f /workspace/runs/nec-high-fidelity-20261017/logs/resources.jsonl
 cat /workspace/runs/nec-high-fidelity-20261017/compile_progress.json
 cat /workspace/runs/nec-high-fidelity-20261017/evaluation/evaluation_progress.json
 ```
 
-The final result is written under `evaluation/results/<checkpoint-manifest-sha256>/<source-commit>/final_results.json`; full per-subject MMLU and both the 10k-token and full WikiText-2 raw-test results are retained alongside it. Keying by both artifact and source commit prevents accidentally reusing scores from a different evaluator implementation. The evaluator uses the pinned tokenizer and architecture validation and records every report, raw harness output, source revision, config hash, checkpoint hash, and exact scoring counts. MMLU is not marked complete unless all 57 subjects / 14,042 questions and the 57-question adapter smoke pass.
+The final matched result is written under `evaluation/results/<checkpoint-manifest-sha256>/<source-commit>/final_results.json`. Four immutable reports are retained beside it: dense and NEC WikiText-2, and dense and NEC MMLU. Keying by both artifact and source commit prevents reuse across checkpoint or evaluator changes. The final report is not emitted unless the protocol fingerprints match, WikiText token IDs/windows/counts match, all independent NLL checks pass, the MMLU subject sets and per-subject counts match, and both 57-question adapter smokes plus both complete 57-subject/14,042-question runs pass.
 
 ## Evaluated protocols
 
 - Model: `NousResearch/Llama-2-7b-hf`, revision `8efe6c9b93655b934e27bd9981e3ec13e55aee9d`.
 - Compression: existing High-Fidelity NEC only; all 32 layers; seven projections/layer; no healing.
 - Calibration: pinned WikiText-2 raw v1 revision `b08601e04326c79dfdd32d625aee71d232d685c3`, 256 train tokens, 128 validation tokens, prefix sampling, length 128, fixed seeds recorded in `run_config.json`.
-- PPL: pinned WikiText-2 raw test revision, 2048 context, stride 512, 10,000 input tokens and full split, each shifted target scored once; mean token NLL then exponentiated.
-- MMLU: pinned `cais/mmlu` revision `c30699e8356da336a370243923dbaf21066bb9fe`, lm-evaluation-harness commit `ddd67220430a2470529f25fd5c05a576ca1057a0`, 5-shot, all 57 subjects, batch 1, deterministic seeds.
+- Comparison model: the unmodified dense `NousResearch/Llama-2-7b-hf` at the same pinned revision; this is measured in the same run, not copied from a publication.
+- PPL: pinned WikiText-2 raw test revision, 2048 context, stride 512, 10,000 input tokens and full split, each shifted target scored once; float32 token NLL is summed, divided by the exact number of scored labels, then exponentiated. Dense and NEC token-stream SHA-256 values and window specifications must match.
+- MMLU: pinned `cais/mmlu` revision `c30699e8356da336a370243923dbaf21066bb9fe`, lm-evaluation-harness commit `ddd67220430a2470529f25fd5c05a576ca1057a0`, standard 5-shot, all 57 subjects, batch 1, deterministic seeds, no chat template. Dense and NEC use the identical harness adapter and task definitions.
 
 The runner derives evaluator placement caps as at most 75% of the least-free GPU VRAM and 75% of effective container RAM, capped at 60 GiB/GPU and 48 GiB CPU, leaving space for runtime allocations. With an idle 24 GiB GPU / 32 GiB RAM pod this is about 18 GiB / 24 GiB; an idle 80 GiB / 64 GiB pod gets at most 60 GiB / 48 GiB. Override `NEC_EVAL_GPU_MEMORY_GIB` or `NEC_EVAL_CPU_MEMORY_GIB` only to fit the actual pod; this changes placement only, not precision or scoring. Resource telemetry continues through compilation and evaluation; `compile_progress.json` tracks the last compiled layer, while `evaluation_progress.json` records PPL/MMLU stage state and failures.

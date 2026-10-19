@@ -9,6 +9,7 @@ import torch
 
 from nox.compiler import nox_hybrid_dmrg_decompose, quantize_4bit_grouped
 from benchmarks.evaluate_high_fidelity_mmlu import (
+    audit_mmlu_response_finiteness,
     install_pinned_mmlu_loader,
     summarize_mmlu_harness,
 )
@@ -16,6 +17,7 @@ from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget
 from runpod_execution.nec_high_fidelity.runpod_driver import (
     evaluation_memory_limits,
     load_config,
+    validate_matched_evaluations,
     verify_result,
     verify_checkpoint_matches_run_config,
 )
@@ -140,14 +142,49 @@ class ProductionEvaluationTests(unittest.TestCase):
                 "status": "COMPLETE",
                 "checkpoint_manifest_sha256": "checkpoint-hash",
                 "source_commit": "source-commit",
+                "model_variant": "high_fidelity_nec",
             }))
             self.assertIsNotNone(verify_result(
                 result, "checkpoint-hash", source_commit_hash="source-commit",
+                model_variant="high_fidelity_nec",
             ))
             with self.assertRaisesRegex(RuntimeError, "different source commit"):
                 verify_result(result, "checkpoint-hash", source_commit_hash="other-commit")
             with self.assertRaisesRegex(RuntimeError, "different checkpoint"):
                 verify_result(result, "other-checkpoint")
+            with self.assertRaisesRegex(RuntimeError, "different model variant"):
+                verify_result(result, "checkpoint-hash", model_variant="dense")
+
+    def test_matched_comparison_requires_identical_token_and_task_inputs(self):
+        metric = {
+            "input_tokens": 10,
+            "scored_tokens": 9,
+            "token_ids_sha256": "tokens",
+            "bos_token_id": 1,
+            "window_specification": [{"begin": 0, "end": 10}],
+        }
+        compatibility = {"model_config": {"rms_norm_eps": 1e-5}, "tokenizer": {"vocab_size": 32000}}
+        dense_ppl = {
+            "protocol_fingerprint": "ppl-protocol",
+            "metrics": {"primary_10k": dict(metric), "full_test": dict(metric)},
+            "model_tokenizer_compatibility": compatibility,
+            "independent_numerical_coefficients": 100,
+        }
+        nec_ppl = json.loads(json.dumps(dense_ppl))
+        subject = {"accuracy": 0.5, "questions": 2}
+        dense_mmlu = {
+            "protocol_fingerprint": "mmlu-protocol",
+            "evaluation_input_identity": {"samples": 2, "sha256": "mmlu-inputs"},
+            "per_subject": {"subject": dict(subject)},
+            "model_tokenizer_compatibility": compatibility,
+            "independent_numerical_coefficients": 100,
+        }
+        nec_mmlu = json.loads(json.dumps(dense_mmlu))
+        audit = validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
+        self.assertEqual(audit["status"], "PASS")
+        nec_ppl["metrics"]["primary_10k"]["token_ids_sha256"] = "different"
+        with self.assertRaisesRegex(RuntimeError, "token_ids_sha256"):
+            validate_matched_evaluations(dense_ppl, nec_ppl, dense_mmlu, nec_mmlu)
 
     def test_runpod_checkpoint_configuration_is_checked_against_pins(self):
         config = load_config()
@@ -226,6 +263,18 @@ class ProductionEvaluationTests(unittest.TestCase):
         summary = summarize_mmlu_harness(results, subjects, full_test=False)
         self.assertEqual(summary["total_questions"], 3)
         self.assertAlmostEqual(summary["overall_accuracy"], 2.0 / 3.0)
+
+    def test_mmlu_response_audit_rejects_nonfinite_likelihoods(self):
+        results = {"samples": {"mmlu_a": [{
+            "resps": [[(-1.0, True)]],
+            "filtered_resps": [(-1.0, True)],
+        }]}}
+        self.assertEqual(
+            audit_mmlu_response_finiteness(results, ["a"])["status"], "PASS",
+        )
+        results["samples"]["mmlu_a"][0]["resps"] = [[(float("nan"), False)]]
+        with self.assertRaises(FloatingPointError):
+            audit_mmlu_response_finiteness(results, ["a"])
 
     def test_mpo_artifact_count_is_derived_from_tensors(self):
         report = validate_mpo_artifact("fixture", tiny_artifact(), (2, 2))
