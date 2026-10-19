@@ -206,7 +206,7 @@ calibration/validation samples. The comparison checks the reconstructed
 weight, ranks, coefficient count, two-sweep Q4 diagnostics, calibration and
 held-out projection errors, wall time, CUDA peaks, and RSS. FP64 is a separate
 `down-fp64` stage; the runner refuses it unless the FP32 comparison failed. It defaults
-to a two-hour process timeout, records partial status and logs, reuses verified
+to a two-hour total invocation timeout including environment bootstrap, records partial status and logs, reuses verified
 completed stages, and never starts a successor automatically. Terminating the
 process does not terminate the RunPod pod or stop billing.
 The qualification bootstrap omits the unused MMLU harness; invoking the later

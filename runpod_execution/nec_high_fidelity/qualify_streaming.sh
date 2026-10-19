@@ -34,7 +34,7 @@ Each invocation runs exactly one stage and then stops:
   layer-compare      Compare completed layer variants
   status             Print saved status without running computation
 
-Default per-stage process timeout: 7200 seconds. Override only with
+Default per-invocation timeout, including bootstrap: 7200 seconds. Override only with
 NEC_QUAL_TIMEOUT_SECONDS. No stage starts its successor. Layer stages require
 a passing down-compare report. A process timeout DOES NOT stop RunPod billing;
 terminate the pod manually.
@@ -65,36 +65,38 @@ if [[ "$STAGE" == "status" ]]; then
   exit 0
 fi
 
-if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  NEC_BOOTSTRAP_PROFILE=qualification bash "$SCRIPT_DIR/bootstrap.sh"
-fi
 mkdir -p "$QUAL_ROOT/logs"
 cd "$REPO_ROOT"
+INVOCATION_STARTED="$(date +%s)"
 
 record_exit() {
   local name="$1"
   local output_dir="$2"
   local exit_code="$3"
   local elapsed="$4"
-  "$VENV_DIR/bin/python" - "$name" "$output_dir" "$exit_code" "$elapsed" "$GPU_HOURLY_USD" "$TIMEOUT_SECONDS" <<'PY'
+  local invocation_elapsed="$(( $(date +%s) - INVOCATION_STARTED ))"
+  python3 - "$name" "$output_dir" "$exit_code" "$elapsed" "$invocation_elapsed" "$GPU_HOURLY_USD" "$TIMEOUT_SECONDS" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-name, output, exit_code, elapsed, hourly, timeout = sys.argv[1:]
+name, output, exit_code, elapsed, invocation_elapsed, hourly, timeout = sys.argv[1:]
 output = Path(output)
 output.mkdir(parents=True, exist_ok=True)
 elapsed = float(elapsed)
+invocation_elapsed = float(invocation_elapsed)
 record = {
     "stage": name,
     "command_exit_code": int(exit_code),
     "status": "TIMEOUT" if int(exit_code) == 124 else "PASS" if int(exit_code) == 0 else "FAIL",
     "finished_at_utc": datetime.now(timezone.utc).isoformat(),
     "elapsed_wall_seconds": elapsed,
+    "total_invocation_elapsed_wall_seconds": invocation_elapsed,
     "configured_timeout_seconds": int(timeout),
     "gpu_hourly_usd": float(hourly),
     "estimated_gpu_cost_usd": elapsed / 3600.0 * float(hourly),
+    "estimated_total_invocation_gpu_cost_usd": invocation_elapsed / 3600.0 * float(hourly),
     "billing_warning": "Stopping this process does not stop RunPod billing; terminate the pod manually.",
 }
 path = output / "last_execution.json"
@@ -109,10 +111,16 @@ run_guarded() {
   local name="$1"
   local output_dir="$2"
   shift 2
-  local started elapsed exit_code
+  local started elapsed exit_code already_elapsed remaining
   started="$(date +%s)"
+  already_elapsed="$(( started - INVOCATION_STARTED ))"
+  remaining="$(( TIMEOUT_SECONDS - already_elapsed ))"
+  if (( remaining <= 0 )); then
+    record_exit "$name" "$output_dir" 124 0
+    return 124
+  fi
   set +e
-  timeout --foreground --signal=TERM --kill-after=60s "$TIMEOUT_SECONDS" "$@" \
+  timeout --foreground --signal=TERM --kill-after=60s "$remaining" "$@" \
     2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
   exit_code="${PIPESTATUS[0]}"
   set -e
@@ -121,6 +129,11 @@ run_guarded() {
   echo "IMPORTANT: this process stopped, but RunPod billing continues until you terminate the pod." >&2
   return "$exit_code"
 }
+
+if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+  run_guarded bootstrap "$QUAL_ROOT/bootstrap" \
+    env NEC_BOOTSTRAP_PROFILE=qualification bash "$SCRIPT_DIR/bootstrap.sh"
+fi
 
 down_stage() {
   local name="$1"

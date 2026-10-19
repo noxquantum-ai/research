@@ -314,6 +314,7 @@ class ProductionEvaluationTests(unittest.TestCase):
             / "runpod_execution" / "nec_high_fidelity" / "qualify_streaming.sh"
         ).read_text()
         self.assertIn('TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-7200}"', qualification_script)
+        self.assertIn('remaining="$(( TIMEOUT_SECONDS - already_elapsed ))"', qualification_script)
         self.assertIn("require_down_gate", qualification_script)
         self.assertNotIn("run_variant reference-full-matrix", qualification_script)
         self.assertIn("down-reference)", qualification_script)

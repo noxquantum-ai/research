@@ -26,7 +26,7 @@ bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-fp32
 bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-compare
 ```
 
-It defaults to a two-hour timeout per process. A timeout does not stop RunPod
+It defaults to a two-hour total timeout per invocation, including bootstrap. A timeout does not stop RunPod
 billing; terminate the pod manually. FP64 and all-seven-projection layer stages
 are explicit follow-up commands. An unnecessary FP64 run is refused, and each
 layer backend remains locked until its single-projection comparison passes.
