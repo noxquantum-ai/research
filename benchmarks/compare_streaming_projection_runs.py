@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 
 from nox.compiler import reconstruct_from_artifact  # noqa: E402
 from scripts.compile_high_fidelity import sha256_file  # noqa: E402
+from benchmarks.qualify_streaming_projection import source_identity  # noqa: E402
 
 
 EXPECTED_COMPONENTS = {
@@ -39,7 +40,7 @@ def artifact_coefficient_count(artifact):
     return total
 
 
-def load_run(path, backend, statistics_dtype):
+def load_run(path, backend, statistics_dtype, current_source):
     path = Path(path)
     report = json.loads((path / "report.json").read_text())
     artifact_path = path / "artifact.pt"
@@ -49,11 +50,46 @@ def load_run(path, backend, statistics_dtype):
         raise ValueError(f"{path} backend or statistics dtype is not the requested variant")
     if report.get("layer") != 0 or report.get("projection") != "down_proj":
         raise ValueError(f"{path} is not the pinned layer-0 down_proj stage")
+    if report.get("source") != current_source or not current_source.get("clean"):
+        raise ValueError(f"{path} was not produced by the current clean source commit")
     if report.get("artifact", {}).get("sha256") != sha256_file(artifact_path):
         raise ValueError(f"{path} artifact checksum does not match its report")
     payload = torch.load(artifact_path, map_location="cpu", weights_only=False)
     if payload.get("input_data") != report.get("input_data"):
         raise ValueError(f"{path} artifact and report input metadata differ")
+    identity = report.get("qualification_identity")
+    required_identity = {
+        "schema_version": 1,
+        "model_id": "NousResearch/Llama-2-7b-hf",
+        "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+        "layer": 0,
+        "projection": "down_proj",
+        "backend": backend,
+        "statistics_dtype": statistics_dtype,
+        "calibration_tokens": 4096,
+        "validation_tokens": 1024,
+        "sequence_length": 128,
+        "calibration_sampling": "uniform",
+        "validation_sampling": "uniform",
+        "calibration_seed": 42,
+        "validation_seed": 43,
+        "ranks": [1, 64, 128, 64, 1],
+        "bridge_rank": 128,
+        "sparse_budget": 524288,
+        "sweeps": 2,
+        "prior_gamma": 0.01,
+        "activation_scale_exponent": 0.5,
+        "dmrg_chunk_size": 32,
+        "diagonal_prior_strength": 0.0,
+        "site_order": [0, 1, 2, 3],
+        "quantize_components": True,
+    }
+    if not isinstance(identity, dict) or any(
+        identity.get(key) != value for key, value in required_identity.items()
+    ):
+        raise ValueError(f"{path} qualification settings do not match the current protocol")
+    if payload.get("source") != current_source or payload.get("qualification_identity") != identity:
+        raise ValueError(f"{path} artifact identity does not match its report")
     return report, payload["artifact"]
 
 
@@ -143,8 +179,15 @@ def main():
     if args.gpu_hourly_usd < 0:
         raise ValueError("gpu-hourly-usd must be nonnegative")
 
-    reference_report, reference_artifact = load_run(args.reference, "full_matrix", "float64")
-    fp32_report, fp32_artifact = load_run(args.fp32, "streaming_statistics", "float32")
+    current_source = source_identity()
+    if not current_source["clean"]:
+        raise RuntimeError("Comparison requires a clean source tree")
+    reference_report, reference_artifact = load_run(
+        args.reference, "full_matrix", "float64", current_source,
+    )
+    fp32_report, fp32_artifact = load_run(
+        args.fp32, "streaming_statistics", "float32", current_source,
+    )
     fp32 = compare(
         reference_report, reference_artifact, fp32_report, fp32_artifact,
         args.gpu_hourly_usd,
@@ -166,6 +209,7 @@ def main():
     )
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj staged streaming qualification",
+        "source": current_source,
         "identical_input_data_and_hidden_states": True,
         "gpu_hourly_usd": args.gpu_hourly_usd,
         "acceptance": {
@@ -176,7 +220,7 @@ def main():
     }
     if args.fp64 is not None:
         fp64_report, fp64_artifact = load_run(
-            args.fp64, "streaming_statistics", "float64",
+            args.fp64, "streaming_statistics", "float64", current_source,
         )
         fp64 = compare(
             reference_report, reference_artifact, fp64_report, fp64_artifact,

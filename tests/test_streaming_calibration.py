@@ -1,4 +1,7 @@
 import unittest
+import json
+import tempfile
+from pathlib import Path
 
 import torch
 
@@ -23,11 +26,47 @@ from benchmarks.qualify_streaming_projection import (
     down_projection_input,
     materialize_down_inputs,
     projection_metrics_chunked,
+    validate_completed,
 )
+from scripts.compile_high_fidelity import sha256_file
 from benchmarks.compare_streaming_projection_runs import compare as compare_staged_projection
 
 
 class StreamingCalibrationTests(unittest.TestCase):
+    def test_completed_stage_reuse_requires_current_source_and_settings(self):
+        identity = {
+            "schema_version": 1,
+            "backend": "streaming_statistics",
+            "statistics_dtype": "float32",
+            "calibration_tokens": 4096,
+        }
+        source = {"commit": "current", "dirty_paths": [], "clean": True}
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            artifact_path = output / "artifact.pt"
+            torch.save({
+                "source": source,
+                "qualification_identity": identity,
+                "artifact": {"fixture": True},
+            }, artifact_path)
+            report = {
+                "status": "PASS",
+                "source": source,
+                "qualification_identity": identity,
+                "artifact": {"sha256": sha256_file(artifact_path)},
+            }
+            (output / "report.json").write_text(json.dumps(report))
+            self.assertTrue(validate_completed(output, identity, source))
+            self.assertFalse(validate_completed(
+                output, identity, {**source, "commit": "newer"},
+            ))
+            self.assertFalse(validate_completed(
+                output, {**identity, "calibration_tokens": 8192}, source,
+            ))
+            self.assertFalse(validate_completed(
+                output, identity, {**source, "clean": False, "dirty_paths": ["changed.py"]},
+            ))
+
     def test_chunked_statistics_match_direct_products(self):
         torch.manual_seed(101)
         x = torch.randn(11, 37, dtype=torch.float64)

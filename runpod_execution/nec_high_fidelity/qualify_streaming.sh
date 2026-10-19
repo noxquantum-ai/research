@@ -166,9 +166,18 @@ require_down_gate() {
   fi
   "$VENV_DIR/bin/python" - "$gate" "$variant" <<'PY'
 import json
+import subprocess
 import sys
 report = json.load(open(sys.argv[1]))
 variant = sys.argv[2]
+commit = subprocess.run(
+    ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True,
+).stdout.strip()
+dirty = subprocess.run(
+    ["git", "status", "--porcelain"], check=True, capture_output=True, text=True,
+).stdout.splitlines()
+if dirty or report.get("source") != {"commit": commit, "dirty_paths": [], "clean": True}:
+    raise SystemExit("down_proj gate is stale or the current source tree is dirty")
 passed = (
     report.get("fp32_passes") if variant == "fp32" else
     report.get("fp64_passes") if variant == "fp64" else
@@ -187,8 +196,17 @@ require_fp64_needed() {
   fi
   "$VENV_DIR/bin/python" - "$gate" <<'PY'
 import json
+import subprocess
 import sys
 report = json.load(open(sys.argv[1]))
+commit = subprocess.run(
+    ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True,
+).stdout.strip()
+dirty = subprocess.run(
+    ["git", "status", "--porcelain"], check=True, capture_output=True, text=True,
+).stdout.splitlines()
+if dirty or report.get("source") != {"commit": commit, "dirty_paths": [], "clean": True}:
+    raise SystemExit("down_proj comparison is stale or the current source tree is dirty")
 if report.get("fp32_passes"):
     raise SystemExit("FP32 already passed; refusing an unnecessary FP64 stage")
 PY

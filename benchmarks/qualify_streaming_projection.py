@@ -69,6 +69,44 @@ def source_identity():
     return {"commit": commit, "dirty_paths": dirty, "clean": not dirty}
 
 
+def qualification_identity(args, device):
+    configuration = get_tier_config("high_fidelity_10x")
+    hardware = {"requested_device": str(device)}
+    if device.type == "cuda" and torch.cuda.is_available():
+        hardware.update({
+            "cuda_device_name": torch.cuda.get_device_name(device),
+            "cuda_total_bytes": int(torch.cuda.get_device_properties(device).total_memory),
+        })
+    return {
+        "schema_version": 1,
+        "model_id": args.model_id,
+        "model_revision": args.model_revision,
+        "layer": LAYER,
+        "projection": PROJECTION,
+        "backend": args.backend,
+        "statistics_dtype": args.statistics_dtype,
+        "calibration_tokens": int(args.n_calib),
+        "validation_tokens": int(args.n_validation),
+        "sequence_length": int(args.seq_len),
+        "calibration_sampling": "uniform",
+        "validation_sampling": "uniform",
+        "calibration_seed": 42,
+        "validation_seed": 43,
+        "windows_per_chunk": int(args.windows_per_chunk),
+        "ranks": list(configuration["ranks"]),
+        "bridge_rank": int(configuration["r_bridge"]),
+        "sparse_budget": int(configuration["n_outliers"]),
+        "sweeps": 2,
+        "prior_gamma": 0.01,
+        "activation_scale_exponent": 0.5,
+        "dmrg_chunk_size": 32,
+        "diagonal_prior_strength": 0.0,
+        "site_order": [0, 1, 2, 3],
+        "quantize_components": True,
+        "hardware": hardware,
+    }
+
+
 def tensor_sha256(tensor):
     contiguous = tensor.detach().cpu().contiguous()
     return hashlib.sha256(contiguous.numpy().tobytes()).hexdigest()
@@ -242,16 +280,28 @@ def projection_metrics_chunked(
     }
 
 
-def validate_completed(output):
+def validate_completed(output, expected_identity, current_source):
     report_path = output / "report.json"
     artifact_path = output / "artifact.pt"
     if not report_path.exists() or not artifact_path.exists():
         return False
-    report = json.loads(report_path.read_text())
-    return (
-        report.get("status") == "PASS"
-        and report.get("artifact", {}).get("sha256") == sha256_file(artifact_path)
-    )
+    try:
+        report = json.loads(report_path.read_text())
+        if not (
+            report.get("status") == "PASS"
+            and report.get("artifact", {}).get("sha256") == sha256_file(artifact_path)
+            and report.get("source") == current_source
+            and current_source.get("clean") is True
+            and report.get("qualification_identity") == expected_identity
+        ):
+            return False
+        payload = torch.load(artifact_path, map_location="cpu", weights_only=False)
+        return (
+            payload.get("source") == current_source
+            and payload.get("qualification_identity") == expected_identity
+        )
+    except (OSError, ValueError, json.JSONDecodeError, RuntimeError, EOFError):
+        return False
 
 
 @torch.no_grad()
@@ -275,7 +325,16 @@ def main():
         raise ValueError("Initial qualification is pinned to 4096/1024 tokens and 128-token windows")
     if args.windows_per_chunk <= 0:
         raise ValueError("windows-per-chunk must be positive")
-    if validate_completed(args.output):
+    device = torch.device(args.device)
+    if device.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA qualification requested but CUDA is unavailable")
+    current_source = source_identity()
+    if not current_source["clean"]:
+        raise RuntimeError(
+            "Qualification requires a clean source tree; commit or remove local changes first"
+        )
+    expected_identity = qualification_identity(args, device)
+    if validate_completed(args.output, expected_identity, current_source):
         print(f"Reusing verified completed stage: {args.output}", flush=True)
         return
     args.output.mkdir(parents=True, exist_ok=True)
@@ -290,6 +349,8 @@ def main():
         "backend": args.backend,
         "statistics_dtype": args.statistics_dtype,
         "scope": "real Llama-2-7B layer-0 down_proj qualification",
+        "source": current_source,
+        "qualification_identity": expected_identity,
     }
     atomic_json_save(progress, args.output / "progress.json")
 
@@ -311,9 +372,6 @@ def main():
     signal.signal(signal.SIGTERM, terminate)
     signal.signal(signal.SIGINT, terminate)
 
-    device = torch.device(args.device)
-    if device.type == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA qualification requested but CUDA is unavailable")
     telemetry = Telemetry(device)
     telemetry.start()
     started = time.monotonic()
@@ -443,17 +501,23 @@ def main():
             "backend": args.backend,
             "statistics_dtype": args.statistics_dtype,
             "input_data": input_data,
+            "source": current_source,
+            "qualification_identity": expected_identity,
             "artifact": artifact,
         }
         atomic_torch_save(artifact_payload, artifact_path)
         telemetry.finish()
+        completed_source = source_identity()
+        if completed_source != current_source or not completed_source["clean"]:
+            raise RuntimeError("Source tree changed during qualification; refusing the result")
         report = {
             "status": "PASS",
             "completed_at_utc": utc_now(),
             "scope": "real Llama-2-7B layer-0 down_proj qualification; not a model-quality benchmark",
             "model_id": args.model_id,
             "model_revision": args.model_revision,
-            "source": source_identity(),
+            "source": completed_source,
+            "qualification_identity": expected_identity,
             "runtime": {
                 "torch_version": torch.__version__,
                 "cuda_runtime_version": torch.version.cuda,

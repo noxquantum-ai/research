@@ -30,6 +30,8 @@ It defaults to a two-hour total timeout per invocation, including bootstrap. A t
 billing; terminate the pod manually. FP64 and all-seven-projection layer stages
 are explicit follow-up commands. An unnecessary FP64 run is refused, and each
 layer backend remains locked until its single-projection comparison passes.
+Completed stages are reusable only when their SHA-256, clean Git commit,
+hardware identity, and full qualification settings match the current run.
 
 The script creates or repairs the Python 3.13.15 environment, installs the pinned PyTorch/CUDA and requirements plus the pinned `lm-evaluation-harness` commit, and runs `pip check` before model compilation. Preflight verifies the model architecture/tokenizer, package versions, RunPod persistence, resources, and clean source commit. It then loads the pinned dense model and qualifies PPL batch equivalence at batch size 1 versus the selected batch, scans all 14,042 MMLU prompts for five-shot fit, tests the longest prompt and 4,096-token context at the selected MMLU batch, and initializes the pinned harness on one question per subject. Finally it compiles one actual pinned `down_proj` matrix with a synthetic 65,536-token activation matrix at the full High-Fidelity rank and Q4 settings, then checks artifact decoding against the compiler reconstruction. This last stage validates compiler memory and artifact mechanics, not model quality. No 32-layer compilation starts unless every qualification passes.
 

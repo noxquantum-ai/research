@@ -207,7 +207,9 @@ weight, ranks, coefficient count, two-sweep Q4 diagnostics, calibration and
 held-out projection errors, wall time, CUDA peaks, and RSS. FP64 is a separate
 `down-fp64` stage; the runner refuses it unless the FP32 comparison failed. It defaults
 to a two-hour total invocation timeout including environment bootstrap, records partial status and logs, reuses verified
-completed stages, and never starts a successor automatically. Terminating the
+completed stages only when their artifact hash, clean source commit, hardware,
+and complete qualification identity match the current invocation, and never
+starts a successor automatically. Terminating the
 process does not terminate the RunPod pod or stop billing.
 The qualification bootstrap omits the unused MMLU harness; invoking the later
 production bootstrap installs and verifies it before any PPL/MMLU execution.
