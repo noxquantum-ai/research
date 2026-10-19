@@ -230,6 +230,46 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertTrue(details["nll_formula_crosscheck"]["passed"])
         self.assertEqual(details["nll_formula_crosscheck"]["scored_tokens"], 3)
 
+    def test_batched_perplexity_preserves_scores_and_reduces_forward_passes(self):
+        class Tokenizer:
+            bos_token_id = 0
+
+            def __len__(self):
+                return 4
+
+            def __call__(self, text, return_tensors, add_special_tokens=True):
+                return SimpleNamespace(input_ids=torch.tensor([[0, 1, 2, 3, 0, 1, 2, 3, 0, 1]]))
+
+        class DeterministicNextTokenModel:
+            def eval(self):
+                return self
+
+            def __call__(self, input_ids):
+                target = (input_ids + 1) % 4
+                classes = torch.arange(4).view(1, 1, 4)
+                return SimpleNamespace(logits=-((classes - target.unsqueeze(-1)) ** 2).float())
+
+        def evaluate(batch_size):
+            with patch("benchmarks.benchmark_day4_perplexity.log_step"):
+                return compute_perplexity(
+                    DeterministicNextTokenModel(), Tokenizer(), "ignored",
+                    seq_len=4, stride=2, max_eval_tokens=10, device="cpu",
+                    return_details=True, verify_reference_loss=True,
+                    batch_size=batch_size,
+                )
+
+        serial_ppl, serial_scored, serial = evaluate(1)
+        batched_ppl, batched_scored, batched = evaluate(2)
+        self.assertEqual(serial_scored, batched_scored)
+        self.assertAlmostEqual(serial_ppl, batched_ppl, places=7)
+        self.assertAlmostEqual(serial["mean_nll"], batched["mean_nll"], places=7)
+        self.assertEqual(serial["top1_predictions"].tolist(), batched["top1_predictions"].tolist())
+        self.assertEqual(serial["token_ids_sha256"], batched["token_ids_sha256"])
+        self.assertEqual(serial["window_specification"], batched["window_specification"])
+        self.assertEqual(serial["forward_passes"], 4)
+        self.assertEqual(batched["forward_passes"], 2)
+        self.assertEqual(batched["inference_batch_size"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

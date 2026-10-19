@@ -15,6 +15,7 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
 )
 from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget
 from runpod_execution.nec_high_fidelity.runpod_driver import (
+    evaluation_batch_sizes,
     evaluation_memory_limits,
     load_config,
     validate_matched_evaluations,
@@ -135,6 +136,19 @@ class ProductionEvaluationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "positive"):
             evaluation_memory_limits([24 * gib], 32 * gib, {"NEC_EVAL_GPU_MEMORY_GIB": "0"})
 
+    def test_runpod_batch_sizes_adapt_once_to_least_free_gpu(self):
+        gib = 1024**3
+        self.assertEqual(evaluation_batch_sizes([80 * gib], {}), (8, 16))
+        self.assertEqual(evaluation_batch_sizes([48 * gib], {}), (4, 8))
+        self.assertEqual(evaluation_batch_sizes([34 * gib], {}), (2, 4))
+        self.assertEqual(evaluation_batch_sizes([24 * gib], {}), (1, 2))
+        self.assertEqual(evaluation_batch_sizes([80 * gib, 40 * gib], {}), (2, 4))
+        self.assertEqual(evaluation_batch_sizes(
+            [80 * gib], {"NEC_PPL_BATCH_SIZE": "3", "NEC_MMLU_BATCH_SIZE": "7"},
+        ), (3, 7))
+        with self.assertRaisesRegex(ValueError, "positive"):
+            evaluation_batch_sizes([80 * gib], {"NEC_PPL_BATCH_SIZE": "0"})
+
     def test_runpod_reuse_requires_same_checkpoint_and_source_commit(self):
         with tempfile.TemporaryDirectory() as directory:
             result = Path(directory) / "result.json"
@@ -161,6 +175,7 @@ class ProductionEvaluationTests(unittest.TestCase):
             "scored_tokens": 9,
             "token_ids_sha256": "tokens",
             "bos_token_id": 1,
+            "inference_batch_size": 2,
             "window_specification": [{"begin": 0, "end": 10}],
         }
         compatibility = {"model_config": {"rms_norm_eps": 1e-5}, "tokenizer": {"vocab_size": 32000}}

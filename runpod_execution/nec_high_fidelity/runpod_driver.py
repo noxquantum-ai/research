@@ -120,6 +120,10 @@ def load_config() -> dict:
         or wikitext["text_join"] != "two newline characters"
         or wikitext["token_loss_precision"] != "float32_cross_entropy_from_logits"
         or wikitext["chat_template"] is not False
+        or wikitext["inference_batch_size_policy"] != "shared_hardware_adaptive"
+        or wikitext["batch_size_tiers_by_minimum_free_vram_gib"] != {
+            "70": 8, "42": 4, "28": 2, "0": 1,
+        }
     ):
         raise RuntimeError("run_config.json WikiText-2 revision is not pinned")
     mmlu = config["mmlu"]
@@ -132,7 +136,10 @@ def load_config() -> dict:
         or mmlu["shots"] != 5
         or mmlu["subjects"] != 57
         or mmlu["expected_test_questions"] != 14042
-        or mmlu["batch_size"] != 1
+        or mmlu["batch_size_policy"] != "shared_hardware_adaptive"
+        or mmlu["batch_size_tiers_by_minimum_free_vram_gib"] != {
+            "70": 16, "42": 8, "28": 4, "0": 2,
+        }
         or mmlu["fewshot_split"] != "dev"
         or mmlu["test_split"] != "test"
         or mmlu["prompt_template"] != "question + four labeled choices + Answer:"
@@ -289,6 +296,29 @@ def evaluation_memory_limits(
     if gpu_limit < 1 or cpu_limit < 1:
         raise ValueError("Evaluation memory caps must be positive integer GiB values")
     return gpu_limit, cpu_limit
+
+
+def evaluation_batch_sizes(
+    available_gpu_bytes: list[int], overrides: dict[str, str] | None = None,
+) -> tuple[int, int]:
+    """Choose one hardware-sized PPL/MMLU batch pair for both model variants."""
+    if not available_gpu_bytes or any(value <= 0 for value in available_gpu_bytes):
+        raise ValueError("At least one positive available GPU memory size is required")
+    minimum_free_gib = min(available_gpu_bytes) / (1024**3)
+    if minimum_free_gib >= 70:
+        defaults = (8, 16)
+    elif minimum_free_gib >= 42:
+        defaults = (4, 8)
+    elif minimum_free_gib >= 28:
+        defaults = (2, 4)
+    else:
+        defaults = (1, 2)
+    env = os.environ if overrides is None else overrides
+    ppl_batch = int(env.get("NEC_PPL_BATCH_SIZE", str(defaults[0])))
+    mmlu_batch = int(env.get("NEC_MMLU_BATCH_SIZE", str(defaults[1])))
+    if ppl_batch < 1 or mmlu_batch < 1:
+        raise ValueError("Evaluation batch sizes must be positive integers")
+    return ppl_batch, mmlu_batch
 
 
 def effective_ram_bytes() -> int:
@@ -602,6 +632,9 @@ def validate_ppl_report(record: dict, variant: str, checkpoint_hash: str | None,
         raise RuntimeError(f"{variant} PPL report checkpoint/source identity mismatch")
     if not isinstance(record.get("protocol_fingerprint"), str):
         raise RuntimeError(f"{variant} PPL report has no protocol fingerprint")
+    protocol_batch = record.get("protocol_identity", {}).get("inference_batch_size")
+    if not isinstance(protocol_batch, int) or protocol_batch < 1:
+        raise RuntimeError(f"{variant} PPL report has an invalid batch size")
     for label in ("primary_10k", "full_test"):
         metric = record.get("metrics", {}).get(label)
         if metric is None or metric["scored_tokens"] != metric["input_tokens"] - 1:
@@ -614,6 +647,10 @@ def validate_ppl_report(record: dict, variant: str, checkpoint_hash: str | None,
             raise RuntimeError(f"{variant} PPL is inconsistent with exp(mean NLL) for {label}")
         if not 0.0 <= metric["next_token_accuracy"] <= 1.0:
             raise RuntimeError(f"{variant} next-token accuracy is invalid for {label}")
+        if metric.get("inference_batch_size") != protocol_batch:
+            raise RuntimeError(f"{variant} PPL batch metadata is inconsistent for {label}")
+        if not 0 < metric.get("forward_passes", 0) <= metric.get("window_count", 0):
+            raise RuntimeError(f"{variant} PPL forward-pass count is invalid for {label}")
 
 
 def validate_mmlu_report(record: dict, variant: str, checkpoint_hash: str | None, commit: str) -> None:
@@ -655,7 +692,10 @@ def validate_matched_evaluations(
     for label in ("primary_10k", "full_test"):
         dense_metric = dense_ppl["metrics"][label]
         nec_metric = nec_ppl["metrics"][label]
-        for key in ("input_tokens", "scored_tokens", "token_ids_sha256", "bos_token_id", "window_specification"):
+        for key in (
+            "input_tokens", "scored_tokens", "token_ids_sha256", "bos_token_id",
+            "inference_batch_size", "window_specification",
+        ):
             if dense_metric[key] != nec_metric[key]:
                 raise RuntimeError(f"Dense and NEC WikiText-2 {label} differ in {key}")
     if dense_mmlu["protocol_fingerprint"] != nec_mmlu["protocol_fingerprint"]:
@@ -707,6 +747,7 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
     env["NEC_SOURCE_COMMIT"] = commit
     available_gpu_memory = [torch.cuda.mem_get_info(index)[0] for index in range(torch.cuda.device_count())]
     gpu_cap, cpu_cap = evaluation_memory_limits(available_gpu_memory, effective_ram_bytes(), env)
+    ppl_batch, mmlu_batch = evaluation_batch_sizes(available_gpu_memory, env)
     env.update({
         "NEC_EVAL_GPU_MEMORY_GIB": str(gpu_cap),
         "NEC_EVAL_CPU_MEMORY_GIB": str(cpu_cap),
@@ -723,6 +764,8 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
         "checkpoint_manifest_sha256": checkpoint_hash,
         "gpu_memory_cap_gib": gpu_cap,
         "cpu_memory_cap_gib": cpu_cap,
+        "ppl_batch_size": ppl_batch,
+        "mmlu_batch_size": mmlu_batch,
         "started_utc": datetime.now(timezone.utc).isoformat(),
         "stages": {},
     }
@@ -748,7 +791,7 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
                     sys.executable, str(PPL_EVALUATOR), "--variant", variant,
                     "--offload-folder", str(attempt / "offload"),
                     "--output", str(output), "--context-length", "2048", "--stride", "512",
-                    "--max-eval-tokens", "10000", "--full-test",
+                    "--max-eval-tokens", "10000", "--batch-size", str(ppl_batch), "--full-test",
                 ]
                 if variant == "high_fidelity_nec":
                     command.extend(["--checkpoint-dir", str(checkpoint), "--skip-reconstruct-audit"])
@@ -801,7 +844,7 @@ def run_evaluation(workspace: Path, run_root: Path, commit: str, checkpoint: Pat
                 atomic_json(evaluation_progress, progress)
                 command = [
                     sys.executable, str(MMLU_EVALUATOR), "--variant", variant,
-                    "--output", str(output), "--batch-size", "1", "--smoke-first",
+                    "--output", str(output), "--batch-size", str(mmlu_batch), "--smoke-first",
                 ]
                 if variant == "high_fidelity_nec":
                     command.extend(["--checkpoint-dir", str(checkpoint)])

@@ -123,6 +123,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--context-length", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
+    parser.add_argument("--batch-size", type=int, default=1,
+                        help="Number of equal-length sliding windows per forward pass")
     parser.add_argument("--max-eval-tokens", type=int, default=10_000,
                         help="Zero scores the complete test split")
     parser.add_argument("--offload-folder", type=Path, default=None,
@@ -148,6 +150,8 @@ def main() -> None:
         raise FileExistsError(f"Refusing to overwrite {audit_path}")
     if args.context_length != 2048 or args.stride != 512:
         raise ValueError("The production protocol is fixed at context=2048, stride=512")
+    if args.batch_size < 1:
+        raise ValueError("--batch-size must be a positive integer")
     if args.max_eval_tokens != 0 and args.max_eval_tokens < 10_000:
         raise ValueError("Production evaluation requires 10,000 tokens or the full split")
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -180,6 +184,7 @@ def main() -> None:
         device=str(model.get_input_embeddings().weight.device),
         return_details=True,
         verify_reference_loss=True,
+        batch_size=args.batch_size,
     )
     if args.max_eval_tokens > 0 and details["input_tokens"] < args.max_eval_tokens:
         raise ValueError(
@@ -208,6 +213,7 @@ def main() -> None:
             device=str(model.get_input_embeddings().weight.device),
             return_details=True,
             verify_reference_loss=True,
+            batch_size=args.batch_size,
         )
         if full_scored != full_details["input_tokens"] - 1:
             raise RuntimeError("Full-test target count is inconsistent with causal shift")
@@ -224,6 +230,8 @@ def main() -> None:
             "bos_token_id": full_details["bos_token_id"],
             "tokenizer_compatibility": compatibility["tokenizer"],
             "window_count": full_details["window_count"],
+            "inference_batch_size": full_details["inference_batch_size"],
+            "forward_passes": full_details["forward_passes"],
             "window_specification": full_details["window_specification"],
             "nll_formula_crosscheck": full_details["nll_formula_crosscheck"],
         }
@@ -243,6 +251,7 @@ def main() -> None:
         "stride": args.stride,
         "primary_input_tokens": args.max_eval_tokens,
         "full_test": args.full_test,
+        "inference_batch_size": args.batch_size,
         "text_policy": "raw WikiText-2 text joined with two newlines; no instruction/chat template",
         "causal_shift": "logits[:, :-1] predict labels[:, 1:]",
         "overlap_masking": "each corpus target after the first is scored exactly once",
@@ -260,6 +269,8 @@ def main() -> None:
         "token_ids_sha256": details["token_ids_sha256"],
         "bos_token_id": details["bos_token_id"],
         "window_count": details["window_count"],
+        "inference_batch_size": details["inference_batch_size"],
+        "forward_passes": details["forward_passes"],
         "window_specification": details["window_specification"],
         "nll_formula_crosscheck": details["nll_formula_crosscheck"],
     }
@@ -298,6 +309,8 @@ def main() -> None:
             "text_policy": "raw WikiText-2 text joined with two newlines; no instruction/chat template",
             "use_cache": False,
             "window_count": details["window_count"],
+            "inference_batch_size": details["inference_batch_size"],
+            "forward_passes": details["forward_passes"],
             "window_specification": details["window_specification"],
             "text_join": dataset["text_join"],
             "causal_shift": "logits[:, :-1] predict labels[:, 1:]",

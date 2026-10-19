@@ -78,6 +78,7 @@ def sliding_window_specifications(num_tokens, seq_len=2048, stride=512, max_eval
     return windows, eval_limit
 
 
+@torch.inference_mode()
 def compute_perplexity(
     model,
     tokenizer,
@@ -88,11 +89,14 @@ def compute_perplexity(
     device="cuda",
     return_details=False,
     verify_reference_loss=False,
+    batch_size=1,
 ):
     """
     Computes sliding-window language model perplexity across tokens.
     """
     model.eval()
+    if not isinstance(batch_size, int) or batch_size < 1:
+        raise ValueError("batch_size must be a positive integer")
     encodings = tokenizer(text, return_tensors="pt", add_special_tokens=True)
     total_tokens = encodings.input_ids.size(1)
     if total_tokens < 2:
@@ -107,7 +111,10 @@ def compute_perplexity(
         max_eval_tokens=max_eval_tokens,
     )
 
-    log_step(f"Computing Perplexity over {eval_limit} tokens (seq_len={seq_len}, stride={stride})...")
+    log_step(
+        f"Computing Perplexity over {eval_limit} tokens "
+        f"(seq_len={seq_len}, stride={stride}, batch_size={batch_size})..."
+    )
 
     total_nll = 0.0
     total_evaluated_tokens = 0
@@ -116,19 +123,34 @@ def compute_perplexity(
     maximum_logit_abs = 0.0
     reference_loss_crosscheck = None
 
-    for window in windows:
-        begin_loc, end_loc = window["begin"], window["end"]
-        trg_len = window["target_length"]
-        input_ids = encodings.input_ids[:, begin_loc:end_loc].to(device)
+    forward_passes = 0
+    window_index = 0
+    while window_index < len(windows):
+        window_length = windows[window_index]["end"] - windows[window_index]["begin"]
+        group = []
+        while window_index < len(windows) and len(group) < batch_size:
+            candidate = windows[window_index]
+            candidate_length = candidate["end"] - candidate["begin"]
+            if candidate_length != window_length:
+                break
+            group.append(candidate)
+            window_index += 1
+        input_ids = torch.cat([
+            encodings.input_ids[:, window["begin"]:window["end"]]
+            for window in group
+        ], dim=0).to(device)
         target_ids = input_ids.clone()
-        target_ids[:, :-trg_len] = -100
+        for row, window in enumerate(group):
+            target_ids[row, :-window["target_length"]] = -100
 
         scored_tokens = int((target_ids[:, 1:] != -100).sum().item())
-        if scored_tokens != window["scored_tokens"]:
+        expected_group_scored = sum(window["scored_tokens"] for window in group)
+        if scored_tokens != expected_group_scored:
             raise RuntimeError("Internal sliding-window target count mismatch")
         if scored_tokens == 0:
             continue
         outputs = model(input_ids)
+        forward_passes += 1
         labels = target_ids[:, 1:]
         logits = outputs.logits[:, :-1].float()
         if not torch.isfinite(logits).all():
@@ -145,22 +167,29 @@ def compute_perplexity(
         if not math.isfinite(window_nll):
             raise FloatingPointError("Model returned non-finite shifted-token NLL")
         if verify_reference_loss and reference_loss_crosscheck is None:
-            safe_labels = labels.clamp_min(0)
-            target_logits = logits.gather(-1, safe_labels.unsqueeze(-1)).squeeze(-1)
-            reference_per_token = torch.logsumexp(logits, dim=-1) - target_logits
-            reference_nll = float(reference_per_token[mask].sum().item())
-            gap = abs(window_nll - reference_nll)
-            tolerance = 1e-4 + 1e-6 * max(abs(window_nll), abs(reference_nll))
+            first_labels = labels[:1]
+            first_logits = logits[:1]
+            first_mask = first_labels != -100
+            safe_labels = first_labels.clamp_min(0)
+            target_logits = first_logits.gather(-1, safe_labels.unsqueeze(-1)).squeeze(-1)
+            reference_per_token = torch.logsumexp(first_logits, dim=-1) - target_logits
+            reference_nll = float(reference_per_token[first_mask].sum().item())
+            cross_entropy_nll = float(F.cross_entropy(
+                first_logits.reshape(-1, first_logits.shape[-1]),
+                first_labels.reshape(-1), ignore_index=-100, reduction="sum",
+            ).item())
+            gap = abs(cross_entropy_nll - reference_nll)
+            tolerance = 1e-4 + 1e-6 * max(abs(cross_entropy_nll), abs(reference_nll))
             if not math.isfinite(reference_nll) or gap > tolerance:
                 raise RuntimeError(
                     "Cross-entropy NLL disagrees with independent logsumexp-minus-target-logit check: "
-                    f"{window_nll} vs {reference_nll}"
+                    f"{cross_entropy_nll} vs {reference_nll}"
                 )
             reference_loss_crosscheck = {
                 "passed": True,
                 "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
-                "scored_tokens": scored_tokens,
-                "cross_entropy_sum": window_nll,
+                "scored_tokens": int(first_mask.sum().item()),
+                "cross_entropy_sum": cross_entropy_nll,
                 "independent_formula_sum": reference_nll,
                 "absolute_difference": gap,
                 "absolute_relative_tolerance": tolerance,
@@ -190,6 +219,8 @@ def compute_perplexity(
             "maximum_absolute_logit": maximum_logit_abs,
             "nll_formula_crosscheck": reference_loss_crosscheck,
             "window_count": len(windows),
+            "inference_batch_size": batch_size,
+            "forward_passes": forward_passes,
             "window_specification": windows,
         }
     return ppl, total_evaluated_tokens

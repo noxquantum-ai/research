@@ -85,6 +85,8 @@
     "tokenizer_probe_text": "NEC tokenizer compatibility probe.",
     "tokenizer_probe_ids": [1, 405, 11206, 5993, 3950, 24521, 410, 915, 29889],
     "chat_template": false,
+    "inference_batch_size_policy": "shared_hardware_adaptive",
+    "batch_size_tiers_by_minimum_free_vram_gib": {"70": 8, "42": 4, "28": 2, "0": 1},
     "loss": "float32 shifted cross entropy, sum then divide by scored token count",
     "first_token_policy": "BOS inserted by pinned Llama-2 tokenizer; no target score for token position 0"
   },
@@ -98,7 +100,8 @@
     "shots": 5,
     "subjects": 57,
     "expected_test_questions": 14042,
-    "batch_size": 1,
+    "batch_size_policy": "shared_hardware_adaptive",
+    "batch_size_tiers_by_minimum_free_vram_gib": {"70": 16, "42": 8, "28": 4, "0": 2},
     "fewshot_split": "dev",
     "test_split": "test",
     "prompt_template": "question + four labeled choices + Answer:",
