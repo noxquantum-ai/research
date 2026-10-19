@@ -105,16 +105,34 @@ class ProductionEvaluationTests(unittest.TestCase):
             "doc_hash": "doc",
             "prompt_hash": "prompt",
             "target_hash": "target",
-            "resps": [[(-1.0, True), (-2.0, True), (-3.0, True), (-4.0, True)]],
-            "filtered_resps": ["A"],
+            "resps": [[(-1.0, True)], [(-2.0, False)], [(-3.0, False)], [(-4.0, False)]],
+            "filtered_resps": [(-1.0, True), (-2.0, False), (-3.0, False), (-4.0, False)],
+            "metrics": ["acc", "acc_norm"],
+            "acc": 1.0,
+            "acc_norm": 1.0,
         }
-        serial = {"samples": {"mmlu_subject": [sample]}}
+        serial = json.loads(json.dumps({"samples": {"mmlu_subject": [sample]}}))
         batched = json.loads(json.dumps(serial))
+        for request in batched["samples"]["mmlu_subject"][0]["resps"]:
+            request[0][0] += 5e-5
+        for response in batched["samples"]["mmlu_subject"][0]["filtered_resps"]:
+            response[0] += 5e-5
         audit = compare_mmlu_smokes(serial, batched, ["subject"])
         self.assertEqual(audit["status"], "PASS")
         self.assertEqual(audit["numerical_likelihood_values_compared"], 4)
-        batched["samples"]["mmlu_subject"][0]["filtered_resps"] = ["B"]
-        with self.assertRaisesRegex(RuntimeError, "answer choice changed"):
+        self.assertAlmostEqual(audit["maximum_absolute_likelihood_delta"], 5e-5)
+
+        near_tie_serial = json.loads(json.dumps(serial))
+        near_tie_batched = json.loads(json.dumps(serial))
+        near_tie_serial_row = near_tie_serial["samples"]["mmlu_subject"][0]
+        near_tie_batched_row = near_tie_batched["samples"]["mmlu_subject"][0]
+        near_tie_serial_row["resps"] = [[(-1.0, True)], [(-1.00005, False)], [(-3.0, False)], [(-4.0, False)]]
+        near_tie_batched_row["resps"] = [[(-1.00005, True)], [(-1.0, False)], [(-3.0, False)], [(-4.0, False)]]
+        with self.assertRaisesRegex(RuntimeError, "predicted answer choice changed"):
+            compare_mmlu_smokes(near_tie_serial, near_tie_batched, ["subject"])
+
+        batched["samples"]["mmlu_subject"][0]["resps"][0][0][0] += 1e-2
+        with self.assertRaisesRegex(RuntimeError, "exceeding 0.0001"):
             compare_mmlu_smokes(serial, batched, ["subject"])
 
     def test_top1_prediction_sidecar_is_exact_and_hash_audited(self):

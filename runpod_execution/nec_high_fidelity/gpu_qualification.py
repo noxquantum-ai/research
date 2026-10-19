@@ -6,6 +6,7 @@ from __future__ import annotations
 import gc
 import json
 import math
+import numbers
 import os
 import time
 from datetime import datetime, timezone
@@ -90,8 +91,45 @@ def _numeric_leaves(value) -> list[float]:
     return []
 
 
+def _assert_response_tree_close(left, right, tolerance: float, path: str = "response") -> float:
+    """Compare a harness response tree, tolerating only small numeric drift."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        if type(left) is not type(right) or left != right:
+            raise BatchEquivalenceError(f"Boolean response changed at {path}")
+        return 0.0
+    if isinstance(left, numbers.Real) and isinstance(right, numbers.Real):
+        left_value, right_value = float(left), float(right)
+        if not math.isfinite(left_value) or not math.isfinite(right_value):
+            raise BatchEquivalenceError(f"Non-finite response value at {path}")
+        delta = abs(left_value - right_value)
+        if delta > tolerance:
+            raise BatchEquivalenceError(
+                f"Response value at {path} differs by {delta:.6g}, exceeding {tolerance}"
+            )
+        return delta
+    if isinstance(left, (list, tuple)) or isinstance(right, (list, tuple)):
+        if type(left) is not type(right) or len(left) != len(right):
+            raise BatchEquivalenceError(f"Response shape changed at {path}")
+        return max(
+            (_assert_response_tree_close(a, b, tolerance, f"{path}[{index}]")
+             for index, (a, b) in enumerate(zip(left, right))),
+            default=0.0,
+        )
+    if isinstance(left, dict) or isinstance(right, dict):
+        if not isinstance(left, dict) or not isinstance(right, dict) or left.keys() != right.keys():
+            raise BatchEquivalenceError(f"Response mapping changed at {path}")
+        return max(
+            (_assert_response_tree_close(left[key], right[key], tolerance, f"{path}.{key}")
+             for key in left),
+            default=0.0,
+        )
+    if left != right:
+        raise BatchEquivalenceError(f"Non-numeric response changed at {path}")
+    return 0.0
+
+
 def compare_mmlu_smokes(serial: dict, batched: dict, subjects: list[str], tolerance: float = 1e-4) -> dict:
-    """Require the same 57 prompts, answer choices, and near-identical scores."""
+    """Require identical prompts and predictions, allowing small score roundoff."""
     if mmlu_sample_identity(serial, subjects) != mmlu_sample_identity(batched, subjects):
         raise BatchEquivalenceError("Serial and batched MMLU smoke prompts differ")
     checked = 0
@@ -103,18 +141,31 @@ def compare_mmlu_smokes(serial: dict, batched: dict, subjects: list[str], tolera
         if len(left_rows) != 1 or len(right_rows) != 1:
             raise BatchEquivalenceError(f"MMLU smoke did not return one row for {task}")
         left, right = left_rows[0], right_rows[0]
-        if left.get("filtered_resps") != right.get("filtered_resps"):
-            raise BatchEquivalenceError(f"MMLU answer choice changed under batching for {task}")
+        filtered_delta = _assert_response_tree_close(
+            left.get("filtered_resps"), right.get("filtered_resps"), tolerance,
+            f"{task}.filtered_resps",
+        )
+        response_delta = _assert_response_tree_close(
+            left.get("resps"), right.get("resps"), tolerance, f"{task}.resps",
+        )
         left_scores = _numeric_leaves(left.get("resps"))
         right_scores = _numeric_leaves(right.get("resps"))
-        if not left_scores or len(left_scores) != len(right_scores):
+        if len(left_scores) != 4 or len(left_scores) != len(right_scores):
             raise BatchEquivalenceError(f"MMLU score vectors differ in shape for {task}")
-        delta = max(abs(a - b) for a, b in zip(left_scores, right_scores))
+        if max(range(4), key=left_scores.__getitem__) != max(range(4), key=right_scores.__getitem__):
+            raise BatchEquivalenceError(f"MMLU predicted answer choice changed under batching for {task}")
+        if left.get("metrics") != right.get("metrics"):
+            raise BatchEquivalenceError(f"MMLU task metrics changed under batching for {task}")
+        metric_names = left.get("metrics", [])
+        for metric in metric_names:
+            if left.get(metric) != right.get(metric):
+                raise BatchEquivalenceError(f"MMLU metric {metric} changed under batching for {task}")
+        delta = max(
+            filtered_delta,
+            response_delta,
+            *(abs(a - b) for a, b in zip(left_scores, right_scores)),
+        )
         maximum_absolute_score_delta = max(maximum_absolute_score_delta, delta)
-        if delta > tolerance:
-            raise BatchEquivalenceError(
-                f"MMLU likelihood delta {delta:.6g} exceeds {tolerance} for {task}"
-            )
         checked += len(left_scores)
     return {
         "status": "PASS",
@@ -122,7 +173,9 @@ def compare_mmlu_smokes(serial: dict, batched: dict, subjects: list[str], tolera
         "numerical_likelihood_values_compared": checked,
         "maximum_absolute_likelihood_delta": maximum_absolute_score_delta,
         "maximum_absolute_likelihood_delta_tolerance": tolerance,
-        "answer_choices_exactly_equal": True,
+        "filtered_responses_within_tolerance": True,
+        "predicted_answer_choices_exactly_equal": True,
+        "task_metrics_exactly_equal": True,
         "prompt_identities_exactly_equal": True,
     }
 
@@ -502,6 +555,5 @@ def qualify_gpu(
     temporary = target.with_suffix(target.suffix + ".partial")
     temporary.write_text(json.dumps(record, indent=2, sort_keys=True, default=str) + "\n")
     temporary.replace(target)
-    del model
     _release_cuda()
     return record
