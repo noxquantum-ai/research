@@ -56,6 +56,9 @@
     "post_compression_healing": false
   },
   "calibration": {
+    "compiler_backend": "full_matrix",
+    "windows_per_chunk": 4,
+    "statistics_dtype": "float64",
     "dataset": "Salesforce/wikitext/wikitext-2-raw-v1",
     "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
     "calibration_split": "train",

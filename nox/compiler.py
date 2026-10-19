@@ -341,11 +341,22 @@ def _left_singular_system_from_gram(xx, sample_count, output_dtype):
     )
     tolerance = singular_tolerance.square()
     negative_eigenvalues = int(torch.count_nonzero(eigenvalues < 0).item())
-    retained = int(torch.count_nonzero(eigenvalues > tolerance).item())
-    if retained == 0:
-        raise ValueError("Calibration covariance has zero numerical rank")
-    eigenvalues = eigenvalues[:retained]
-    eigenvectors = eigenvectors[:, :retained]
+    positive_modes = int(torch.count_nonzero(eigenvalues > 0).item())
+    conventional_numerical_rank = int(torch.count_nonzero(eigenvalues > tolerance).item())
+    below_conventional_cutoff = positive_modes - conventional_numerical_rank
+    # The reference SVD keeps min(N,d) modes; silently applying the usual SVD
+    # rank heuristic here would change that algorithm (notably, eps*N is
+    # 0.0078125 for FP32 and N=65536). Retain every expected positive mode and
+    # fail closed when Gram roundoff makes that impossible. A stable TSQR/SVD
+    # path, not silent truncation, is required for such a covariance.
+    if positive_modes < maximum_modes:
+        raise FloatingPointError(
+            "Calibration Gram factorization lost positive modes: "
+            f"expected {maximum_modes}, observed {positive_modes}, "
+            f"negative={negative_eigenvalues}, dtype={xx.dtype}. "
+            "Retry with float64 statistics or the full-matrix SVD backend."
+        )
+    retained = maximum_modes
     singular_values = torch.sqrt(eigenvalues)
     return (
         eigenvectors.to(dtype=output_dtype),
@@ -353,6 +364,8 @@ def _left_singular_system_from_gram(xx, sample_count, output_dtype):
         {
             "maximum_modes": maximum_modes,
             "numerical_rank": retained,
+            "conventional_numerical_rank": conventional_numerical_rank,
+            "positive_modes_below_conventional_cutoff": below_conventional_cutoff,
             "eigenvalue_tolerance": float(tolerance.item()),
             "singular_value_tolerance": float(singular_tolerance.item()),
             "largest_eigenvalue": float(largest.item()),

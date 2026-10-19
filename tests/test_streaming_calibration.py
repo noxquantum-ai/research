@@ -3,6 +3,7 @@ import unittest
 import torch
 
 from nox.calibration import (
+    CalibrationStatistics,
     CalibrationStatisticsAccumulator,
     accumulate_calibration_statistics,
 )
@@ -110,6 +111,34 @@ class StreamingCalibrationTests(unittest.TestCase):
             result[4]["calibration_statistics_diagnostics"]["numerical_rank"], 7,
         )
 
+    def test_fp32_does_not_silently_apply_sample_count_rank_cutoff(self):
+        torch.manual_seed(107)
+        weight = torch.randn(16, 16)
+        singular_values = torch.linspace(1.0, 0.001, 16)
+        covariance = torch.diag(singular_values.square()).float()
+        statistics = CalibrationStatistics(
+            xx=covariance,
+            yx=weight @ covariance,
+            sample_count=65_536,
+        )
+        result = nox_hybrid_dmrg_decompose_from_statistics(
+            W=weight,
+            calibration_statistics=statistics,
+            o_modes=(2, 2, 2, 2),
+            i_modes=(2, 2, 2, 2),
+            ranks=(1, 2, 4, 2, 1),
+            r_bridge=0,
+            n_outliers=0,
+            n_sweeps=0,
+            quantize_components=False,
+            return_artifacts=True,
+            verbose=False,
+        )
+        diagnostics = result[4]["calibration_statistics_diagnostics"]
+        self.assertEqual(diagnostics["numerical_rank"], 16)
+        self.assertLess(diagnostics["conventional_numerical_rank"], 16)
+        self.assertGreater(diagnostics["positive_modes_below_conventional_cutoff"], 0)
+
     def test_sequence_aligned_chunked_block_forward_matches_full_forward(self):
         torch.manual_seed(105)
         d_model = 16
@@ -181,7 +210,7 @@ class StreamingCalibrationTests(unittest.TestCase):
             seq_len=4,
             rms_norm_eps=1e-5,
             diagonal_prior_strength=0.01,
-            mpo_n_sweeps=1,
+            mpo_n_sweeps=2,
             mpo_alpha_awt=0.5,
             return_artifacts=True,
             verbose=False,
@@ -216,6 +245,16 @@ class StreamingCalibrationTests(unittest.TestCase):
             == "streaming_sufficient_statistics"
             for artifact in streamed["compressed_artifacts"].values()
         ))
+        expected_quantized_components = {
+            "sparse_shield", "bridge_A", "bridge_B",
+            "mpo_site_0", "mpo_site_1", "mpo_site_2", "mpo_site_3",
+        }
+        for artifact in streamed["compressed_artifacts"].values():
+            self.assertEqual(artifact["core_quantization_bits"], 4)
+            self.assertEqual(artifact["sparse_bridge_quantization_bits"], 4)
+            self.assertEqual(
+                set(artifact["precision_diagnostics"]), expected_quantized_components,
+            )
 
 
 if __name__ == "__main__":

@@ -106,6 +106,11 @@ def load_config() -> dict:
     ):
         raise RuntimeError("run_config.json Llama-2 architecture settings differ from the pinned model")
     if (
+        calibration.get("compiler_backend") not in ("full_matrix", "streaming_statistics")
+        or not isinstance(calibration.get("windows_per_chunk"), int)
+        or calibration["windows_per_chunk"] <= 0
+        or calibration.get("statistics_dtype") not in ("float32", "float64")
+        or
         calibration["dataset_revision"] != WIKITEXT_REVISION
         or calibration["dataset"] != "Salesforce/wikitext/wikitext-2-raw-v1"
         or calibration["calibration_split"] != "train"
@@ -466,6 +471,9 @@ def compile_command(config: dict, checkpoint: Path, resume: bool) -> list[str]:
         "--seq-len", str(calibration["sequence_length"]),
         "--calibration-sampling", calibration["sampling"],
         "--validation-sampling", calibration["sampling"],
+        "--calibration-backend", calibration["compiler_backend"],
+        "--calibration-windows-per-chunk", str(calibration["windows_per_chunk"]),
+        "--statistics-dtype", calibration["statistics_dtype"],
         "--calibration-activation-mode", "dense",
         "--construction-mode", compression["construction_mode"],
         "--diagonal-prior-strength", str(compression["diagonal_prior_strength"]),

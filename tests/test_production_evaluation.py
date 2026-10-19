@@ -17,6 +17,7 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
 from runpod_execution.nec_high_fidelity.gpu_qualification import compare_mmlu_smokes
 from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget, save_top1_predictions
 from runpod_execution.nec_high_fidelity.runpod_driver import (
+    compile_command,
     evaluation_batch_sizes,
     evaluation_memory_limits,
     load_config,
@@ -294,6 +295,17 @@ class ProductionEvaluationTests(unittest.TestCase):
         self.assertEqual(config["calibration"]["calibration_tokens"], 65_536)
         self.assertEqual(config["calibration"]["heldout_tokens"], 16_384)
         self.assertEqual(config["calibration"]["sampling"], "uniform")
+        self.assertEqual(config["calibration"]["compiler_backend"], "full_matrix")
+        command = compile_command(config, Path("/tmp/nec-checkpoint"), resume=False)
+        self.assertEqual(
+            command[command.index("--calibration-backend") + 1], "full_matrix",
+        )
+        self.assertEqual(
+            command[command.index("--calibration-windows-per-chunk") + 1], "4",
+        )
+        self.assertEqual(
+            command[command.index("--statistics-dtype") + 1], "float64",
+        )
         self.assertEqual(
             config["acceptance"]["primary_10k_next_token_accuracy_retention_min"], 0.90,
         )

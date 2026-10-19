@@ -63,13 +63,16 @@ the accumulator can retain it for exact loss accounting.
 
 The covariance identity is exact algebraically but a Gram matrix squares the
 condition number. `nox/calibration.py` therefore makes the accumulation dtype
-explicit, symmetrizes covariance before `eigh`, rejects zero numerical rank,
-records negative eigenvalues and the rank threshold, and preserves the
-full-matrix implementation as the reference. Float64 is the CPU reference
-mode. Float32 is faster on commodity GPUs but is not certified for the real
-Llama activation spectra until it is compared against the SVD path on a real
+explicit, symmetrizes covariance before `eigh`, and preserves the full-matrix
+implementation as the reference. It does not apply the conventional
+`eps * max(N,d)` singular-value cutoff: that would silently discard modes kept
+by the reference compiler and reaches 0.0078125 for FP32 and N=65,536. It
+instead retains every expected positive mode, records how many lie below that
+cutoff, and fails closed if Gram roundoff loses a positive mode. Float64 is the
+CPU reference mode. Float32 is faster on commodity GPUs but is not certified
+for real Llama activation spectra until compared against the SVD path on a real
 projection. Streaming QR/TSQR is the preferred fallback if that comparison
-shows loss of small but relevant singular directions; it was analyzed but not
+shows corruption of small but relevant directions; it was analyzed but not
 implemented in this change.
 
 For a fixed linear dense target (Y=WX), (H=WC). The independent block path
@@ -137,11 +140,16 @@ covariance accumulation work but not the maximum DMRG rank.
 ## Verified local results
 
 `tests/test_streaming_calibration.py` covers chunk accumulation, optional
-(YY^\top), unequal chunks, rank-deficient inputs, a complete sparse/bridge/AWT/
-two-sweep fit, diagonal prior, sequence-aligned Transformer forwards, and a
-complete seven-projection block comparison. All seven tests pass. The complete
+(YY^\top), unequal chunks, rank-deficient inputs, FP32 no-silent-truncation
+behavior, a complete sparse/bridge/AWT/two-sweep fit, diagonal prior,
+sequence-aligned Transformer forwards, and a complete seven-projection block
+comparison with two sweeps and Q4 diagnostics for every stored component. All
+eight tests pass. The complete
 repository suite passed 148 tests with four intentional CUDA skips; one
 unrelated test module could not import because local `pyarrow` is absent.
+These are small-matrix regression tests; they do not certify real-sized
+High-Fidelity projections. `qualify_streaming.sh` is the required production-
+shape qualification before changing the official backend.
 
 The CPU synthetic benchmark (`torch 2.11.0+cpu`, 64-by-64 projection, two
 sweeps, float64 accumulated statistics) produced:
@@ -180,6 +188,20 @@ python3 scripts/compile_high_fidelity.py \
   --budget-allocation uniform --defect-bridge-mode none --pees-rank 0 \
   --device cuda:0
 ```
+
+The production `runpod_driver.py` now always passes the backend recorded in
+`run_config.json`; that configuration explicitly remains `full_matrix` until
+real qualification succeeds. The matched one-command qualification is:
+
+```bash
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh
+```
+
+It runs layer 0 with the reference SVD, FP32 statistics, and FP64 statistics on
+the same 4,096/1,024-token calibration/validation samples, then compares all
+seven reconstructed weights, ranks, coefficient counts, two-sweep Q4
+diagnostics, calibration metrics, held-out metrics, wall time, CUDA peaks, and
+RSS. It does not invoke the 160-GiB production preflight.
 
 ## Hardware decision and cheapest sound next experiment
 
