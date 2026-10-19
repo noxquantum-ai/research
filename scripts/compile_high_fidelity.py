@@ -8,6 +8,7 @@ import io
 import json
 import math
 import os
+import resource
 import sys
 import time
 from pathlib import Path
@@ -27,7 +28,12 @@ from nox.block_compiler import compile_transformer_block
 from nox.compiler import reconstruct_from_artifact
 from nox.gauge import balanced_attention_gauge
 from nox.mlp_gauge import balanced_swiglu_gauge, entanglement_ordered_swiglu_gauge
-from nox.sequential_compiler import forward_transformer_block, get_tier_config
+from nox.sequential_compiler import (
+    compile_independent_transformer_block_streaming,
+    forward_transformer_block,
+    forward_transformer_block_chunked,
+    get_tier_config,
+)
 from nox.utils import compute_metrics
 from nox.tensor_order import IDENTITY_SITE_ORDER, validate_site_order
 from nox.defect_bridge import fit_hybrid_defect_bridge, bridge_tensor_bytes
@@ -173,6 +179,21 @@ def main():
     parser.add_argument("--calibration-sampling", choices=("prefix", "uniform"), default="prefix")
     parser.add_argument("--validation-sampling", choices=("prefix", "uniform"), default="prefix")
     parser.add_argument(
+        "--calibration-backend",
+        choices=("full_matrix", "streaming_statistics"),
+        default="full_matrix",
+        help=("Retain the reference full-matrix SVD path or accumulate exact projection "
+              "normal-equation statistics over complete sequence windows."),
+    )
+    parser.add_argument(
+        "--calibration-windows-per-chunk", type=int, default=4,
+        help="Complete seq-len windows per forward/statistics chunk in streaming mode.",
+    )
+    parser.add_argument(
+        "--statistics-dtype", choices=("float32", "float64"), default="float32",
+        help="Accumulation dtype for streamed covariance and cross-covariance matrices.",
+    )
+    parser.add_argument(
         "--calibration-activation-mode", choices=("dense", "compressed_prefix"), default="dense",
         help=("Use dense layer inputs (independent control) or propagate calibration inputs "
               "through already-written compressed layers. Both modes keep causal_healing=False."),
@@ -261,6 +282,8 @@ def main():
         raise ValueError("Invalid layer interval")
     if args.seq_len < 2 or any(n < args.seq_len or n % args.seq_len for n in (args.n_calib, args.n_validation)):
         raise ValueError("Calibration/validation counts must be positive multiples of seq-len")
+    if args.calibration_windows_per_chunk <= 0:
+        raise ValueError("--calibration-windows-per-chunk must be positive")
     if args.construction_mode != "independent" and args.calibration_activation_mode != "compressed_prefix":
         raise ValueError("Trajectory-aware construction requires --calibration-activation-mode compressed_prefix")
     if args.mlp_product_ridge_ratio <= 0:
@@ -300,6 +323,25 @@ def main():
         raise ValueError("--pees-projections is only meaningful when --pees-rank is positive")
     if args.max_checkpoint_multiplier < 1.0:
         raise ValueError("--max-checkpoint-multiplier must be at least 1")
+    if args.calibration_backend == "streaming_statistics":
+        unsupported = []
+        if args.calibration_activation_mode != "dense":
+            unsupported.append("compressed-prefix activations")
+        if args.construction_mode != "independent":
+            unsupported.append("trajectory-aware construction")
+        if args.representation != "mpo4":
+            unsupported.append("non-MPO4 representation")
+        if args.attention_gauge != "none" or args.mlp_gauge != "none":
+            unsupported.append("pre-compression gauges")
+        if args.mlp_objective != "independent":
+            unsupported.append("product-aware MLP objective")
+        if args.defect_bridge_mode != "none" or args.pees_rank > 0:
+            unsupported.append("post-codec construction sidecars")
+        if unsupported:
+            raise ValueError(
+                "Streaming statistics currently preserves only the active independent "
+                f"zero-healing experiment; unsupported: {', '.join(unsupported)}"
+            )
     has_existing = bool(list(args.output.glob("compressed_layer_*.pt"))) or (args.output / "model_manifest.json").exists()
     if has_existing and not args.resume:
         raise FileExistsError("Use a fresh output directory; checkpoints will not be overwritten")
@@ -315,9 +357,30 @@ def main():
         calibration_sampling=args.calibration_sampling, validation_sampling=args.validation_sampling,
     )
     del embedding
-    train, validation = train.to(args.device), validation.to(args.device)
+    if args.calibration_backend == "full_matrix":
+        train, validation = train.to(args.device), validation.to(args.device)
+    else:
+        # Token-major state remains in host memory; only complete-window chunks
+        # and the bounded covariance matrices enter the accelerator.
+        train, validation = train.cpu(), validation.cpu()
     forward_options = dict(n_heads=config.num_attention_heads, n_kv_heads=config.num_key_value_heads,
                            seq_len=args.seq_len, rms_norm_eps=config.rms_norm_eps)
+    statistics_dtype = {
+        "float32": torch.float32,
+        "float64": torch.float64,
+    }[args.statistics_dtype]
+
+    def execute_block(block_weights, activations):
+        if args.calibration_backend == "streaming_statistics":
+            return forward_transformer_block_chunked(
+                block_weights,
+                activations,
+                windows_per_chunk=args.calibration_windows_per_chunk,
+                output_device="cpu",
+                return_components=False,
+                **forward_options,
+            )
+        return forward_transformer_block(block_weights, activations, **forward_options)
     compression = get_tier_config("high_fidelity_10x")
     compression["diagonal_prior_strength"] = args.diagonal_prior_strength
     compression["representation"] = args.representation
@@ -360,6 +423,9 @@ def main():
         "operator_schmidt_activation_mix": args.operator_schmidt_activation_mix,
         "mpo_n_sweeps": args.mpo_sweeps,
         "mpo_alpha_awt": args.mpo_alpha_awt,
+        "calibration_backend": args.calibration_backend,
+        "calibration_windows_per_chunk": args.calibration_windows_per_chunk,
+        "statistics_dtype": args.statistics_dtype,
         "defect_bridge_mode": args.defect_bridge_mode,
         "defect_bridge_linear_rank": args.defect_bridge_linear_rank,
         "defect_bridge_memory_size": args.defect_bridge_memory_size,
@@ -381,6 +447,7 @@ def main():
             ROOT / "nox/defect_bridge.py",
             ROOT / "nox/pees.py",
             ROOT / "nox/operator_schmidt.py",
+            ROOT / "nox/calibration.py",
         ]),
     }
     if args.resume:
@@ -417,6 +484,8 @@ def main():
     compressed_calibration = None
     for index in range(args.end_layer + 1):
         started = time.monotonic()
+        if torch.device(args.device).type == "cuda":
+            torch.cuda.reset_peak_memory_stats(torch.device(args.device))
         dense = weights.layer(index, args.device)
         gauge_metadata = None
         mlp_gauge_metadata = None
@@ -424,13 +493,13 @@ def main():
             dense, gauge_metadata = balanced_attention_gauge(
                 dense, config.num_attention_heads, config.num_key_value_heads,
             )
-            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
-            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+            train_next, _, _ = execute_block(dense, train)
+            validation_next, _, _ = execute_block(dense, validation)
             # Verify the exact symmetry against the original pinned dense block
             # before any lossy compression is attempted.
             original = weights.layer(index, args.device)
-            original_train, _, _ = forward_transformer_block(original, train, **forward_options)
-            original_validation, _, _ = forward_transformer_block(original, validation, **forward_options)
+            original_train, _, _ = execute_block(original, train)
+            original_validation, _, _ = execute_block(original, validation)
             gauge_metadata["train_parity_relative_error"] = compute_metrics(original_train, train_next)["relative_error"]
             gauge_metadata["validation_parity_relative_error"] = compute_metrics(original_validation, validation_next)["relative_error"]
             if max(gauge_metadata["train_parity_relative_error"],
@@ -438,8 +507,8 @@ def main():
                 raise RuntimeError(f"Exact attention gauge parity failed: {gauge_metadata}")
             del original, original_train, original_validation
         else:
-            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
-            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+            train_next, _, _ = execute_block(dense, train)
+            validation_next, _, _ = execute_block(dense, validation)
         if index >= args.start_layer and args.mlp_gauge != "none":
             reference_train_next = train_next
             reference_validation_next = validation_next
@@ -452,8 +521,8 @@ def main():
                 dense, mlp_gauge_metadata = entanglement_ordered_swiglu_gauge(
                     dense, gauge_input,
                 )
-            train_next, _, _ = forward_transformer_block(dense, train, **forward_options)
-            validation_next, _, _ = forward_transformer_block(dense, validation, **forward_options)
+            train_next, _, _ = execute_block(dense, train)
+            validation_next, _, _ = execute_block(dense, validation)
             mlp_gauge_metadata["train_parity_relative_error"] = compute_metrics(
                 reference_train_next, train_next,
             )["relative_error"]
@@ -520,13 +589,9 @@ def main():
                 })
                 if artifact.get("cross_layer_bridge") is not None:
                     reconstructed["cross_layer_bridge"] = artifact["cross_layer_bridge"]
-                compressed_validation, _, _ = forward_transformer_block(
-                    reconstructed, compressed_validation, **forward_options,
-                )
+                compressed_validation, _, _ = execute_block(reconstructed, compressed_validation)
                 if args.calibration_activation_mode == "compressed_prefix":
-                    compressed_calibration, _, _ = forward_transformer_block(
-                        reconstructed, compressed_calibration, **forward_options,
-                    )
+                    compressed_calibration, _, _ = execute_block(reconstructed, compressed_calibration)
                 train, validation = train_next, validation_next
                 del dense, reconstructed, artifact
                 gc.collect()
@@ -546,26 +611,47 @@ def main():
                     "sha256": sha256_file(intermediate_path),
                 }
             atomic_json_save(manifest, args.output / "model_manifest.json")
-            compiled = compile_transformer_block(
-                dense, calibration_input, X_calib_dense=reference_input, causal_healing=False,
-                ranks=compression["ranks"], r_bridge=compression["r_bridge"],
-                n_outliers=compression["n_outliers"], return_artifacts=True,
-                diagonal_prior_strength=args.diagonal_prior_strength,
-                trajectory_mode=("none" if args.construction_mode == "independent"
-                                 else args.construction_mode.removeprefix("trajectory_aware_")),
-                mlp_product_aware=(
-                    args.mlp_objective == "product_aware"
-                    or args.construction_mode == "trajectory_aware_product"
-                ),
-                mlp_product_ridge_ratio=args.mlp_product_ridge_ratio,
-                projection_budgets=per_projection_budgets,
-                representation=args.representation,
-                operator_schmidt_weight_mix=args.operator_schmidt_weight_mix,
-                operator_schmidt_activation_mix=args.operator_schmidt_activation_mix,
-                mpo_n_sweeps=args.mpo_sweeps,
-                mpo_alpha_awt=args.mpo_alpha_awt,
-                verbose=True, site_order=args.site_order, **forward_options,
-            )
+            if args.calibration_backend == "streaming_statistics":
+                compiled = compile_independent_transformer_block_streaming(
+                    dense,
+                    calibration_input,
+                    windows_per_chunk=args.calibration_windows_per_chunk,
+                    ranks=compression["ranks"],
+                    r_bridge=compression["r_bridge"],
+                    n_outliers=compression["n_outliers"],
+                    return_artifacts=True,
+                    diagonal_prior_strength=args.diagonal_prior_strength,
+                    projection_budgets=per_projection_budgets,
+                    mpo_n_sweeps=args.mpo_sweeps,
+                    mpo_alpha_awt=args.mpo_alpha_awt,
+                    accumulation_dtype=statistics_dtype,
+                    statistics_device=args.device,
+                    output_device="cpu",
+                    verbose=True,
+                    site_order=args.site_order,
+                    **forward_options,
+                )
+            else:
+                compiled = compile_transformer_block(
+                    dense, calibration_input, X_calib_dense=reference_input, causal_healing=False,
+                    ranks=compression["ranks"], r_bridge=compression["r_bridge"],
+                    n_outliers=compression["n_outliers"], return_artifacts=True,
+                    diagonal_prior_strength=args.diagonal_prior_strength,
+                    trajectory_mode=("none" if args.construction_mode == "independent"
+                                     else args.construction_mode.removeprefix("trajectory_aware_")),
+                    mlp_product_aware=(
+                        args.mlp_objective == "product_aware"
+                        or args.construction_mode == "trajectory_aware_product"
+                    ),
+                    mlp_product_ridge_ratio=args.mlp_product_ridge_ratio,
+                    projection_budgets=per_projection_budgets,
+                    representation=args.representation,
+                    operator_schmidt_weight_mix=args.operator_schmidt_weight_mix,
+                    operator_schmidt_activation_mix=args.operator_schmidt_activation_mix,
+                    mpo_n_sweeps=args.mpo_sweeps,
+                    mpo_alpha_awt=args.mpo_alpha_awt,
+                    verbose=True, site_order=args.site_order, **forward_options,
+                )
             artifact = {
                 "layer_idx": index, "compression_path": compression_path,
                 "construction_mode": args.construction_mode,
@@ -580,6 +666,9 @@ def main():
                 "representation": args.representation,
                 "mpo_n_sweeps": args.mpo_sweeps,
                 "mpo_alpha_awt": args.mpo_alpha_awt,
+                "calibration_backend": args.calibration_backend,
+                "calibration_windows_per_chunk": args.calibration_windows_per_chunk,
+                "statistics_dtype": args.statistics_dtype,
                 "rms_norm_eps": config.rms_norm_eps, "run_fingerprint": manifest["run_fingerprint"],
                 "compressed_artifacts": compiled["compressed_artifacts"],
                 "input_layernorm": dense["input_layernorm"].cpu(),
@@ -705,9 +794,7 @@ def main():
             # The bridge learns the complete composed defect on calibration
             # trajectories: dense next-layer state minus the lossy block output
             # at the actual (possibly compressed-prefix) input.
-            train_output, _, _ = forward_transformer_block(
-                reconstructed, calibration_input, **forward_options,
-            )
+            train_output, _, _ = execute_block(reconstructed, calibration_input)
             if args.defect_bridge_mode == "hybrid":
                 baseline_buffer = io.BytesIO()
                 torch.save(artifact, baseline_buffer)
@@ -732,21 +819,13 @@ def main():
                     args.max_checkpoint_multiplier
                 )
 
-            dense_same_input, _, _ = forward_transformer_block(
-                dense, validation_calibration_input, **forward_options,
-            )
-            same_input, _, _ = forward_transformer_block(
-                reconstructed, validation_calibration_input, **forward_options,
-            )
-            compressed_validation, _, _ = forward_transformer_block(reconstructed, compressed_validation, **forward_options)
-            calibration_output, _, _ = forward_transformer_block(
-                reconstructed, calibration_input, **forward_options,
-            )
+            dense_same_input, _, _ = execute_block(dense, validation_calibration_input)
+            same_input, _, _ = execute_block(reconstructed, validation_calibration_input)
+            compressed_validation, _, _ = execute_block(reconstructed, compressed_validation)
+            calibration_output, _, _ = execute_block(reconstructed, calibration_input)
             calibration_target = train_next
             calibration_metrics = compute_metrics(calibration_target, calibration_output)
-            validation_output, _, _ = forward_transformer_block(
-                reconstructed, validation_calibration_input, **forward_options,
-            )
+            validation_output, _, _ = execute_block(reconstructed, validation_calibration_input)
             validation_metrics = compute_metrics(validation_next, validation_output)
             if args.defect_bridge_mode == "hybrid":
                 artifact["cross_layer_bridge_metadata"].update({
@@ -786,6 +865,9 @@ def main():
                 "budget_allocation": args.budget_allocation,
                 "projection_budgets": per_projection_budgets,
                 "representation": args.representation,
+                "calibration_backend": args.calibration_backend,
+                "calibration_windows_per_chunk": args.calibration_windows_per_chunk,
+                "statistics_dtype": args.statistics_dtype,
                 "projection_serialization_audit": projection_serialization_audit,
                 "serialized_bytes": path.stat().st_size,
                 "base_checkpoint_bytes_before_bridge": (
@@ -808,6 +890,15 @@ def main():
                 ),
                 "dense_fp16_tensor_bytes": sum(t.numel() * 2 for t in dense.values()),
                 "seconds": time.monotonic() - started,
+                "peak_cuda_allocated_bytes": (
+                    int(torch.cuda.max_memory_allocated(torch.device(args.device)))
+                    if torch.device(args.device).type == "cuda" else 0
+                ),
+                "peak_cuda_reserved_bytes": (
+                    int(torch.cuda.max_memory_reserved(torch.device(args.device)))
+                    if torch.device(args.device).type == "cuda" else 0
+                ),
+                "process_max_rss_kib": int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),
             }
             manifest["history"].append(record)
             manifest["layers_compressed"].append(index)
@@ -817,9 +908,7 @@ def main():
             atomic_json_save(manifest, args.output / "model_manifest.json")
             print(json.dumps(record), flush=True)
             if args.calibration_activation_mode == "compressed_prefix":
-                compressed_calibration, _, _ = forward_transformer_block(
-                    reconstructed, compressed_calibration, **forward_options,
-                )
+                compressed_calibration, _, _ = execute_block(reconstructed, compressed_calibration)
             del compiled, reconstructed, same_input, train_output, artifact
         train, validation = train_next, validation_next
         del dense

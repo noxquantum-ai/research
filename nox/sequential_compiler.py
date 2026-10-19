@@ -17,9 +17,12 @@ from nox.block_compiler import (
     compile_transformer_block,
     compile_multiverse_block,
 )
+from nox.compiler import nox_hybrid_dmrg_decompose_from_statistics
+from nox.utils import get_modes_for_projection
 from nox.utils import compute_metrics
 from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, fingerprint
 from nox.defect_bridge import apply_defect_bridge
+from nox.calibration import InputCovarianceAccumulator
 
 
 def compute_dense_argmax_metrics(logits_dense, logits_compressed):
@@ -104,6 +107,287 @@ def forward_transformer_block(
         X_out = X_out + apply_defect_bridge(X, cross_layer_bridge)
 
     return X_out, Y_attn, Y_mlp
+
+
+@torch.no_grad()
+def forward_transformer_block_chunked(
+    weights,
+    X,
+    *,
+    windows_per_chunk,
+    n_heads=32,
+    n_kv_heads=32,
+    seq_len=128,
+    rms_norm_eps=1e-5,
+    output_device="cpu",
+    return_components=True,
+):
+    """Run independent calibration windows in bounded-memory batches.
+
+    Chunk boundaries are required to align to complete ``seq_len`` windows.
+    Each chunk is passed through the unchanged block forward, so causal masks,
+    RoPE positions as represented by the cached hidden states, normalization,
+    residuals, and SwiGLU operations have the same per-window semantics as the
+    full call.  This function never permits attention across windows.
+    """
+    if windows_per_chunk <= 0:
+        raise ValueError("windows_per_chunk must be positive")
+    if X.ndim != 2 or X.shape[1] % seq_len:
+        raise ValueError("Calibration columns must contain complete sequence windows")
+    token_chunk = int(windows_per_chunk) * int(seq_len)
+    outputs = []
+    attention_outputs = [] if return_components else None
+    mlp_outputs = [] if return_components else None
+    device = weights["q_proj"].device
+    for start in range(0, X.shape[1], token_chunk):
+        stop = min(start + token_chunk, X.shape[1])
+        chunk = X[:, start:stop].to(device=device)
+        output, attention, mlp = forward_transformer_block(
+            weights,
+            chunk,
+            n_heads=n_heads,
+            n_kv_heads=n_kv_heads,
+            seq_len=seq_len,
+            rms_norm_eps=rms_norm_eps,
+        )
+        outputs.append(output.to(device=output_device))
+        if return_components:
+            attention_outputs.append(attention.to(device=output_device))
+            mlp_outputs.append(mlp.to(device=output_device))
+        del chunk, output, attention, mlp
+    return (
+        torch.cat(outputs, dim=1),
+        torch.cat(attention_outputs, dim=1) if return_components else None,
+        torch.cat(mlp_outputs, dim=1) if return_components else None,
+    )
+
+
+@torch.no_grad()
+def collect_independent_block_calibration(
+    weights,
+    X,
+    *,
+    windows_per_chunk,
+    n_heads=32,
+    n_kv_heads=32,
+    seq_len=128,
+    rms_norm_eps=1e-5,
+    statistics_device=None,
+    accumulation_dtype=torch.float32,
+    output_device="cpu",
+):
+    """Collect exact independent-NEC input covariances for all seven projections.
+
+    The current RunPod experiment uses independent, dense-trajectory targets.
+    Therefore q/k/v share the normalized residual-stream covariance, gate/up
+    share the normalized post-attention covariance, and each dense target is
+    exactly ``W @ X``.  Storing four input covariances is sufficient; projection
+    cross-covariances are formed one at a time as ``W @ (X X^T)``.
+    """
+    if windows_per_chunk <= 0:
+        raise ValueError("windows_per_chunk must be positive")
+    if X.ndim != 2 or X.shape[1] % seq_len:
+        raise ValueError("Calibration columns must contain complete sequence windows")
+    device = weights["q_proj"].device
+    stats_device = device if statistics_device is None else statistics_device
+    d_model = int(weights["q_proj"].shape[1])
+    d_intermediate = int(weights["down_proj"].shape[1])
+    accumulators = {
+        "qkv_input": InputCovarianceAccumulator(
+            d_model, device=stats_device, accumulation_dtype=accumulation_dtype,
+        ),
+        "o_input": InputCovarianceAccumulator(
+            d_model, device=stats_device, accumulation_dtype=accumulation_dtype,
+        ),
+        "gate_up_input": InputCovarianceAccumulator(
+            d_model, device=stats_device, accumulation_dtype=accumulation_dtype,
+        ),
+        "down_input": InputCovarianceAccumulator(
+            d_intermediate, device=stats_device, accumulation_dtype=accumulation_dtype,
+        ),
+    }
+    norm1 = RMSNorm(
+        d_model, eps=rms_norm_eps, weight=weights.get("input_layernorm", None),
+    )
+    norm2 = RMSNorm(
+        d_model, eps=rms_norm_eps, weight=weights.get("post_attention_layernorm", None),
+    )
+    outputs = []
+    attention_outputs = []
+    mlp_outputs = []
+    token_chunk = int(windows_per_chunk) * int(seq_len)
+    for start in range(0, X.shape[1], token_chunk):
+        stop = min(start + token_chunk, X.shape[1])
+        x = X[:, start:stop].to(device=device, dtype=weights["q_proj"].dtype)
+        x_norm1 = norm1(x)
+        q = weights["q_proj"] @ x_norm1
+        k = weights["k_proj"] @ x_norm1
+        v = weights["v_proj"] @ x_norm1
+        attention_input = scaled_dot_product_attention_2d(
+            q, k, v, n_heads, n_kv_heads, seq_len,
+        )
+        attention_output = weights["o_proj"] @ attention_input
+        residual1 = x + attention_output
+        x_norm2 = norm2(residual1)
+        gate = weights["gate_proj"] @ x_norm2
+        up = weights["up_proj"] @ x_norm2
+        down_input = F.silu(gate) * up
+        mlp_output = weights["down_proj"] @ down_input
+        output = residual1 + mlp_output
+
+        accumulators["qkv_input"].update(x_norm1)
+        accumulators["o_input"].update(attention_input)
+        accumulators["gate_up_input"].update(x_norm2)
+        accumulators["down_input"].update(down_input)
+        outputs.append(output.to(device=output_device))
+        attention_outputs.append(attention_output.to(device=output_device))
+        mlp_outputs.append(mlp_output.to(device=output_device))
+        del x, x_norm1, q, k, v, attention_input, attention_output, residual1, x_norm2, gate, up, down_input, mlp_output, output
+
+    return {
+        "covariances": {name: accumulator.finalize() for name, accumulator in accumulators.items()},
+        "output": torch.cat(outputs, dim=1),
+        "attention_output": torch.cat(attention_outputs, dim=1),
+        "mlp_output": torch.cat(mlp_outputs, dim=1),
+        "sample_count": int(X.shape[1]),
+        "windows_per_chunk": int(windows_per_chunk),
+        "seq_len": int(seq_len),
+    }
+
+
+@torch.no_grad()
+def compile_independent_transformer_block_streaming(
+    weights,
+    X,
+    *,
+    windows_per_chunk,
+    ranks=(1, 64, 128, 64, 1),
+    r_bridge=128,
+    n_outliers=524288,
+    n_heads=32,
+    n_kv_heads=32,
+    seq_len=128,
+    rms_norm_eps=1e-5,
+    diagonal_prior_strength=0.0,
+    site_order=(0, 1, 2, 3),
+    projection_budgets=None,
+    mpo_n_sweeps=2,
+    mpo_alpha_awt=0.5,
+    accumulation_dtype=torch.float32,
+    statistics_device=None,
+    output_device="cpu",
+    return_artifacts=True,
+    verbose=True,
+):
+    """Compile the active independent High-Fidelity block from streamed data.
+
+    This is intentionally narrow: it implements the current independent,
+    dense-trajectory, MPO4, zero-healing experiment.  Trajectory-conditioned,
+    product-aware, PEES, and defect-bridge experiments remain on their original
+    paths because their targets are not reducible to these four covariances.
+    """
+    started = time.time()
+    calibration = collect_independent_block_calibration(
+        weights,
+        X,
+        windows_per_chunk=windows_per_chunk,
+        n_heads=n_heads,
+        n_kv_heads=n_kv_heads,
+        seq_len=seq_len,
+        rms_norm_eps=rms_norm_eps,
+        statistics_device=statistics_device,
+        accumulation_dtype=accumulation_dtype,
+        output_device=output_device,
+    )
+    covariance_for_projection = {
+        "q_proj": "qkv_input",
+        "k_proj": "qkv_input",
+        "v_proj": "qkv_input",
+        "o_proj": "o_input",
+        "gate_proj": "gate_up_input",
+        "up_proj": "gate_up_input",
+        "down_proj": "down_input",
+    }
+    compressed_weights = {}
+    artifacts = {}
+    total_kb = 0.0
+    factorization_cache = {}
+    active_covariance_name = None
+    for name in covariance_for_projection:
+        covariance_name = covariance_for_projection[name]
+        if active_covariance_name is not None and covariance_name != active_covariance_name:
+            factorization_cache.clear()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        active_covariance_name = covariance_name
+        budget = {} if projection_budgets is None else projection_budgets.get(name, {})
+        projection_bridge = int(budget.get("r_bridge", r_bridge))
+        projection_outliers = int(budget.get("n_outliers", n_outliers))
+        weight = weights[name]
+        o_modes, i_modes = get_modes_for_projection(weight.shape[0], weight.shape[1])
+        statistics = calibration["covariances"][
+            covariance_for_projection[name]
+        ].projection_statistics(weight)
+        result = nox_hybrid_dmrg_decompose_from_statistics(
+            W=weight,
+            calibration_statistics=statistics,
+            o_modes=o_modes,
+            i_modes=i_modes,
+            ranks=ranks,
+            r_bridge=projection_bridge,
+            n_outliers=projection_outliers,
+            n_sweeps=mpo_n_sweeps,
+            prior_gamma=0.01,
+            alpha_awt=mpo_alpha_awt,
+            return_artifacts=return_artifacts,
+            verbose=verbose,
+            diagonal_prior_strength=diagonal_prior_strength,
+            site_order=site_order,
+            statistics_factorization_cache=factorization_cache,
+        )
+        compressed_weights[name] = result[0]
+        total_kb += float(result[1])
+        if return_artifacts:
+            artifacts[name] = result[4]
+        del statistics, result
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    factorization_cache.clear()
+
+    compressed_output, compressed_attention, compressed_mlp = forward_transformer_block_chunked(
+        {**weights, **compressed_weights},
+        X,
+        windows_per_chunk=windows_per_chunk,
+        n_heads=n_heads,
+        n_kv_heads=n_kv_heads,
+        seq_len=seq_len,
+        rms_norm_eps=rms_norm_eps,
+        output_device=output_device,
+    )
+    dense_output = calibration["output"]
+    dense_attention = calibration["attention_output"]
+    dense_mlp = calibration["mlp_output"]
+    result = {
+        "compressed_weights": compressed_weights,
+        "X_out_comp": compressed_output,
+        "X_out_dense": dense_output,
+        "block_metrics": compute_metrics(dense_output, compressed_output),
+        "transform_metrics": compute_metrics(
+            dense_attention + dense_mlp, compressed_attention + compressed_mlp,
+        ),
+        "attn_metrics": compute_metrics(dense_attention, compressed_attention),
+        "mlp_metrics": compute_metrics(dense_mlp, compressed_mlp),
+        "mlp_product_aware": None,
+        "total_kb": total_kb,
+        "time_sec": time.time() - started,
+        "causal_healing": False,
+        "trajectory_mode": "none",
+        "calibration_backend": "streaming_sufficient_statistics",
+        "calibration_windows_per_chunk": int(windows_per_chunk),
+    }
+    if return_artifacts:
+        result["compressed_artifacts"] = artifacts
+    return result
 
 
 def get_tier_config(tier_name="extreme_77x"):

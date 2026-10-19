@@ -1,5 +1,6 @@
 import gc
 import torch
+from nox.calibration import CalibrationStatistics
 from nox.utils import quantize_dequantize_groupwise, quantize_4bit_per_channel, mpo_to_dense
 from nox.tensor_order import (
     IDENTITY_SITE_ORDER,
@@ -314,6 +315,53 @@ def local_ridge_solve(Z_env, Y_site, o_m, dim_param, ridge=1e-4, device=None):
     return torch.linalg.solve(H + reg, B).T
 
 
+def _left_singular_system_from_gram(xx, sample_count, output_dtype):
+    """Recover the nonzero left singular system of X from ``xx = X X^T``.
+
+    This is algebraically equivalent to an SVD in exact arithmetic.  In finite
+    precision it is less robust because forming a Gram matrix squares the
+    condition number.  Accumulators can therefore retain float64 statistics;
+    the returned reduced calibration coordinates are converted to the model
+    dtype before the DMRG stage.
+    """
+    symmetric = (xx + xx.T) * 0.5
+    eigenvalues, eigenvectors = torch.linalg.eigh(symmetric)
+    eigenvalues = eigenvalues.flip(0)
+    eigenvectors = eigenvectors.flip(1)
+    maximum_modes = min(int(sample_count), int(xx.shape[0]))
+    eigenvalues = eigenvalues[:maximum_modes]
+    eigenvectors = eigenvectors[:, :maximum_modes]
+    largest = eigenvalues[0].clamp_min(0)
+    # Apply the conventional SVD rank threshold in singular-value units.
+    # Since these are squared singular values, the corresponding eigenvalue
+    # threshold is squared as well.  Negative Gram eigenvalues are never
+    # promoted to valid directions.
+    singular_tolerance = torch.sqrt(largest) * torch.finfo(eigenvalues.dtype).eps * max(
+        int(sample_count), int(xx.shape[0]),
+    )
+    tolerance = singular_tolerance.square()
+    negative_eigenvalues = int(torch.count_nonzero(eigenvalues < 0).item())
+    retained = int(torch.count_nonzero(eigenvalues > tolerance).item())
+    if retained == 0:
+        raise ValueError("Calibration covariance has zero numerical rank")
+    eigenvalues = eigenvalues[:retained]
+    eigenvectors = eigenvectors[:, :retained]
+    singular_values = torch.sqrt(eigenvalues)
+    return (
+        eigenvectors.to(dtype=output_dtype),
+        singular_values.to(dtype=output_dtype),
+        {
+            "maximum_modes": maximum_modes,
+            "numerical_rank": retained,
+            "eigenvalue_tolerance": float(tolerance.item()),
+            "singular_value_tolerance": float(singular_tolerance.item()),
+            "largest_eigenvalue": float(largest.item()),
+            "negative_eigenvalues_in_candidate_range": negative_eigenvalues,
+            "statistics_dtype": str(xx.dtype),
+        },
+    )
+
+
 @torch.no_grad()
 def nox_hybrid_dmrg_decompose(
     W,
@@ -334,6 +382,8 @@ def nox_hybrid_dmrg_decompose(
     diagnostic_callback=None,
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
+    calibration_statistics=None,
+    statistics_factorization_cache=None,
 ):
     """
     Nox Hybrid Entanglement Engine (v3 - Covariance Bridge + Bidirectional Isometric Gauge):
@@ -345,11 +395,36 @@ def nox_hybrid_dmrg_decompose(
       4. Bidirectional QR Gauge-Fixed DMRG Sweep (Left->Right then Right->Left canonicalization
          before the final in-loop 4-bit quantization pass so gauges never collide).
     """
+    if calibration_statistics is not None and not isinstance(
+        calibration_statistics, CalibrationStatistics,
+    ):
+        raise TypeError("calibration_statistics must be CalibrationStatistics")
+    if calibration_statistics is None:
+        if X_calib is None or Y_dense is None:
+            raise ValueError("X_calib and Y_dense are required without calibration statistics")
+        if X_calib.ndim != 2 or Y_dense.ndim != 2 or X_calib.shape[1] != Y_dense.shape[1]:
+            raise ValueError("Expected X_calib[d_in,N] and Y_dense[d_out,N] with matching N")
+    elif X_calib is not None or Y_dense is not None:
+        raise ValueError("Pass either raw calibration tensors or statistics, not both")
+
     site_order = validate_site_order(site_order)
     if site_order != IDENTITY_SITE_ORDER:
-        W_ordered, X_ordered, Y_ordered, o_ordered, i_ordered, out_perm, in_perm = permute_projection(
-            W, X_calib, Y_dense, o_modes, i_modes, site_order,
-        )
+        if calibration_statistics is None:
+            W_ordered, X_ordered, Y_ordered, o_ordered, i_ordered, out_perm, in_perm = permute_projection(
+                W, X_calib, Y_dense, o_modes, i_modes, site_order,
+            )
+            ordered_statistics = None
+        else:
+            out_perm = mode_index_permutation(o_modes, site_order, device=W.device)
+            in_perm = mode_index_permutation(i_modes, site_order, device=W.device)
+            W_ordered = W.index_select(0, out_perm).index_select(1, in_perm)
+            X_ordered = Y_ordered = None
+            o_ordered = tuple(o_modes[axis] for axis in site_order)
+            i_ordered = tuple(i_modes[axis] for axis in site_order)
+            ordered_statistics = calibration_statistics.permuted(
+                out_perm.to(calibration_statistics.yx.device),
+                in_perm.to(calibration_statistics.xx.device),
+            )
 
         def restore_diagnostic(stage, value):
             if diagnostic_callback is not None:
@@ -374,6 +449,8 @@ def nox_hybrid_dmrg_decompose(
             diagnostic_callback=restore_diagnostic if diagnostic_callback is not None else None,
             diagonal_prior_strength=diagonal_prior_strength,
             site_order=IDENTITY_SITE_ORDER,
+            calibration_statistics=ordered_statistics,
+            statistics_factorization_cache=statistics_factorization_cache,
         )
         if return_artifacts:
             W_hat, total_kb, cores, chosen_ranks, artifact = result
@@ -391,6 +468,12 @@ def nox_hybrid_dmrg_decompose(
         return unpermute_projection(W_hat, out_perm, in_perm), total_kb, cores, chosen_ranks
 
     d_out, d_in = W.shape
+    if calibration_statistics is not None:
+        if (
+            calibration_statistics.input_dimension != d_in
+            or calibration_statistics.output_dimension != d_out
+        ):
+            raise ValueError("Calibration statistics do not match W dimensions")
     if diagonal_prior_strength < 0:
         raise ValueError("Weight prior strength must be nonnegative")
     quantize = quantize_4bit_grouped if quantize_components else lambda tensor, group_size=64: tensor
@@ -412,8 +495,30 @@ def nox_hybrid_dmrg_decompose(
         gc.collect()
         torch.cuda.empty_cache()
 
+    statistics_diagnostics = None
+    covariance = cross_covariance = None
+    if calibration_statistics is not None:
+        # Keep higher-precision accumulation until a factorization is needed.
+        # The DMRG implementation itself is float32, matching the reference.
+        covariance = calibration_statistics.xx.to(device=device)
+        cross_covariance = calibration_statistics.yx.to(device=device)
+        calibration_count = int(calibration_statistics.sample_count)
+        ch_rms = torch.sqrt(
+            covariance.diagonal().to(dtype=W.dtype) / calibration_count + 1e-8,
+        )
+    else:
+        calibration_count = int(X_calib.shape[1])
+        ch_rms = torch.sqrt(torch.mean(X_calib ** 2, dim=1) + 1e-8)
+
+    def gram_factorization(matrix, effective_samples, cache_key):
+        if statistics_factorization_cache is not None and cache_key in statistics_factorization_cache:
+            return statistics_factorization_cache[cache_key]
+        result = _left_singular_system_from_gram(matrix, effective_samples, W.dtype)
+        if statistics_factorization_cache is not None:
+            statistics_factorization_cache[cache_key] = result
+        return result
+
     # Step 1A: Exact Operator-Norm Sparse Outlier Shield
-    ch_rms = torch.sqrt(torch.mean(X_calib ** 2, dim=1) + 1e-8)
     mask = None
     if n_outliers > 0:
         importance = torch.abs(W) * ch_rms.unsqueeze(0)
@@ -443,17 +548,40 @@ def nox_hybrid_dmrg_decompose(
     A_q = None
     B_q = None
     if r_bridge > 0:
-        U_xc, S_xc, Vh_xc = torch.linalg.svd(X_calib, full_matrices=False)
-        r_act = min(len(S_xc), max(r_bridge * 2, 64))
-        Y_rem = Y_dense - (S_sparse @ X_calib)
-        Y_proj = Y_rem @ Vh_xc[:r_act, :].T
+        if calibration_statistics is None:
+            U_xc, S_xc, Vh_xc = torch.linalg.svd(X_calib, full_matrices=False)
+            bridge_rank_diagnostics = None
+            r_act = min(len(S_xc), max(r_bridge * 2, 64))
+            Y_rem = Y_dense - (S_sparse @ X_calib)
+            Y_proj = Y_rem @ Vh_xc[:r_act, :].T
+            del Y_rem
+        else:
+            U_xc, S_xc, bridge_rank_diagnostics = gram_factorization(
+                covariance,
+                calibration_count,
+                ("raw", int(covariance.data_ptr()), calibration_count, str(covariance.dtype)),
+            )
+            r_act = min(len(S_xc), max(r_bridge * 2, 64))
+            # If X=U Sigma V^T, then (Y-SX)V=(YX^T-SXX^T)U Sigma^-1.
+            h_remaining = (
+                cross_covariance
+                - S_sparse.to(dtype=cross_covariance.dtype) @ covariance
+            )
+            Y_proj = (
+                h_remaining @ U_xc[:, :r_act].to(dtype=h_remaining.dtype)
+            ) / S_xc[:r_act].to(dtype=h_remaining.dtype).unsqueeze(0)
+            Y_proj = Y_proj.to(dtype=W.dtype)
+            del h_remaining
         U_y, S_y, Vh_y = torch.linalg.svd(Y_proj, full_matrices=False)
-        del Vh_y, Y_rem
+        del Vh_y
 
-        U_r = U_y[:, :r_bridge]
+        realized_bridge_rank = min(r_bridge, U_y.shape[1])
+        U_r = U_y[:, :realized_bridge_rank]
         reg_inv_S = S_xc[:r_act] / (S_xc[:r_act] ** 2 + (0.02 * S_xc[0]) ** 2)
         B_raw = (U_r.T @ Y_proj) * reg_inv_S.unsqueeze(0) @ U_xc[:, :r_act].T
-        del U_y, Y_proj, U_xc, S_xc, Vh_xc
+        del U_y, Y_proj, U_xc, S_xc
+        if calibration_statistics is None:
+            del Vh_xc
 
         col_norms = torch.sqrt(torch.norm(U_r, dim=0) / (torch.norm(B_raw, dim=1) + 1e-8))
         A_bridge = U_r / col_norms.unsqueeze(0)
@@ -464,8 +592,8 @@ def nox_hybrid_dmrg_decompose(
         S_bridge = A_q @ B_q
         del A_bridge, B_bridge, U_r, B_raw
         if verbose:
-            bridge_params = (d_out + d_in) * r_bridge
-            print(f"    [Nox Step 1B] Covariance-Projected SVD Bridge (r={r_bridge}, {bridge_params} params = {bridge_params * 0.5 / 1024.0:.1f} KB)", flush=True)
+            bridge_params = (d_out + d_in) * realized_bridge_rank
+            print(f"    [Nox Step 1B] Covariance-Projected SVD Bridge (r={realized_bridge_rank}, {bridge_params} params = {bridge_params * 0.5 / 1024.0:.1f} KB)", flush=True)
     else:
         S_bridge = torch.zeros_like(W)
 
@@ -477,22 +605,68 @@ def nox_hybrid_dmrg_decompose(
     # Step 2: Exact AWT Channel Preconditioning
     d_awt = (ch_rms + 1e-6) ** alpha_awt
     W_cond = W_core * d_awt.unsqueeze(0)
-    X_cond = X_calib / d_awt.unsqueeze(1)
+    if calibration_statistics is None:
+        X_cond = X_calib / d_awt.unsqueeze(1)
+        Y_target = Y_dense - (S_total @ X_calib)
 
-    Y_target = Y_dense - (S_total @ X_calib)
+        X_cond, Y_target = augment_diagonal_weight_prior(
+            X_cond, Y_target, W_cond, ch_rms / d_awt, diagonal_prior_strength,
+        )
 
-    X_cond, Y_target = augment_diagonal_weight_prior(
-        X_cond, Y_target, W_cond, ch_rms / d_awt, diagonal_prior_strength,
-    )
+        U_x, S_x, Vh_x = torch.linalg.svd(X_cond, full_matrices=False)
+        r_cov = S_x.shape[0]
+        X_red = (U_x * S_x.unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
+        Y_red = (Y_target @ Vh_x.T).reshape(o0, o1, o2, o3, r_cov)
+        del U_x, S_x, Vh_x, Y_target, X_cond
+    else:
+        d_stats = d_awt.to(dtype=covariance.dtype)
+        inverse_d = d_stats.reciprocal()
+        conditioned_covariance = (
+            covariance * inverse_d.unsqueeze(0) * inverse_d.unsqueeze(1)
+        )
+        target_cross_covariance = (
+            cross_covariance
+            - S_total.to(dtype=cross_covariance.dtype) @ covariance
+        ) * inverse_d.unsqueeze(0)
 
-    U_x, S_x, Vh_x = torch.linalg.svd(X_cond, full_matrices=False)
-    r_cov = S_x.shape[0]
-    X_red = (U_x * S_x.unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
-    Y_red = (Y_target @ Vh_x.T).reshape(o0, o1, o2, o3, r_cov)
-    del U_x, S_x, Vh_x, Y_target, X_cond, W_core
+        if diagonal_prior_strength > 0:
+            prior_scale = (
+                ch_rms.to(dtype=covariance.dtype) / d_stats
+            ) * (calibration_count * diagonal_prior_strength) ** 0.5
+            prior_variance = prior_scale.square()
+            conditioned_covariance.diagonal().add_(prior_variance)
+            target_cross_covariance.add_(
+                W_cond.to(dtype=target_cross_covariance.dtype) * prior_variance.unsqueeze(0),
+            )
+
+        U_x, S_x, statistics_diagnostics = gram_factorization(
+            conditioned_covariance,
+            calibration_count + (d_in if diagonal_prior_strength > 0 else 0),
+            (
+                "conditioned",
+                int(covariance.data_ptr()),
+                calibration_count,
+                float(alpha_awt),
+                float(diagonal_prior_strength),
+                str(covariance.dtype),
+            ),
+        )
+        r_cov = S_x.shape[0]
+        # X_red=U Sigma and Y_red=(Y X^T) U Sigma^-1 preserve both
+        # X_red X_red^T and Y_red X_red^T, which are the only data terms
+        # consumed by every local normal equation below.
+        Y_reduced_matrix = (
+            target_cross_covariance
+            @ U_x.to(dtype=target_cross_covariance.dtype)
+        ) / S_x.to(dtype=target_cross_covariance.dtype).unsqueeze(0)
+        X_red = (U_x * S_x.unsqueeze(0)).reshape(i0, i1, i2, i3, r_cov)
+        Y_red = Y_reduced_matrix.to(dtype=W.dtype).reshape(o0, o1, o2, o3, r_cov)
+        del U_x, S_x, Y_reduced_matrix, conditioned_covariance, target_cross_covariance
+    del W_core
 
     if verbose:
-        print(f"    [Nox Step 2] Exact AWT preconditioning applied; keeping all r={r_cov} calibration modes (chunk_size={chunk_size})", flush=True)
+        backend = "streamed sufficient statistics" if calibration_statistics is not None else "full calibration matrix"
+        print(f"    [Nox Step 2] Exact AWT preconditioning applied from {backend}; keeping r={r_cov} calibration modes (chunk_size={chunk_size})", flush=True)
 
     # Step 3: Exact AWT TT-SVD Warm-Start on W_cond
     bond_ranks = ranks[1:4] if len(ranks) == 5 else ranks
@@ -819,13 +993,44 @@ def nox_hybrid_dmrg_decompose(
                 "requested_sparse_budget": int(n_outliers),
                 "realized_sparse_count": int(sparse_count),
                 "quantize_components": bool(quantize_components),
+                "calibration_backend": (
+                    "streaming_sufficient_statistics"
+                    if calibration_statistics is not None else "full_matrix_svd"
+                ),
+                "calibration_sample_count": int(calibration_count),
             },
         }
+        if statistics_diagnostics is not None:
+            artifact["calibration_statistics_diagnostics"] = statistics_diagnostics
+        if calibration_statistics is not None and r_bridge > 0:
+            artifact["bridge_statistics_diagnostics"] = bridge_rank_diagnostics
         del S_sparse, d_awt
+        del covariance, cross_covariance
         return W_hat, total_kb, final_cores, chosen_ranks, artifact
     else:
         del S_sparse, d_awt
+        if calibration_statistics is not None:
+            del covariance, cross_covariance
         return W_hat, total_kb, final_cores, chosen_ranks
+
+
+def nox_hybrid_dmrg_decompose_from_statistics(
+    W,
+    calibration_statistics,
+    **kwargs,
+):
+    """Fit one NEC operator from globally accumulated calibration statistics.
+
+    The existing full-matrix compiler remains unchanged as the reference path.
+    This wrapper makes the mutually exclusive input mode explicit to callers.
+    """
+    return nox_hybrid_dmrg_decompose(
+        W=W,
+        X_calib=None,
+        Y_dense=None,
+        calibration_statistics=calibration_statistics,
+        **kwargs,
+    )
 
 
 def nox_4step_compiler(

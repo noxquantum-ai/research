@@ -3,10 +3,19 @@
 from nox.compiler import (
     nox_4step_compiler,
     nox_hybrid_dmrg_decompose,
+    nox_hybrid_dmrg_decompose_from_statistics,
     adaptive_tt_svd_4site,
     local_ridge_solve,
     solve_site_anchored,
     solve_accumulated_system,
+)
+from nox.calibration import (
+    CalibrationStatistics,
+    CalibrationStatisticsAccumulator,
+    InputCovariance,
+    InputCovarianceAccumulator,
+    accumulate_calibration_statistics,
+    accumulate_statistics_from_chunks,
 )
 from nox.utils import (
     quantize_dequantize_groupwise,
@@ -38,6 +47,7 @@ from nox.operator_schmidt import (
 __all__ = [
     "nox_4step_compiler",
     "nox_hybrid_dmrg_decompose",
+    "nox_hybrid_dmrg_decompose_from_statistics",
     "adaptive_tt_svd_4site",
     "local_ridge_solve",
     "solve_site_anchored",
@@ -62,4 +72,10 @@ __all__ = [
     "candidate_layouts",
     "nox_operator_schmidt_decompose",
     "operator_schmidt_to_dense",
+    "CalibrationStatistics",
+    "CalibrationStatisticsAccumulator",
+    "InputCovariance",
+    "InputCovarianceAccumulator",
+    "accumulate_calibration_statistics",
+    "accumulate_statistics_from_chunks",
 ]
