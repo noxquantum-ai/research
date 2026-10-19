@@ -189,19 +189,33 @@ python3 scripts/compile_high_fidelity.py \
   --device cuda:0
 ```
 
-The production `runpod_driver.py` now always passes the backend recorded in
+The production `runpod_driver.py` always passes the backend recorded in
 `run_config.json`; that configuration explicitly remains `full_matrix` until
-real qualification succeeds. The matched one-command qualification is:
+real qualification succeeds. Qualification is deliberately staged. Each
+command runs one stage and stops:
 
 ```bash
-bash runpod_execution/nec_high_fidelity/qualify_streaming.sh
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-reference
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-fp32
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-compare
 ```
 
-It runs layer 0 with the reference SVD, FP32 statistics, and FP64 statistics on
-the same 4,096/1,024-token calibration/validation samples, then compares all
-seven reconstructed weights, ranks, coefficient counts, two-sweep Q4
-diagnostics, calibration metrics, held-out metrics, wall time, CUDA peaks, and
-RSS. It does not invoke the 160-GiB production preflight.
+These stages use the real layer-0 SwiGLU activation entering `down_proj`, with
+the reference SVD and FP32 statistics on identical 4,096/1,024-token
+calibration/validation samples. The comparison checks the reconstructed
+weight, ranks, coefficient count, two-sweep Q4 diagnostics, calibration and
+held-out projection errors, wall time, CUDA peaks, and RSS. FP64 is a separate
+`down-fp64` stage; the runner refuses it unless the FP32 comparison failed. It defaults
+to a two-hour process timeout, records partial status and logs, reuses verified
+completed stages, and never starts a successor automatically. Terminating the
+process does not terminate the RunPod pod or stop billing.
+The qualification bootstrap omits the unused MMLU harness; invoking the later
+production bootstrap installs and verifies it before any PPL/MMLU execution.
+
+Only a passing `down-compare` unlocks the explicit `layer-reference` and
+`layer-fp32` stages. This prevents the original three-full-layer qualification
+from consuming the budget before a single real projection establishes runtime
+and memory. None of these commands invokes the 160-GiB production preflight.
 
 ## Hardware decision and cheapest sound next experiment
 

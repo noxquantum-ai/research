@@ -309,6 +309,21 @@ class ProductionEvaluationTests(unittest.TestCase):
         self.assertEqual(
             config["acceptance"]["primary_10k_next_token_accuracy_retention_min"], 0.90,
         )
+        qualification_script = (
+            Path(__file__).resolve().parents[1]
+            / "runpod_execution" / "nec_high_fidelity" / "qualify_streaming.sh"
+        ).read_text()
+        self.assertIn('TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-7200}"', qualification_script)
+        self.assertIn("require_down_gate", qualification_script)
+        self.assertNotIn("run_variant reference-full-matrix", qualification_script)
+        self.assertIn("down-reference)", qualification_script)
+        self.assertIn("down-fp32)", qualification_script)
+        self.assertIn("NEC_BOOTSTRAP_PROFILE=qualification", qualification_script)
+        bootstrap_script = (
+            Path(__file__).resolve().parents[1]
+            / "runpod_execution" / "nec_high_fidelity" / "bootstrap.sh"
+        ).read_text()
+        self.assertIn('BOOTSTRAP_PROFILE="${NEC_BOOTSTRAP_PROFILE:-production}"', bootstrap_script)
         compression = config["compression"]
         identity = {
             "config": {

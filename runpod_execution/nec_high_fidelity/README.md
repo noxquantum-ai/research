@@ -16,6 +16,21 @@ Use a clean committed checkout at `/workspace/research` (or set `NEC_REPO_ROOT`)
 bash runpod_execution/nec_high_fidelity/run.sh
 ```
 
+Do not use the production command for the initial streaming-calibration
+qualification. The budget-controlled qualification is staged and never
+progresses automatically:
+
+```bash
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-reference
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-fp32
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-compare
+```
+
+It defaults to a two-hour timeout per process. A timeout does not stop RunPod
+billing; terminate the pod manually. FP64 and all-seven-projection layer stages
+are explicit follow-up commands. An unnecessary FP64 run is refused, and each
+layer backend remains locked until its single-projection comparison passes.
+
 The script creates or repairs the Python 3.13.15 environment, installs the pinned PyTorch/CUDA and requirements plus the pinned `lm-evaluation-harness` commit, and runs `pip check` before model compilation. Preflight verifies the model architecture/tokenizer, package versions, RunPod persistence, resources, and clean source commit. It then loads the pinned dense model and qualifies PPL batch equivalence at batch size 1 versus the selected batch, scans all 14,042 MMLU prompts for five-shot fit, tests the longest prompt and 4,096-token context at the selected MMLU batch, and initializes the pinned harness on one question per subject. Finally it compiles one actual pinned `down_proj` matrix with a synthetic 65,536-token activation matrix at the full High-Fidelity rank and Q4 settings, then checks artifact decoding against the compiler reconstruction. This last stage validates compiler memory and artifact mechanics, not model quality. No 32-layer compilation starts unless every qualification passes.
 
 Run the command inside `tmux` or a persistent pod terminal. Resume with the same command after interruption. Checkpoints, intermediate calibration states, configuration, logs, resource telemetry, preflight qualification, and reports live below:

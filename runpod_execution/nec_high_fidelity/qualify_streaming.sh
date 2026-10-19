@@ -6,9 +6,10 @@ REPO_ROOT="${NEC_REPO_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd)}"
 WORKSPACE_ROOT="${NEC_WORKSPACE_ROOT:-/workspace}"
 VENV_DIR="${NEC_VENV_DIR:-$WORKSPACE_ROOT/venvs/nec-hf}"
 QUAL_ROOT="${NEC_STREAMING_QUAL_ROOT:-$WORKSPACE_ROOT/runs/nec-streaming-qualification}"
-CALIBRATION_TOKENS=4096
-VALIDATION_TOKENS=1024
 WINDOWS_PER_CHUNK="${NEC_STREAMING_WINDOWS_PER_CHUNK:-4}"
+TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-7200}"
+GPU_HOURLY_USD="${NEC_GPU_HOURLY_USD:-0.59}"
+STAGE="${1:-help}"
 
 export HF_HOME="${HF_HOME:-$WORKSPACE_ROOT/cache/huggingface}"
 export HF_HUB_CACHE="${HF_HUB_CACHE:-$HF_HOME/hub}"
@@ -17,15 +18,172 @@ export TOKENIZERS_PARALLELISM=false
 export PYTHONUNBUFFERED=1
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
+usage() {
+  cat <<EOF
+Usage: $0 STAGE
+
+Each invocation runs exactly one stage and then stops:
+  down-reference     Real layer-0 down_proj, full-matrix reference
+  down-fp32          Same projection, FP32 streaming statistics
+  down-compare       Compare reference and FP32; writes the layer-stage gate
+  down-fp64          Optional FP64 streaming diagnostic (never automatic)
+  down-compare-fp64  Compare reference, FP32, and FP64
+  layer-reference    All seven layer-0 projections, full-matrix reference
+  layer-fp32         All seven layer-0 projections, FP32 streaming statistics
+  layer-fp64         Optional all-seven FP64 streaming diagnostic
+  layer-compare      Compare completed layer variants
+  status             Print saved status without running computation
+
+Default per-stage process timeout: 7200 seconds. Override only with
+NEC_QUAL_TIMEOUT_SECONDS. No stage starts its successor. Layer stages require
+a passing down-compare report. A process timeout DOES NOT stop RunPod billing;
+terminate the pod manually.
+EOF
+}
+
+if [[ "$STAGE" == "help" || "$STAGE" == "--help" || "$STAGE" == "-h" ]]; then
+  usage
+  exit 0
+fi
+if [[ ! "$TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "ERROR: NEC_QUAL_TIMEOUT_SECONDS must be a positive integer." >&2
+  exit 2
+fi
+if ! [[ "$GPU_HOURLY_USD" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+  echo "ERROR: NEC_GPU_HOURLY_USD must be a nonnegative number." >&2
+  exit 2
+fi
+
+if [[ "$STAGE" == "status" ]]; then
+  if [[ ! -d "$QUAL_ROOT" ]]; then
+    echo "No qualification state exists at $QUAL_ROOT"
+    exit 0
+  fi
+  find "$QUAL_ROOT" -maxdepth 4 -type f \
+    \( -name 'progress.json' -o -name 'last_execution.json' -o -name 'comparison*.json' \) \
+    -print -exec python3 -m json.tool {} \;
+  exit 0
+fi
+
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  bash "$SCRIPT_DIR/bootstrap.sh"
+  NEC_BOOTSTRAP_PROFILE=qualification bash "$SCRIPT_DIR/bootstrap.sh"
 fi
 mkdir -p "$QUAL_ROOT/logs"
 cd "$REPO_ROOT"
 
-common=(
+record_exit() {
+  local name="$1"
+  local output_dir="$2"
+  local exit_code="$3"
+  local elapsed="$4"
+  "$VENV_DIR/bin/python" - "$name" "$output_dir" "$exit_code" "$elapsed" "$GPU_HOURLY_USD" "$TIMEOUT_SECONDS" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+name, output, exit_code, elapsed, hourly, timeout = sys.argv[1:]
+output = Path(output)
+output.mkdir(parents=True, exist_ok=True)
+elapsed = float(elapsed)
+record = {
+    "stage": name,
+    "command_exit_code": int(exit_code),
+    "status": "TIMEOUT" if int(exit_code) == 124 else "PASS" if int(exit_code) == 0 else "FAIL",
+    "finished_at_utc": datetime.now(timezone.utc).isoformat(),
+    "elapsed_wall_seconds": elapsed,
+    "configured_timeout_seconds": int(timeout),
+    "gpu_hourly_usd": float(hourly),
+    "estimated_gpu_cost_usd": elapsed / 3600.0 * float(hourly),
+    "billing_warning": "Stopping this process does not stop RunPod billing; terminate the pod manually.",
+}
+path = output / "last_execution.json"
+temporary = path.with_suffix(".json.partial")
+temporary.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+temporary.replace(path)
+print(json.dumps(record, indent=2, sort_keys=True))
+PY
+}
+
+run_guarded() {
+  local name="$1"
+  local output_dir="$2"
+  shift 2
+  local started elapsed exit_code
+  started="$(date +%s)"
+  set +e
+  timeout --foreground --signal=TERM --kill-after=60s "$TIMEOUT_SECONDS" "$@" \
+    2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
+  exit_code="${PIPESTATUS[0]}"
+  set -e
+  elapsed="$(( $(date +%s) - started ))"
+  record_exit "$name" "$output_dir" "$exit_code" "$elapsed"
+  echo "IMPORTANT: this process stopped, but RunPod billing continues until you terminate the pod." >&2
+  return "$exit_code"
+}
+
+down_stage() {
+  local name="$1"
+  local backend="$2"
+  local dtype="$3"
+  local output="$QUAL_ROOT/down_projection/$name"
+  run_guarded "$name" "$output" \
+    "$VENV_DIR/bin/python" benchmarks/qualify_streaming_projection.py \
+      --output "$output" \
+      --backend "$backend" \
+      --statistics-dtype "$dtype" \
+      --n-calib 4096 --n-validation 1024 --seq-len 128 \
+      --windows-per-chunk "$WINDOWS_PER_CHUNK" \
+      --device cuda:0 \
+      --model-id NousResearch/Llama-2-7b-hf \
+      --model-revision 8efe6c9b93655b934e27bd9981e3ec13e55aee9d
+}
+
+require_down_gate() {
+  local variant="${1:-any}"
+  local gate="$QUAL_ROOT/down_projection/comparison.json"
+  if [[ "$variant" == "fp64" ]]; then
+    gate="$QUAL_ROOT/down_projection/comparison-fp64.json"
+  elif [[ "$variant" == "any" && -f "$QUAL_ROOT/down_projection/comparison-fp64.json" ]]; then
+    gate="$QUAL_ROOT/down_projection/comparison-fp64.json"
+  fi
+  if [[ ! -f "$gate" ]]; then
+    echo "ERROR: layer stages require a completed down-compare at $gate" >&2
+    exit 2
+  fi
+  "$VENV_DIR/bin/python" - "$gate" "$variant" <<'PY'
+import json
+import sys
+report = json.load(open(sys.argv[1]))
+variant = sys.argv[2]
+passed = (
+    report.get("fp32_passes") if variant == "fp32" else
+    report.get("fp64_passes") if variant == "fp64" else
+    report.get("fp32_passes") or report.get("fp64_passes")
+)
+if not passed:
+    raise SystemExit(f"{variant} down_proj qualification did not pass; do not start a full layer")
+PY
+}
+
+require_fp64_needed() {
+  local gate="$QUAL_ROOT/down_projection/comparison.json"
+  if [[ ! -f "$gate" ]]; then
+    echo "ERROR: run down-compare before the optional FP64 diagnostic." >&2
+    exit 2
+  fi
+  "$VENV_DIR/bin/python" - "$gate" <<'PY'
+import json
+import sys
+report = json.load(open(sys.argv[1]))
+if report.get("fp32_passes"):
+    raise SystemExit("FP32 already passed; refusing an unnecessary FP64 stage")
+PY
+}
+
+layer_common=(
   --start-layer 0 --end-layer 0
-  --n-calib "$CALIBRATION_TOKENS" --n-validation "$VALIDATION_TOKENS"
+  --n-calib 4096 --n-validation 1024
   --seq-len 128 --calibration-sampling uniform --validation-sampling uniform
   --calibration-activation-mode dense --construction-mode independent
   --diagonal-prior-strength 0 --mpo-sweeps 2 --mpo-alpha-awt 0.5
@@ -37,37 +195,87 @@ common=(
   --device cuda:0
 )
 
-run_variant() {
+layer_stage() {
   local name="$1"
   local backend="$2"
-  local statistics_dtype="$3"
-  local output="$QUAL_ROOT/$name"
-  if [[ -f "$output/compressed_layer_0.pt" ]]; then
-    echo "Reusing completed qualification variant: $output"
-    return
+  local dtype="$3"
+  local gate_variant="$4"
+  local output="$QUAL_ROOT/layer0/$name"
+  local resume_argument=()
+  require_down_gate "$gate_variant"
+  if [[ -f "$output/model_manifest.json" ]]; then
+    resume_argument=(--resume)
   fi
-  if [[ -e "$output/model_manifest.json" ]]; then
-    echo "ERROR: incomplete qualification output exists at $output; inspect it before retrying." >&2
-    exit 2
-  fi
-  "$VENV_DIR/bin/python" scripts/compile_high_fidelity.py \
-    --output "$output" \
-    --calibration-backend "$backend" \
-    --calibration-windows-per-chunk "$WINDOWS_PER_CHUNK" \
-    --statistics-dtype "$statistics_dtype" \
-    "${common[@]}" 2>&1 | tee "$QUAL_ROOT/logs/$name.log"
+  run_guarded "$name" "$output" \
+    "$VENV_DIR/bin/python" scripts/compile_high_fidelity.py \
+      --output "$output" \
+      --calibration-backend "$backend" \
+      --calibration-windows-per-chunk "$WINDOWS_PER_CHUNK" \
+      --statistics-dtype "$dtype" \
+      "${resume_argument[@]}" \
+      "${layer_common[@]}"
 }
 
-# The official run.sh remains on the full_matrix backend. This separate command
-# is the required real-layer qualification before that configuration changes.
-run_variant reference-full-matrix full_matrix float64
-run_variant streaming-fp32 streaming_statistics float32
-run_variant streaming-fp64 streaming_statistics float64
-
-"$VENV_DIR/bin/python" benchmarks/compare_streaming_nec_runs.py \
-  --reference "$QUAL_ROOT/reference-full-matrix" \
-  --fp32 "$QUAL_ROOT/streaming-fp32" \
-  --fp64 "$QUAL_ROOT/streaming-fp64" \
-  --output "$QUAL_ROOT/streaming_qualification_report.json"
-
-echo "Qualification complete: $QUAL_ROOT/streaming_qualification_report.json"
+case "$STAGE" in
+  down-reference)
+    down_stage reference-full-matrix full_matrix float64
+    ;;
+  down-fp32)
+    down_stage streaming-fp32 streaming_statistics float32
+    ;;
+  down-fp64)
+    require_fp64_needed
+    down_stage streaming-fp64 streaming_statistics float64
+    ;;
+  down-compare)
+    run_guarded down-compare "$QUAL_ROOT/down_projection" \
+      "$VENV_DIR/bin/python" benchmarks/compare_streaming_projection_runs.py \
+        --reference "$QUAL_ROOT/down_projection/reference-full-matrix" \
+        --fp32 "$QUAL_ROOT/down_projection/streaming-fp32" \
+        --output "$QUAL_ROOT/down_projection/comparison.json" \
+        --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  down-compare-fp64)
+    run_guarded down-compare-fp64 "$QUAL_ROOT/down_projection" \
+      "$VENV_DIR/bin/python" benchmarks/compare_streaming_projection_runs.py \
+        --reference "$QUAL_ROOT/down_projection/reference-full-matrix" \
+        --fp32 "$QUAL_ROOT/down_projection/streaming-fp32" \
+        --fp64 "$QUAL_ROOT/down_projection/streaming-fp64" \
+        --output "$QUAL_ROOT/down_projection/comparison-fp64.json" \
+        --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  layer-reference)
+    layer_stage reference-full-matrix full_matrix float64 any
+    ;;
+  layer-fp32)
+    layer_stage streaming-fp32 streaming_statistics float32 fp32
+    ;;
+  layer-fp64)
+    layer_stage streaming-fp64 streaming_statistics float64 fp64
+    ;;
+  layer-compare)
+    require_down_gate any
+    variant_arguments=()
+    if [[ -f "$QUAL_ROOT/layer0/streaming-fp32/compressed_layer_0.pt" ]]; then
+      variant_arguments+=(--fp32 "$QUAL_ROOT/layer0/streaming-fp32")
+    fi
+    if [[ -f "$QUAL_ROOT/layer0/streaming-fp64/compressed_layer_0.pt" ]]; then
+      variant_arguments+=(--fp64 "$QUAL_ROOT/layer0/streaming-fp64")
+    fi
+    if [[ "${#variant_arguments[@]}" -eq 0 ]]; then
+      echo "ERROR: no completed streaming layer variant exists." >&2
+      exit 2
+    fi
+    run_guarded layer-compare "$QUAL_ROOT/layer0" \
+      "$VENV_DIR/bin/python" benchmarks/compare_streaming_nec_runs.py \
+        --reference "$QUAL_ROOT/layer0/reference-full-matrix" \
+        "${variant_arguments[@]}" \
+        --output "$QUAL_ROOT/layer0/comparison.json" \
+        --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  *)
+    echo "ERROR: unknown qualification stage: $STAGE" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

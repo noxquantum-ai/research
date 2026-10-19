@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare matched full-SVD, FP32-statistics, and FP64-statistics NEC runs."""
+"""Compare matched full-SVD and streaming-statistics NEC layer runs."""
 
 import argparse
 import json
@@ -121,16 +121,33 @@ def compare_variant(reference_checkpoint, variant_manifest, variant_checkpoint, 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--reference", type=Path, required=True)
-    parser.add_argument("--fp32", type=Path, required=True)
-    parser.add_argument("--fp64", type=Path, required=True)
+    parser.add_argument("--fp32", type=Path)
+    parser.add_argument("--fp64", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-relative-weight-difference", type=float, default=0.01)
+    parser.add_argument("--gpu-hourly-usd", type=float, default=0.59)
     args = parser.parse_args()
+    if args.fp32 is None and args.fp64 is None:
+        parser.error("at least one streaming variant is required")
+    if args.gpu_hourly_usd < 0:
+        parser.error("gpu-hourly-usd must be nonnegative")
     reference_manifest, reference_checkpoint = load_run(args.reference, "full_matrix", "float64")
-    fp32_manifest, fp32_checkpoint = load_run(args.fp32, "streaming_statistics", "float32")
-    fp64_manifest, fp64_checkpoint = load_run(args.fp64, "streaming_statistics", "float64")
     reference_inputs = reference_manifest["run_identity"]["input_data"]
-    for name, manifest in (("fp32", fp32_manifest), ("fp64", fp64_manifest)):
+    variants = []
+    variant_checkpoints = {}
+    if args.fp32 is not None:
+        fp32_manifest, fp32_checkpoint = load_run(
+            args.fp32, "streaming_statistics", "float32",
+        )
+        variants.append(("fp32", fp32_manifest))
+        variant_checkpoints["fp32"] = fp32_checkpoint
+    if args.fp64 is not None:
+        fp64_manifest, fp64_checkpoint = load_run(
+            args.fp64, "streaming_statistics", "float64",
+        )
+        variants.append(("fp64", fp64_manifest))
+        variant_checkpoints["fp64"] = fp64_checkpoint
+    for name, manifest in variants:
         if manifest["run_identity"]["input_data"] != reference_inputs:
             raise ValueError(f"{name} qualification run did not use identical sampled inputs")
     report = {
@@ -138,13 +155,17 @@ def main():
         "reference_backend": reference_manifest["run_identity"]["calibration_backend"],
         "identical_input_data_metadata": True,
         "reference_layer_record": reference_manifest["history"][0],
-        "fp32": compare_variant(reference_checkpoint, fp32_manifest, fp32_checkpoint, "fp32"),
-        "fp64": compare_variant(reference_checkpoint, fp64_manifest, fp64_checkpoint, "fp64"),
         "acceptance": {
             "maximum_relative_weight_difference": args.max_relative_weight_difference,
         },
+        "gpu_hourly_usd": args.gpu_hourly_usd,
     }
-    for name in ("fp32", "fp64"):
+    for name, manifest in variants:
+        report[name] = compare_variant(
+            reference_checkpoint, manifest, variant_checkpoints[name], name,
+        )
+    variant_names = tuple(name for name, _ in variants)
+    for name in variant_names:
         maximum = report[name]["maximum_relative_reconstructed_weight_difference"]
         report[name]["passes_weight_parity_threshold"] = bool(
             math.isfinite(maximum) and maximum <= args.max_relative_weight_difference
@@ -153,12 +174,26 @@ def main():
             report[name]["all_projection_structures_match"]
             and report[name]["all_two_sweep_q4_diagnostics_complete"]
         )
-    report["all_variants_pass"] = bool(
-        report["fp32"]["passes_weight_parity_threshold"]
-        and report["fp64"]["passes_weight_parity_threshold"]
-        and report["fp32"]["passes_complete_production_structure"]
-        and report["fp64"]["passes_complete_production_structure"]
+    report["all_variants_pass"] = all(
+        report[name]["passes_weight_parity_threshold"]
+        and report[name]["passes_complete_production_structure"]
+        for name in variant_names
     )
+    reference_seconds = float(reference_manifest["history"][0]["seconds"])
+    report["observed_and_extrapolated_cost"] = {
+        "reference_layer_seconds": reference_seconds,
+        "reference_layer_gpu_cost_usd": reference_seconds / 3600.0 * args.gpu_hourly_usd,
+        "streaming_variants": {},
+        "warning": "32-layer values are linear extrapolations from layer 0, not measured runtimes.",
+    }
+    for name, manifest in variants:
+        seconds = float(manifest["history"][0]["seconds"])
+        report["observed_and_extrapolated_cost"]["streaming_variants"][name] = {
+            "layer_seconds": seconds,
+            "layer_gpu_cost_usd": seconds / 3600.0 * args.gpu_hourly_usd,
+            "projected_32_layer_seconds": 32.0 * seconds,
+            "projected_32_layer_gpu_cost_usd": 32.0 * seconds / 3600.0 * args.gpu_hourly_usd,
+        }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".partial")
     temporary.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")

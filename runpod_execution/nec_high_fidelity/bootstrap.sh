@@ -5,6 +5,12 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${NEC_REPO_ROOT:-$(cd -- "$SCRIPT_DIR/../.." && pwd)}"
 WORKSPACE_ROOT="${NEC_WORKSPACE_ROOT:-/workspace}"
 VENV_DIR="${NEC_VENV_DIR:-$WORKSPACE_ROOT/venvs/nec-hf}"
+BOOTSTRAP_PROFILE="${NEC_BOOTSTRAP_PROFILE:-production}"
+
+if [[ "$BOOTSTRAP_PROFILE" != "production" && "$BOOTSTRAP_PROFILE" != "qualification" ]]; then
+  echo "ERROR: NEC_BOOTSTRAP_PROFILE must be production or qualification." >&2
+  exit 2
+fi
 
 if ! mountpoint -q "$WORKSPACE_ROOT"; then
   echo "ERROR: $WORKSPACE_ROOT is not a mounted persistent RunPod volume." >&2
@@ -31,17 +37,21 @@ uv pip install --python "$VENV_DIR/bin/python" \
   "torch==2.11.0"
 uv pip install --python "$VENV_DIR/bin/python" \
   -r "$SCRIPT_DIR/requirements.txt"
-uv pip install --python "$VENV_DIR/bin/python" \
-  "lm_eval[hf] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git@ddd67220430a2470529f25fd5c05a576ca1057a0"
-# Reassert the audited numerical/runtime pins after resolving harness extras.
-uv pip install --python "$VENV_DIR/bin/python" \
-  -r "$SCRIPT_DIR/requirements.txt"
+if [[ "$BOOTSTRAP_PROFILE" == "production" ]]; then
+  uv pip install --python "$VENV_DIR/bin/python" \
+    "lm_eval[hf] @ git+https://github.com/EleutherAI/lm-evaluation-harness.git@ddd67220430a2470529f25fd5c05a576ca1057a0"
+  # Reassert the audited numerical/runtime pins after resolving harness extras.
+  uv pip install --python "$VENV_DIR/bin/python" \
+    -r "$SCRIPT_DIR/requirements.txt"
+fi
 "$VENV_DIR/bin/python" -m pip check
-"$VENV_DIR/bin/python" - <<'PY'
+if [[ "$BOOTSTRAP_PROFILE" == "production" ]]; then
+  "$VENV_DIR/bin/python" - <<'PY'
 import importlib.metadata
 assert importlib.metadata.version("lm_eval") == "0.4.13"
 PY
+fi
 
-echo "Environment ready: $VENV_DIR"
+echo "Environment ready: $VENV_DIR (profile=$BOOTSTRAP_PROFILE)"
 echo "Activate with: source $VENV_DIR/bin/activate"
 echo "Run preflight: $SCRIPT_DIR/preflight.sh"

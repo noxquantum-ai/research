@@ -18,6 +18,13 @@ from nox.sequential_compiler import (
     forward_transformer_block_chunked,
 )
 from nox.block_compiler import compile_transformer_block
+from benchmarks.qualify_streaming_projection import (
+    accumulate_down_covariance,
+    down_projection_input,
+    materialize_down_inputs,
+    projection_metrics_chunked,
+)
+from benchmarks.compare_streaming_projection_runs import compare as compare_staged_projection
 
 
 class StreamingCalibrationTests(unittest.TestCase):
@@ -84,6 +91,52 @@ class StreamingCalibrationTests(unittest.TestCase):
         self.assertEqual(
             reference[4]["compiler_hyperparameters"]["calibration_backend"],
             "full_matrix_svd",
+        )
+
+    def test_staged_comparison_reports_cost_and_metric_parity(self):
+        torch.manual_seed(109)
+        weight = torch.randn(16, 16)
+        inputs = torch.randn(16, 32)
+        result = nox_hybrid_dmrg_decompose(
+            W=weight,
+            X_calib=inputs,
+            Y_dense=weight @ inputs,
+            o_modes=(2, 2, 2, 2),
+            i_modes=(2, 2, 2, 2),
+            ranks=(1, 2, 4, 2, 1),
+            r_bridge=2,
+            n_outliers=4,
+            n_sweeps=2,
+            return_artifacts=True,
+            quantize_components=True,
+            verbose=False,
+        )
+        artifact = result[4]
+        metrics = {
+            "sample_count": 32,
+            "relative_error": 0.2,
+            "cosine_similarity": 0.98,
+            "angular_drift": 0.02,
+            "norm_ratio": 1.0,
+        }
+        base = {
+            "input_data": {"calibration_token_ids_sha256": "same"},
+            "hidden_state_sha256": {"calibration": "a", "validation": "b"},
+            "source": {"commit": "abc", "clean": True},
+            "calibration_metrics": dict(metrics),
+            "validation_metrics": dict(metrics),
+            "runtime_seconds": 60.0,
+            "memory": {"torch_peak_cuda_allocated_bytes": 123},
+        }
+        compared = compare_staged_projection(base, artifact, base, artifact, 0.59)
+        self.assertEqual(compared["relative_reconstructed_weight_difference"], 0.0)
+        self.assertEqual(
+            compared["metric_differences"]["validation"]["relative_error_absolute_difference"],
+            0.0,
+        )
+        self.assertAlmostEqual(
+            compared["planning_upper_bound_for_two_full_layer_variants"]["gpu_cost_usd"],
+            7 * 120 / 3600 * 0.59,
         )
 
     def test_rank_deficient_statistics_are_handled_explicitly(self):
@@ -184,6 +237,60 @@ class StreamingCalibrationTests(unittest.TestCase):
                 weights, torch.randn(4, 7), windows_per_chunk=1,
                 n_heads=1, n_kv_heads=1, seq_len=4,
             )
+
+    def test_staged_down_projection_collection_and_metrics_match_direct_path(self):
+        torch.manual_seed(108)
+        d_model = 16
+        d_intermediate = 32
+        weights = {
+            "q_proj": torch.randn(d_model, d_model) / 4,
+            "k_proj": torch.randn(d_model, d_model) / 4,
+            "v_proj": torch.randn(d_model, d_model) / 4,
+            "o_proj": torch.randn(d_model, d_model) / 4,
+            "gate_proj": torch.randn(d_intermediate, d_model) / 4,
+            "up_proj": torch.randn(d_intermediate, d_model) / 4,
+            "down_proj": torch.randn(d_model, d_intermediate) / 4,
+            "input_layernorm": torch.randn(d_model),
+            "post_attention_layernorm": torch.randn(d_model),
+        }
+        hidden = torch.randn(d_model, 7 * 4)
+        options = dict(seq_len=4, n_heads=4, n_kv_heads=4, rms_norm_eps=1e-5)
+        direct = down_projection_input(weights, hidden, **options)
+        chunked = materialize_down_inputs(
+            weights, hidden, windows_per_chunk=2, forward_options=options,
+        )
+        torch.testing.assert_close(chunked, direct, atol=2e-6, rtol=2e-6)
+        covariance = accumulate_down_covariance(
+            weights,
+            hidden,
+            windows_per_chunk=2,
+            forward_options=options,
+            accumulation_dtype=torch.float64,
+        )
+        torch.testing.assert_close(
+            covariance.xx, chunked.double() @ chunked.double().T,
+            atol=1e-9, rtol=1e-9,
+        )
+        self.assertEqual(covariance.sample_count, hidden.shape[1])
+
+        reconstructed = weights["down_proj"] + 0.01 * torch.randn_like(weights["down_proj"])
+        measured = projection_metrics_chunked(
+            weights["down_proj"],
+            reconstructed,
+            weights,
+            hidden,
+            windows_per_chunk=2,
+            forward_options=options,
+        )
+        target = weights["down_proj"] @ direct
+        prediction = reconstructed @ direct
+        expected_relative = float(
+            torch.linalg.vector_norm(target - prediction)
+            .div(torch.linalg.vector_norm(target))
+            .item()
+        )
+        self.assertAlmostEqual(measured["relative_error"], expected_relative, places=6)
+        self.assertEqual(measured["sample_count"], hidden.shape[1])
 
     def test_complete_streaming_block_compiler_matches_reference_path(self):
         torch.manual_seed(106)
