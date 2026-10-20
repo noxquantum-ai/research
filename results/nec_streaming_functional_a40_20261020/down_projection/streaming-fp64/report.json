@@ -1,0 +1,433 @@
+{
+  "status": "PASS",
+  "completed_at_utc": "2026-10-20T13:41:47.596021+00:00",
+  "scope": "real Llama-2-7B layer-0 down_proj qualification; not a model-quality benchmark",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source": {
+    "commit": "534ebda89d4a70db65685e5ec6efbd94ebbbea89",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "algorithm_identity": {
+    "schema_version": 1,
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "60ae9c12eddef6e4791a9ded5c7ca154e55f78faee452052a5c5147ca182e743",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "79dc3991df2b4d4130bcaf5d51475d36432ad8c00674490433e9c1daa382dadc",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "sha256": "3e294a4d8955f3a440c783b1b51e5aec55a6870ae8b7204a7ef615522a16bb72"
+  },
+  "qualification_identity": {
+    "schema_version": 2,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "layer": 0,
+    "projection": "down_proj",
+    "backend": "streaming_statistics",
+    "statistics_dtype": "float64",
+    "calibration_tokens": 4096,
+    "validation_tokens": 1024,
+    "sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "validation_sampling": "uniform",
+    "calibration_seed": 42,
+    "validation_seed": 43,
+    "windows_per_chunk": 4,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "prior_gamma": 0.01,
+    "activation_scale_exponent": 0.5,
+    "dmrg_chunk_size": 32,
+    "diagonal_prior_strength": 0.0,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "quantize_components": true,
+    "stage_diagnostics": [
+      "sparse",
+      "sparse_plus_bridge",
+      "tt_warmstart",
+      "sweep_1",
+      "sweep_2",
+      "serialized_artifact"
+    ],
+    "hardware": {
+      "requested_device": "cuda:0",
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240
+    }
+  },
+  "runtime": {
+    "torch_version": "2.11.0+cu128",
+    "cuda_runtime_version": "12.8"
+  },
+  "layer": 0,
+  "projection": "down_proj",
+  "weight_shape": [
+    4096,
+    11008
+  ],
+  "backend": "streaming_statistics",
+  "statistics_dtype": "float64",
+  "input_data": {
+    "dataset": "wikitext-2-raw-v1",
+    "calibration_split": "train",
+    "heldout_split": "validation",
+    "evaluation_split": "test",
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "validation",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_bytes": 657209,
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "rows": 3760,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "calibration_token_count": 4096,
+    "heldout_token_count": 1024,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "configuration": {
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "activation_scale_exponent": 0.5,
+    "quantization": "Q4 simulation for shield, bridge, and final-sweep MPO cores",
+    "windows_per_chunk": 4
+  },
+  "realized_ranks": [
+    1,
+    64,
+    128,
+    64,
+    1
+  ],
+  "independent_numerical_coefficients": 3280994,
+  "two_sweep_q4_diagnostics_complete": true,
+  "serialization_relative_difference": 0.0004145213752053678,
+  "calibration_metrics": {
+    "sample_count": 4096,
+    "relative_error": 0.33616103621378646,
+    "cosine_similarity": 0.9418112572415278,
+    "angular_drift": 0.05818874275847219,
+    "norm_ratio": 0.9382494406701765
+  },
+  "validation_metrics": {
+    "sample_count": 1024,
+    "relative_error": 0.4206174545831021,
+    "cosine_similarity": 0.9072676857678337,
+    "angular_drift": 0.09273231423216632,
+    "norm_ratio": 0.914595491185512
+  },
+  "calibration_statistics_diagnostics": {
+    "maximum_modes": 4096,
+    "numerical_rank": 4096,
+    "conventional_numerical_rank": 4096,
+    "positive_modes_below_conventional_cutoff": 0,
+    "eigenvalue_tolerance": 3.4616161573307665e-20,
+    "singular_value_tolerance": 1.8605418988377463e-10,
+    "largest_eigenvalue": 5794.041700644884,
+    "negative_eigenvalues_in_candidate_range": 0,
+    "statistics_dtype": "torch.float64"
+  },
+  "bridge_statistics_diagnostics": {
+    "maximum_modes": 4096,
+    "numerical_rank": 4096,
+    "conventional_numerical_rank": 4096,
+    "positive_modes_below_conventional_cutoff": 0,
+    "eigenvalue_tolerance": 7.300411655549923e-22,
+    "singular_value_tolerance": 2.7019273964246196e-11,
+    "largest_eigenvalue": 122.19404937359275,
+    "negative_eigenvalues_in_candidate_range": 0,
+    "statistics_dtype": "torch.float64"
+  },
+  "direct_functional_disagreement": {
+    "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+    "final_artifact": {
+      "relative_reconstructed_weight_difference": 0.31918537616729736,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_functional_disagreement": 0.06033909174139891,
+        "cosine_similarity": 0.998179709075462,
+        "angular_drift": 0.0018202909245379484,
+        "norm_ratio": 1.0000605605292454
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_functional_disagreement": 0.06849350066988145,
+        "cosine_similarity": 0.9976544255654531,
+        "angular_drift": 0.00234557443454686,
+        "norm_ratio": 1.0000445059850103
+      }
+    },
+    "stages": {
+      "sparse": {
+        "relative_reconstructed_weight_difference": 0.0,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.0,
+          "cosine_similarity": 1.0,
+          "angular_drift": 0.0,
+          "norm_ratio": 1.0
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.0,
+          "cosine_similarity": 1.0,
+          "angular_drift": 0.0,
+          "norm_ratio": 1.0
+        }
+      },
+      "sparse_plus_bridge": {
+        "relative_reconstructed_weight_difference": 0.0242720115929842,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.010758148139962375,
+          "cosine_similarity": 0.999942131177213,
+          "angular_drift": 5.7868822787021656e-05,
+          "norm_ratio": 1.0000009072676768
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.009248345956356187,
+          "cosine_similarity": 0.9999572343292734,
+          "angular_drift": 4.276567072658555e-05,
+          "norm_ratio": 1.0000061257434227
+        }
+      },
+      "tt_warmstart": {
+        "relative_reconstructed_weight_difference": 0.0523751899600029,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.011973642739904538,
+          "cosine_similarity": 0.9999283134228799,
+          "angular_drift": 7.168657712008919e-05,
+          "norm_ratio": 0.9999385695428643
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.010943336043438029,
+          "cosine_similarity": 0.9999401199098849,
+          "angular_drift": 5.988009011514972e-05,
+          "norm_ratio": 0.9999370934489439
+        }
+      },
+      "sweep_1": {
+        "relative_reconstructed_weight_difference": 0.11187424510717392,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.018663536996346708,
+          "cosine_similarity": 0.999825835365877,
+          "angular_drift": 0.00017416463412300853,
+          "norm_ratio": 0.9999951820216482
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.021514661153089615,
+          "cosine_similarity": 0.9997685637531141,
+          "angular_drift": 0.0002314362468859299,
+          "norm_ratio": 1.000016985775893
+        }
+      },
+      "sweep_2": {
+        "relative_reconstructed_weight_difference": 0.3191872835159302,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.06033891928160547,
+          "cosine_similarity": 0.9981796684128389,
+          "angular_drift": 0.0018203315871611059,
+          "norm_ratio": 1.0000332090231148
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.06849276780314947,
+          "cosine_similarity": 0.997654406860516,
+          "angular_drift": 0.0023455931394840146,
+          "norm_ratio": 1.0000155018316956
+        }
+      },
+      "serialized_artifact": {
+        "relative_reconstructed_weight_difference": 0.3191855549812317,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.06033893577619689,
+          "cosine_similarity": 0.9981796691258407,
+          "angular_drift": 0.0018203308741593371,
+          "norm_ratio": 1.0000341304304385
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.0684937357493409,
+          "cosine_similarity": 0.997654343930635,
+          "angular_drift": 0.0023456560693649875,
+          "norm_ratio": 1.0000169273869743
+        }
+      }
+    }
+  },
+  "stage_snapshots": {
+    "sparse": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/stage_weights/sparse.pt",
+      "bytes": 90181687,
+      "sha256": "5a364192e1440e4d42690b6096c060eb1ec2868f261f5f1fd8fceb284b958d28",
+      "storage_dtype": "float16"
+    },
+    "sparse_plus_bridge": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/stage_weights/sparse_plus_bridge.pt",
+      "bytes": 90181835,
+      "sha256": "6173bbc54e3a20f35c48e47565313f06e8cfa609a2a9ffd736a4ebd1e760ecf6",
+      "storage_dtype": "float16"
+    },
+    "tt_warmstart": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/stage_weights/tt_warmstart.pt",
+      "bytes": 90181729,
+      "sha256": "452b4b4d996152397dd338136d9da9309e49ebab0c8f642b2d01fdf28dc503e5",
+      "storage_dtype": "float16"
+    },
+    "sweep_1": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/stage_weights/sweep_1.pt",
+      "bytes": 90181758,
+      "sha256": "4a1e1ca6259036a590c0590ab2140bd1ca8cb39c49190fcc167e857e775e48d6",
+      "storage_dtype": "float16"
+    },
+    "sweep_2": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/stage_weights/sweep_2.pt",
+      "bytes": 90181758,
+      "sha256": "58416490c8d1c2e4a85ac537b89a0ea5e547230331e3b7ca862c43cacbd6e361",
+      "storage_dtype": "float16"
+    },
+    "serialized_artifact": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/stage_weights/serialized_artifact.pt",
+      "bytes": 90181906,
+      "sha256": "b37e4749718516f95512b60ea816cc4b7976945e605efecc157374ec6935e67d",
+      "storage_dtype": "float16"
+    }
+  },
+  "runtime_seconds": 196.47788388491608,
+  "core_qualification_runtime_seconds": 192.1094459418673,
+  "functional_diagnostic_runtime_seconds": 3.948629450984299,
+  "memory": {
+    "process_peak_rss_bytes": 2533486592,
+    "sampler_peak_cuda_device_used_bytes": 11939282944,
+    "sampler_interval_seconds": 0.25,
+    "sampler_count": 754,
+    "torch_peak_cuda_allocated_bytes": 10847297024,
+    "torch_peak_cuda_reserved_bytes": 11559501824,
+    "cuda_device_name": "NVIDIA A40",
+    "cuda_total_bytes": 47699722240
+  },
+  "functional_diagnostic_memory": {
+    "torch_peak_cuda_allocated_bytes": 2128880128,
+    "torch_peak_cuda_reserved_bytes": 3464495104
+  },
+  "artifact": {
+    "path": "/workspace/runs/nec-streaming-qualification/down_projection/streaming-fp64/artifact.pt",
+    "bytes": 10765317,
+    "sha256": "72e32486c2c091df5fd4f2a2c8cf5b372b561f6f1f56907c198715ac6163fb02"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "started_at_utc": "2026-10-20T13:34:09.324866+00:00",
+  "phase": "complete",
+  "backend": "streaming_statistics",
+  "statistics_dtype": "float32",
+  "scope": "real Llama-2-7B layer-0 down_proj qualification",
+  "source": {
+    "commit": "534ebda89d4a70db65685e5ec6efbd94ebbbea89",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "algorithm_identity": {
+    "schema_version": 1,
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "60ae9c12eddef6e4791a9ded5c7ca154e55f78faee452052a5c5147ca182e743",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "79dc3991df2b4d4130bcaf5d51475d36432ad8c00674490433e9c1daa382dadc",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "sha256": "3e294a4d8955f3a440c783b1b51e5aec55a6870ae8b7204a7ef615522a16bb72"
+  },
+  "qualification_identity": {
+    "schema_version": 2,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "layer": 0,
+    "projection": "down_proj",
+    "backend": "streaming_statistics",
+    "statistics_dtype": "float32",
+    "calibration_tokens": 4096,
+    "validation_tokens": 1024,
+    "sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "validation_sampling": "uniform",
+    "calibration_seed": 42,
+    "validation_seed": 43,
+    "windows_per_chunk": 4,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "prior_gamma": 0.01,
+    "activation_scale_exponent": 0.5,
+    "dmrg_chunk_size": 32,
+    "diagonal_prior_strength": 0.0,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "quantize_components": true,
+    "stage_diagnostics": [
+      "sparse",
+      "sparse_plus_bridge",
+      "tt_warmstart",
+      "sweep_1",
+      "sweep_2",
+      "serialized_artifact"
+    ],
+    "hardware": {
+      "requested_device": "cuda:0",
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240
+    }
+  },
+  "updated_at_utc": "2026-10-20T13:36:57.239907+00:00",
+  "completed_at_utc": "2026-10-20T13:37:01.439171+00:00",
+  "runtime_seconds": 172.2350979470648
+}

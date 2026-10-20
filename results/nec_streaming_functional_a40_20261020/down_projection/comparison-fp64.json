@@ -1,0 +1,501 @@
+{
+  "acceptance": {
+    "maximum_activation_metric_absolute_difference": 0.01,
+    "maximum_direct_functional_disagreement": 0.01,
+    "maximum_relative_weight_difference": 0.01
+  },
+  "algorithm_identity": {
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "60ae9c12eddef6e4791a9ded5c7ca154e55f78faee452052a5c5147ca182e743",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "79dc3991df2b4d4130bcaf5d51475d36432ad8c00674490433e9c1daa382dadc",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "schema_version": 1,
+    "sha256": "3e294a4d8955f3a440c783b1b51e5aec55a6870ae8b7204a7ef615522a16bb72"
+  },
+  "fp32": {
+    "bridge_statistics_diagnostics": {
+      "conventional_numerical_rank": 3774,
+      "eigenvalue_tolerance": 0.00021042001026216894,
+      "largest_eigenvalue": 122.19403839111328,
+      "maximum_modes": 4096,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 4096,
+      "positive_modes_below_conventional_cutoff": 322,
+      "singular_value_tolerance": 0.014505861327052116,
+      "statistics_dtype": "torch.float32"
+    },
+    "calibration_statistics_diagnostics": {
+      "conventional_numerical_rank": 4006,
+      "eigenvalue_tolerance": 0.009977429173886776,
+      "largest_eigenvalue": 5794.04150390625,
+      "maximum_modes": 4096,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 4096,
+      "positive_modes_below_conventional_cutoff": 90,
+      "singular_value_tolerance": 0.09988708049058914,
+      "statistics_dtype": "torch.float32"
+    },
+    "clean_source_trees": true,
+    "combined_observed_gpu_cost_usd": 0.06365232060836343,
+    "combined_runtime_seconds": 388.3870410001837,
+    "direct_functional_disagreement": {
+      "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+      "final_artifact": {
+        "calibration": {
+          "angular_drift": 0.0018807635968449699,
+          "cosine_similarity": 0.998119236403155,
+          "norm_ratio": 1.0000664255396554,
+          "relative_functional_disagreement": 0.061333363413171686,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.32523971796035767,
+        "validation": {
+          "angular_drift": 0.0024327032324183984,
+          "cosine_similarity": 0.9975672967675816,
+          "norm_ratio": 1.0000758429519998,
+          "relative_functional_disagreement": 0.0697551519537574,
+          "sample_count": 1024
+        }
+      },
+      "stages": {
+        "serialized_artifact": {
+          "calibration": {
+            "angular_drift": 0.0018807474818319792,
+            "cosine_similarity": 0.998119252518168,
+            "norm_ratio": 1.000065676382687,
+            "relative_functional_disagreement": 0.06133307687152565,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.3252398371696472,
+          "validation": {
+            "angular_drift": 0.002432683142863157,
+            "cosine_similarity": 0.9975673168571368,
+            "norm_ratio": 1.0000765344950244,
+            "relative_functional_disagreement": 0.06975488879833329,
+            "sample_count": 1024
+          }
+        },
+        "sparse": {
+          "calibration": {
+            "angular_drift": 0.0,
+            "cosine_similarity": 1.0,
+            "norm_ratio": 1.0,
+            "relative_functional_disagreement": 0.0,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.0,
+          "validation": {
+            "angular_drift": 0.0,
+            "cosine_similarity": 1.0,
+            "norm_ratio": 1.0,
+            "relative_functional_disagreement": 0.0,
+            "sample_count": 1024
+          }
+        },
+        "sparse_plus_bridge": {
+          "calibration": {
+            "angular_drift": 6.381220132534171e-05,
+            "cosine_similarity": 0.9999361877986747,
+            "norm_ratio": 0.9999948908908558,
+            "relative_functional_disagreement": 0.011297069385640672,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.02593212202191353,
+          "validation": {
+            "angular_drift": 4.730273393083184e-05,
+            "cosine_similarity": 0.9999526972660692,
+            "norm_ratio": 1.0000042699829137,
+            "relative_functional_disagreement": 0.009726555919882036,
+            "sample_count": 1024
+          }
+        },
+        "sweep_1": {
+          "calibration": {
+            "angular_drift": 0.0002009834190608295,
+            "cosine_similarity": 0.9997990165809392,
+            "norm_ratio": 0.9999721176140888,
+            "relative_functional_disagreement": 0.020048850534552926,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.12040078639984131,
+          "validation": {
+            "angular_drift": 0.0002669442876086503,
+            "cosine_similarity": 0.9997330557123913,
+            "norm_ratio": 0.9999808898942113,
+            "relative_functional_disagreement": 0.023105816102351323,
+            "sample_count": 1024
+          }
+        },
+        "sweep_2": {
+          "calibration": {
+            "angular_drift": 0.0018807769917230654,
+            "cosine_similarity": 0.9981192230082769,
+            "norm_ratio": 1.0000609972048466,
+            "relative_functional_disagreement": 0.06133340972413444,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.32524242997169495,
+          "validation": {
+            "angular_drift": 0.002432661331207453,
+            "cosine_similarity": 0.9975673386687925,
+            "norm_ratio": 1.000070844913965,
+            "relative_functional_disagreement": 0.06975437165467306,
+            "sample_count": 1024
+          }
+        },
+        "tt_warmstart": {
+          "calibration": {
+            "angular_drift": 8.042097086191635e-05,
+            "cosine_similarity": 0.9999195790291381,
+            "norm_ratio": 0.9999749895060916,
+            "relative_functional_disagreement": 0.012682213707058985,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.05690284073352814,
+          "validation": {
+            "angular_drift": 6.774869704262443e-05,
+            "cosine_similarity": 0.9999322513029574,
+            "norm_ratio": 0.9999771438460033,
+            "relative_functional_disagreement": 0.011640224204767695,
+            "sample_count": 1024
+          }
+        }
+      }
+    },
+    "first_stage_over_one_percent_disagreement": "sparse_plus_bridge",
+    "metric_differences": {
+      "calibration": {
+        "cosine_similarity_absolute_difference": 6.033384122305918e-06,
+        "relative_error_absolute_difference": 1.617417537191912e-05
+      },
+      "validation": {
+        "cosine_similarity_absolute_difference": 2.7213341559195747e-05,
+        "relative_error_absolute_difference": 5.796844628436215e-05
+      }
+    },
+    "passes_activation_metric_parity": true,
+    "passes_algorithm_identity": true,
+    "passes_complete_production_structure": true,
+    "passes_direct_functional_parity": false,
+    "passes_weight_parity_threshold": false,
+    "planning_upper_bound_for_two_full_layer_variants": {
+      "gpu_cost_usd": 0.445566244258544,
+      "method": "seven times the observed two-variant down_proj runtime; conservative planning bound, not a runtime model",
+      "seconds": 2718.7092870012857
+    },
+    "reference_calibration_metrics": {
+      "angular_drift": 0.058187833933987854,
+      "cosine_similarity": 0.9418121660660121,
+      "norm_ratio": 0.9381926232283796,
+      "relative_error": 0.3361591065819641,
+      "sample_count": 4096
+    },
+    "reference_coefficients": 3280994,
+    "reference_memory": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "process_peak_rss_bytes": 9126187008,
+      "sampler_count": 848,
+      "sampler_interval_seconds": 0.25,
+      "sampler_peak_cuda_device_used_bytes": 5199036416,
+      "torch_peak_cuda_allocated_bytes": 4729782272,
+      "torch_peak_cuda_reserved_bytes": 4812963840
+    },
+    "reference_runtime_seconds": 216.15194305311888,
+    "reference_validation_metrics": {
+      "angular_drift": 0.09273901899724901,
+      "cosine_similarity": 0.907260981002751,
+      "norm_ratio": 0.9145547880238251,
+      "relative_error": 0.4206313254897281,
+      "sample_count": 1024
+    },
+    "relative_reconstructed_weight_difference": 0.3253093659877777,
+    "same_algorithm_fingerprint": true,
+    "source_commits": {
+      "reference": "534ebda89d4a70db65685e5ec6efbd94ebbbea89",
+      "variant": "534ebda89d4a70db65685e5ec6efbd94ebbbea89"
+    },
+    "structure_matches": true,
+    "two_sweep_q4_diagnostics_complete": true,
+    "variant_calibration_metrics": {
+      "angular_drift": 0.05819386731811016,
+      "cosine_similarity": 0.9418061326818898,
+      "norm_ratio": 0.9382549431796783,
+      "relative_error": 0.336175280757336,
+      "sample_count": 4096
+    },
+    "variant_coefficients": 3280994,
+    "variant_memory": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "process_peak_rss_bytes": 2534473728,
+      "sampler_count": 665,
+      "sampler_interval_seconds": 0.25,
+      "sampler_peak_cuda_device_used_bytes": 7409434624,
+      "torch_peak_cuda_allocated_bytes": 6603052544,
+      "torch_peak_cuda_reserved_bytes": 7029653504
+    },
+    "variant_runtime_seconds": 172.2350979470648,
+    "variant_validation_metrics": {
+      "angular_drift": 0.09271180565568982,
+      "cosine_similarity": 0.9072881943443102,
+      "norm_ratio": 0.9146241505587143,
+      "relative_error": 0.42057335704344373,
+      "sample_count": 1024
+    }
+  },
+  "fp32_passes": false,
+  "fp64": {
+    "bridge_statistics_diagnostics": {
+      "conventional_numerical_rank": 4096,
+      "eigenvalue_tolerance": 7.300411655549923e-22,
+      "largest_eigenvalue": 122.19404937359275,
+      "maximum_modes": 4096,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 4096,
+      "positive_modes_below_conventional_cutoff": 0,
+      "singular_value_tolerance": 2.7019273964246196e-11,
+      "statistics_dtype": "torch.float64"
+    },
+    "calibration_statistics_diagnostics": {
+      "conventional_numerical_rank": 4096,
+      "eigenvalue_tolerance": 3.4616161573307665e-20,
+      "largest_eigenvalue": 5794.041700644884,
+      "maximum_modes": 4096,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 4096,
+      "positive_modes_below_conventional_cutoff": 0,
+      "singular_value_tolerance": 1.8605418988377463e-10,
+      "statistics_dtype": "torch.float64"
+    },
+    "clean_source_trees": true,
+    "combined_observed_gpu_cost_usd": 0.06762544385928906,
+    "combined_runtime_seconds": 412.62982693803497,
+    "direct_functional_disagreement": {
+      "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+      "final_artifact": {
+        "calibration": {
+          "angular_drift": 0.0018202909245379484,
+          "cosine_similarity": 0.998179709075462,
+          "norm_ratio": 1.0000605605292454,
+          "relative_functional_disagreement": 0.06033909174139891,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.31918537616729736,
+        "validation": {
+          "angular_drift": 0.00234557443454686,
+          "cosine_similarity": 0.9976544255654531,
+          "norm_ratio": 1.0000445059850103,
+          "relative_functional_disagreement": 0.06849350066988145,
+          "sample_count": 1024
+        }
+      },
+      "stages": {
+        "serialized_artifact": {
+          "calibration": {
+            "angular_drift": 0.0018203308741593371,
+            "cosine_similarity": 0.9981796691258407,
+            "norm_ratio": 1.0000341304304385,
+            "relative_functional_disagreement": 0.06033893577619689,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.3191855549812317,
+          "validation": {
+            "angular_drift": 0.0023456560693649875,
+            "cosine_similarity": 0.997654343930635,
+            "norm_ratio": 1.0000169273869743,
+            "relative_functional_disagreement": 0.0684937357493409,
+            "sample_count": 1024
+          }
+        },
+        "sparse": {
+          "calibration": {
+            "angular_drift": 0.0,
+            "cosine_similarity": 1.0,
+            "norm_ratio": 1.0,
+            "relative_functional_disagreement": 0.0,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.0,
+          "validation": {
+            "angular_drift": 0.0,
+            "cosine_similarity": 1.0,
+            "norm_ratio": 1.0,
+            "relative_functional_disagreement": 0.0,
+            "sample_count": 1024
+          }
+        },
+        "sparse_plus_bridge": {
+          "calibration": {
+            "angular_drift": 5.7868822787021656e-05,
+            "cosine_similarity": 0.999942131177213,
+            "norm_ratio": 1.0000009072676768,
+            "relative_functional_disagreement": 0.010758148139962375,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.0242720115929842,
+          "validation": {
+            "angular_drift": 4.276567072658555e-05,
+            "cosine_similarity": 0.9999572343292734,
+            "norm_ratio": 1.0000061257434227,
+            "relative_functional_disagreement": 0.009248345956356187,
+            "sample_count": 1024
+          }
+        },
+        "sweep_1": {
+          "calibration": {
+            "angular_drift": 0.00017416463412300853,
+            "cosine_similarity": 0.999825835365877,
+            "norm_ratio": 0.9999951820216482,
+            "relative_functional_disagreement": 0.018663536996346708,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.11187424510717392,
+          "validation": {
+            "angular_drift": 0.0002314362468859299,
+            "cosine_similarity": 0.9997685637531141,
+            "norm_ratio": 1.000016985775893,
+            "relative_functional_disagreement": 0.021514661153089615,
+            "sample_count": 1024
+          }
+        },
+        "sweep_2": {
+          "calibration": {
+            "angular_drift": 0.0018203315871611059,
+            "cosine_similarity": 0.9981796684128389,
+            "norm_ratio": 1.0000332090231148,
+            "relative_functional_disagreement": 0.06033891928160547,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.3191872835159302,
+          "validation": {
+            "angular_drift": 0.0023455931394840146,
+            "cosine_similarity": 0.997654406860516,
+            "norm_ratio": 1.0000155018316956,
+            "relative_functional_disagreement": 0.06849276780314947,
+            "sample_count": 1024
+          }
+        },
+        "tt_warmstart": {
+          "calibration": {
+            "angular_drift": 7.168657712008919e-05,
+            "cosine_similarity": 0.9999283134228799,
+            "norm_ratio": 0.9999385695428643,
+            "relative_functional_disagreement": 0.011973642739904538,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.0523751899600029,
+          "validation": {
+            "angular_drift": 5.988009011514972e-05,
+            "cosine_similarity": 0.9999401199098849,
+            "norm_ratio": 0.9999370934489439,
+            "relative_functional_disagreement": 0.010943336043438029,
+            "sample_count": 1024
+          }
+        }
+      }
+    },
+    "first_stage_over_one_percent_disagreement": "sparse_plus_bridge",
+    "metric_differences": {
+      "calibration": {
+        "cosine_similarity_absolute_difference": 9.08824484335824e-07,
+        "relative_error_absolute_difference": 1.929631822383815e-06
+      },
+      "validation": {
+        "cosine_similarity_absolute_difference": 6.7047650826879135e-06,
+        "relative_error_absolute_difference": 1.3870906625967905e-05
+      }
+    },
+    "passes_activation_metric_parity": true,
+    "passes_algorithm_identity": true,
+    "passes_complete_production_structure": true,
+    "passes_direct_functional_parity": false,
+    "passes_weight_parity_threshold": false,
+    "planning_upper_bound_for_two_full_layer_variants": {
+      "gpu_cost_usd": 0.4733781070150234,
+      "method": "seven times the observed two-variant down_proj runtime; conservative planning bound, not a runtime model",
+      "seconds": 2888.4087885662448
+    },
+    "reference_calibration_metrics": {
+      "angular_drift": 0.058187833933987854,
+      "cosine_similarity": 0.9418121660660121,
+      "norm_ratio": 0.9381926232283796,
+      "relative_error": 0.3361591065819641,
+      "sample_count": 4096
+    },
+    "reference_coefficients": 3280994,
+    "reference_memory": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "process_peak_rss_bytes": 9126187008,
+      "sampler_count": 848,
+      "sampler_interval_seconds": 0.25,
+      "sampler_peak_cuda_device_used_bytes": 5199036416,
+      "torch_peak_cuda_allocated_bytes": 4729782272,
+      "torch_peak_cuda_reserved_bytes": 4812963840
+    },
+    "reference_runtime_seconds": 216.15194305311888,
+    "reference_validation_metrics": {
+      "angular_drift": 0.09273901899724901,
+      "cosine_similarity": 0.907260981002751,
+      "norm_ratio": 0.9145547880238251,
+      "relative_error": 0.4206313254897281,
+      "sample_count": 1024
+    },
+    "relative_reconstructed_weight_difference": 0.31921008229255676,
+    "same_algorithm_fingerprint": true,
+    "source_commits": {
+      "reference": "534ebda89d4a70db65685e5ec6efbd94ebbbea89",
+      "variant": "534ebda89d4a70db65685e5ec6efbd94ebbbea89"
+    },
+    "structure_matches": true,
+    "two_sweep_q4_diagnostics_complete": true,
+    "variant_calibration_metrics": {
+      "angular_drift": 0.05818874275847219,
+      "cosine_similarity": 0.9418112572415278,
+      "norm_ratio": 0.9382494406701765,
+      "relative_error": 0.33616103621378646,
+      "sample_count": 4096
+    },
+    "variant_coefficients": 3280994,
+    "variant_memory": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "process_peak_rss_bytes": 2533486592,
+      "sampler_count": 754,
+      "sampler_interval_seconds": 0.25,
+      "sampler_peak_cuda_device_used_bytes": 11939282944,
+      "torch_peak_cuda_allocated_bytes": 10847297024,
+      "torch_peak_cuda_reserved_bytes": 11559501824
+    },
+    "variant_runtime_seconds": 196.47788388491608,
+    "variant_validation_metrics": {
+      "angular_drift": 0.09273231423216632,
+      "cosine_similarity": 0.9072676857678337,
+      "norm_ratio": 0.914595491185512,
+      "relative_error": 0.4206174545831021,
+      "sample_count": 1024
+    }
+  },
+  "fp64_passes": false,
+  "gpu_hourly_usd": 0.59,
+  "identical_input_data_and_hidden_states": true,
+  "recommended_next_stage": "implement_numerically_stable_factorization",
+  "scientific_scope_warning": "Projection parity and memory savings do not establish full-model quality; PPL and MMLU still require a complete 32-layer evaluation.",
+  "scope": "real Llama-2-7B layer-0 down_proj staged streaming qualification",
+  "source": {
+    "clean": true,
+    "commit": "534ebda89d4a70db65685e5ec6efbd94ebbbea89",
+    "dirty_paths": []
+  }
+}
