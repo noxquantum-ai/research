@@ -26,12 +26,27 @@ bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-fp32
 bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-compare
 ```
 
-It defaults to a two-hour total timeout per invocation, including bootstrap. A timeout does not stop RunPod
-billing; terminate the pod manually. FP64 and all-seven-projection layer stages
+There is no automatic timeout. Unbuffered compiler logs and a 60-second
+resource/progress heartbeat are persisted under the qualification log directory.
+Terminate the pod manually to stop RunPod billing. FP64 and all-seven-projection layer stages
 are explicit follow-up commands. An unnecessary FP64 run is refused, and each
 layer backend remains locked until its single-projection comparison passes.
 Completed stages are reusable only when their SHA-256, clean Git commit,
 hardware identity, and full qualification settings match the current run.
+
+For the first stage, follow the compiler and resource streams from a second
+terminal with:
+
+```bash
+tail -F /workspace/runs/nec-streaming-qualification/logs/reference-full-matrix.log
+tail -F /workspace/runs/nec-streaming-qualification/logs/reference-full-matrix.heartbeat.jsonl
+bash runpod_execution/nec_high_fidelity/qualify_streaming.sh status
+```
+
+The main log identifies every projection, DMRG sweep, local site, solver and
+elapsed site time. The heartbeat records GPU utilization/VRAM, host RAM, disk,
+load average and the latest durable phase. Logging does not impose a wall-time
+limit or automatically advance to another paid stage.
 
 The script creates or repairs the Python 3.13.15 environment, installs the pinned PyTorch/CUDA and requirements plus the pinned `lm-evaluation-harness` commit, and runs `pip check` before model compilation. Preflight verifies the model architecture/tokenizer, package versions, RunPod persistence, resources, and clean source commit. It then loads the pinned dense model and qualifies PPL batch equivalence at batch size 1 versus the selected batch, scans all 14,042 MMLU prompts for five-shot fit, tests the longest prompt and 4,096-token context at the selected MMLU batch, and initializes the pinned harness on one question per subject. Finally it compiles one actual pinned `down_proj` matrix with a synthetic 65,536-token activation matrix at the full High-Fidelity rank and Q4 settings, then checks artifact decoding against the compiler reconstruction. This last stage validates compiler memory and artifact mechanics, not model quality. No 32-layer compilation starts unless every qualification passes.
 

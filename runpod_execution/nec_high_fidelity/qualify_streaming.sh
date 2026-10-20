@@ -7,7 +7,7 @@ WORKSPACE_ROOT="${NEC_WORKSPACE_ROOT:-/workspace}"
 VENV_DIR="${NEC_VENV_DIR:-$WORKSPACE_ROOT/venvs/nec-hf}"
 QUAL_ROOT="${NEC_STREAMING_QUAL_ROOT:-$WORKSPACE_ROOT/runs/nec-streaming-qualification}"
 WINDOWS_PER_CHUNK="${NEC_STREAMING_WINDOWS_PER_CHUNK:-4}"
-TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-7200}"
+HEARTBEAT_SECONDS="${NEC_QUAL_HEARTBEAT_SECONDS:-60}"
 GPU_HOURLY_USD="${NEC_GPU_HOURLY_USD:-0.59}"
 STAGE="${1:-help}"
 
@@ -34,10 +34,10 @@ Each invocation runs exactly one stage and then stops:
   layer-compare      Compare completed layer variants
   status             Print saved status without running computation
 
-Default per-invocation timeout, including bootstrap: 7200 seconds. Override only with
-NEC_QUAL_TIMEOUT_SECONDS. No stage starts its successor. Layer stages require
-a passing down-compare report. A process timeout DOES NOT stop RunPod billing;
-terminate the pod manually.
+There is no automatic timeout. NEC_QUAL_HEARTBEAT_SECONDS controls periodic
+progress/resource logging (default 60 seconds). No stage starts its successor.
+Layer stages require a passing down-compare report. Terminate the RunPod pod
+manually when finished to stop billing.
 EOF
 }
 
@@ -45,8 +45,8 @@ if [[ "$STAGE" == "help" || "$STAGE" == "--help" || "$STAGE" == "-h" ]]; then
   usage
   exit 0
 fi
-if [[ ! "$TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
-  echo "ERROR: NEC_QUAL_TIMEOUT_SECONDS must be a positive integer." >&2
+if [[ ! "$HEARTBEAT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "ERROR: NEC_QUAL_HEARTBEAT_SECONDS must be a positive integer." >&2
   exit 2
 fi
 if ! [[ "$GPU_HOURLY_USD" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
@@ -62,6 +62,12 @@ if [[ "$STAGE" == "status" ]]; then
   find "$QUAL_ROOT" -maxdepth 4 -type f \
     \( -name 'progress.json' -o -name 'last_execution.json' -o -name 'comparison*.json' \) \
     -print -exec python3 -m json.tool {} \;
+  if [[ -d "$QUAL_ROOT/logs" ]]; then
+    find "$QUAL_ROOT/logs" -maxdepth 1 -type f -name '*.heartbeat.jsonl' \
+      -print -exec tail -n 1 {} \;
+    find "$QUAL_ROOT/logs" -maxdepth 1 -type f -name '*.log' \
+      -print -exec tail -n 25 {} \;
+  fi
   exit 0
 fi
 
@@ -75,13 +81,13 @@ record_exit() {
   local exit_code="$3"
   local elapsed="$4"
   local invocation_elapsed="$(( $(date +%s) - INVOCATION_STARTED ))"
-  python3 - "$name" "$output_dir" "$exit_code" "$elapsed" "$invocation_elapsed" "$GPU_HOURLY_USD" "$TIMEOUT_SECONDS" <<'PY'
+  python3 - "$name" "$output_dir" "$exit_code" "$elapsed" "$invocation_elapsed" "$GPU_HOURLY_USD" "$QUAL_ROOT/logs/$name.log" "$QUAL_ROOT/logs/$name.heartbeat.jsonl" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-name, output, exit_code, elapsed, invocation_elapsed, hourly, timeout = sys.argv[1:]
+name, output, exit_code, elapsed, invocation_elapsed, hourly, main_log, heartbeat_log = sys.argv[1:]
 output = Path(output)
 output.mkdir(parents=True, exist_ok=True)
 elapsed = float(elapsed)
@@ -89,11 +95,13 @@ invocation_elapsed = float(invocation_elapsed)
 record = {
     "stage": name,
     "command_exit_code": int(exit_code),
-    "status": "TIMEOUT" if int(exit_code) == 124 else "PASS" if int(exit_code) == 0 else "FAIL",
+    "status": "PASS" if int(exit_code) == 0 else "FAIL",
     "finished_at_utc": datetime.now(timezone.utc).isoformat(),
     "elapsed_wall_seconds": elapsed,
     "total_invocation_elapsed_wall_seconds": invocation_elapsed,
-    "configured_timeout_seconds": int(timeout),
+    "automatic_timeout": False,
+    "main_log": main_log,
+    "heartbeat_log": heartbeat_log,
     "gpu_hourly_usd": float(hourly),
     "estimated_gpu_cost_usd": elapsed / 3600.0 * float(hourly),
     "estimated_total_invocation_gpu_cost_usd": invocation_elapsed / 3600.0 * float(hourly),
@@ -107,23 +115,27 @@ print(json.dumps(record, indent=2, sort_keys=True))
 PY
 }
 
-run_guarded() {
+run_logged() {
   local name="$1"
   local output_dir="$2"
   shift 2
-  local started elapsed exit_code already_elapsed remaining
+  local started elapsed exit_code heartbeat_pid
   started="$(date +%s)"
-  already_elapsed="$(( started - INVOCATION_STARTED ))"
-  remaining="$(( TIMEOUT_SECONDS - already_elapsed ))"
-  if (( remaining <= 0 )); then
-    record_exit "$name" "$output_dir" 124 0
-    return 124
-  fi
+  python3 benchmarks/qualification_heartbeat.py \
+    --stage "$name" \
+    --progress "$output_dir/progress.json" \
+    --workspace "$WORKSPACE_ROOT" \
+    --output "$QUAL_ROOT/logs/$name.heartbeat.jsonl" \
+    --interval-seconds "$HEARTBEAT_SECONDS" &
+  heartbeat_pid="$!"
+  trap 'kill -TERM '"$heartbeat_pid"' 2>/dev/null || true' INT TERM EXIT
   set +e
-  timeout --foreground --signal=TERM --kill-after=60s "$remaining" "$@" \
-    2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
+  "$@" 2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
   exit_code="${PIPESTATUS[0]}"
   set -e
+  kill -TERM "$heartbeat_pid" 2>/dev/null || true
+  wait "$heartbeat_pid" 2>/dev/null || true
+  trap - INT TERM EXIT
   elapsed="$(( $(date +%s) - started ))"
   record_exit "$name" "$output_dir" "$exit_code" "$elapsed"
   echo "IMPORTANT: this process stopped, but RunPod billing continues until you terminate the pod." >&2
@@ -131,7 +143,7 @@ run_guarded() {
 }
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
-  run_guarded bootstrap "$QUAL_ROOT/bootstrap" \
+  run_logged bootstrap "$QUAL_ROOT/bootstrap" \
     env NEC_BOOTSTRAP_PROFILE=qualification bash "$SCRIPT_DIR/bootstrap.sh"
 fi
 
@@ -140,7 +152,7 @@ down_stage() {
   local backend="$2"
   local dtype="$3"
   local output="$QUAL_ROOT/down_projection/$name"
-  run_guarded "$name" "$output" \
+  run_logged "$name" "$output" \
     "$VENV_DIR/bin/python" benchmarks/qualify_streaming_projection.py \
       --output "$output" \
       --backend "$backend" \
@@ -237,7 +249,7 @@ layer_stage() {
   if [[ -f "$output/model_manifest.json" ]]; then
     resume_argument=(--resume)
   fi
-  run_guarded "$name" "$output" \
+  run_logged "$name" "$output" \
     "$VENV_DIR/bin/python" scripts/compile_high_fidelity.py \
       --output "$output" \
       --calibration-backend "$backend" \
@@ -259,7 +271,7 @@ case "$STAGE" in
     down_stage streaming-fp64 streaming_statistics float64
     ;;
   down-compare)
-    run_guarded down-compare "$QUAL_ROOT/down_projection" \
+    run_logged down-compare "$QUAL_ROOT/down_projection" \
       "$VENV_DIR/bin/python" benchmarks/compare_streaming_projection_runs.py \
         --reference "$QUAL_ROOT/down_projection/reference-full-matrix" \
         --fp32 "$QUAL_ROOT/down_projection/streaming-fp32" \
@@ -267,7 +279,7 @@ case "$STAGE" in
         --gpu-hourly-usd "$GPU_HOURLY_USD"
     ;;
   down-compare-fp64)
-    run_guarded down-compare-fp64 "$QUAL_ROOT/down_projection" \
+    run_logged down-compare-fp64 "$QUAL_ROOT/down_projection" \
       "$VENV_DIR/bin/python" benchmarks/compare_streaming_projection_runs.py \
         --reference "$QUAL_ROOT/down_projection/reference-full-matrix" \
         --fp32 "$QUAL_ROOT/down_projection/streaming-fp32" \
@@ -297,7 +309,7 @@ case "$STAGE" in
       echo "ERROR: no completed streaming layer variant exists." >&2
       exit 2
     fi
-    run_guarded layer-compare "$QUAL_ROOT/layer0" \
+    run_logged layer-compare "$QUAL_ROOT/layer0" \
       "$VENV_DIR/bin/python" benchmarks/compare_streaming_nec_runs.py \
         --reference "$QUAL_ROOT/layer0/reference-full-matrix" \
         "${variant_arguments[@]}" \

@@ -214,6 +214,8 @@ def compile_attention_block(
         raise ValueError(f"Unknown NEC representation: {representation}")
 
     def compile_projection(*, projection_name, **kwargs):
+        if verbose:
+            print(f"    [NEC projection] Starting {projection_name}...", flush=True)
         if representation == "mpo4":
             return nox_hybrid_dmrg_decompose(
                 diagonal_prior_strength=diagonal_prior_strength,
@@ -265,13 +267,13 @@ def compile_attention_block(
         W_hat_q, kb_q, cores_q, _, art_q = compile_projection(
             projection_name="q_proj",
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_q, kb_q, cores_q, _ = compile_projection(
             projection_name="q_proj",
             W=W_q, X_calib=X_in, Y_dense=Q_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_q, n_outliers=n_outliers_q, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -281,13 +283,13 @@ def compile_attention_block(
         W_hat_k, kb_k, cores_k, _, art_k = compile_projection(
             projection_name="k_proj",
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_k, kb_k, cores_k, _ = compile_projection(
             projection_name="k_proj",
             W=W_k, X_calib=X_in, Y_dense=K_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_k, n_outliers=n_outliers_k, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -297,13 +299,13 @@ def compile_attention_block(
         W_hat_v, kb_v, cores_v, _, art_v = compile_projection(
             projection_name="v_proj",
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_v, kb_v, cores_v, _ = compile_projection(
             projection_name="v_proj",
             W=W_v, X_calib=X_in, Y_dense=V_dense, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_v, n_outliers=n_outliers_v, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -350,13 +352,13 @@ def compile_attention_block(
         W_hat_o, kb_o, cores_o, _, art_o = compile_projection(
             projection_name="o_proj",
             W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_target, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_o, kb_o, cores_o, _ = compile_projection(
             projection_name="o_proj",
             W=W_o, X_calib=X_o_calib, Y_dense=Y_attn_target, o_modes=o_modes, i_modes=i_modes,
-            ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_o, n_outliers=n_outliers_o, prior_gamma=gamma_o, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -421,6 +423,8 @@ def compile_mlp_block(
         raise ValueError(f"Unknown NEC representation: {representation}")
 
     def compile_projection(*, projection_name, **kwargs):
+        if verbose:
+            print(f"    [NEC projection] Starting {projection_name}...", flush=True)
         if representation == "mpo4":
             return nox_hybrid_dmrg_decompose(
                 diagonal_prior_strength=diagonal_prior_strength,
@@ -469,13 +473,13 @@ def compile_mlp_block(
         W_hat_gate, kb_gate, cores_gate, _, art_gate = compile_projection(
             projection_name="gate_proj",
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_gate, kb_gate, cores_gate, _ = compile_projection(
             projection_name="gate_proj",
             W=W_gate, X_calib=M_in, Y_dense=H_gate_dense, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_gate, n_outliers=n_outliers_gate, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -514,13 +518,13 @@ def compile_mlp_block(
         W_hat_up, kb_up, cores_up, _, art_up = compile_projection(
             projection_name="up_proj",
             W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_up, kb_up, cores_up, _ = compile_projection(
             projection_name="up_proj",
             W=W_up, X_calib=M_in, Y_dense=H_up_target, o_modes=o_modes_up, i_modes=i_modes_up,
-            ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_up, n_outliers=n_outliers_up, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()
@@ -579,13 +583,13 @@ def compile_mlp_block(
         W_hat_down, kb_down, cores_down, _, art_down = compile_projection(
             projection_name="down_proj",
             W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_target, o_modes=o_modes_down, i_modes=i_modes_down,
-            ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, return_artifacts=True, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, return_artifacts=True, verbose=verbose,
         )
     else:
         W_hat_down, kb_down, cores_down, _ = compile_projection(
             projection_name="down_proj",
             W=W_down, X_calib=X_down_calib, Y_dense=Y_mlp_target, o_modes=o_modes_down, i_modes=i_modes_down,
-            ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, verbose=False,
+            ranks=ranks, r_bridge=r_bridge_down, n_outliers=n_outliers_down, prior_gamma=gamma_down, verbose=verbose,
         )
     if torch.cuda.is_available():
         gc.collect()

@@ -16,6 +16,7 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
 )
 from runpod_execution.nec_high_fidelity.gpu_qualification import compare_mmlu_smokes
 from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget, save_top1_predictions
+from benchmarks.qualification_heartbeat import read_progress
 from runpod_execution.nec_high_fidelity.runpod_driver import (
     compile_command,
     evaluation_batch_sizes,
@@ -100,6 +101,23 @@ def tiny_artifact():
 
 
 class ProductionEvaluationTests(unittest.TestCase):
+    def test_qualification_heartbeat_reads_durable_phase(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            progress = Path(temporary) / "progress.json"
+            progress.write_text(json.dumps({
+                "status": "RUNNING",
+                "phase": "compiling_projection",
+                "updated_at_utc": "2026-10-20T00:00:00+00:00",
+                "ignored": "large payload",
+            }))
+            self.assertEqual(read_progress(progress), {
+                "status": "RUNNING",
+                "phase": "compiling_projection",
+                "updated_at_utc": "2026-10-20T00:00:00+00:00",
+            })
+            progress.write_text("not-json")
+            self.assertIsNone(read_progress(progress))
+
     def test_mmlu_batch_smoke_requires_same_prompts_predictions_and_scores(self):
         sample = {
             "doc_id": 0,
@@ -313,8 +331,9 @@ class ProductionEvaluationTests(unittest.TestCase):
             Path(__file__).resolve().parents[1]
             / "runpod_execution" / "nec_high_fidelity" / "qualify_streaming.sh"
         ).read_text()
-        self.assertIn('TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-7200}"', qualification_script)
-        self.assertIn('remaining="$(( TIMEOUT_SECONDS - already_elapsed ))"', qualification_script)
+        self.assertNotIn("timeout --foreground", qualification_script)
+        self.assertIn('HEARTBEAT_SECONDS="${NEC_QUAL_HEARTBEAT_SECONDS:-60}"', qualification_script)
+        self.assertIn("qualification_heartbeat.py", qualification_script)
         self.assertIn("require_down_gate", qualification_script)
         self.assertNotIn("run_variant reference-full-matrix", qualification_script)
         self.assertIn("down-reference)", qualification_script)

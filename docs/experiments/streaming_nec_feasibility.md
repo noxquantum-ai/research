@@ -1,6 +1,6 @@
 # Streaming NEC calibration: mathematical and implementation audit
 
-Date: 2026-10-19
+Date: 2026-10-20
 
 Scope: the four-site MPO High-Fidelity NEC path with independent dense
 calibration activations, zero post-compression healing, ranks
@@ -120,6 +120,19 @@ allocator fragmentation, model shards, and temporary copies.
 | artifact reconstruction | dense weight required by current HF injection | unchanged | yes | (O(d_od_i)) storage/work |
 | validation propagation | full token matrices | complete-window chunks | yes | forward GEMMs |
 
+The active contractions, covariance accumulation, Gram eigendecomposition,
+TT-SVD, and DMRG solve all remain on the selected CUDA device. Complete-window
+inputs are transferred to the GPU once per chunk; dense block outputs are moved
+to the configured output device once so they do not accumulate in VRAM. CPU
+transfers inside the compiler are limited to final artifact serialization and
+metadata. The interior DMRG systems already use bounded design chunks and
+matrix-free six-step CG instead of allocating 20,480--65,536-square Hessians.
+The qualification path does not enable TF32, reduced precision, compilation,
+or experimental fused kernels because those would complicate the numerical
+parity test. One avoidable synchronization was removed: local-design Frobenius
+norms now accumulate as FP64 scalars on-device rather than calling `.item()`
+for every chunk.
+
 The four persistent block-input covariances total about 654 MiB in FP32. The
 largest single High-Fidelity local design chunk is approximately 1 GiB for the
 interior sites (`D=65,536`, 4,096 design rows). The down-projection covariance,
@@ -144,9 +157,9 @@ covariance accumulation work but not the maximum DMRG rank.
 behavior, a complete sparse/bridge/AWT/two-sweep fit, diagonal prior,
 sequence-aligned Transformer forwards, and a complete seven-projection block
 comparison with two sweeps and Q4 diagnostics for every stored component. All
-eight tests pass. The complete
-repository suite passed 148 tests with four intentional CUDA skips; one
-unrelated test module could not import because local `pyarrow` is absent.
+11 tests pass. In the current local environment, 157 runnable repository tests
+passed and four CUDA tests were skipped; complete discovery had one import error
+because the local interpreter lacks the declared `pyarrow` dependency.
 These are small-matrix regression tests; they do not certify real-sized
 High-Fidelity projections. `qualify_streaming.sh` is the required production-
 shape qualification before changing the official backend.
@@ -205,8 +218,10 @@ the reference SVD and FP32 statistics on identical 4,096/1,024-token
 calibration/validation samples. The comparison checks the reconstructed
 weight, ranks, coefficient count, two-sweep Q4 diagnostics, calibration and
 held-out projection errors, wall time, CUDA peaks, and RSS. FP64 is a separate
-`down-fp64` stage; the runner refuses it unless the FP32 comparison failed. It defaults
-to a two-hour total invocation timeout including environment bootstrap, records partial status and logs, reuses verified
+`down-fp64` stage; the runner refuses it unless the FP32 comparison failed. It has no
+automatic timeout. Unbuffered compiler output is appended to a main log, while a
+60-second heartbeat records the current phase, GPU utilization and VRAM, host RAM,
+disk space, load average, and elapsed time as durable JSONL. It records partial status and logs, reuses verified
 completed stages only when their artifact hash, clean source commit, hardware,
 and complete qualification identity match the current invocation, and never
 starts a successor automatically. Terminating the

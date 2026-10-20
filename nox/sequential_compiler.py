@@ -175,6 +175,7 @@ def collect_independent_block_calibration(
     statistics_device=None,
     accumulation_dtype=torch.float32,
     output_device="cpu",
+    verbose=False,
 ):
     """Collect exact independent-NEC input covariances for all seven projections.
 
@@ -216,8 +217,17 @@ def collect_independent_block_calibration(
     attention_outputs = []
     mlp_outputs = []
     token_chunk = int(windows_per_chunk) * int(seq_len)
+    chunk_count = (int(X.shape[1]) + token_chunk - 1) // token_chunk
+    collection_started = time.monotonic()
     for start in range(0, X.shape[1], token_chunk):
         stop = min(start + token_chunk, X.shape[1])
+        chunk_index = start // token_chunk + 1
+        if verbose:
+            print(
+                f"  [Streaming calibration] chunk {chunk_index}/{chunk_count} "
+                f"tokens={start}:{stop}",
+                flush=True,
+            )
         x = X[:, start:stop].to(device=device, dtype=weights["q_proj"].dtype)
         x_norm1 = norm1(x)
         q = weights["q_proj"] @ x_norm1
@@ -243,6 +253,13 @@ def collect_independent_block_calibration(
         attention_outputs.append(attention_output.to(device=output_device))
         mlp_outputs.append(mlp_output.to(device=output_device))
         del x, x_norm1, q, k, v, attention_input, attention_output, residual1, x_norm2, gate, up, down_input, mlp_output, output
+
+    if verbose:
+        print(
+            f"  [Streaming calibration] complete: {X.shape[1]} tokens in "
+            f"{time.monotonic() - collection_started:.1f}s",
+            flush=True,
+        )
 
     return {
         "covariances": {name: accumulator.finalize() for name, accumulator in accumulators.items()},
@@ -298,6 +315,7 @@ def compile_independent_transformer_block_streaming(
         statistics_device=statistics_device,
         accumulation_dtype=accumulation_dtype,
         output_device=output_device,
+        verbose=verbose,
     )
     covariance_for_projection = {
         "q_proj": "qkv_input",
@@ -328,6 +346,12 @@ def compile_independent_transformer_block_streaming(
         statistics = calibration["covariances"][
             covariance_for_projection[name]
         ].projection_statistics(weight)
+        if verbose:
+            print(
+                f"  [Streaming compiler] Starting {name} from "
+                f"{covariance_name} statistics...",
+                flush=True,
+            )
         result = nox_hybrid_dmrg_decompose_from_statistics(
             W=weight,
             calibration_statistics=statistics,

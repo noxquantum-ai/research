@@ -1,4 +1,5 @@
 import gc
+import time
 import torch
 from nox.calibration import CalibrationStatistics
 from nox.utils import quantize_dequantize_groupwise, quantize_4bit_per_channel, mpo_to_dense
@@ -718,6 +719,7 @@ def nox_hybrid_dmrg_decompose(
 
     # Step 4: Isometric DMRG Sweeps in the Conditioned Hilbert Space
     for sweep in range(n_sweeps):
+        sweep_started = time.monotonic()
         is_final = (sweep == n_sweeps - 1)
         cur_gamma = prior_gamma * (0.25 if is_final else 1.0)
         if verbose:
@@ -727,6 +729,13 @@ def nox_hybrid_dmrg_decompose(
         # Site 0
         r1 = c1.shape[0]
         D0 = r1 * i0
+        site_started = time.monotonic()
+        if verbose:
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 0/3 start "
+                f"(local_width={D0}, calibration_modes={r_cov})",
+                flush=True,
+            )
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
         R123 = torch.einsum("bcjd,degkl->bcejkgl", c1, R23)
         del R23
@@ -755,10 +764,24 @@ def nox_hybrid_dmrg_decompose(
             Q, R = torch.linalg.qr(c0.reshape(o0 * i0, r1))
             c0 = Q.reshape(o0, i0, -1)
             c1 = torch.einsum("ab,bcjd->acjd", R, c1)
+        if verbose:
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 0/3 complete "
+                f"({time.monotonic() - site_started:.1f}s)",
+                flush=True,
+            )
 
         # Site 1
         r1, _, _, r2 = c1.shape
         D1 = r1 * r2 * i1
+        site_started = time.monotonic()
+        if verbose:
+            solver = "matrix-free-CG" if D1 > 4096 else "normal-equation"
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 1/3 start "
+                f"(local_width={D1}, solver={solver}, calibration_modes={r_cov})",
+                flush=True,
+            )
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
         c1_prior = c1.permute(0, 3, 2, 1).reshape(D1, o1)
         step_chunk1 = 8 if D1 > 4096 else chunk_size
@@ -766,7 +789,12 @@ def nox_hybrid_dmrg_decompose(
         if D1 > 4096:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
             rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
-            sum_frob1 = 0.0
+            # Keep the norm reduction on-device. Calling .item() for every
+            # calibration chunk serializes the CUDA stream and materially
+            # slows the matrix-free path.
+            # FP64 preserves the previous Python-float accumulation precision;
+            # only scalar additions use FP64, not the expensive contractions.
+            sum_frob1 = torch.zeros((), device=device, dtype=torch.float64)
             for r_start in range(0, r_cov, step_chunk1):
                 r_end = min(r_start + step_chunk1, r_cov)
                 L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
@@ -774,7 +802,7 @@ def nox_hybrid_dmrg_decompose(
                 del L0_c
                 Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
                 rhs1.addmm_(Z1_c.T, Y1_c)
-                sum_frob1 += torch.sum(Z1_c ** 2).item()
+                sum_frob1.add_(torch.sum(Z1_c.square()))
                 del Z1_c, Y1_c
 
             reg_scale1 = cur_gamma * (sum_frob1 / D1 + 1e-6)
@@ -837,10 +865,24 @@ def nox_hybrid_dmrg_decompose(
             Q, R = torch.linalg.qr(c1.reshape(r1 * o1 * i1, r2))
             c1 = Q.reshape(r1, o1, i1, -1)
             c2 = torch.einsum("ab,bcjd->acjd", R, c2)
+        if verbose:
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 1/3 complete "
+                f"({time.monotonic() - site_started:.1f}s)",
+                flush=True,
+            )
 
         # Site 2
         r2, _, _, r3 = c2.shape
         D2 = r2 * r3 * i2
+        site_started = time.monotonic()
+        if verbose:
+            solver = "matrix-free-CG" if D2 > 4096 else "normal-equation"
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 2/3 start "
+                f"(local_width={D2}, solver={solver}, calibration_modes={r_cov})",
+                flush=True,
+            )
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
         step_chunk2 = 8 if D2 > 4096 else chunk_size
@@ -848,7 +890,8 @@ def nox_hybrid_dmrg_decompose(
         if D2 > 4096:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
             rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
-            sum_frob2 = 0.0
+            # As at site 1, avoid a host synchronization for every chunk.
+            sum_frob2 = torch.zeros((), device=device, dtype=torch.float64)
             for r_start in range(0, r_cov, step_chunk2):
                 r_end = min(r_start + step_chunk2, r_cov)
                 L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
@@ -856,7 +899,7 @@ def nox_hybrid_dmrg_decompose(
                 del L01_X_c
                 Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
                 rhs2.addmm_(Z2_c.T, Y2_c)
-                sum_frob2 += torch.sum(Z2_c ** 2).item()
+                sum_frob2.add_(torch.sum(Z2_c.square()))
                 del Z2_c, Y2_c
 
             reg_scale2 = cur_gamma * (sum_frob2 / D2 + 1e-6)
@@ -919,10 +962,23 @@ def nox_hybrid_dmrg_decompose(
             Q, R = torch.linalg.qr(c2.reshape(r2 * o2 * i2, r3))
             c2 = Q.reshape(r2, o2, i2, -1)
             c3 = torch.einsum("ab,bcj->acj", R, c3)
+        if verbose:
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 2/3 complete "
+                f"({time.monotonic() - site_started:.1f}s)",
+                flush=True,
+            )
 
         # Site 3
         r3 = c3.shape[0]
         D3 = r3 * i3
+        site_started = time.monotonic()
+        if verbose:
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 3/3 start "
+                f"(local_width={D3}, calibration_modes={r_cov})",
+                flush=True,
+            )
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         L012 = torch.einsum("acijd,dekf->aceijkf", L01, c2)
         del L01
@@ -949,6 +1005,13 @@ def nox_hybrid_dmrg_decompose(
             c3 = quantize_component(c3, "mpo_site_3")
         else:
             c0, c1, c2, c3 = right_canonicalize(c0, c1, c2, c3)
+        if verbose:
+            print(
+                f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 3/3 complete "
+                f"({time.monotonic() - site_started:.1f}s); sweep complete "
+                f"({time.monotonic() - sweep_started:.1f}s)",
+                flush=True,
+            )
         if diagnostic_callback is not None:
             diagnostic_callback(f"sweep_{sweep + 1}", mpo_to_dense([c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]) / d_awt.unsqueeze(0) + S_total)
 
