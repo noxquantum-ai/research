@@ -344,6 +344,8 @@ class ProductionEvaluationTests(unittest.TestCase):
             / "runpod_execution" / "nec_high_fidelity" / "bootstrap.sh"
         ).read_text()
         self.assertIn('BOOTSTRAP_PROFILE="${NEC_BOOTSTRAP_PROFILE:-production}"', bootstrap_script)
+        self.assertIn('"uv==0.13.1"', bootstrap_script)
+        self.assertIn("uv python install 3.13.15", bootstrap_script)
         compression = config["compression"]
         identity = {
             "config": {

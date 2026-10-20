@@ -27,7 +27,11 @@ export UV_PYTHON_INSTALL_DIR="$WORKSPACE_ROOT/cache/uv/python"
 export PIP_CACHE_DIR="$WORKSPACE_ROOT/cache/pip"
 mkdir -p "$UV_CACHE_DIR" "$UV_PYTHON_INSTALL_DIR" "$PIP_CACHE_DIR" "$(dirname "$VENV_DIR")"
 
-python3 -m pip install --user --disable-pip-version-check "uv==0.8.17"
+# uv's managed-Python catalog is versioned with uv. 0.8.17 predates the
+# CPython 3.13.15 standalone build and reports it as unavailable even though
+# that build exists. Keep uv pinned, but use a release that knows this exact
+# interpreter target.
+python3 -m pip install --user --disable-pip-version-check "uv==0.13.1"
 export PATH="$HOME/.local/bin:$PATH"
 uv python install 3.13.15
 uv venv --python 3.13.15 --seed --allow-existing "$VENV_DIR"
