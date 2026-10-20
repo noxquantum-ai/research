@@ -9,5 +9,6 @@ venv/
 models/
 *.pt
 *.log
+!results/nec_streaming_*/logs/*.log
 *.pem
 !experiment_artifacts/**/*.log

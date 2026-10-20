@@ -22,8 +22,10 @@ from nox.sequential_compiler import (
 )
 from nox.block_compiler import compile_transformer_block
 from benchmarks.qualify_streaming_projection import (
+    DIAGNOSTIC_STAGES,
     accumulate_down_covariance,
     down_projection_input,
+    functional_disagreement_from_inputs,
     materialize_down_inputs,
     projection_metrics_chunked,
     validate_completed,
@@ -33,38 +35,68 @@ from benchmarks.compare_streaming_projection_runs import compare as compare_stag
 
 
 class StreamingCalibrationTests(unittest.TestCase):
-    def test_completed_stage_reuse_requires_current_source_and_settings(self):
+    def test_direct_functional_disagreement_uses_reference_output_norm(self):
+        reference = torch.eye(4)
+        variant = 2.0 * reference
+        inputs = torch.arange(1, 21, dtype=torch.float32).reshape(4, 5)
+        metrics = functional_disagreement_from_inputs(
+            reference, variant, inputs, token_chunk=2,
+        )
+        self.assertAlmostEqual(metrics["relative_functional_disagreement"], 1.0)
+        self.assertAlmostEqual(metrics["cosine_similarity"], 1.0)
+        self.assertAlmostEqual(metrics["norm_ratio"], 2.0)
+
+    def test_completed_stage_reuse_requires_algorithm_fingerprint_and_settings(self):
         identity = {
             "schema_version": 1,
             "backend": "streaming_statistics",
             "statistics_dtype": "float32",
             "calibration_tokens": 4096,
         }
-        source = {"commit": "current", "dirty_paths": [], "clean": True}
+        source = {"commit": "original", "dirty_paths": [], "clean": True}
+        algorithm = {"schema_version": 1, "files": {"compiler.py": "abc"}, "sha256": "abc"}
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
             artifact_path = output / "artifact.pt"
             torch.save({
                 "source": source,
+                "algorithm_identity": algorithm,
                 "qualification_identity": identity,
                 "artifact": {"fixture": True},
             }, artifact_path)
+            snapshots = {}
+            stage_directory = output / "stage_weights"
+            stage_directory.mkdir()
+            for stage in DIAGNOSTIC_STAGES:
+                path = stage_directory / f"{stage}.pt"
+                torch.save({
+                    "stage": stage,
+                    "algorithm_identity": algorithm,
+                    "weight": torch.ones(1),
+                }, path)
+                snapshots[stage] = {
+                    "bytes": path.stat().st_size,
+                    "sha256": sha256_file(path),
+                }
             report = {
                 "status": "PASS",
                 "source": source,
+                "algorithm_identity": algorithm,
                 "qualification_identity": identity,
+                "stage_snapshots": snapshots,
                 "artifact": {"sha256": sha256_file(artifact_path)},
             }
             (output / "report.json").write_text(json.dumps(report))
-            self.assertTrue(validate_completed(output, identity, source))
+            self.assertTrue(validate_completed(output, identity, algorithm))
+            # A provenance-only commit change does not invalidate numerical reuse.
+            report["source"] = {**source, "commit": "results-only-commit"}
+            (output / "report.json").write_text(json.dumps(report))
+            self.assertTrue(validate_completed(output, identity, algorithm))
             self.assertFalse(validate_completed(
-                output, identity, {**source, "commit": "newer"},
+                output, identity, {**algorithm, "sha256": "changed"},
             ))
             self.assertFalse(validate_completed(
-                output, {**identity, "calibration_tokens": 8192}, source,
-            ))
-            self.assertFalse(validate_completed(
-                output, identity, {**source, "clean": False, "dirty_paths": ["changed.py"]},
+                output, {**identity, "calibration_tokens": 8192}, algorithm,
             ))
 
     def test_chunked_statistics_match_direct_products(self):

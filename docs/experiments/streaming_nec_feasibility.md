@@ -219,11 +219,14 @@ calibration/validation samples. The comparison checks the reconstructed
 weight, ranks, coefficient count, two-sweep Q4 diagnostics, calibration and
 held-out projection errors, wall time, CUDA peaks, and RSS. FP64 is a separate
 `down-fp64` stage; the runner refuses it unless the FP32 comparison failed. It has no
-automatic timeout. Unbuffered compiler output is appended to a main log, while a
+automatic timeout by default; `NEC_QUAL_TIMEOUT_SECONDS` enables an explicit
+per-stage limit when a budget requires one. Unbuffered compiler output is appended to a main log, while a
 60-second heartbeat records the current phase, GPU utilization and VRAM, host RAM,
 disk space, load average, and elapsed time as durable JSONL. It records partial status and logs, reuses verified
-completed stages only when their artifact hash, clean source commit, hardware,
-and complete qualification identity match the current invocation, and never
+completed stages only when their artifact and stage hashes, numerical-source
+fingerprint, hardware, and complete qualification identity match the current
+invocation. The Git commit is retained separately as provenance, so publishing
+reports does not invalidate unchanged numerical artifacts. The runner never
 starts a successor automatically. Terminating the
 process does not terminate the RunPod pod or stop billing.
 The qualification bootstrap omits the unused MMLU harness; invoking the later

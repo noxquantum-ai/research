@@ -14,7 +14,12 @@ sys.path.insert(0, str(ROOT))
 
 from nox.compiler import reconstruct_from_artifact  # noqa: E402
 from scripts.compile_high_fidelity import sha256_file  # noqa: E402
-from benchmarks.qualify_streaming_projection import source_identity  # noqa: E402
+from benchmarks.qualify_streaming_projection import (  # noqa: E402
+    DIAGNOSTIC_STAGES,
+    algorithm_identity,
+    source_identity,
+    validate_completed,
+)
 
 
 EXPECTED_COMPONENTS = {
@@ -40,7 +45,7 @@ def artifact_coefficient_count(artifact):
     return total
 
 
-def load_run(path, backend, statistics_dtype, current_source):
+def load_run(path, backend, statistics_dtype, current_algorithm):
     path = Path(path)
     report = json.loads((path / "report.json").read_text())
     artifact_path = path / "artifact.pt"
@@ -50,8 +55,8 @@ def load_run(path, backend, statistics_dtype, current_source):
         raise ValueError(f"{path} backend or statistics dtype is not the requested variant")
     if report.get("layer") != 0 or report.get("projection") != "down_proj":
         raise ValueError(f"{path} is not the pinned layer-0 down_proj stage")
-    if report.get("source") != current_source or not current_source.get("clean"):
-        raise ValueError(f"{path} was not produced by the current clean source commit")
+    if report.get("algorithm_identity") != current_algorithm:
+        raise ValueError(f"{path} was produced by different qualification code")
     if report.get("artifact", {}).get("sha256") != sha256_file(artifact_path):
         raise ValueError(f"{path} artifact checksum does not match its report")
     payload = torch.load(artifact_path, map_location="cpu", weights_only=False)
@@ -59,7 +64,7 @@ def load_run(path, backend, statistics_dtype, current_source):
         raise ValueError(f"{path} artifact and report input metadata differ")
     identity = report.get("qualification_identity")
     required_identity = {
-        "schema_version": 1,
+        "schema_version": 2,
         "model_id": "NousResearch/Llama-2-7b-hf",
         "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
         "layer": 0,
@@ -83,12 +88,17 @@ def load_run(path, backend, statistics_dtype, current_source):
         "diagonal_prior_strength": 0.0,
         "site_order": [0, 1, 2, 3],
         "quantize_components": True,
+        "stage_diagnostics": list(DIAGNOSTIC_STAGES),
     }
     if not isinstance(identity, dict) or any(
         identity.get(key) != value for key, value in required_identity.items()
     ):
         raise ValueError(f"{path} qualification settings do not match the current protocol")
-    if payload.get("source") != current_source or payload.get("qualification_identity") != identity:
+    if (
+        payload.get("algorithm_identity") != current_algorithm
+        or payload.get("qualification_identity") != identity
+        or not validate_completed(path, identity, current_algorithm)
+    ):
         raise ValueError(f"{path} artifact identity does not match its report")
     return report, payload["artifact"]
 
@@ -106,8 +116,8 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
         raise ValueError("Qualification variants did not use identical input data")
     if variant_report["hidden_state_sha256"] != reference_report["hidden_state_sha256"]:
         raise ValueError("Qualification variants did not reproduce identical hidden states")
-    if variant_report.get("source", {}).get("commit") != reference_report.get("source", {}).get("commit"):
-        raise ValueError("Qualification variants were produced from different source commits")
+    if variant_report.get("algorithm_identity") != reference_report.get("algorithm_identity"):
+        raise ValueError("Qualification variants used different numerical source fingerprints")
     reference_weight = reconstruct_from_artifact(reference_artifact, dtype=torch.float32)
     variant_weight = reconstruct_from_artifact(variant_artifact, dtype=torch.float32)
     difference = relative_difference(variant_weight, reference_weight)
@@ -134,6 +144,19 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
                 variant_metrics["cosine_similarity"] - reference_metrics["cosine_similarity"]
             ),
         }
+    direct_disagreement = variant_report.get("direct_functional_disagreement")
+    first_stage_over_one_percent = None
+    if direct_disagreement:
+        for stage in DIAGNOSTIC_STAGES:
+            stage_result = direct_disagreement.get("stages", {}).get(stage, {})
+            if (
+                stage_result.get("relative_reconstructed_weight_difference", 0.0) > 0.01
+                or stage_result.get("validation", {}).get(
+                    "relative_functional_disagreement", 0.0,
+                ) > 0.01
+            ):
+                first_stage_over_one_percent = stage
+                break
     return {
         "relative_reconstructed_weight_difference": difference,
         "structure_matches": same_structure,
@@ -158,7 +181,13 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
         "variant_memory": variant_report["memory"],
         "calibration_statistics_diagnostics": variant_report.get("calibration_statistics_diagnostics"),
         "bridge_statistics_diagnostics": variant_report.get("bridge_statistics_diagnostics"),
-        "same_source_commit": True,
+        "direct_functional_disagreement": direct_disagreement,
+        "first_stage_over_one_percent_disagreement": first_stage_over_one_percent,
+        "same_algorithm_fingerprint": True,
+        "source_commits": {
+            "reference": reference_report.get("source", {}).get("commit"),
+            "variant": variant_report.get("source", {}).get("commit"),
+        },
         "clean_source_trees": bool(
             reference_report.get("source", {}).get("clean")
             and variant_report.get("source", {}).get("clean")
@@ -174,6 +203,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-relative-weight-difference", type=float, default=0.01)
     parser.add_argument("--max-metric-absolute-difference", type=float, default=0.01)
+    parser.add_argument("--max-functional-disagreement", type=float, default=0.01)
     parser.add_argument("--gpu-hourly-usd", type=float, default=0.59)
     args = parser.parse_args()
     if args.gpu_hourly_usd < 0:
@@ -182,11 +212,12 @@ def main():
     current_source = source_identity()
     if not current_source["clean"]:
         raise RuntimeError("Comparison requires a clean source tree")
+    current_algorithm = algorithm_identity()
     reference_report, reference_artifact = load_run(
-        args.reference, "full_matrix", "float64", current_source,
+        args.reference, "full_matrix", "float64", current_algorithm,
     )
     fp32_report, fp32_artifact = load_run(
-        args.fp32, "streaming_statistics", "float32", current_source,
+        args.fp32, "streaming_statistics", "float32", current_algorithm,
     )
     fp32 = compare(
         reference_report, reference_artifact, fp32_report, fp32_artifact,
@@ -204,23 +235,34 @@ def main():
         and item["cosine_similarity_absolute_difference"] <= args.max_metric_absolute_difference
         for item in fp32["metric_differences"].values()
     )
-    fp32["passes_source_identity"] = bool(
-        fp32["same_source_commit"] and fp32["clean_source_trees"]
+    fp32["passes_direct_functional_parity"] = bool(
+        fp32.get("direct_functional_disagreement")
+        and all(
+            fp32["direct_functional_disagreement"]["final_artifact"][split][
+                "relative_functional_disagreement"
+            ] <= args.max_functional_disagreement
+            for split in ("calibration", "validation")
+        )
+    )
+    fp32["passes_algorithm_identity"] = bool(
+        fp32["same_algorithm_fingerprint"] and fp32["clean_source_trees"]
     )
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj staged streaming qualification",
         "source": current_source,
+        "algorithm_identity": current_algorithm,
         "identical_input_data_and_hidden_states": True,
         "gpu_hourly_usd": args.gpu_hourly_usd,
         "acceptance": {
             "maximum_relative_weight_difference": args.max_relative_weight_difference,
             "maximum_activation_metric_absolute_difference": args.max_metric_absolute_difference,
+            "maximum_direct_functional_disagreement": args.max_functional_disagreement,
         },
         "fp32": fp32,
     }
     if args.fp64 is not None:
         fp64_report, fp64_artifact = load_run(
-            args.fp64, "streaming_statistics", "float64", current_source,
+            args.fp64, "streaming_statistics", "float64", current_algorithm,
         )
         fp64 = compare(
             reference_report, reference_artifact, fp64_report, fp64_artifact,
@@ -238,8 +280,17 @@ def main():
             and item["cosine_similarity_absolute_difference"] <= args.max_metric_absolute_difference
             for item in fp64["metric_differences"].values()
         )
-        fp64["passes_source_identity"] = bool(
-            fp64["same_source_commit"] and fp64["clean_source_trees"]
+        fp64["passes_direct_functional_parity"] = bool(
+            fp64.get("direct_functional_disagreement")
+            and all(
+                fp64["direct_functional_disagreement"]["final_artifact"][split][
+                    "relative_functional_disagreement"
+                ] <= args.max_functional_disagreement
+                for split in ("calibration", "validation")
+            )
+        )
+        fp64["passes_algorithm_identity"] = bool(
+            fp64["same_algorithm_fingerprint"] and fp64["clean_source_trees"]
         )
         report["fp64"] = fp64
 
@@ -247,14 +298,14 @@ def main():
         fp32["passes_weight_parity_threshold"]
         and fp32["passes_complete_production_structure"]
         and fp32["passes_activation_metric_parity"]
-        and fp32["passes_source_identity"]
+        and fp32["passes_algorithm_identity"]
     )
     if "fp64" in report:
         report["fp64_passes"] = bool(
             report["fp64"]["passes_weight_parity_threshold"]
             and report["fp64"]["passes_complete_production_structure"]
             and report["fp64"]["passes_activation_metric_parity"]
-            and report["fp64"]["passes_source_identity"]
+            and report["fp64"]["passes_algorithm_identity"]
         )
     report["recommended_next_stage"] = (
         "one_layer_fp32" if report["fp32_passes"] else (

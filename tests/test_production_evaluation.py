@@ -331,7 +331,9 @@ class ProductionEvaluationTests(unittest.TestCase):
             Path(__file__).resolve().parents[1]
             / "runpod_execution" / "nec_high_fidelity" / "qualify_streaming.sh"
         ).read_text()
-        self.assertNotIn("timeout --foreground", qualification_script)
+        self.assertIn('TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-}"', qualification_script)
+        self.assertIn("timeout --foreground", qualification_script)
+        self.assertIn('if [[ -n "$TIMEOUT_SECONDS" ]]', qualification_script)
         self.assertIn('HEARTBEAT_SECONDS="${NEC_QUAL_HEARTBEAT_SECONDS:-60}"', qualification_script)
         self.assertIn("qualification_heartbeat.py", qualification_script)
         self.assertIn("require_down_gate", qualification_script)

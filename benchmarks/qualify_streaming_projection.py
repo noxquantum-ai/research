@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT))
 from benchmarks.benchmark_day3_cascade import build_real_token_calibration_data  # noqa: E402
 from nox.block_compiler import RMSNorm, scaled_dot_product_attention_2d  # noqa: E402
 from nox.calibration import InputCovarianceAccumulator  # noqa: E402
+from nox.artifacts import fingerprint  # noqa: E402
 from nox.compiler import (  # noqa: E402
     nox_hybrid_dmrg_decompose,
     nox_hybrid_dmrg_decompose_from_statistics,
@@ -51,6 +52,28 @@ EXPECTED_Q4_COMPONENTS = {
     "sparse_shield", "bridge_A", "bridge_B",
     "mpo_site_0", "mpo_site_1", "mpo_site_2", "mpo_site_3",
 }
+DIAGNOSTIC_STAGES = (
+    "sparse",
+    "sparse_plus_bridge",
+    "tt_warmstart",
+    "sweep_1",
+    "sweep_2",
+    "serialized_artifact",
+)
+QUALIFICATION_SOURCE_PATHS = (
+    "benchmarks/benchmark_day3_cascade.py",
+    "benchmarks/qualify_streaming_projection.py",
+    "nox/artifacts.py",
+    "nox/block_compiler.py",
+    "nox/calibration.py",
+    "nox/compiler.py",
+    "nox/data.py",
+    "nox/evaluation.py",
+    "nox/sequential_compiler.py",
+    "nox/tensor_order.py",
+    "nox/utils.py",
+    "scripts/compile_high_fidelity.py",
+)
 
 
 def utc_now():
@@ -69,6 +92,19 @@ def source_identity():
     return {"commit": commit, "dirty_paths": dirty, "clean": not dirty}
 
 
+def algorithm_identity():
+    """Fingerprint only files that determine this qualification's numerics."""
+    files = {}
+    for relative in QUALIFICATION_SOURCE_PATHS:
+        path = ROOT / relative
+        files[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {
+        "schema_version": 1,
+        "files": files,
+        "sha256": fingerprint(files),
+    }
+
+
 def qualification_identity(args, device):
     configuration = get_tier_config("high_fidelity_10x")
     hardware = {"requested_device": str(device)}
@@ -78,7 +114,7 @@ def qualification_identity(args, device):
             "cuda_total_bytes": int(torch.cuda.get_device_properties(device).total_memory),
         })
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "model_id": args.model_id,
         "model_revision": args.model_revision,
         "layer": LAYER,
@@ -103,6 +139,7 @@ def qualification_identity(args, device):
         "diagonal_prior_strength": 0.0,
         "site_order": [0, 1, 2, 3],
         "quantize_components": True,
+        "stage_diagnostics": list(DIAGNOSTIC_STAGES),
         "hardware": hardware,
     }
 
@@ -280,7 +317,74 @@ def projection_metrics_chunked(
     }
 
 
-def validate_completed(output, expected_identity, current_source):
+def functional_disagreement_from_inputs(
+    reference_weight, variant_weight, inputs, *, token_chunk=512,
+):
+    """Measure D_X directly between two operators on identical activations."""
+    squared_difference = 0.0
+    reference_squared = 0.0
+    variant_squared = 0.0
+    dot = 0.0
+    for start in range(0, inputs.shape[1], token_chunk):
+        stop = min(start + token_chunk, inputs.shape[1])
+        chunk = inputs[:, start:stop]
+        reference_output = reference_weight @ chunk
+        variant_output = variant_weight @ chunk
+        squared_difference += float(
+            (variant_output - reference_output).double().square().sum().item()
+        )
+        reference_squared += float(reference_output.double().square().sum().item())
+        variant_squared += float(variant_output.double().square().sum().item())
+        dot += float(
+            (reference_output.double() * variant_output.double()).sum().item()
+        )
+        del chunk, reference_output, variant_output
+    denominator = max(math.sqrt(reference_squared * variant_squared), 1e-30)
+    cosine = dot / denominator
+    return {
+        "sample_count": int(inputs.shape[1]),
+        "relative_functional_disagreement": (
+            math.sqrt(squared_difference) / max(math.sqrt(reference_squared), 1e-30)
+        ),
+        "cosine_similarity": cosine,
+        "angular_drift": 1.0 - cosine,
+        "norm_ratio": (
+            math.sqrt(variant_squared) / max(math.sqrt(reference_squared), 1e-30)
+        ),
+    }
+
+
+def relative_weight_difference(actual, reference):
+    return float(
+        torch.linalg.vector_norm(actual.float() - reference.float())
+        .div(torch.linalg.vector_norm(reference.float()).clamp_min(1e-30))
+        .item()
+    )
+
+
+def validate_stage_snapshots(output, report, expected_algorithm):
+    snapshots = report.get("stage_snapshots")
+    if not isinstance(snapshots, dict) or set(snapshots) != set(DIAGNOSTIC_STAGES):
+        return False
+    for stage, metadata in snapshots.items():
+        path = output / "stage_weights" / f"{stage}.pt"
+        if (
+            not path.is_file()
+            or metadata.get("sha256") != sha256_file(path)
+            or metadata.get("bytes") != path.stat().st_size
+        ):
+            return False
+        payload = torch.load(path, map_location="cpu", weights_only=False)
+        if (
+            payload.get("stage") != stage
+            or payload.get("algorithm_identity") != expected_algorithm
+            or not torch.is_tensor(payload.get("weight"))
+        ):
+            return False
+    return True
+
+
+def validate_completed(output, expected_identity, expected_algorithm):
     report_path = output / "report.json"
     artifact_path = output / "artifact.pt"
     if not report_path.exists() or not artifact_path.exists():
@@ -290,14 +394,14 @@ def validate_completed(output, expected_identity, current_source):
         if not (
             report.get("status") == "PASS"
             and report.get("artifact", {}).get("sha256") == sha256_file(artifact_path)
-            and report.get("source") == current_source
-            and current_source.get("clean") is True
+            and report.get("algorithm_identity") == expected_algorithm
             and report.get("qualification_identity") == expected_identity
+            and validate_stage_snapshots(output, report, expected_algorithm)
         ):
             return False
         payload = torch.load(artifact_path, map_location="cpu", weights_only=False)
         return (
-            payload.get("source") == current_source
+            payload.get("algorithm_identity") == expected_algorithm
             and payload.get("qualification_identity") == expected_identity
         )
     except (OSError, ValueError, json.JSONDecodeError, RuntimeError, EOFError):
@@ -317,6 +421,7 @@ def main():
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--model-id", default=MODEL_ID)
     parser.add_argument("--model-revision", default=MODEL_REVISION)
+    parser.add_argument("--reference-output", type=Path)
     args = parser.parse_args()
 
     if args.model_id != MODEL_ID or args.model_revision != MODEL_REVISION:
@@ -334,7 +439,12 @@ def main():
             "Qualification requires a clean source tree; commit or remove local changes first"
         )
     expected_identity = qualification_identity(args, device)
-    if validate_completed(args.output, expected_identity, current_source):
+    current_algorithm = algorithm_identity()
+    if args.backend == "full_matrix" and args.reference_output is not None:
+        raise ValueError("The full-matrix reference cannot reference itself")
+    if args.backend == "streaming_statistics" and args.reference_output is None:
+        raise ValueError("Streaming qualification requires --reference-output")
+    if validate_completed(args.output, expected_identity, current_algorithm):
         print(f"Reusing verified completed stage: {args.output}", flush=True)
         return
     args.output.mkdir(parents=True, exist_ok=True)
@@ -350,6 +460,7 @@ def main():
         "statistics_dtype": args.statistics_dtype,
         "scope": "real Llama-2-7B layer-0 down_proj qualification",
         "source": current_source,
+        "algorithm_identity": current_algorithm,
         "qualification_identity": expected_identity,
     }
     atomic_json_save(progress, args.output / "progress.json")
@@ -402,6 +513,31 @@ def main():
             "rms_norm_eps": config.rms_norm_eps,
         }
         configuration = get_tier_config("high_fidelity_10x")
+        stage_directory = args.output / "stage_weights"
+        stage_directory.mkdir(parents=True, exist_ok=True)
+        stage_snapshots = {}
+
+        def record_stage(stage, weight):
+            if stage not in DIAGNOSTIC_STAGES:
+                raise ValueError(f"Unexpected diagnostic stage: {stage}")
+            path = stage_directory / f"{stage}.pt"
+            payload = {
+                "stage": stage,
+                "storage_dtype": "float16",
+                "source": current_source,
+                "algorithm_identity": current_algorithm,
+                "qualification_identity": expected_identity,
+                "weight": weight.detach().to(device="cpu", dtype=torch.float16),
+            }
+            atomic_torch_save(payload, path)
+            stage_snapshots[stage] = {
+                "path": str(path),
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+                "storage_dtype": "float16",
+            }
+            print(f"QUALIFICATION_STAGE_SNAPSHOT={stage}", flush=True)
+
         common = {
             "W": dense_weight,
             "o_modes": get_modes_for_projection(*dense_weight.shape)[0],
@@ -418,6 +554,7 @@ def main():
             "quantize_components": True,
             "diagonal_prior_strength": 0.0,
             "site_order": (0, 1, 2, 3),
+            "diagnostic_callback": record_stage,
         }
 
         record_phase("collecting_calibration_inputs")
@@ -477,6 +614,10 @@ def main():
         )
         if not q4_complete:
             raise RuntimeError("Qualification artifact does not contain complete two-sweep Q4 diagnostics")
+        record_stage("serialized_artifact", reconstructed)
+        if set(stage_snapshots) != set(DIAGNOSTIC_STAGES):
+            missing = sorted(set(DIAGNOSTIC_STAGES) - set(stage_snapshots))
+            raise RuntimeError(f"Missing compiler stage snapshots: {missing}")
 
         record_phase("measuring_calibration_and_validation")
         calibration_metrics = projection_metrics_chunked(
@@ -502,14 +643,120 @@ def main():
             "statistics_dtype": args.statistics_dtype,
             "input_data": input_data,
             "source": current_source,
+            "algorithm_identity": current_algorithm,
             "qualification_identity": expected_identity,
             "artifact": artifact,
         }
         atomic_torch_save(artifact_payload, artifact_path)
+        qualification_runtime_seconds = time.monotonic() - started
         telemetry.finish()
+        qualification_memory = telemetry.record()
+
+        direct_functional_disagreement = None
+        functional_diagnostic_runtime_seconds = 0.0
+        diagnostic_memory = None
+        if args.reference_output is not None:
+            record_phase("measuring_direct_functional_disagreement")
+            diagnostic_started = time.monotonic()
+            if device.type == "cuda":
+                torch.cuda.reset_peak_memory_stats(device)
+            reference_identity = dict(expected_identity)
+            reference_identity.update({
+                "backend": "full_matrix",
+                "statistics_dtype": "float64",
+            })
+            if not validate_completed(
+                args.reference_output, reference_identity, current_algorithm,
+            ):
+                raise RuntimeError("Reference output failed artifact, stage, or algorithm validation")
+            reference_report = json.loads(
+                (args.reference_output / "report.json").read_text()
+            )
+            if (
+                reference_report.get("input_data") != input_data
+                or reference_report.get("hidden_state_sha256") != {
+                    "calibration": tensor_sha256(train_hidden),
+                    "validation": tensor_sha256(validation_hidden),
+                }
+            ):
+                raise RuntimeError("Reference and variant activation inputs differ")
+            reference_payload = torch.load(
+                args.reference_output / "artifact.pt",
+                map_location="cpu",
+                weights_only=False,
+            )
+            reference_reconstructed = reconstruct_from_artifact(
+                reference_payload["artifact"], device=device, dtype=torch.float32,
+            )
+            calibration_inputs = materialize_down_inputs(
+                weights,
+                train_hidden,
+                windows_per_chunk=args.windows_per_chunk,
+                forward_options=forward_options,
+            )
+            validation_inputs = materialize_down_inputs(
+                weights,
+                validation_hidden,
+                windows_per_chunk=args.windows_per_chunk,
+                forward_options=forward_options,
+            )
+
+            def compare_pair(reference_weight, variant_weight):
+                return {
+                    "relative_reconstructed_weight_difference": (
+                        relative_weight_difference(variant_weight, reference_weight)
+                    ),
+                    "calibration": functional_disagreement_from_inputs(
+                        reference_weight, variant_weight, calibration_inputs,
+                    ),
+                    "validation": functional_disagreement_from_inputs(
+                        reference_weight, variant_weight, validation_inputs,
+                    ),
+                }
+
+            direct_functional_disagreement = {
+                "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+                "final_artifact": compare_pair(
+                    reference_reconstructed, reconstructed,
+                ),
+                "stages": {},
+            }
+            for stage in DIAGNOSTIC_STAGES:
+                reference_stage = torch.load(
+                    args.reference_output / "stage_weights" / f"{stage}.pt",
+                    map_location="cpu",
+                    weights_only=False,
+                )["weight"].to(device=device, dtype=torch.float32)
+                variant_stage = torch.load(
+                    stage_directory / f"{stage}.pt",
+                    map_location="cpu",
+                    weights_only=False,
+                )["weight"].to(device=device, dtype=torch.float32)
+                direct_functional_disagreement["stages"][stage] = compare_pair(
+                    reference_stage, variant_stage,
+                )
+                del reference_stage, variant_stage
+            del (
+                reference_payload,
+                reference_reconstructed,
+                calibration_inputs,
+                validation_inputs,
+            )
+            functional_diagnostic_runtime_seconds = time.monotonic() - diagnostic_started
+            diagnostic_memory = {
+                "torch_peak_cuda_allocated_bytes": (
+                    int(torch.cuda.max_memory_allocated(device))
+                    if device.type == "cuda" else None
+                ),
+                "torch_peak_cuda_reserved_bytes": (
+                    int(torch.cuda.max_memory_reserved(device))
+                    if device.type == "cuda" else None
+                ),
+            }
         completed_source = source_identity()
-        if completed_source != current_source or not completed_source["clean"]:
-            raise RuntimeError("Source tree changed during qualification; refusing the result")
+        completed_algorithm = algorithm_identity()
+        if completed_algorithm != current_algorithm:
+            raise RuntimeError("Relevant compiler source changed during qualification")
         report = {
             "status": "PASS",
             "completed_at_utc": utc_now(),
@@ -517,6 +764,7 @@ def main():
             "model_id": args.model_id,
             "model_revision": args.model_revision,
             "source": completed_source,
+            "algorithm_identity": completed_algorithm,
             "qualification_identity": expected_identity,
             "runtime": {
                 "torch_version": torch.__version__,
@@ -549,8 +797,13 @@ def main():
             "validation_metrics": validation_metrics,
             "calibration_statistics_diagnostics": artifact.get("calibration_statistics_diagnostics"),
             "bridge_statistics_diagnostics": artifact.get("bridge_statistics_diagnostics"),
+            "direct_functional_disagreement": direct_functional_disagreement,
+            "stage_snapshots": stage_snapshots,
             "runtime_seconds": time.monotonic() - started,
-            "memory": telemetry.record(),
+            "core_qualification_runtime_seconds": qualification_runtime_seconds,
+            "functional_diagnostic_runtime_seconds": functional_diagnostic_runtime_seconds,
+            "memory": qualification_memory,
+            "functional_diagnostic_memory": diagnostic_memory,
             "artifact": {
                 "path": str(artifact_path),
                 "bytes": artifact_path.stat().st_size,

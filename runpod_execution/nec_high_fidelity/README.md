@@ -26,8 +26,9 @@ bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-fp32
 bash runpod_execution/nec_high_fidelity/qualify_streaming.sh down-compare
 ```
 
-There is no automatic timeout. Unbuffered compiler logs and a 60-second
-resource/progress heartbeat are persisted under the qualification log directory.
+There is no automatic timeout by default. Set `NEC_QUAL_TIMEOUT_SECONDS` to a
+positive integer to impose a per-stage budget limit. Unbuffered compiler logs
+and a 60-second resource/progress heartbeat are persisted under the qualification log directory.
 Terminate the pod manually to stop RunPod billing. FP64 and all-seven-projection layer stages
 are explicit follow-up commands. An unnecessary FP64 run is refused, and each
 layer backend remains locked until its single-projection comparison passes.
@@ -43,10 +44,19 @@ tail -F /workspace/runs/nec-streaming-qualification/logs/reference-full-matrix.h
 bash runpod_execution/nec_high_fidelity/qualify_streaming.sh status
 ```
 
-The main log identifies every projection, DMRG sweep, local site, solver and
+The projection qualification also stores FP16 diagnostic weight snapshots after
+the sparse shield, sparse-plus-bridge construction, TT-SVD warm start, both DMRG
+sweeps, and final artifact serialization. Streaming variants directly measure
+`||(W_stream-W_reference)X||_F / ||W_reference X||_F` on the identical
+calibration and validation activations at every stage. The main log identifies every projection, DMRG sweep, local site, solver and
 elapsed site time. The heartbeat records GPU utilization/VRAM, host RAM, disk,
 load average and the latest durable phase. Logging does not impose a wall-time
 limit or automatically advance to another paid stage.
+
+Artifact reuse is keyed by a deterministic fingerprint of the numerical source
+files plus the complete qualification identity. The producing Git commit remains
+in every report for provenance, while later report-only or documentation commits
+do not invalidate unchanged compiler artifacts.
 
 The script creates or repairs the Python 3.13.15 environment, installs the pinned PyTorch/CUDA and requirements plus the pinned `lm-evaluation-harness` commit, and runs `pip check` before model compilation. Preflight verifies the model architecture/tokenizer, package versions, RunPod persistence, resources, and clean source commit. It then loads the pinned dense model and qualifies PPL batch equivalence at batch size 1 versus the selected batch, scans all 14,042 MMLU prompts for five-shot fit, tests the longest prompt and 4,096-token context at the selected MMLU batch, and initializes the pinned harness on one question per subject. Finally it compiles one actual pinned `down_proj` matrix with a synthetic 65,536-token activation matrix at the full High-Fidelity rank and Q4 settings, then checks artifact decoding against the compiler reconstruction. This last stage validates compiler memory and artifact mechanics, not model quality. No 32-layer compilation starts unless every qualification passes.
 

@@ -8,6 +8,7 @@ VENV_DIR="${NEC_VENV_DIR:-$WORKSPACE_ROOT/venvs/nec-hf}"
 QUAL_ROOT="${NEC_STREAMING_QUAL_ROOT:-$WORKSPACE_ROOT/runs/nec-streaming-qualification}"
 WINDOWS_PER_CHUNK="${NEC_STREAMING_WINDOWS_PER_CHUNK:-4}"
 HEARTBEAT_SECONDS="${NEC_QUAL_HEARTBEAT_SECONDS:-60}"
+TIMEOUT_SECONDS="${NEC_QUAL_TIMEOUT_SECONDS:-}"
 GPU_HOURLY_USD="${NEC_GPU_HOURLY_USD:-0.59}"
 STAGE="${1:-help}"
 
@@ -34,8 +35,9 @@ Each invocation runs exactly one stage and then stops:
   layer-compare      Compare completed layer variants
   status             Print saved status without running computation
 
-There is no automatic timeout. NEC_QUAL_HEARTBEAT_SECONDS controls periodic
-progress/resource logging (default 60 seconds). No stage starts its successor.
+There is no timeout by default. Set NEC_QUAL_TIMEOUT_SECONDS to a positive
+number to enforce an optional per-stage limit. NEC_QUAL_HEARTBEAT_SECONDS controls
+periodic progress/resource logging (default 60 seconds). No stage starts its successor.
 Layer stages require a passing down-compare report. Terminate the RunPod pod
 manually when finished to stop billing.
 EOF
@@ -47,6 +49,10 @@ if [[ "$STAGE" == "help" || "$STAGE" == "--help" || "$STAGE" == "-h" ]]; then
 fi
 if [[ ! "$HEARTBEAT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
   echo "ERROR: NEC_QUAL_HEARTBEAT_SECONDS must be a positive integer." >&2
+  exit 2
+fi
+if [[ -n "$TIMEOUT_SECONDS" && ! "$TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "ERROR: NEC_QUAL_TIMEOUT_SECONDS must be empty or a positive integer." >&2
   exit 2
 fi
 if ! [[ "$GPU_HOURLY_USD" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
@@ -81,13 +87,13 @@ record_exit() {
   local exit_code="$3"
   local elapsed="$4"
   local invocation_elapsed="$(( $(date +%s) - INVOCATION_STARTED ))"
-  python3 - "$name" "$output_dir" "$exit_code" "$elapsed" "$invocation_elapsed" "$GPU_HOURLY_USD" "$QUAL_ROOT/logs/$name.log" "$QUAL_ROOT/logs/$name.heartbeat.jsonl" <<'PY'
+  python3 - "$name" "$output_dir" "$exit_code" "$elapsed" "$invocation_elapsed" "$GPU_HOURLY_USD" "$QUAL_ROOT/logs/$name.log" "$QUAL_ROOT/logs/$name.heartbeat.jsonl" "$TIMEOUT_SECONDS" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-name, output, exit_code, elapsed, invocation_elapsed, hourly, main_log, heartbeat_log = sys.argv[1:]
+name, output, exit_code, elapsed, invocation_elapsed, hourly, main_log, heartbeat_log, timeout = sys.argv[1:]
 output = Path(output)
 output.mkdir(parents=True, exist_ok=True)
 elapsed = float(elapsed)
@@ -95,11 +101,12 @@ invocation_elapsed = float(invocation_elapsed)
 record = {
     "stage": name,
     "command_exit_code": int(exit_code),
-    "status": "PASS" if int(exit_code) == 0 else "FAIL",
+    "status": "PASS" if int(exit_code) == 0 else "TIMEOUT" if int(exit_code) == 124 else "FAIL",
     "finished_at_utc": datetime.now(timezone.utc).isoformat(),
     "elapsed_wall_seconds": elapsed,
     "total_invocation_elapsed_wall_seconds": invocation_elapsed,
-    "automatic_timeout": False,
+    "automatic_timeout": bool(timeout),
+    "configured_timeout_seconds": int(timeout) if timeout else None,
     "main_log": main_log,
     "heartbeat_log": heartbeat_log,
     "gpu_hourly_usd": float(hourly),
@@ -130,7 +137,12 @@ run_logged() {
   heartbeat_pid="$!"
   trap 'kill -TERM '"$heartbeat_pid"' 2>/dev/null || true' INT TERM EXIT
   set +e
-  "$@" 2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
+  if [[ -n "$TIMEOUT_SECONDS" ]]; then
+    timeout --foreground --signal=TERM --kill-after=60s "$TIMEOUT_SECONDS" "$@" \
+      2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
+  else
+    "$@" 2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
+  fi
   exit_code="${PIPESTATUS[0]}"
   set -e
   kill -TERM "$heartbeat_pid" 2>/dev/null || true
@@ -152,11 +164,16 @@ down_stage() {
   local backend="$2"
   local dtype="$3"
   local output="$QUAL_ROOT/down_projection/$name"
+  local reference_argument=()
+  if [[ "$backend" == "streaming_statistics" ]]; then
+    reference_argument=(--reference-output "$QUAL_ROOT/down_projection/reference-full-matrix")
+  fi
   run_logged "$name" "$output" \
     "$VENV_DIR/bin/python" benchmarks/qualify_streaming_projection.py \
       --output "$output" \
       --backend "$backend" \
       --statistics-dtype "$dtype" \
+      "${reference_argument[@]}" \
       --n-calib 4096 --n-validation 1024 --seq-len 128 \
       --windows-per-chunk "$WINDOWS_PER_CHUNK" \
       --device cuda:0 \
@@ -182,14 +199,9 @@ import subprocess
 import sys
 report = json.load(open(sys.argv[1]))
 variant = sys.argv[2]
-commit = subprocess.run(
-    ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True,
-).stdout.strip()
-dirty = subprocess.run(
-    ["git", "status", "--porcelain"], check=True, capture_output=True, text=True,
-).stdout.splitlines()
-if dirty or report.get("source") != {"commit": commit, "dirty_paths": [], "clean": True}:
-    raise SystemExit("down_proj gate is stale or the current source tree is dirty")
+from benchmarks.qualify_streaming_projection import algorithm_identity
+if report.get("algorithm_identity") != algorithm_identity():
+    raise SystemExit("down_proj gate is stale for the current numerical source fingerprint")
 passed = (
     report.get("fp32_passes") if variant == "fp32" else
     report.get("fp64_passes") if variant == "fp64" else
@@ -208,17 +220,11 @@ require_fp64_needed() {
   fi
   "$VENV_DIR/bin/python" - "$gate" <<'PY'
 import json
-import subprocess
 import sys
 report = json.load(open(sys.argv[1]))
-commit = subprocess.run(
-    ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True,
-).stdout.strip()
-dirty = subprocess.run(
-    ["git", "status", "--porcelain"], check=True, capture_output=True, text=True,
-).stdout.splitlines()
-if dirty or report.get("source") != {"commit": commit, "dirty_paths": [], "clean": True}:
-    raise SystemExit("down_proj comparison is stale or the current source tree is dirty")
+from benchmarks.qualify_streaming_projection import algorithm_identity
+if report.get("algorithm_identity") != algorithm_identity():
+    raise SystemExit("down_proj comparison is stale for the current numerical source fingerprint")
 if report.get("fp32_passes"):
     raise SystemExit("FP32 already passed; refusing an unnecessary FP64 stage")
 PY
