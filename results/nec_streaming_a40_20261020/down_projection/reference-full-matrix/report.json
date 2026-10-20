@@ -1,0 +1,219 @@
+{
+  "status": "PASS",
+  "completed_at_utc": "2026-10-20T12:12:49.192668+00:00",
+  "scope": "real Llama-2-7B layer-0 down_proj qualification; not a model-quality benchmark",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source": {
+    "commit": "49e9f2f892eafb6e64f75b26e556af34ee70ee85",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "qualification_identity": {
+    "schema_version": 1,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "layer": 0,
+    "projection": "down_proj",
+    "backend": "full_matrix",
+    "statistics_dtype": "float64",
+    "calibration_tokens": 4096,
+    "validation_tokens": 1024,
+    "sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "validation_sampling": "uniform",
+    "calibration_seed": 42,
+    "validation_seed": 43,
+    "windows_per_chunk": 4,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "prior_gamma": 0.01,
+    "activation_scale_exponent": 0.5,
+    "dmrg_chunk_size": 32,
+    "diagonal_prior_strength": 0.0,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "quantize_components": true,
+    "hardware": {
+      "requested_device": "cuda:0",
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240
+    }
+  },
+  "runtime": {
+    "torch_version": "2.11.0+cu128",
+    "cuda_runtime_version": "12.8"
+  },
+  "layer": 0,
+  "projection": "down_proj",
+  "weight_shape": [
+    4096,
+    11008
+  ],
+  "backend": "full_matrix",
+  "statistics_dtype": "float64",
+  "input_data": {
+    "dataset": "wikitext-2-raw-v1",
+    "calibration_split": "train",
+    "heldout_split": "validation",
+    "evaluation_split": "test",
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "validation",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_bytes": 657209,
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "rows": 3760,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "calibration_token_count": 4096,
+    "heldout_token_count": 1024,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "configuration": {
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "activation_scale_exponent": 0.5,
+    "quantization": "Q4 simulation for shield, bridge, and final-sweep MPO cores",
+    "windows_per_chunk": 4
+  },
+  "realized_ranks": [
+    1,
+    64,
+    128,
+    64,
+    1
+  ],
+  "independent_numerical_coefficients": 3280994,
+  "two_sweep_q4_diagnostics_complete": true,
+  "serialization_relative_difference": 0.00041158366366289556,
+  "calibration_metrics": {
+    "sample_count": 4096,
+    "relative_error": 0.3361591065819641,
+    "cosine_similarity": 0.9418121660660121,
+    "angular_drift": 0.058187833933987854,
+    "norm_ratio": 0.9381926232283796
+  },
+  "validation_metrics": {
+    "sample_count": 1024,
+    "relative_error": 0.4206313254897281,
+    "cosine_similarity": 0.907260981002751,
+    "angular_drift": 0.09273901899724901,
+    "norm_ratio": 0.9145547880238251
+  },
+  "calibration_statistics_diagnostics": null,
+  "bridge_statistics_diagnostics": null,
+  "runtime_seconds": 192.65457651599718,
+  "memory": {
+    "process_peak_rss_bytes": 6197006336,
+    "sampler_peak_cuda_device_used_bytes": 5199036416,
+    "sampler_interval_seconds": 0.25,
+    "sampler_count": 757,
+    "torch_peak_cuda_allocated_bytes": 4729782272,
+    "torch_peak_cuda_reserved_bytes": 4812963840,
+    "cuda_device_name": "NVIDIA A40",
+    "cuda_total_bytes": 47699722240
+  },
+  "artifact": {
+    "path": "/workspace/runs/nec-streaming-qualification/down_projection/reference-full-matrix/artifact.pt",
+    "bytes": 10763269,
+    "sha256": "f7928fd4c61b2f8d12ec8fa3385812590bd7b7383d29dcfa5a6989552857ff88"
+  }
+}

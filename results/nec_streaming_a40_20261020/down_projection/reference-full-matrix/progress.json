@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "started_at_utc": "2026-10-20T12:09:36.653959+00:00",
+  "phase": "complete",
+  "backend": "full_matrix",
+  "statistics_dtype": "float64",
+  "scope": "real Llama-2-7B layer-0 down_proj qualification",
+  "source": {
+    "commit": "49e9f2f892eafb6e64f75b26e556af34ee70ee85",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "qualification_identity": {
+    "schema_version": 1,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "layer": 0,
+    "projection": "down_proj",
+    "backend": "full_matrix",
+    "statistics_dtype": "float64",
+    "calibration_tokens": 4096,
+    "validation_tokens": 1024,
+    "sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "validation_sampling": "uniform",
+    "calibration_seed": 42,
+    "validation_seed": 43,
+    "windows_per_chunk": 4,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "prior_gamma": 0.01,
+    "activation_scale_exponent": 0.5,
+    "dmrg_chunk_size": 32,
+    "diagonal_prior_strength": 0.0,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "quantize_components": true,
+    "hardware": {
+      "requested_device": "cuda:0",
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240
+    }
+  },
+  "updated_at_utc": "2026-10-20T12:12:48.537576+00:00",
+  "completed_at_utc": "2026-10-20T12:12:49.192668+00:00",
+  "runtime_seconds": 192.65457651599718
+}
