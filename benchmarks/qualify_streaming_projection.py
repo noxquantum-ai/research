@@ -114,7 +114,7 @@ def qualification_identity(args, device):
             "cuda_total_bytes": int(torch.cuda.get_device_properties(device).total_memory),
         })
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "model_id": args.model_id,
         "model_revision": args.model_revision,
         "layer": LAYER,
@@ -136,9 +136,12 @@ def qualification_identity(args, device):
         "prior_gamma": 0.01,
         "activation_scale_exponent": 0.5,
         "dmrg_chunk_size": 32,
+        "cg_threshold": int(args.cg_threshold),
+        "cg_iterations": int(args.cg_iterations),
         "diagonal_prior_strength": 0.0,
         "site_order": [0, 1, 2, 3],
         "quantize_components": True,
+        "quantization_schedule": args.quantization_schedule,
         "stage_diagnostics": list(DIAGNOSTIC_STAGES),
         "hardware": hardware,
     }
@@ -414,6 +417,14 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--backend", choices=("full_matrix", "streaming_statistics"), required=True)
     parser.add_argument("--statistics-dtype", choices=("float32", "float64"), default="float32")
+    parser.add_argument(
+        "--quantization-schedule",
+        choices=("in_sweep", "post_sweep"),
+        default="in_sweep",
+        help="Historical in-sweep Q4 or the isolated post-sweep numerical control.",
+    )
+    parser.add_argument("--cg-threshold", type=int, default=4096)
+    parser.add_argument("--cg-iterations", type=int, default=6)
     parser.add_argument("--n-calib", type=int, default=4096)
     parser.add_argument("--n-validation", type=int, default=1024)
     parser.add_argument("--seq-len", type=int, default=128)
@@ -430,6 +441,8 @@ def main():
         raise ValueError("Initial qualification is pinned to 4096/1024 tokens and 128-token windows")
     if args.windows_per_chunk <= 0:
         raise ValueError("windows-per-chunk must be positive")
+    if args.cg_threshold <= 0 or args.cg_iterations <= 0:
+        raise ValueError("CG threshold and iteration count must be positive")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA qualification requested but CUDA is unavailable")
@@ -516,6 +529,7 @@ def main():
         stage_directory = args.output / "stage_weights"
         stage_directory.mkdir(parents=True, exist_ok=True)
         stage_snapshots = {}
+        solver_diagnostics = []
 
         def record_stage(stage, weight):
             if stage not in DIAGNOSTIC_STAGES:
@@ -549,12 +563,16 @@ def main():
             "prior_gamma": 0.01,
             "alpha_awt": 0.5,
             "chunk_size": 32,
+            "cg_threshold": args.cg_threshold,
+            "cg_iterations": args.cg_iterations,
             "return_artifacts": True,
             "verbose": True,
             "quantize_components": True,
             "diagonal_prior_strength": 0.0,
             "site_order": (0, 1, 2, 3),
             "diagnostic_callback": record_stage,
+            "solver_diagnostic_callback": solver_diagnostics.append,
+            "quantization_schedule": args.quantization_schedule,
         }
 
         record_phase("collecting_calibration_inputs")
@@ -786,7 +804,13 @@ def main():
                 "sparse_budget": configuration["n_outliers"],
                 "sweeps": 2,
                 "activation_scale_exponent": 0.5,
-                "quantization": "Q4 simulation for shield, bridge, and final-sweep MPO cores",
+                "quantization": (
+                    "Q4 simulation for shield, bridge, and final-sweep MPO cores; "
+                    f"MPO schedule={args.quantization_schedule}"
+                ),
+                "quantization_schedule": args.quantization_schedule,
+                "cg_threshold": args.cg_threshold,
+                "cg_iterations": args.cg_iterations,
                 "windows_per_chunk": args.windows_per_chunk,
             },
             "realized_ranks": list(realized_ranks),
@@ -797,6 +821,7 @@ def main():
             "validation_metrics": validation_metrics,
             "calibration_statistics_diagnostics": artifact.get("calibration_statistics_diagnostics"),
             "bridge_statistics_diagnostics": artifact.get("bridge_statistics_diagnostics"),
+            "solver_diagnostics": solver_diagnostics,
             "direct_functional_disagreement": direct_functional_disagreement,
             "stage_snapshots": stage_snapshots,
             "runtime_seconds": time.monotonic() - started,

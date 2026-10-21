@@ -29,6 +29,9 @@ Each invocation runs exactly one stage and then stops:
   down-compare       Compare reference and FP32; writes the layer-stage gate
   down-fp64          Optional FP64 streaming diagnostic (never automatic)
   down-compare-fp64  Compare reference, FP32, and FP64
+  down-stable-reference  Post-sweep-Q4/48-CG full-matrix numerical control
+  down-stable-fp64       Matching FP64 streaming numerical control
+  down-stable-compare    Compare the two stable-control variants
   layer-reference    All seven layer-0 projections, full-matrix reference
   layer-fp32         All seven layer-0 projections, FP32 streaming statistics
   layer-fp64         Optional all-seven FP64 streaming diagnostic
@@ -181,6 +184,29 @@ down_stage() {
       --model-revision 8efe6c9b93655b934e27bd9981e3ec13e55aee9d
 }
 
+down_stable_stage() {
+  local name="$1"
+  local backend="$2"
+  local output="$QUAL_ROOT/down_projection_stable/$name"
+  local reference_argument=()
+  if [[ "$backend" == "streaming_statistics" ]]; then
+    reference_argument=(--reference-output "$QUAL_ROOT/down_projection_stable/reference-full-matrix")
+  fi
+  run_logged "stable-$name" "$output" \
+    "$VENV_DIR/bin/python" benchmarks/qualify_streaming_projection.py \
+      --output "$output" \
+      --backend "$backend" \
+      --statistics-dtype float64 \
+      --quantization-schedule post_sweep \
+      --cg-threshold 4096 --cg-iterations 48 \
+      "${reference_argument[@]}" \
+      --n-calib 4096 --n-validation 1024 --seq-len 128 \
+      --windows-per-chunk "$WINDOWS_PER_CHUNK" \
+      --device cuda:0 \
+      --model-id NousResearch/Llama-2-7b-hf \
+      --model-revision 8efe6c9b93655b934e27bd9981e3ec13e55aee9d
+}
+
 require_down_gate() {
   local variant="${1:-any}"
   local gate="$QUAL_ROOT/down_projection/comparison.json"
@@ -291,6 +317,20 @@ case "$STAGE" in
         --fp32 "$QUAL_ROOT/down_projection/streaming-fp32" \
         --fp64 "$QUAL_ROOT/down_projection/streaming-fp64" \
         --output "$QUAL_ROOT/down_projection/comparison-fp64.json" \
+        --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  down-stable-reference)
+    down_stable_stage reference-full-matrix full_matrix
+    ;;
+  down-stable-fp64)
+    down_stable_stage streaming-fp64 streaming_statistics
+    ;;
+  down-stable-compare)
+    run_logged stable-down-compare "$QUAL_ROOT/down_projection_stable" \
+      "$VENV_DIR/bin/python" benchmarks/compare_streaming_projection_runs.py \
+        --reference "$QUAL_ROOT/down_projection_stable/reference-full-matrix" \
+        --fp64 "$QUAL_ROOT/down_projection_stable/streaming-fp64" \
+        --output "$QUAL_ROOT/down_projection_stable/comparison-fp64.json" \
         --gpu-hourly-usd "$GPU_HOURLY_USD"
     ;;
   layer-reference)

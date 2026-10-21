@@ -1,5 +1,12 @@
 # Streaming NEC calibration: mathematical and implementation audit
 
+> Update (2026-10-21): real A40 qualification found approximately 6.9%
+> held-out functional disagreement between the historical full-matrix and
+> streaming compilers. See
+> [`streaming_numerical_diagnosis_20261021.md`](streaming_numerical_diagnosis_20261021.md)
+> for the localized in-sweep-Q4 and six-step-CG failure mechanisms. The
+> production backend remains unchanged.
+
 Date: 2026-10-20
 
 Scope: the four-site MPO High-Fidelity NEC path with independent dense

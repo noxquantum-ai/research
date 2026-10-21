@@ -188,7 +188,16 @@ def solve_site_anchored(Z_env, Y_site, C_prior, gamma, device=None):
     return sol.T
 
 
-def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n_cg_iters=6):
+def solve_accumulated_system(
+    H,
+    rhs,
+    C_prior,
+    gamma,
+    D,
+    use_cg_threshold=4096,
+    n_cg_iters=6,
+    return_diagnostics=False,
+):
     """
     Solves (H + reg*I) sol = rhs + reg*C_prior for chunked DMRG site systems.
     When D <= 4096: Uses SPD Cholesky factorization (cholesky_ex + cholesky_solve).
@@ -201,6 +210,8 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
     H.diagonal().add_(reg_scale)
     rhs.add_(reg_scale * C_prior)
 
+    solver = "cholesky"
+    iterations = 0
     if D <= use_cg_threshold:
         L, info = torch.linalg.cholesky_ex(H)
         if info == 0:
@@ -217,10 +228,13 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
                 L, info = torch.linalg.cholesky_ex(H)
                 if info == 0:
                     sol = torch.cholesky_solve(rhs, L)
+                    solver = "cholesky_with_jitter"
                     break
             if sol is None:
                 sol = torch.linalg.pinv(H, hermitian=True, rtol=1e-5) @ rhs
+                solver = "hermitian_pinv"
     else:
+        solver = "conjugate_gradient"
         HC = H @ C_prior
         R = rhs - HC
         del HC
@@ -228,7 +242,7 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
         Delta = torch.zeros_like(C_prior)
         rs_old = torch.sum(R * R, dim=0, keepdim=True)
 
-        for _ in range(n_cg_iters):
+        for iteration in range(n_cg_iters):
             HP = H @ P
             pAp = torch.sum(P * HP, dim=0, keepdim=True).clamp(min=1e-12)
             alpha = rs_old / pAp
@@ -236,6 +250,7 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
             R.addcmul_(-alpha, HP)
             del HP
             rs_new = torch.sum(R * R, dim=0, keepdim=True)
+            iterations = iteration + 1
             if torch.max(rs_new).item() < 1e-8:
                 break
             beta = rs_new / rs_old.clamp(min=1e-12)
@@ -245,8 +260,25 @@ def solve_accumulated_system(H, rhs, C_prior, gamma, D, use_cg_threshold=4096, n
         sol = C_prior + Delta
         del Delta
 
+    diagnostics = None
+    if return_diagnostics:
+        normal_residual = H @ sol - rhs
+        diagnostics = {
+            "solver": solver,
+            "iterations": int(iterations),
+            "regularization_scale": float(reg_scale.item()),
+            "relative_normal_residual": float(
+                torch.linalg.vector_norm(normal_residual)
+                .div(torch.linalg.vector_norm(rhs).clamp_min(1e-30))
+                .item()
+            ),
+        }
+        del normal_residual
     del H, rhs
-    return sol.T
+    result = sol.T
+    if return_diagnostics:
+        return result, diagnostics
+    return result
 
 
 def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
@@ -398,6 +430,10 @@ def nox_hybrid_dmrg_decompose(
     site_order=IDENTITY_SITE_ORDER,
     calibration_statistics=None,
     statistics_factorization_cache=None,
+    quantization_schedule="in_sweep",
+    solver_diagnostic_callback=None,
+    cg_threshold=4096,
+    cg_iterations=6,
 ):
     """
     Nox Hybrid Entanglement Engine (v3 - Covariance Bridge + Bidirectional Isometric Gauge):
@@ -465,6 +501,10 @@ def nox_hybrid_dmrg_decompose(
             site_order=IDENTITY_SITE_ORDER,
             calibration_statistics=ordered_statistics,
             statistics_factorization_cache=statistics_factorization_cache,
+            quantization_schedule=quantization_schedule,
+            solver_diagnostic_callback=solver_diagnostic_callback,
+            cg_threshold=cg_threshold,
+            cg_iterations=cg_iterations,
         )
         if return_artifacts:
             W_hat, total_kb, cores, chosen_ranks, artifact = result
@@ -490,6 +530,15 @@ def nox_hybrid_dmrg_decompose(
             raise ValueError("Calibration statistics do not match W dimensions")
     if diagonal_prior_strength < 0:
         raise ValueError("Weight prior strength must be nonnegative")
+    if quantization_schedule not in ("in_sweep", "post_sweep"):
+        raise ValueError(
+            "quantization_schedule must be 'in_sweep' or 'post_sweep'"
+        )
+    if cg_threshold < 1 or cg_iterations < 1:
+        raise ValueError("cg_threshold and cg_iterations must be positive")
+    in_sweep_quantization = (
+        quantize_components and quantization_schedule == "in_sweep"
+    )
     quantize = quantize_4bit_grouped if quantize_components else lambda tensor, group_size=64: tensor
     precision_diagnostics = {}
 
@@ -717,6 +766,35 @@ def nox_hybrid_dmrg_decompose(
     if diagnostic_callback is not None:
         diagnostic_callback("tt_warmstart", mpo_to_dense([c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]) / d_awt.unsqueeze(0) + S_total)
 
+    def solve_site_system(H, rhs, prior, gamma, width, sweep_index, site_index):
+        if solver_diagnostic_callback is None:
+            return solve_accumulated_system(
+                H,
+                rhs,
+                prior,
+                gamma,
+                width,
+                use_cg_threshold=cg_threshold,
+                n_cg_iters=cg_iterations,
+            )
+        solved, diagnostics = solve_accumulated_system(
+            H,
+            rhs,
+            prior,
+            gamma,
+            width,
+            use_cg_threshold=cg_threshold,
+            n_cg_iters=cg_iterations,
+            return_diagnostics=True,
+        )
+        diagnostics.update({
+            "sweep": int(sweep_index + 1),
+            "site": int(site_index),
+            "local_width": int(width),
+        })
+        solver_diagnostic_callback(diagnostics)
+        return solved
+
     # Step 4: Isometric DMRG Sweeps in the Conditioned Hilbert Space
     for sweep in range(n_sweeps):
         sweep_started = time.monotonic()
@@ -754,11 +832,13 @@ def nox_hybrid_dmrg_decompose(
             del Z0_c, Y0_c
         del R123
         c0_prior = c0.permute(2, 1, 0).reshape(D0, o0)
-        c0 = solve_accumulated_system(H0, rhs0, c0_prior, cur_gamma, D0).reshape(o0, r1, i0).permute(0, 2, 1).contiguous()
+        c0 = solve_site_system(
+            H0, rhs0, c0_prior, cur_gamma, D0, sweep, 0,
+        ).reshape(o0, r1, i0).permute(0, 2, 1).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
-        if is_final:
+        if is_final and in_sweep_quantization:
             c0 = quantize_component(c0, "mpo_site_0")
         else:
             Q, R = torch.linalg.qr(c0.reshape(o0 * i0, r1))
@@ -776,7 +856,7 @@ def nox_hybrid_dmrg_decompose(
         D1 = r1 * r2 * i1
         site_started = time.monotonic()
         if verbose:
-            solver = "matrix-free-CG" if D1 > 4096 else "normal-equation"
+            solver = "matrix-free-CG" if D1 > cg_threshold else "normal-equation"
             print(
                 f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 1/3 start "
                 f"(local_width={D1}, solver={solver}, calibration_modes={r_cov})",
@@ -784,9 +864,9 @@ def nox_hybrid_dmrg_decompose(
             )
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
         c1_prior = c1.permute(0, 3, 2, 1).reshape(D1, o1)
-        step_chunk1 = 8 if D1 > 4096 else chunk_size
+        step_chunk1 = 8 if D1 > cg_threshold else chunk_size
 
-        if D1 > 4096:
+        if D1 > cg_threshold:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
             rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
             # Keep the norm reduction on-device. Calling .item() for every
@@ -807,6 +887,10 @@ def nox_hybrid_dmrg_decompose(
 
             reg_scale1 = cur_gamma * (sum_frob1 / D1 + 1e-6)
             rhs1.add_(reg_scale1 * c1_prior)
+            rhs_norm1 = (
+                torch.linalg.vector_norm(rhs1).clamp_min(1e-30)
+                if solver_diagnostic_callback is not None else None
+            )
 
             def matvec1(P_in):
                 HP = reg_scale1 * P_in
@@ -826,7 +910,8 @@ def nox_hybrid_dmrg_decompose(
             P1 = R1.clone()
             Delta1 = torch.zeros_like(c1_prior)
             rs_old1 = torch.sum(R1 * R1, dim=0, keepdim=True)
-            for _ in range(6):
+            cg_iterations1 = 0
+            for iteration in range(cg_iterations):
                 HP1 = matvec1(P1)
                 pAp1 = torch.sum(P1 * HP1, dim=0, keepdim=True).clamp(min=1e-12)
                 alpha1 = rs_old1 / pAp1
@@ -834,11 +919,24 @@ def nox_hybrid_dmrg_decompose(
                 R1.addcmul_(-alpha1, HP1)
                 del HP1
                 rs_new1 = torch.sum(R1 * R1, dim=0, keepdim=True)
+                cg_iterations1 = iteration + 1
                 if torch.max(rs_new1).item() < 1e-8:
                     break
                 beta1 = rs_new1 / rs_old1.clamp(min=1e-12)
                 P1 = R1 + beta1 * P1
                 rs_old1 = rs_new1
+            if solver_diagnostic_callback is not None:
+                solver_diagnostic_callback({
+                    "sweep": int(sweep + 1),
+                    "site": 1,
+                    "local_width": int(D1),
+                    "solver": "matrix_free_conjugate_gradient",
+                    "iterations": int(cg_iterations1),
+                    "regularization_scale": float(reg_scale1.item()),
+                    "relative_normal_residual": float(
+                        torch.linalg.vector_norm(R1).div(rhs_norm1).item()
+                    ),
+                })
             del R1, P1
             c1 = (c1_prior + Delta1).T.reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
             del Delta1, c1_prior
@@ -854,12 +952,14 @@ def nox_hybrid_dmrg_decompose(
                 H1.addmm_(Z1_c.T, Z1_c)
                 rhs1.addmm_(Z1_c.T, Y1_c)
                 del Z1_c, Y1_c
-            c1 = solve_accumulated_system(H1, rhs1, c1_prior, cur_gamma, D1).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
+            c1 = solve_site_system(
+                H1, rhs1, c1_prior, cur_gamma, D1, sweep, 1,
+            ).reshape(o1, r1, r2, i1).permute(1, 0, 3, 2).contiguous()
         del R23
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
-        if is_final:
+        if is_final and in_sweep_quantization:
             c1 = quantize_component(c1, "mpo_site_1")
         else:
             Q, R = torch.linalg.qr(c1.reshape(r1 * o1 * i1, r2))
@@ -877,7 +977,7 @@ def nox_hybrid_dmrg_decompose(
         D2 = r2 * r3 * i2
         site_started = time.monotonic()
         if verbose:
-            solver = "matrix-free-CG" if D2 > 4096 else "normal-equation"
+            solver = "matrix-free-CG" if D2 > cg_threshold else "normal-equation"
             print(
                 f"      [DMRG sweep {sweep+1}/{n_sweeps}] site 2/3 start "
                 f"(local_width={D2}, solver={solver}, calibration_modes={r_cov})",
@@ -885,9 +985,9 @@ def nox_hybrid_dmrg_decompose(
             )
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
-        step_chunk2 = 8 if D2 > 4096 else chunk_size
+        step_chunk2 = 8 if D2 > cg_threshold else chunk_size
 
-        if D2 > 4096:
+        if D2 > cg_threshold:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
             rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
             # As at site 1, avoid a host synchronization for every chunk.
@@ -904,6 +1004,10 @@ def nox_hybrid_dmrg_decompose(
 
             reg_scale2 = cur_gamma * (sum_frob2 / D2 + 1e-6)
             rhs2.add_(reg_scale2 * c2_prior)
+            rhs_norm2 = (
+                torch.linalg.vector_norm(rhs2).clamp_min(1e-30)
+                if solver_diagnostic_callback is not None else None
+            )
 
             def matvec2(P_in):
                 HP = reg_scale2 * P_in
@@ -923,7 +1027,8 @@ def nox_hybrid_dmrg_decompose(
             P2 = R2.clone()
             Delta2 = torch.zeros_like(c2_prior)
             rs_old2 = torch.sum(R2 * R2, dim=0, keepdim=True)
-            for _ in range(6):
+            cg_iterations2 = 0
+            for iteration in range(cg_iterations):
                 HP2 = matvec2(P2)
                 pAp2 = torch.sum(P2 * HP2, dim=0, keepdim=True).clamp(min=1e-12)
                 alpha2 = rs_old2 / pAp2
@@ -931,11 +1036,24 @@ def nox_hybrid_dmrg_decompose(
                 R2.addcmul_(-alpha2, HP2)
                 del HP2
                 rs_new2 = torch.sum(R2 * R2, dim=0, keepdim=True)
+                cg_iterations2 = iteration + 1
                 if torch.max(rs_new2).item() < 1e-8:
                     break
                 beta2 = rs_new2 / rs_old2.clamp(min=1e-12)
                 P2 = R2 + beta2 * P2
                 rs_old2 = rs_new2
+            if solver_diagnostic_callback is not None:
+                solver_diagnostic_callback({
+                    "sweep": int(sweep + 1),
+                    "site": 2,
+                    "local_width": int(D2),
+                    "solver": "matrix_free_conjugate_gradient",
+                    "iterations": int(cg_iterations2),
+                    "regularization_scale": float(reg_scale2.item()),
+                    "relative_normal_residual": float(
+                        torch.linalg.vector_norm(R2).div(rhs_norm2).item()
+                    ),
+                })
             del R2, P2
             c2 = (c2_prior + Delta2).T.reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
             del Delta2, c2_prior
@@ -951,12 +1069,14 @@ def nox_hybrid_dmrg_decompose(
                 H2.addmm_(Z2_c.T, Z2_c)
                 rhs2.addmm_(Z2_c.T, Y2_c)
                 del Z2_c, Y2_c
-            c2 = solve_accumulated_system(H2, rhs2, c2_prior, cur_gamma, D2).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
+            c2 = solve_site_system(
+                H2, rhs2, c2_prior, cur_gamma, D2, sweep, 2,
+            ).reshape(o2, r2, r3, i2).permute(1, 0, 3, 2).contiguous()
         del L01
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
-        if is_final:
+        if is_final and in_sweep_quantization:
             c2 = quantize_component(c2, "mpo_site_2")
         else:
             Q, R = torch.linalg.qr(c2.reshape(r2 * o2 * i2, r3))
@@ -997,11 +1117,13 @@ def nox_hybrid_dmrg_decompose(
             del Z3_c, Y3_c
         del L012
         c3_prior = c3.permute(0, 2, 1).reshape(D3, o3)
-        c3 = solve_accumulated_system(H3, rhs3, c3_prior, cur_gamma, D3).reshape(o3, r3, i3).permute(1, 0, 2).contiguous()
+        c3 = solve_site_system(
+            H3, rhs3, c3_prior, cur_gamma, D3, sweep, 3,
+        ).reshape(o3, r3, i3).permute(1, 0, 2).contiguous()
         if str(device).startswith("cuda"):
             torch.cuda.empty_cache()
 
-        if is_final:
+        if is_final and in_sweep_quantization:
             c3 = quantize_component(c3, "mpo_site_3")
         else:
             c0, c1, c2, c3 = right_canonicalize(c0, c1, c2, c3)
@@ -1014,6 +1136,19 @@ def nox_hybrid_dmrg_decompose(
             )
         if diagnostic_callback is not None:
             diagnostic_callback(f"sweep_{sweep + 1}", mpo_to_dense([c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]) / d_awt.unsqueeze(0) + S_total)
+
+    # The historical schedule quantizes each solved site immediately and then
+    # builds the next local environment from that rounded core.  This makes a
+    # final sweep discontinuous: a small factorization perturbation can cross
+    # a Q4 boundary at an early site and be amplified by every later solve.
+    # The post-sweep schedule is an explicitly separate numerical control.  It
+    # completes the gauge-fixed sweep in floating point and quantizes every
+    # final core exactly once, after no remaining local solve can consume it.
+    if quantize_components and quantization_schedule == "post_sweep" and n_sweeps > 0:
+        c0 = quantize_component(c0, "mpo_site_0")
+        c1 = quantize_component(c1, "mpo_site_1")
+        c2 = quantize_component(c2, "mpo_site_2")
+        c3 = quantize_component(c3, "mpo_site_3")
 
     final_cores = [c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)]
 
@@ -1069,6 +1204,9 @@ def nox_hybrid_dmrg_decompose(
                 "requested_sparse_budget": int(n_outliers),
                 "realized_sparse_count": int(sparse_count),
                 "quantize_components": bool(quantize_components),
+                "quantization_schedule": quantization_schedule,
+                "cg_threshold": int(cg_threshold),
+                "cg_iterations": int(cg_iterations),
                 "calibration_backend": (
                     "streaming_sufficient_statistics"
                     if calibration_statistics is not None else "full_matrix_svd"

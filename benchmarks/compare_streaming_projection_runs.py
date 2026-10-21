@@ -64,7 +64,7 @@ def load_run(path, backend, statistics_dtype, current_algorithm):
         raise ValueError(f"{path} artifact and report input metadata differ")
     identity = report.get("qualification_identity")
     required_identity = {
-        "schema_version": 2,
+        "schema_version": 3,
         "model_id": "NousResearch/Llama-2-7b-hf",
         "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
         "layer": 0,
@@ -95,6 +95,14 @@ def load_run(path, backend, statistics_dtype, current_algorithm):
     ):
         raise ValueError(f"{path} qualification settings do not match the current protocol")
     if (
+        identity.get("quantization_schedule") not in ("in_sweep", "post_sweep")
+        or not isinstance(identity.get("cg_threshold"), int)
+        or identity["cg_threshold"] <= 0
+        or not isinstance(identity.get("cg_iterations"), int)
+        or identity["cg_iterations"] <= 0
+    ):
+        raise ValueError(f"{path} has invalid optimizer-control settings")
+    if (
         payload.get("algorithm_identity") != current_algorithm
         or payload.get("qualification_identity") != identity
         or not validate_completed(path, identity, current_algorithm)
@@ -118,6 +126,14 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
         raise ValueError("Qualification variants did not reproduce identical hidden states")
     if variant_report.get("algorithm_identity") != reference_report.get("algorithm_identity"):
         raise ValueError("Qualification variants used different numerical source fingerprints")
+    reference_identity = dict(reference_report.get("qualification_identity", {}))
+    variant_identity = dict(variant_report.get("qualification_identity", {}))
+    for identity in (reference_identity, variant_identity):
+        identity.pop("backend", None)
+        identity.pop("statistics_dtype", None)
+        identity.pop("hardware", None)
+    if variant_identity != reference_identity:
+        raise ValueError("Qualification variants used different compiler settings")
     reference_weight = reconstruct_from_artifact(reference_artifact, dtype=torch.float32)
     variant_weight = reconstruct_from_artifact(variant_artifact, dtype=torch.float32)
     difference = relative_difference(variant_weight, reference_weight)
@@ -181,6 +197,8 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
         "variant_memory": variant_report["memory"],
         "calibration_statistics_diagnostics": variant_report.get("calibration_statistics_diagnostics"),
         "bridge_statistics_diagnostics": variant_report.get("bridge_statistics_diagnostics"),
+        "reference_solver_diagnostics": reference_report.get("solver_diagnostics"),
+        "variant_solver_diagnostics": variant_report.get("solver_diagnostics"),
         "direct_functional_disagreement": direct_disagreement,
         "first_stage_over_one_percent_disagreement": first_stage_over_one_percent,
         "same_algorithm_fingerprint": True,
@@ -198,7 +216,7 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--reference", type=Path, required=True)
-    parser.add_argument("--fp32", type=Path, required=True)
+    parser.add_argument("--fp32", type=Path)
     parser.add_argument("--fp64", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-relative-weight-difference", type=float, default=0.01)
@@ -206,6 +224,8 @@ def main():
     parser.add_argument("--max-functional-disagreement", type=float, default=0.01)
     parser.add_argument("--gpu-hourly-usd", type=float, default=0.59)
     args = parser.parse_args()
+    if args.fp32 is None and args.fp64 is None:
+        raise ValueError("At least one streaming variant is required")
     if args.gpu_hourly_usd < 0:
         raise ValueError("gpu-hourly-usd must be nonnegative")
 
@@ -215,37 +235,6 @@ def main():
     current_algorithm = algorithm_identity()
     reference_report, reference_artifact = load_run(
         args.reference, "full_matrix", "float64", current_algorithm,
-    )
-    fp32_report, fp32_artifact = load_run(
-        args.fp32, "streaming_statistics", "float32", current_algorithm,
-    )
-    fp32 = compare(
-        reference_report, reference_artifact, fp32_report, fp32_artifact,
-        args.gpu_hourly_usd,
-    )
-    fp32["passes_weight_parity_threshold"] = bool(
-        math.isfinite(fp32["relative_reconstructed_weight_difference"])
-        and fp32["relative_reconstructed_weight_difference"] <= args.max_relative_weight_difference
-    )
-    fp32["passes_complete_production_structure"] = bool(
-        fp32["structure_matches"] and fp32["two_sweep_q4_diagnostics_complete"]
-    )
-    fp32["passes_activation_metric_parity"] = all(
-        item["relative_error_absolute_difference"] <= args.max_metric_absolute_difference
-        and item["cosine_similarity_absolute_difference"] <= args.max_metric_absolute_difference
-        for item in fp32["metric_differences"].values()
-    )
-    fp32["passes_direct_functional_parity"] = bool(
-        fp32.get("direct_functional_disagreement")
-        and all(
-            fp32["direct_functional_disagreement"]["final_artifact"][split][
-                "relative_functional_disagreement"
-            ] <= args.max_functional_disagreement
-            for split in ("calibration", "validation")
-        )
-    )
-    fp32["passes_algorithm_identity"] = bool(
-        fp32["same_algorithm_fingerprint"] and fp32["clean_source_trees"]
     )
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj staged streaming qualification",
@@ -258,8 +247,40 @@ def main():
             "maximum_activation_metric_absolute_difference": args.max_metric_absolute_difference,
             "maximum_direct_functional_disagreement": args.max_functional_disagreement,
         },
-        "fp32": fp32,
     }
+    if args.fp32 is not None:
+        fp32_report, fp32_artifact = load_run(
+            args.fp32, "streaming_statistics", "float32", current_algorithm,
+        )
+        fp32 = compare(
+            reference_report, reference_artifact, fp32_report, fp32_artifact,
+            args.gpu_hourly_usd,
+        )
+        fp32["passes_weight_parity_threshold"] = bool(
+            math.isfinite(fp32["relative_reconstructed_weight_difference"])
+            and fp32["relative_reconstructed_weight_difference"] <= args.max_relative_weight_difference
+        )
+        fp32["passes_complete_production_structure"] = bool(
+            fp32["structure_matches"] and fp32["two_sweep_q4_diagnostics_complete"]
+        )
+        fp32["passes_activation_metric_parity"] = all(
+            item["relative_error_absolute_difference"] <= args.max_metric_absolute_difference
+            and item["cosine_similarity_absolute_difference"] <= args.max_metric_absolute_difference
+            for item in fp32["metric_differences"].values()
+        )
+        fp32["passes_direct_functional_parity"] = bool(
+            fp32.get("direct_functional_disagreement")
+            and all(
+                fp32["direct_functional_disagreement"]["final_artifact"][split][
+                    "relative_functional_disagreement"
+                ] <= args.max_functional_disagreement
+                for split in ("calibration", "validation")
+            )
+        )
+        fp32["passes_algorithm_identity"] = bool(
+            fp32["same_algorithm_fingerprint"] and fp32["clean_source_trees"]
+        )
+        report["fp32"] = fp32
     if args.fp64 is not None:
         fp64_report, fp64_artifact = load_run(
             args.fp64, "streaming_statistics", "float64", current_algorithm,
@@ -294,21 +315,24 @@ def main():
         )
         report["fp64"] = fp64
 
-    report["fp32_passes"] = bool(
-        fp32["passes_weight_parity_threshold"]
-        and fp32["passes_complete_production_structure"]
-        and fp32["passes_activation_metric_parity"]
-        and fp32["passes_algorithm_identity"]
-    )
+    if "fp32" in report:
+        report["fp32_passes"] = bool(
+            report["fp32"]["passes_weight_parity_threshold"]
+            and report["fp32"]["passes_complete_production_structure"]
+            and report["fp32"]["passes_activation_metric_parity"]
+            and report["fp32"]["passes_direct_functional_parity"]
+            and report["fp32"]["passes_algorithm_identity"]
+        )
     if "fp64" in report:
         report["fp64_passes"] = bool(
             report["fp64"]["passes_weight_parity_threshold"]
             and report["fp64"]["passes_complete_production_structure"]
             and report["fp64"]["passes_activation_metric_parity"]
+            and report["fp64"]["passes_direct_functional_parity"]
             and report["fp64"]["passes_algorithm_identity"]
         )
     report["recommended_next_stage"] = (
-        "one_layer_fp32" if report["fp32_passes"] else (
+        "one_layer_fp32" if report.get("fp32_passes") else (
             "one_layer_fp64" if report.get("fp64_passes") else
             "implement_numerically_stable_factorization" if "fp64" in report else
             "down_projection_fp64"
@@ -320,7 +344,7 @@ def main():
     )
     atomic_json_save(report, args.output)
     print(json.dumps(report, indent=2, sort_keys=True), flush=True)
-    if not report["fp32_passes"] and args.fp64 is None:
+    if args.fp32 is not None and not report["fp32_passes"] and args.fp64 is None:
         # A failed FP32 comparison is a valid diagnostic result. The nonzero
         # status prevents an unattended workflow from progressing to a layer.
         raise SystemExit(3)

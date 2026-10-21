@@ -11,6 +11,7 @@ from nox.calibration import (
     accumulate_calibration_statistics,
 )
 from nox.compiler import (
+    _left_singular_system_from_gram,
     nox_hybrid_dmrg_decompose,
     nox_hybrid_dmrg_decompose_from_statistics,
 )
@@ -124,6 +125,43 @@ class StreamingCalibrationTests(unittest.TestCase):
         torch.testing.assert_close(statistics.xx, x.double() @ x.double().T)
         torch.testing.assert_close(statistics.yx, y.double() @ x.double().T)
 
+    def test_gram_bridge_identity_matches_direct_svd_before_quantization(self):
+        """Verify YV=(YX^T)U Sigma^-1 on a conditioned spectrum."""
+        torch.manual_seed(110)
+        dimension = 18
+        samples = 14
+        left, _ = torch.linalg.qr(torch.randn(
+            dimension, samples, dtype=torch.float64,
+        ))
+        right, _ = torch.linalg.qr(torch.randn(
+            samples, samples, dtype=torch.float64,
+        ))
+        singular_values = torch.logspace(0, -5, samples, dtype=torch.float64)
+        inputs = left @ torch.diag(singular_values) @ right.T
+        targets = torch.randn(11, samples, dtype=torch.float64)
+
+        direct_u, direct_s, direct_vh = torch.linalg.svd(
+            inputs, full_matrices=False,
+        )
+        gram_u, gram_s, diagnostics = _left_singular_system_from_gram(
+            inputs @ inputs.T,
+            samples,
+            torch.float64,
+        )
+        # Singular vectors are defined up to a sign.  Align that gauge before
+        # comparing the coordinates consumed by the bridge.
+        signs = torch.sign(torch.sum(direct_u * gram_u, dim=0)).clamp_min(0) * 2 - 1
+        gram_u = gram_u * signs.unsqueeze(0)
+        gram_yv = (
+            (targets @ inputs.T) @ gram_u
+        ) / gram_s.unsqueeze(0)
+        direct_yv = targets @ direct_vh.T
+
+        torch.testing.assert_close(gram_s, direct_s, atol=2e-11, rtol=2e-9)
+        torch.testing.assert_close(gram_u, direct_u, atol=2e-8, rtol=2e-7)
+        torch.testing.assert_close(gram_yv, direct_yv, atol=2e-8, rtol=2e-7)
+        self.assertEqual(diagnostics["numerical_rank"], samples)
+
     def test_statistics_compiler_matches_full_matrix_compiler(self):
         torch.manual_seed(103)
         weight = torch.randn(16, 16)
@@ -139,6 +177,7 @@ class StreamingCalibrationTests(unittest.TestCase):
             prior_gamma=0.01,
             alpha_awt=0.5,
             chunk_size=7,
+            cg_threshold=32,
             return_artifacts=True,
             verbose=False,
             quantize_components=False,
@@ -163,6 +202,132 @@ class StreamingCalibrationTests(unittest.TestCase):
             reference[4]["compiler_hyperparameters"]["calibration_backend"],
             "full_matrix_svd",
         )
+
+    def test_post_sweep_quantization_limits_ill_conditioned_backend_amplification(self):
+        """Q4 must not participate in later local solves in the stable control.
+
+        This fixture deliberately spans seven orders of magnitude.  The
+        direct-SVD and Gram-eigendecomposition paths are nearly equivalent
+        before quantization, but the historical second in-sweep Q4 pass turns
+        that small perturbation into a materially different operator.  The
+        post-sweep control keeps every local environment in floating point and
+        quantizes only after optimization has finished.
+        """
+        torch.manual_seed(1234)
+        dimension = 16
+        left, _ = torch.linalg.qr(torch.randn(
+            dimension, dimension, dtype=torch.float64,
+        ))
+        right, _ = torch.linalg.qr(torch.randn(
+            dimension, dimension, dtype=torch.float64,
+        ))
+        singular_values = torch.logspace(0, -7, dimension, dtype=torch.float64)
+        inputs = (left @ torch.diag(singular_values) @ right.T).float()
+        weight = torch.randn(dimension, dimension)
+        targets = weight @ inputs
+        statistics = accumulate_calibration_statistics(
+            inputs, targets, chunk_size=5, accumulation_dtype=torch.float64,
+        )
+        common = dict(
+            o_modes=(2, 2, 2, 2),
+            i_modes=(2, 2, 2, 2),
+            ranks=(1, 4, 8, 4, 1),
+            r_bridge=4,
+            n_outliers=12,
+            n_sweeps=2,
+            prior_gamma=0.01,
+            alpha_awt=0.5,
+            chunk_size=7,
+            return_artifacts=True,
+            verbose=False,
+            diagonal_prior_strength=0.0,
+        )
+
+        unquantized_reference = nox_hybrid_dmrg_decompose(
+            W=weight,
+            X_calib=inputs,
+            Y_dense=targets,
+            quantize_components=False,
+            **common,
+        )
+        unquantized_streamed = nox_hybrid_dmrg_decompose_from_statistics(
+            W=weight,
+            calibration_statistics=statistics,
+            quantize_components=False,
+            cg_iterations=6,
+            **common,
+        )
+        unquantized_disagreement = float(
+            torch.linalg.vector_norm(
+                (unquantized_streamed[0] - unquantized_reference[0]) @ inputs,
+            )
+            / torch.linalg.vector_norm(
+                unquantized_reference[0] @ inputs,
+            ).clamp_min(1e-30)
+        )
+        self.assertLess(unquantized_disagreement, 1e-4)
+
+        disagreements = {}
+        controls = (
+            ("in_sweep_6cg", "in_sweep", 6),
+            ("post_sweep_6cg", "post_sweep", 6),
+            ("post_sweep_48cg", "post_sweep", 48),
+        )
+        for name, schedule, cg_iterations in controls:
+            reference = nox_hybrid_dmrg_decompose(
+                W=weight,
+                X_calib=inputs,
+                Y_dense=targets,
+                quantization_schedule=schedule,
+                quantize_components=True,
+                cg_iterations=cg_iterations,
+                **common,
+            )
+            streamed = nox_hybrid_dmrg_decompose_from_statistics(
+                W=weight,
+                calibration_statistics=statistics,
+                quantization_schedule=schedule,
+                quantize_components=True,
+                cg_iterations=cg_iterations,
+                **common,
+            )
+            disagreements[name] = float(
+                torch.linalg.vector_norm((streamed[0] - reference[0]) @ inputs)
+                / torch.linalg.vector_norm(reference[0] @ inputs).clamp_min(1e-30)
+            )
+            self.assertEqual(
+                streamed[4]["compiler_hyperparameters"]["quantization_schedule"],
+                schedule,
+            )
+            self.assertEqual(
+                set(streamed[4]["precision_diagnostics"]),
+                {
+                    "sparse_shield", "bridge_A", "bridge_B",
+                    "mpo_site_0", "mpo_site_1", "mpo_site_2", "mpo_site_3",
+                },
+            )
+
+        self.assertGreater(disagreements["in_sweep_6cg"], 0.01)
+        self.assertLess(disagreements["post_sweep_48cg"], 0.005)
+        self.assertLess(
+            disagreements["post_sweep_48cg"],
+            disagreements["in_sweep_6cg"] / 5,
+        )
+
+    def test_rejects_unknown_quantization_schedule(self):
+        with self.assertRaisesRegex(ValueError, "quantization_schedule"):
+            nox_hybrid_dmrg_decompose(
+                W=torch.eye(16),
+                X_calib=torch.eye(16),
+                Y_dense=torch.eye(16),
+                o_modes=(2, 2, 2, 2),
+                i_modes=(2, 2, 2, 2),
+                n_outliers=0,
+                r_bridge=0,
+                n_sweeps=0,
+                quantization_schedule="unknown",
+                verbose=False,
+            )
 
     def test_staged_comparison_reports_cost_and_metric_parity(self):
         torch.manual_seed(109)
