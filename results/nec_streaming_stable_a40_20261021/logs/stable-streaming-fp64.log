@@ -1,0 +1,550 @@
+QUALIFICATION_PHASE=loading_pinned_model_and_data
+[10:07:01] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[10:07:01] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[10:07:15] WikiText-2 activations generated: train X_calib [4096, 4096] (4096 tokens), validation X_test [4096, 1024] (1024 tokens).
+QUALIFICATION_PHASE=collecting_calibration_inputs
+QUALIFICATION_PHASE=compiling_projection
+    [Nox Step 1A] Sparse Outlier Shield (524130 stored entries; 5118.5 KiB tensor payload)
+QUALIFICATION_STAGE_SNAPSHOT=sparse
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+QUALIFICATION_STAGE_SNAPSHOT=sparse_plus_bridge
+    [Nox Step 2] Exact AWT preconditioning applied from streamed sufficient statistics; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+QUALIFICATION_STAGE_SNAPSHOT=tt_warmstart
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.9s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (61.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (148.3s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.4s); sweep complete (211.1s)
+QUALIFICATION_STAGE_SNAPSHOT=sweep_1
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final Pass (in-loop 4-bit quantization)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.8s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (53.4s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (137.9s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.3s); sweep complete (192.5s)
+QUALIFICATION_STAGE_SNAPSHOT=sweep_2
+QUALIFICATION_PHASE=validating_artifact
+QUALIFICATION_STAGE_SNAPSHOT=serialized_artifact
+QUALIFICATION_PHASE=measuring_calibration_and_validation
+QUALIFICATION_PHASE=measuring_direct_functional_disagreement
+{
+  "algorithm_identity": {
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "c8ce0b0b9b066a9401183a5884c2c593b960723ff7cc0eae01571716b28f6880",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "53ad1465b8099a06ed51883ec5780f9bb296ef1196e920e3680a1ca710bf33b2",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "schema_version": 1,
+    "sha256": "62e73137f7b0e136f2bf9aa4ce960f0587f984b33f02c88e169c505e5ab79363"
+  },
+  "artifact": {
+    "bytes": 10765445,
+    "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/artifact.pt",
+    "sha256": "9ac4ed731b7f5beafc692acd9c769947c9976b1df06d3b052002e97fd7bf384f"
+  },
+  "backend": "streaming_statistics",
+  "bridge_statistics_diagnostics": {
+    "conventional_numerical_rank": 4096,
+    "eigenvalue_tolerance": 7.300411655549923e-22,
+    "largest_eigenvalue": 122.19404937359275,
+    "maximum_modes": 4096,
+    "negative_eigenvalues_in_candidate_range": 0,
+    "numerical_rank": 4096,
+    "positive_modes_below_conventional_cutoff": 0,
+    "singular_value_tolerance": 2.7019273964246196e-11,
+    "statistics_dtype": "torch.float64"
+  },
+  "calibration_metrics": {
+    "angular_drift": 0.05849672770515946,
+    "cosine_similarity": 0.9415032722948405,
+    "norm_ratio": 0.9391892035324647,
+    "relative_error": 0.33701178491423356,
+    "sample_count": 4096
+  },
+  "calibration_statistics_diagnostics": {
+    "conventional_numerical_rank": 4096,
+    "eigenvalue_tolerance": 3.4616161573307665e-20,
+    "largest_eigenvalue": 5794.041700644884,
+    "maximum_modes": 4096,
+    "negative_eigenvalues_in_candidate_range": 0,
+    "numerical_rank": 4096,
+    "positive_modes_below_conventional_cutoff": 0,
+    "singular_value_tolerance": 1.8605418988377463e-10,
+    "statistics_dtype": "torch.float64"
+  },
+  "completed_at_utc": "2026-10-21T10:14:43.150369+00:00",
+  "configuration": {
+    "activation_scale_exponent": 0.5,
+    "bridge_rank": 128,
+    "cg_iterations": 48,
+    "cg_threshold": 4096,
+    "quantization": "Q4 simulation for shield, bridge, and final-sweep MPO cores; MPO schedule=post_sweep",
+    "quantization_schedule": "post_sweep",
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "windows_per_chunk": 4
+  },
+  "core_qualification_runtime_seconds": 463.6703290469013,
+  "direct_functional_disagreement": {
+    "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+    "final_artifact": {
+      "calibration": {
+        "angular_drift": 0.0019708781921968788,
+        "cosine_similarity": 0.9980291218078031,
+        "norm_ratio": 0.9997112178089976,
+        "relative_functional_disagreement": 0.06277500673444962,
+        "sample_count": 4096
+      },
+      "relative_reconstructed_weight_difference": 0.2948194146156311,
+      "validation": {
+        "angular_drift": 0.0023465875161041705,
+        "cosine_similarity": 0.9976534124838958,
+        "norm_ratio": 0.9995229082762103,
+        "relative_functional_disagreement": 0.06849206942427664,
+        "sample_count": 1024
+      }
+    },
+    "stages": {
+      "serialized_artifact": {
+        "calibration": {
+          "angular_drift": 0.0019709286675615445,
+          "cosine_similarity": 0.9980290713324385,
+          "norm_ratio": 0.9997007837218232,
+          "relative_functional_disagreement": 0.06277553183883874,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.29481956362724304,
+        "validation": {
+          "angular_drift": 0.002346658714946992,
+          "cosine_similarity": 0.997653341285053,
+          "norm_ratio": 0.9995123439312332,
+          "relative_functional_disagreement": 0.06849282089142297,
+          "sample_count": 1024
+        }
+      },
+      "sparse": {
+        "calibration": {
+          "angular_drift": 0.0,
+          "cosine_similarity": 1.0,
+          "norm_ratio": 1.0,
+          "relative_functional_disagreement": 0.0,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.0,
+        "validation": {
+          "angular_drift": 0.0,
+          "cosine_similarity": 1.0,
+          "norm_ratio": 1.0,
+          "relative_functional_disagreement": 0.0,
+          "sample_count": 1024
+        }
+      },
+      "sparse_plus_bridge": {
+        "calibration": {
+          "angular_drift": 5.7868822787021656e-05,
+          "cosine_similarity": 0.999942131177213,
+          "norm_ratio": 1.0000009072676768,
+          "relative_functional_disagreement": 0.010758148139962375,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.0242720115929842,
+        "validation": {
+          "angular_drift": 4.276567072658555e-05,
+          "cosine_similarity": 0.9999572343292734,
+          "norm_ratio": 1.0000061257434227,
+          "relative_functional_disagreement": 0.009248345956356187,
+          "sample_count": 1024
+        }
+      },
+      "sweep_1": {
+        "calibration": {
+          "angular_drift": 0.0001764123756849978,
+          "cosine_similarity": 0.999823587624315,
+          "norm_ratio": 0.9999656416486468,
+          "relative_functional_disagreement": 0.018783338611348826,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.11314287781715393,
+        "validation": {
+          "angular_drift": 0.00023741717706227128,
+          "cosine_similarity": 0.9997625828229377,
+          "norm_ratio": 0.9999826689694605,
+          "relative_functional_disagreement": 0.021790512273149973,
+          "sample_count": 1024
+        }
+      },
+      "sweep_2": {
+        "calibration": {
+          "angular_drift": 0.00023525977456984037,
+          "cosine_similarity": 0.9997647402254302,
+          "norm_ratio": 0.9999345584193571,
+          "relative_functional_disagreement": 0.021690851532245925,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.12701337039470673,
+        "validation": {
+          "angular_drift": 0.00034327231397557334,
+          "cosine_similarity": 0.9996567276860244,
+          "norm_ratio": 0.9999462059023243,
+          "relative_functional_disagreement": 0.026201347096849525,
+          "sample_count": 1024
+        }
+      },
+      "tt_warmstart": {
+        "calibration": {
+          "angular_drift": 7.168657712008919e-05,
+          "cosine_similarity": 0.9999283134228799,
+          "norm_ratio": 0.9999385695428643,
+          "relative_functional_disagreement": 0.011973642739904538,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.0523751899600029,
+        "validation": {
+          "angular_drift": 5.988009011514972e-05,
+          "cosine_similarity": 0.9999401199098849,
+          "norm_ratio": 0.9999370934489439,
+          "relative_functional_disagreement": 0.010943336043438029,
+          "sample_count": 1024
+        }
+      }
+    }
+  },
+  "functional_diagnostic_memory": {
+    "torch_peak_cuda_allocated_bytes": 2128880128,
+    "torch_peak_cuda_reserved_bytes": 3466592256
+  },
+  "functional_diagnostic_runtime_seconds": 3.9295742148533463,
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "independent_numerical_coefficients": 3280994,
+  "input_data": {
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "fallback": false,
+      "literal_unk_count": 0,
+      "rows": 36718,
+      "source_bytes": 6357543,
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "split": "train",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5"
+    },
+    "calibration_split": "train",
+    "calibration_token_count": 4096,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "dataset": "wikitext-2-raw-v1",
+    "evaluation_split": "test",
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "fallback": false,
+      "literal_unk_count": 0,
+      "rows": 3760,
+      "source_bytes": 657209,
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "split": "validation",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e"
+    },
+    "heldout_split": "validation",
+    "heldout_token_count": 1024,
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "layer": 0,
+  "memory": {
+    "cuda_device_name": "NVIDIA A40",
+    "cuda_total_bytes": 47699722240,
+    "process_peak_rss_bytes": 2539827200,
+    "sampler_count": 1839,
+    "sampler_interval_seconds": 0.25,
+    "sampler_peak_cuda_device_used_bytes": 11939282944,
+    "torch_peak_cuda_allocated_bytes": 10847297024,
+    "torch_peak_cuda_reserved_bytes": 11559501824
+  },
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "projection": "down_proj",
+  "qualification_identity": {
+    "activation_scale_exponent": 0.5,
+    "backend": "streaming_statistics",
+    "bridge_rank": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_tokens": 4096,
+    "cg_iterations": 48,
+    "cg_threshold": 4096,
+    "diagonal_prior_strength": 0.0,
+    "dmrg_chunk_size": 32,
+    "hardware": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "requested_device": "cuda:0"
+    },
+    "layer": 0,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "prior_gamma": 0.01,
+    "projection": "down_proj",
+    "quantization_schedule": "post_sweep",
+    "quantize_components": true,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "schema_version": 3,
+    "sequence_length": 128,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "sparse_budget": 524288,
+    "stage_diagnostics": [
+      "sparse",
+      "sparse_plus_bridge",
+      "tt_warmstart",
+      "sweep_1",
+      "sweep_2",
+      "serialized_artifact"
+    ],
+    "statistics_dtype": "float64",
+    "sweeps": 2,
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_tokens": 1024,
+    "windows_per_chunk": 4
+  },
+  "realized_ranks": [
+    1,
+    64,
+    128,
+    64,
+    1
+  ],
+  "runtime": {
+    "cuda_runtime_version": "12.8",
+    "torch_version": "2.11.0+cu128"
+  },
+  "runtime_seconds": 468.20495298388414,
+  "scope": "real Llama-2-7B layer-0 down_proj qualification; not a model-quality benchmark",
+  "serialization_relative_difference": 0.0004153301124460995,
+  "solver_diagnostics": [
+    {
+      "iterations": 0,
+      "local_width": 2752,
+      "regularization_scale": 0.14616015553474426,
+      "relative_normal_residual": 9.898784583128872e-07,
+      "site": 0,
+      "solver": "cholesky",
+      "sweep": 1
+    },
+    {
+      "iterations": 20,
+      "local_width": 32768,
+      "regularization_scale": 0.14975177472745232,
+      "relative_normal_residual": 6.8803255999227986e-06,
+      "site": 1,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 1
+    },
+    {
+      "iterations": 26,
+      "local_width": 65536,
+      "regularization_scale": 0.14762463202427623,
+      "relative_normal_residual": 5.697266260540346e-06,
+      "site": 2,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 1
+    },
+    {
+      "iterations": 0,
+      "local_width": 512,
+      "regularization_scale": 0.14696164429187775,
+      "relative_normal_residual": 4.913716225019016e-07,
+      "site": 3,
+      "solver": "cholesky",
+      "sweep": 1
+    },
+    {
+      "iterations": 0,
+      "local_width": 2752,
+      "regularization_scale": 0.03607543930411339,
+      "relative_normal_residual": 1.1093067087131203e-06,
+      "site": 0,
+      "solver": "cholesky",
+      "sweep": 2
+    },
+    {
+      "iterations": 17,
+      "local_width": 32768,
+      "regularization_scale": 0.03700894472566111,
+      "relative_normal_residual": 7.594873295602156e-06,
+      "site": 1,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 2
+    },
+    {
+      "iterations": 24,
+      "local_width": 65536,
+      "regularization_scale": 0.03692000978526726,
+      "relative_normal_residual": 6.9785896812391e-06,
+      "site": 2,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 2
+    },
+    {
+      "iterations": 0,
+      "local_width": 512,
+      "regularization_scale": 0.03670346364378929,
+      "relative_normal_residual": 4.971890916749544e-07,
+      "site": 3,
+      "solver": "cholesky",
+      "sweep": 2
+    }
+  ],
+  "source": {
+    "clean": true,
+    "commit": "51f738f4234e6888570e66199b5887bc88b7632a",
+    "dirty_paths": []
+  },
+  "stage_snapshots": {
+    "serialized_artifact": {
+      "bytes": 90181970,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/stage_weights/serialized_artifact.pt",
+      "sha256": "dde3759325dd9d67e4250b3e6a7ccf106784a88b3c4fde970cb922c85ce1c504",
+      "storage_dtype": "float16"
+    },
+    "sparse": {
+      "bytes": 90181815,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/stage_weights/sparse.pt",
+      "sha256": "879994a8edf1153e99638eb7a586da5625366b60cd0136cdfc047c604e7580b6",
+      "storage_dtype": "float16"
+    },
+    "sparse_plus_bridge": {
+      "bytes": 90181899,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/stage_weights/sparse_plus_bridge.pt",
+      "sha256": "7685f7fd23a28c6a4ac6b704edd12ee95aa9551f14248e5a8d298bd657c1137b",
+      "storage_dtype": "float16"
+    },
+    "sweep_1": {
+      "bytes": 90181822,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/stage_weights/sweep_1.pt",
+      "sha256": "54ca72d6331c644e44ba4c3466cca97de85138463fe974bf3d59b6630f5628cb",
+      "storage_dtype": "float16"
+    },
+    "sweep_2": {
+      "bytes": 90181822,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/stage_weights/sweep_2.pt",
+      "sha256": "c1e4d76615aef7dabc0545b1c15668e4cf3c2ed5e627b5e4f0054f0fb6164079",
+      "storage_dtype": "float16"
+    },
+    "tt_warmstart": {
+      "bytes": 90181857,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_stable/streaming-fp64/stage_weights/tt_warmstart.pt",
+      "sha256": "5583c140543863e5d79666988eb47a17916e00767257ece175e572088b7852d1",
+      "storage_dtype": "float16"
+    }
+  },
+  "statistics_dtype": "float64",
+  "status": "PASS",
+  "two_sweep_q4_diagnostics_complete": true,
+  "validation_metrics": {
+    "angular_drift": 0.093466964234584,
+    "cosine_similarity": 0.906533035765416,
+    "norm_ratio": 0.9157476761760177,
+    "relative_error": 0.42223543748146747,
+    "sample_count": 1024
+  },
+  "weight_shape": [
+    4096,
+    11008
+  ]
+}
