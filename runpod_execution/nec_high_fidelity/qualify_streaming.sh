@@ -32,6 +32,7 @@ Each invocation runs exactly one stage and then stops:
   down-stable-reference  Post-sweep-Q4/48-CG full-matrix numerical control
   down-stable-fp64       Matching FP64 streaming numerical control
   down-stable-compare    Compare the two stable-control variants
+  bridge-diagnostic      Bridge-only real-activation Q4/FP16/refit diagnostic
   down-bridge-fp16-reference  Stable control with only the bridge kept FP16
   down-bridge-fp16-fp64       Matching FP64 streaming bridge-without-Q4 control
   down-bridge-fp16-compare    Compare the bridge-without-Q4 variants
@@ -377,6 +378,21 @@ case "$STAGE" in
         --fp64 "$QUAL_ROOT/down_projection_stable/streaming-fp64" \
         --output "$QUAL_ROOT/down_projection_stable/comparison-fp64.json" \
         --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  bridge-diagnostic)
+    stable_reference="$QUAL_ROOT/down_projection_stable/reference-full-matrix"
+    if [[ ! -f "$stable_reference/stage_weights/sparse.pt" ]]; then
+      echo "ERROR: bridge-diagnostic requires the completed down-stable-reference artifact." >&2
+      exit 2
+    fi
+    bridge_output="$QUAL_ROOT/down_projection_stable/bridge-diagnostic-controls"
+    run_logged bridge-diagnostic "$bridge_output" \
+      "$VENV_DIR/bin/python" benchmarks/diagnose_real_bridge.py \
+        --output "$bridge_output/report.json" \
+        --reference-output "$stable_reference" \
+        --device cuda:0 \
+        --n-calib 4096 --n-validation 1024 --seq-len 128 \
+        --windows-per-chunk "$WINDOWS_PER_CHUNK"
     ;;
   down-bridge-fp16-reference)
     down_bridge_control_stage fp16 fp16_control reference-full-matrix full_matrix
