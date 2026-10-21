@@ -9,6 +9,7 @@ import numpy as np
 import torch
 
 from nox.compiler import nox_hybrid_dmrg_decompose, quantize_4bit_grouped
+from nox.block_compiler import compile_transformer_block
 from benchmarks.evaluate_high_fidelity_mmlu import (
     audit_mmlu_response_finiteness,
     install_pinned_mmlu_loader,
@@ -93,6 +94,9 @@ def tiny_artifact():
             "requested_sparse_budget": 524288,
             "realized_sparse_count": 1,
             "quantize_components": True,
+            "quantization_schedule": "in_sweep",
+            "cg_threshold": 4096,
+            "cg_iterations": 6,
         },
         "quantization_bits": 4,
         "core_quantization_bits": 4,
@@ -101,6 +105,43 @@ def tiny_artifact():
 
 
 class ProductionEvaluationTests(unittest.TestCase):
+    def test_full_layer_compiler_propagates_post_sweep_q4_and_48_cg_to_all_projections(self):
+        weights = {
+            "q_proj": torch.randn(16, 16),
+            "k_proj": torch.randn(16, 16),
+            "v_proj": torch.randn(16, 16),
+            "o_proj": torch.randn(16, 16),
+            "gate_proj": torch.randn(16, 16),
+            "up_proj": torch.randn(16, 16),
+            "down_proj": torch.randn(16, 16),
+            "input_layernorm": torch.ones(16),
+            "post_attention_layernorm": torch.ones(16),
+        }
+        calls = []
+
+        def fake_projection(**kwargs):
+            calls.append(kwargs)
+            return kwargs["W"], 0.0, [], []
+
+        with patch("nox.block_compiler.nox_hybrid_dmrg_decompose", side_effect=fake_projection):
+            compile_transformer_block(
+                weights,
+                torch.randn(16, 8),
+                n_heads=4,
+                n_kv_heads=4,
+                seq_len=4,
+                causal_healing=False,
+                return_artifacts=False,
+                verbose=False,
+                mpo_quantization_schedule="post_sweep",
+                mpo_cg_threshold=4096,
+                mpo_cg_iterations=48,
+            )
+        self.assertEqual(len(calls), 7)
+        self.assertEqual({call["quantization_schedule"] for call in calls}, {"post_sweep"})
+        self.assertEqual({call["cg_threshold"] for call in calls}, {4096})
+        self.assertEqual({call["cg_iterations"] for call in calls}, {48})
+
     def test_qualification_heartbeat_reads_durable_phase(self):
         with tempfile.TemporaryDirectory() as temporary:
             progress = Path(temporary) / "progress.json"
@@ -581,6 +622,9 @@ class ProductionEvaluationTests(unittest.TestCase):
             },
             "mpo_n_sweeps": 2,
             "mpo_alpha_awt": 0.5,
+                "mpo_quantization_schedule": "in_sweep",
+                "mpo_cg_threshold": 4096,
+                "mpo_cg_iterations": 6,
             "forward_options": {
                 "n_heads": 32,
                 "n_kv_heads": 32,
@@ -628,6 +672,7 @@ class ProductionEvaluationTests(unittest.TestCase):
                 "run_fingerprint": run_fingerprint,
                 "checkpoint_file_sizes": sizes,
                 "checkpoint_file_sha256": hashes,
+                "layers_compressed": list(range(32)),
                 "serialized_checkpoint_bytes": sum(sizes.values()),
                 "intermediate_files": intermediate,
             }
@@ -646,6 +691,108 @@ class ProductionEvaluationTests(unittest.TestCase):
                 report["independent_numerical_coefficients"],
                 32 * 7 * 17_219 + 32 * 8192 + UNCHANGED_COEFFICIENTS,
             )
+
+    def test_partial_prefix_audit_requires_opt_in_and_exact_stable_settings(self):
+        projection_shapes = {name: (2, 2) for name in (
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        )}
+        identity = {
+            "model_id": MODEL_ID,
+            "model_revision": MODEL_REVISION,
+            "compression_path": "no_healing_independent",
+            "calibration_activation_mode": "dense",
+            "construction_mode": "independent",
+            "config": {
+                "ranks": [1, 64, 128, 64, 1],
+                "r_bridge": 128,
+                "n_outliers": 524288,
+            },
+            "mpo_n_sweeps": 2,
+            "mpo_alpha_awt": 0.5,
+            "mpo_quantization_schedule": "post_sweep",
+            "mpo_cg_threshold": 4096,
+            "mpo_cg_iterations": 48,
+            "forward_options": {
+                "n_heads": 32,
+                "n_kv_heads": 32,
+                "seq_len": 128,
+                "rms_norm_eps": 1e-5,
+            },
+            "input_data": {
+                "calibration_token_count": 4096,
+                "heldout_token_count": 1024,
+                "calibration_source": {"dataset_revision": WIKITEXT_REVISION},
+                "heldout_source": {"dataset_revision": WIKITEXT_REVISION},
+            },
+            "layers": [0],
+        }
+        run_fingerprint = fingerprint(identity)
+        artifact = tiny_artifact()
+        artifact["compiler_hyperparameters"].update({
+            "quantization_schedule": "post_sweep",
+            "cg_threshold": 4096,
+            "cg_iterations": 48,
+        })
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp)
+            layer_path = directory / "compressed_layer_0.pt"
+            torch.save({
+                "layer_idx": 0,
+                "run_fingerprint": run_fingerprint,
+                "compressed_artifacts": {
+                    name: artifact for name in projection_shapes
+                },
+                "input_layernorm": torch.ones(4096),
+                "post_attention_layernorm": torch.ones(4096),
+            }, layer_path)
+            intermediate = {}
+            for prefix in ("dense_input", "calibration_input", "layer_input_validation"):
+                path = directory / f"{prefix}_layer_0.pt"
+                torch.save(torch.ones(1), path)
+                intermediate[path.name] = {
+                    "bytes": path.stat().st_size,
+                    "sha256": sha256_file(path),
+                }
+            manifest = {
+                "run_identity": identity,
+                "run_fingerprint": run_fingerprint,
+                "layers_compressed": [0],
+                "checkpoint_file_sizes": {layer_path.name: layer_path.stat().st_size},
+                "checkpoint_file_sha256": {layer_path.name: sha256_file(layer_path)},
+                "serialized_checkpoint_bytes": layer_path.stat().st_size,
+                "intermediate_files": intermediate,
+            }
+            (directory / "model_manifest.json").write_text(json.dumps(manifest))
+            with patch("nox.evaluation.PROJECTION_SHAPES", projection_shapes):
+                with self.assertRaisesRegex(ValueError, "allow_partial_prefix"):
+                    validate_high_fidelity_checkpoint(
+                        directory,
+                        expected_calibration_tokens=4096,
+                        expected_heldout_tokens=1024,
+                        expected_quantization_schedule="post_sweep",
+                        expected_cg_iterations=48,
+                    )
+                report = validate_high_fidelity_checkpoint(
+                    directory,
+                    expected_calibration_tokens=4096,
+                    expected_heldout_tokens=1024,
+                    allow_partial_prefix=True,
+                    expected_quantization_schedule="post_sweep",
+                    expected_cg_iterations=48,
+                )
+                with self.assertRaisesRegex(ValueError, "solver/quantization identity"):
+                    validate_high_fidelity_checkpoint(
+                        directory,
+                        expected_calibration_tokens=4096,
+                        expected_heldout_tokens=1024,
+                        allow_partial_prefix=True,
+                        expected_quantization_schedule="post_sweep",
+                        expected_cg_iterations=6,
+                    )
+            self.assertEqual(report["compressed_layers"], [0])
+            self.assertEqual(report["compressed_layer_count"], 1)
+            self.assertEqual(report["uncompressed_dense_projection_coefficients"], 31 * 7 * 4)
 
 
 if __name__ == "__main__":

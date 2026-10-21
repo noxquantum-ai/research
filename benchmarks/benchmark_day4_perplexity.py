@@ -39,6 +39,16 @@ def load_wikitext2_test_text(return_metadata=False):
     return (text, metadata) if return_metadata else text
 
 
+def load_wikitext2_text(split="test", return_metadata=False):
+    """Load a pinned raw WikiText-2 split; partial-prefix work uses validation."""
+    text, metadata = load_wikitext2_raw_split(split)
+    log_step(
+        f"Loaded WikiText-2 raw {split} split: {metadata['source_bytes']} bytes, "
+        f"sha256={metadata['source_sha256']} from {metadata['source_url']}"
+    )
+    return (text, metadata) if return_metadata else text
+
+
 @torch.no_grad()
 def sliding_window_specifications(num_tokens, seq_len=2048, stride=512, max_eval_tokens=10000):
     """Return non-duplicating strided causal-LM scoring windows.
@@ -293,6 +303,7 @@ def inject_nox_checkpoints(
     device="cuda",
     dtype=torch.float16,
     diagnostics: list[dict] | None = None,
+    expected_layers: list[int] | None = None,
 ):
     """
     Loads NEC MPO, NEC-plus-packed-residual, or direct packed-codec checkpoints
@@ -304,6 +315,13 @@ def inject_nox_checkpoints(
     ckpt_files = sorted(glob.glob(os.path.join(checkpoint_dir, "compressed_layer_*.pt")))
     if not ckpt_files:
         raise FileNotFoundError(f"No 'compressed_layer_*.pt' files found in '{checkpoint_dir}'")
+    file_layers = sorted(
+        int(Path(path).stem.removeprefix("compressed_layer_")) for path in ckpt_files
+    )
+    if expected_layers is not None and file_layers != list(expected_layers):
+        raise ValueError(
+            f"Checkpoint files contain layers {file_layers}, expected exactly {expected_layers}"
+        )
 
     log_step(f"Found {len(ckpt_files)} compressed layer checkpoints in '{checkpoint_dir}'. Injecting weights...")
 
@@ -409,6 +427,10 @@ def inject_nox_checkpoints(
         injected_layers.append(l_idx)
         log_step(f"  Layer {l_idx:02d}: Reconstructed and injected ({data.get('total_kb', 0.0):.1f} KB artifact)")
 
+    if expected_layers is not None and sorted(injected_layers) != list(expected_layers):
+        raise RuntimeError(
+            f"Injected layer set {sorted(injected_layers)} differs from expected {expected_layers}"
+        )
     return injected_layers
 
 

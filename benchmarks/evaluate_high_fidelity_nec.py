@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import math
 import os
@@ -23,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 from benchmarks.benchmark_day4_perplexity import (
     compute_perplexity,
     inject_nox_checkpoints,
-    load_wikitext2_test_text,
+    load_wikitext2_text,
 )
 from nox.artifacts import fingerprint
 from nox.evaluation import (
@@ -52,10 +53,19 @@ MODEL_VARIANTS = ("dense", "high_fidelity_nec")
 
 def save_top1_predictions(predictions: torch.Tensor, path: Path) -> dict:
     """Persist exact ordered predictions in a compact, hash-audited sidecar."""
-    if path.exists():
-        raise FileExistsError(f"Refusing to overwrite prediction sidecar {path}")
     values = predictions.detach().cpu().numpy().astype("<i4", copy=False)
     payload = values.tobytes(order="C")
+    if path.exists():
+        existing = path.read_bytes()
+        if existing != payload:
+            raise FileExistsError(f"Existing prediction sidecar differs; refusing overwrite: {path}")
+        return {
+            "path": str(path.resolve()),
+            "sha256": hashlib.sha256(existing).hexdigest(),
+            "dtype": "int32_little_endian",
+            "count": int(values.size),
+            "bytes": len(existing),
+        }
     temporary = path.with_suffix(path.suffix + ".partial")
     temporary.write_bytes(payload)
     temporary.replace(path)
@@ -68,11 +78,44 @@ def save_top1_predictions(predictions: torch.Tensor, path: Path) -> dict:
     }
 
 
+def save_token_nll(values: torch.Tensor, path: Path) -> dict:
+    """Write ordered per-target NLLs for paired dense/NEC comparison."""
+    array = values.detach().cpu().numpy().astype("<f4", copy=False)
+    buffer = io.BytesIO()
+    np.save(buffer, array, allow_pickle=False)
+    payload = buffer.getvalue()
+    if path.exists():
+        existing = path.read_bytes()
+        if existing != payload:
+            raise FileExistsError(f"Existing token-NLL sidecar differs; refusing overwrite: {path}")
+        return {
+            "path": str(path.resolve()),
+            "sha256": hashlib.sha256(existing).hexdigest(),
+            "dtype": "float32_little_endian_npy",
+            "count": int(array.size),
+            "bytes": len(existing),
+        }
+    temporary = path.with_suffix(path.suffix + ".partial")
+    with temporary.open("wb") as stream:
+        stream.write(payload)
+        stream.flush()
+        os.fsync(stream.fileno())
+    temporary.replace(path)
+    return {
+        "path": str(path.resolve()),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "dtype": "float32_little_endian_npy",
+        "count": int(array.size),
+        "bytes": int(path.stat().st_size),
+    }
+
+
 def load_model(
     checkpoint_dir: Path | None,
     offload_folder: Path | None = None,
     *,
     variant: str = "high_fidelity_nec",
+    allow_partial_prefix: bool = False,
 ):
     """Load the identical pinned base model, optionally replacing all linear weights with NEC."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -111,12 +154,23 @@ def load_model(
     reconstruction_diagnostics: list[dict] = []
     injected: list[int] = []
     if variant == "high_fidelity_nec":
+        checkpoint_manifest = json.loads(
+            (checkpoint_dir / "model_manifest.json").read_text()
+        )
+        expected_layers = checkpoint_manifest.get("run_identity", {}).get("layers")
+        if not isinstance(expected_layers, list) or not expected_layers:
+            raise ValueError("NEC checkpoint manifest does not declare compressed layers")
+        if expected_layers != list(range(len(expected_layers))):
+            raise ValueError("NEC evaluation accepts only a contiguous compressed layer prefix")
+        if len(expected_layers) != 32 and not allow_partial_prefix:
+            raise ValueError("Partial NEC prefix requires --allow-partial-prefix")
         injected = inject_nox_checkpoints(
             model, str(checkpoint_dir), dtype=torch.float16,
             diagnostics=reconstruction_diagnostics,
+            expected_layers=expected_layers,
         )
-        if len(injected) != 32 or set(injected) != set(range(32)):
-            raise RuntimeError(f"Incomplete NEC injection: {sorted(injected)}")
+        if injected != expected_layers:
+            raise RuntimeError(f"Incomplete NEC injection: {injected}, expected {expected_layers}")
     return model, tokenizer, sorted(injected), compatibility, reconstruction_diagnostics
 
 
@@ -151,6 +205,14 @@ def main() -> None:
                         help="Writable folder for Accelerate disk offload")
     parser.add_argument("--full-test", action="store_true",
                         help="Report both the required 10k-token result and full raw test split")
+    parser.add_argument("--dataset-split", choices=("validation", "test"), default="test",
+                        help="Use validation for prefix development runs; reserve test for final evaluation")
+    parser.add_argument("--allow-partial-prefix", action="store_true",
+                        help="Allow a complete contiguous compressed layer prefix, leaving later layers dense")
+    parser.add_argument("--expected-quantization-schedule", choices=("in_sweep", "post_sweep"),
+                        default="in_sweep")
+    parser.add_argument("--expected-cg-threshold", type=int, default=4096)
+    parser.add_argument("--expected-cg-iterations", type=int, default=6)
     parser.add_argument("--skip-reconstruct-audit", action="store_true",
                         help=("Skip the redundant dense reconstruction pass in the metadata audit; "
                               "the subsequent model injection still reconstructs and shape/finite-checks "
@@ -176,6 +238,10 @@ def main() -> None:
         raise ValueError("--batch-size must be a positive integer")
     if args.max_eval_tokens != 0 and args.max_eval_tokens < 10_000:
         raise ValueError("Production evaluation requires 10,000 tokens or the full split")
+    if args.allow_partial_prefix and args.dataset_split != "validation":
+        raise ValueError("Partial-prefix development evaluation must use WikiText-2 validation, not test")
+    if args.expected_cg_threshold <= 0 or args.expected_cg_iterations <= 0:
+        raise ValueError("Expected MPO CG settings must be positive")
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     audit = None
@@ -186,18 +252,29 @@ def main() -> None:
             reconstruction_device="cuda" if torch.cuda.is_available() else "cpu",
             expected_calibration_tokens=args.expected_calibration_tokens,
             expected_heldout_tokens=args.expected_heldout_tokens,
+            allow_partial_prefix=args.allow_partial_prefix,
+            expected_quantization_schedule=args.expected_quantization_schedule,
+            expected_cg_threshold=args.expected_cg_threshold,
+            expected_cg_iterations=args.expected_cg_iterations,
         )
-        audit_temp = audit_path.with_suffix(audit_path.suffix + ".partial")
-        audit_temp.write_text(json.dumps(audit, indent=2) + "\n")
-        audit_temp.replace(audit_path)
+        if audit_path.exists():
+            if json.loads(audit_path.read_text()) != audit:
+                raise FileExistsError(
+                    f"Existing checkpoint audit differs from current checkpoint: {audit_path}"
+                )
+        else:
+            audit_temp = audit_path.with_suffix(audit_path.suffix + ".partial")
+            audit_temp.write_text(json.dumps(audit, indent=2) + "\n")
+            audit_temp.replace(audit_path)
 
     for index in range(torch.cuda.device_count()):
         torch.cuda.reset_peak_memory_stats(index)
     started = time.monotonic()
     model, tokenizer, injected, compatibility, reconstruction_diagnostics = load_model(
         args.checkpoint_dir, offload_folder=args.offload_folder, variant=args.variant,
+        allow_partial_prefix=args.allow_partial_prefix,
     )
-    text, dataset = load_wikitext2_test_text(return_metadata=True)
+    text, dataset = load_wikitext2_text(args.dataset_split, return_metadata=True)
     ppl, scored_tokens, details = compute_perplexity(
         model,
         tokenizer,
@@ -209,6 +286,8 @@ def main() -> None:
         return_details=True,
         verify_reference_loss=True,
         batch_size=args.batch_size,
+        return_token_nll=True,
+        progress_interval=32,
     )
     if args.max_eval_tokens > 0 and details["input_tokens"] < args.max_eval_tokens:
         raise ValueError(
@@ -225,7 +304,15 @@ def main() -> None:
 
     primary_predictions = save_top1_predictions(
         details["top1_predictions"],
-        args.output.with_name(args.output.stem + ".primary_10k.top1.i32"),
+        args.output.with_name(
+            args.output.stem + f".primary_{args.max_eval_tokens or 'full'}.top1.i32"
+        ),
+    )
+    primary_token_nll = save_token_nll(
+        details["token_nll"],
+        args.output.with_name(
+            args.output.stem + f".primary_{args.max_eval_tokens or 'full'}.token_nll.npy"
+        ),
     )
     full_result = None
     if args.full_test:
@@ -282,6 +369,7 @@ def main() -> None:
         "context_length": args.context_length,
         "stride": args.stride,
         "primary_input_tokens": args.max_eval_tokens,
+        "primary_evaluation_scope": "full_split" if args.max_eval_tokens == 0 else "token_prefix",
         "full_test": args.full_test,
         "inference_batch_size": args.batch_size,
         "text_policy": "raw WikiText-2 text joined with two newlines; no instruction/chat template",
@@ -306,11 +394,15 @@ def main() -> None:
         "window_specification": details["window_specification"],
         "nll_formula_crosscheck": details["nll_formula_crosscheck"],
         "top1_prediction_sidecar": primary_predictions,
+        "token_nll_sidecar": primary_token_nll,
     }
     result = {
         "status": "COMPLETE",
         "evaluation": f"{args.variant}_wikitext2_raw",
         "model_variant": args.variant,
+        "compressed_layers": injected,
+        "partial_prefix": bool(args.allow_partial_prefix),
+        "dataset_split": args.dataset_split,
         "model_id": MODEL_ID,
         "model_revision": MODEL_REVISION,
         "model_tokenizer_compatibility": compatibility,
@@ -318,7 +410,6 @@ def main() -> None:
         "checkpoint_dir": str(args.checkpoint_dir.resolve()) if args.checkpoint_dir else None,
         "checkpoint_audit": str(audit_path.resolve()) if audit_path else None,
         "checkpoint_manifest_sha256": audit["manifest_sha256"] if audit else None,
-        "compressed_layers": injected,
         "independent_numerical_coefficients": (
             DENSE_LLAMA2_7B_COEFFICIENTS if is_dense
             else audit["independent_numerical_coefficients"]
@@ -333,6 +424,7 @@ def main() -> None:
             "context_length": args.context_length,
             "stride": args.stride,
             "requested_max_input_tokens": args.max_eval_tokens,
+            "dataset_split": args.dataset_split,
             "input_tokens": details["input_tokens"],
             "scored_tokens": scored_tokens,
             "token_ids_sha256": details["token_ids_sha256"],
@@ -357,7 +449,7 @@ def main() -> None:
             "perplexity": ppl,
             "mean_nll": details["mean_nll"],
             "next_token_accuracy": details["next_token_accuracy"],
-            "primary_10k": primary_result,
+            "primary": primary_result,
             "full_test": full_result,
         },
         "runtime": {
@@ -383,6 +475,8 @@ def main() -> None:
         },
         "dense_model_evaluated": is_dense,
     }
+    if args.max_eval_tokens == 10_000:
+        result["metrics"]["primary_10k"] = primary_result
     temporary = args.output.with_suffix(args.output.suffix + ".partial")
     temporary.write_text(json.dumps(result, indent=2) + "\n")
     temporary.replace(args.output)

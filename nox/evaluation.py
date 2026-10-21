@@ -282,11 +282,17 @@ def validate_high_fidelity_checkpoint(
     reconstruction_device: str = "cpu",
     expected_calibration_tokens: int = 256,
     expected_heldout_tokens: int = 128,
+    allow_partial_prefix: bool = False,
+    expected_quantization_schedule: str = "in_sweep",
+    expected_cg_threshold: int = 4096,
+    expected_cg_iterations: int = 6,
 ) -> dict:
-    """Audit a complete High-Fidelity checkpoint for an explicit data protocol.
+    """Audit a full checkpoint or an explicitly permitted contiguous prefix.
 
     Defaults preserve the historical 256/128-token checkpoint contract. New
     RunPod experiments must pass their configured token counts explicitly.
+    A partial checkpoint is accepted only when ``allow_partial_prefix`` is set
+    and its compressed layers are exactly ``0, ..., k-1``.
     """
     directory = Path(checkpoint_dir)
     manifest_path = directory / "model_manifest.json"
@@ -319,8 +325,28 @@ def validate_high_fidelity_checkpoint(
         raise ValueError("Checkpoint did not use independent dense calibration activations")
     if identity.get("construction_mode", "independent") != "independent":
         raise ValueError("Checkpoint construction mode mismatch")
-    if identity.get("layers") != list(range(32)):
-        raise ValueError("Manifest does not declare all 32 layers")
+    layers_declared = identity.get("layers")
+    if not isinstance(layers_declared, list) or not layers_declared:
+        raise ValueError("Manifest must declare at least one compressed layer")
+    if layers_declared != list(range(len(layers_declared))):
+        raise ValueError("Compressed layer declaration must be a contiguous prefix starting at layer 0")
+    if len(layers_declared) != 32 and not allow_partial_prefix:
+        raise ValueError("Manifest does not declare all 32 layers; pass allow_partial_prefix explicitly")
+    if len(layers_declared) > 32:
+        raise ValueError("Manifest declares more layers than Llama-2-7B contains")
+    if manifest.get("layers_compressed") != layers_declared:
+        raise ValueError("Manifest compressed-layer list disagrees with run identity")
+    actual_schedule = identity.get("mpo_quantization_schedule", "in_sweep")
+    actual_cg_threshold = identity.get("mpo_cg_threshold", 4096)
+    actual_cg_iterations = identity.get("mpo_cg_iterations", 6)
+    if (actual_schedule, actual_cg_threshold, actual_cg_iterations) != (
+        expected_quantization_schedule, expected_cg_threshold, expected_cg_iterations,
+    ):
+        raise ValueError(
+            "MPO solver/quantization identity mismatch: "
+            f"got {(actual_schedule, actual_cg_threshold, actual_cg_iterations)}, expected "
+            f"{(expected_quantization_schedule, expected_cg_threshold, expected_cg_iterations)}"
+        )
     forward = identity.get("forward_options", {})
     if forward != {"n_heads": 32, "n_kv_heads": 32, "seq_len": 128, "rms_norm_eps": 1e-5}:
         raise ValueError(f"Llama-2 forward configuration mismatch: {forward}")
@@ -348,24 +374,37 @@ def validate_high_fidelity_checkpoint(
             raise ValueError(f"Unpinned calibration provenance in {key}")
     if fingerprint(identity) != manifest.get("run_fingerprint"):
         raise ValueError("Checkpoint manifest fingerprint mismatch")
+    accepted_artifact_fingerprints = {manifest["run_fingerprint"]}
+    for event in manifest.get("resume_events", []):
+        previous_fingerprint = event.get("previous_run_fingerprint")
+        if (
+            isinstance(previous_fingerprint, str)
+            and len(previous_fingerprint) == 64
+            and all(character in "0123456789abcdef" for character in previous_fingerprint)
+        ):
+            accepted_artifact_fingerprints.add(previous_fingerprint)
 
-    expected_files = {f"compressed_layer_{index}.pt" for index in range(32)}
+    compressed_layers = list(layers_declared)
+    expected_files = {f"compressed_layer_{index}.pt" for index in compressed_layers}
     actual_files = {path.name for path in directory.glob("compressed_layer_*.pt")}
     if actual_files != expected_files:
-        raise ValueError("Checkpoint directory does not contain exactly 32 layer artifacts")
+        raise ValueError(
+            "Checkpoint directory layer files do not match its declared prefix: "
+            f"found {sorted(actual_files)}, expected {sorted(expected_files)}"
+        )
     if list(directory.glob("*.pt.partial")):
         raise ValueError("Incomplete temporary layer checkpoint present")
     file_sizes = manifest.get("checkpoint_file_sizes", {})
     file_hashes = manifest.get("checkpoint_file_sha256", {})
     if set(file_sizes) != expected_files or set(file_hashes) != expected_files:
-        raise ValueError("Manifest must provide size and SHA-256 for all 32 layer files")
+        raise ValueError("Manifest size/hash entries must match all declared layer files")
     if sum(int(size) for size in file_sizes.values()) != int(
         manifest.get("serialized_checkpoint_bytes", -1)
     ):
         raise ValueError("Manifest serialized checkpoint byte total is inconsistent")
     expected_intermediate = {
         f"{prefix}_layer_{layer}.pt"
-        for layer in range(32)
+        for layer in compressed_layers
         for prefix in (
             "dense_input",
             "calibration_input",
@@ -374,7 +413,7 @@ def validate_high_fidelity_checkpoint(
     }
     intermediate = manifest.get("intermediate_files", {})
     if set(intermediate) != expected_intermediate:
-        raise ValueError("Manifest must preserve all 96 layer calibration/input artifacts")
+        raise ValueError("Manifest intermediate metadata must match every declared layer")
     actual_intermediate = set()
     for prefix in ("dense_input", "calibration_input", "layer_input_validation"):
         actual_intermediate.update(path.name for path in directory.glob(f"{prefix}_layer_*.pt"))
@@ -392,13 +431,13 @@ def validate_high_fidelity_checkpoint(
     projection_coefficients = 0
     layer_norm_coefficients = 0
     serialized_bytes = 0
-    for index in range(32):
+    for index in compressed_layers:
         path = directory / f"compressed_layer_{index}.pt"
         file_sha256 = sha256_file(path)
         checkpoint = torch.load(path, map_location="cpu", weights_only=True)
         if checkpoint.get("layer_idx") != index:
             raise ValueError(f"Layer index mismatch in {path.name}")
-        if checkpoint.get("run_fingerprint") != manifest["run_fingerprint"]:
+        if checkpoint.get("run_fingerprint") not in accepted_artifact_fingerprints:
             raise ValueError(f"Run fingerprint mismatch in {path.name}")
         artifacts = checkpoint.get("compressed_artifacts")
         if not isinstance(artifacts, dict) or set(artifacts) != set(PROJECTION_SHAPES):
@@ -427,19 +466,28 @@ def validate_high_fidelity_checkpoint(
                 "requested_bridge_rank": 128,
                 "requested_sparse_budget": 524288,
                 "quantize_components": True,
+                "quantization_schedule": expected_quantization_schedule,
+                "cg_threshold": expected_cg_threshold,
+                "cg_iterations": expected_cg_iterations,
+            }
+            legacy_hyperparameter_defaults = {
+                "quantization_schedule": "in_sweep",
+                "cg_threshold": 4096,
+                "cg_iterations": 6,
             }
             for key, value in expected_hyperparameters.items():
-                if hyperparameters.get(key) != value:
+                actual_value = hyperparameters.get(key, legacy_hyperparameter_defaults.get(key))
+                if actual_value != value:
                     raise ValueError(
                         f"layer{index}.{projection}: compiler setting {key}="
-                        f"{hyperparameters.get(key)!r}, expected {value!r}"
+                        f"{actual_value!r}, expected {value!r}"
                     )
             if hyperparameters.get("realized_sparse_count") != projection_report["sparse_coefficients"]:
                 raise ValueError(
                     f"layer{index}.{projection}: realized sparse count disagrees with serialized values"
                 )
             if artifact.get("quantization_bits") != 4 or artifact.get("core_quantization_bits") != 4:
-                raise ValueError(f"layer{index}.{projection}: expected in-sweep 4-bit quantization")
+                raise ValueError(f"layer{index}.{projection}: expected 4-bit component quantization")
             precision = artifact.get("precision_diagnostics")
             expected_precision_components = {
                 "sparse_shield", "bridge_A", "bridge_B",
@@ -517,7 +565,19 @@ def validate_high_fidelity_checkpoint(
             "projections": projection_reports,
         })
 
-    independent = projection_coefficients + layer_norm_coefficients + UNCHANGED_COEFFICIENTS
+    dense_projection_coefficients_per_layer = sum(
+        int(shape[0] * shape[1]) for shape in PROJECTION_SHAPES.values()
+    )
+    uncompressed_projection_coefficients = (
+        32 - len(compressed_layers)
+    ) * dense_projection_coefficients_per_layer
+    # Layer norms are dense in both the compressed and uncompressed prefix
+    # evaluation; count the full model's 64 RMSNorm vectors exactly once.
+    layer_norm_coefficients = 32 * 2 * 4096
+    independent = (
+        projection_coefficients + uncompressed_projection_coefficients
+        + layer_norm_coefficients + UNCHANGED_COEFFICIENTS
+    )
     reduction = 1.0 - independent / DENSE_LLAMA2_7B_COEFFICIENTS
     ratio = DENSE_LLAMA2_7B_COEFFICIENTS / independent
     if not all(math.isfinite(value) for value in (reduction, ratio)):
@@ -527,8 +587,11 @@ def validate_high_fidelity_checkpoint(
         "manifest_sha256": sha256_file(manifest_path),
         "run_fingerprint": manifest["run_fingerprint"],
         "layers": layers,
+        "compressed_layer_count": len(compressed_layers),
+        "compressed_layers": compressed_layers,
         "projection_coefficients": int(projection_coefficients),
         "layer_norm_coefficients": int(layer_norm_coefficients),
+        "uncompressed_dense_projection_coefficients": int(uncompressed_projection_coefficients),
         "unchanged_embedding_head_final_norm_coefficients": UNCHANGED_COEFFICIENTS,
         "independent_numerical_coefficients": int(independent),
         "dense_reference_coefficients": DENSE_LLAMA2_7B_COEFFICIENTS,

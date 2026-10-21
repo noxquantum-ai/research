@@ -46,13 +46,16 @@ Each invocation runs exactly one stage and then stops:
   layer-fp32         All seven layer-0 projections, FP32 streaming statistics
   layer-fp64         Optional all-seven FP64 streaming diagnostic
   layer-compare      Compare completed layer variants
+  layer0-dev-ppl     Matched dense and one-layer NEC PPL on raw WikiText-2 validation
+  layer0-pack-audit  Pack round-trip and held-out single-block output check
   status             Print saved status without running computation
 
 There is no timeout by default. Set NEC_QUAL_TIMEOUT_SECONDS to a positive
 number to enforce an optional per-stage limit. NEC_QUAL_HEARTBEAT_SECONDS controls
 periodic progress/resource logging (default 60 seconds). No stage starts its successor.
-Layer stages require a passing down-compare report. Terminate the RunPod pod
-manually when finished to stop billing.
+Streaming layer stages require a passing down-compare report. The full-matrix
+reference layer stage is independent of streaming parity. Terminate the RunPod
+pod manually when finished to stop billing.
 EOF
 }
 
@@ -165,6 +168,23 @@ run_logged() {
   record_exit "$name" "$output_dir" "$exit_code" "$elapsed"
   echo "IMPORTANT: this process stopped, but RunPod billing continues until you terminate the pod." >&2
   return "$exit_code"
+}
+
+run_ppl_eval_or_reuse() {
+  local name="$1" output_dir="$2" result_path="$3" variant="$4" checkpoint_dir="$5"
+  shift 5
+  if [[ -f "$result_path" ]]; then
+    local validation_args=(--result "$result_path" --variant "$variant")
+    if [[ -n "$checkpoint_dir" ]]; then
+      validation_args+=(--checkpoint-dir "$checkpoint_dir")
+    fi
+    echo "Verifying completed PPL result before reuse: $result_path" | tee -a "$QUAL_ROOT/logs/$name.log"
+    "$VENV_DIR/bin/python" benchmarks/validate_ppl_result.py "${validation_args[@]}" \
+      2>&1 | tee -a "$QUAL_ROOT/logs/$name.log"
+    echo "Reusing verified completed PPL result; no model inference repeated." | tee -a "$QUAL_ROOT/logs/$name.log"
+    return 0
+  fi
+  run_logged "$name" "$output_dir" "$@"
 }
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
@@ -350,6 +370,7 @@ layer_common=(
   --seq-len 128 --calibration-sampling uniform --validation-sampling uniform
   --calibration-activation-mode dense --construction-mode independent
   --diagonal-prior-strength 0 --mpo-sweeps 2 --mpo-alpha-awt 0.5
+  --mpo-quantization-schedule post_sweep --mpo-cg-threshold 4096 --mpo-cg-iterations 48
   --representation mpo4 --attention-gauge none --mlp-gauge none
   --mlp-objective independent --budget-allocation uniform
   --defect-bridge-mode none --pees-rank 0
@@ -365,7 +386,9 @@ layer_stage() {
   local gate_variant="$4"
   local output="$QUAL_ROOT/layer0/$name"
   local resume_argument=()
-  require_down_gate "$gate_variant"
+  if [[ "$backend" == "streaming_statistics" ]]; then
+    require_down_gate "$gate_variant"
+  fi
   if [[ -f "$output/model_manifest.json" ]]; then
     resume_argument=(--resume)
   fi
@@ -467,7 +490,7 @@ case "$STAGE" in
     compare_bridge_control refit
     ;;
   layer-reference)
-    layer_stage reference-full-matrix full_matrix float64 any
+    layer_stage reference-post-sweep-q4-48cg full_matrix float64 any
     ;;
   layer-fp32)
     layer_stage streaming-fp32 streaming_statistics float32 fp32
@@ -490,10 +513,67 @@ case "$STAGE" in
     fi
     run_logged layer-compare "$QUAL_ROOT/layer0" \
       "$VENV_DIR/bin/python" benchmarks/compare_streaming_nec_runs.py \
-        --reference "$QUAL_ROOT/layer0/reference-full-matrix" \
+        --reference "$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg" \
         "${variant_arguments[@]}" \
         --output "$QUAL_ROOT/layer0/comparison.json" \
         --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  layer0-dev-ppl)
+    layer_dir="$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg"
+    eval_dir="$layer_dir/evaluation-dev"
+    if [[ ! -f "$layer_dir/model_manifest.json" || ! -f "$layer_dir/compressed_layer_0.pt" ]]; then
+      echo "ERROR: layer0-dev-ppl requires the completed all-seven-projection layer-0 reference checkpoint." >&2
+      exit 2
+    fi
+    export NEC_EVAL_GPU_MEMORY_GIB="${NEC_EVAL_GPU_MEMORY_GIB:-32}"
+    export NEC_EVAL_CPU_MEMORY_GIB="${NEC_EVAL_CPU_MEMORY_GIB:-48}"
+    run_ppl_eval_or_reuse layer0-dense-dev-ppl "$eval_dir/dense" "$eval_dir/dense.json" dense "" \
+      "$VENV_DIR/bin/python" benchmarks/evaluate_high_fidelity_nec.py \
+        --variant dense \
+        --output "$eval_dir/dense.json" \
+        --dataset-split validation \
+        --context-length 2048 --stride 512 --batch-size 1 \
+        --max-eval-tokens 0 \
+        --offload-folder "$eval_dir/dense-offload"
+    run_ppl_eval_or_reuse layer0-nec-dev-ppl "$eval_dir/nec" "$eval_dir/nec.json" high_fidelity_nec "$layer_dir" \
+      "$VENV_DIR/bin/python" benchmarks/evaluate_high_fidelity_nec.py \
+        --variant high_fidelity_nec \
+        --checkpoint-dir "$layer_dir" \
+        --output "$eval_dir/nec.json" \
+        --dataset-split validation \
+        --allow-partial-prefix \
+        --expected-calibration-tokens 4096 \
+        --expected-heldout-tokens 1024 \
+        --expected-quantization-schedule post_sweep \
+        --expected-cg-threshold 4096 --expected-cg-iterations 48 \
+        --context-length 2048 --stride 512 --batch-size 1 \
+        --max-eval-tokens 0 \
+        --offload-folder "$eval_dir/nec-offload"
+    run_logged layer0-dev-ppl-compare "$eval_dir/comparison" \
+      "$VENV_DIR/bin/python" benchmarks/compare_ppl_results.py \
+        --dense "$eval_dir/dense.json" \
+        --nec "$eval_dir/nec.json" \
+        --output "$eval_dir/comparison/report.json" \
+        --block-tokens 512 --bootstrap-repetitions 5000 --seed 20261021
+    ;;
+  layer0-pack-audit)
+    layer_dir="$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg"
+    pack_dir="$layer_dir/packed-control"
+    packed_artifacts="$pack_dir/artifacts"
+    if [[ ! -f "$layer_dir/compressed_layer_0.pt" || ! -f "$layer_dir/layer_input_validation_layer_0.pt" ]]; then
+      echo "ERROR: layer0-pack-audit requires the completed layer-0 checkpoint and saved held-out activations." >&2
+      exit 2
+    fi
+    run_logged layer0-pack-control "$pack_dir/pack-stage" \
+      "$VENV_DIR/bin/python" scripts/pack_checkpoint_control.py \
+        --input "$layer_dir/compressed_layer_0.pt" \
+        --output-dir "$packed_artifacts"
+    run_logged layer0-pack-forward-audit "$pack_dir/forward-audit-stage" \
+      "$VENV_DIR/bin/python" scripts/audit_packed_checkpoint.py \
+        --original "$layer_dir/compressed_layer_0.pt" \
+        --packed "$packed_artifacts/packed_checkpoint.pt" \
+        --activation-file "$layer_dir/layer_input_validation_layer_0.pt" \
+        --output "$packed_artifacts/block_roundtrip.json"
     ;;
   *)
     echo "ERROR: unknown qualification stage: $STAGE" >&2

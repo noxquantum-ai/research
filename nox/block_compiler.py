@@ -203,6 +203,9 @@ def compile_attention_block(
     operator_schmidt_activation_mix=1.0,
     mpo_n_sweeps=2,
     mpo_alpha_awt=0.5,
+    mpo_quantization_schedule="in_sweep",
+    mpo_cg_threshold=4096,
+    mpo_cg_iterations=6,
 ):
     """
     Compiles the 4 attention projections (W_q, W_k, W_v, W_o) with optional
@@ -222,6 +225,9 @@ def compile_attention_block(
                 site_order=site_order,
                 n_sweeps=mpo_n_sweeps,
                 alpha_awt=mpo_alpha_awt,
+                quantization_schedule=mpo_quantization_schedule,
+                cg_threshold=mpo_cg_threshold,
+                cg_iterations=mpo_cg_iterations,
                 **kwargs,
             )
         if site_order != IDENTITY_SITE_ORDER:
@@ -412,6 +418,9 @@ def compile_mlp_block(
     operator_schmidt_activation_mix=1.0,
     mpo_n_sweeps=2,
     mpo_alpha_awt=0.5,
+    mpo_quantization_schedule="in_sweep",
+    mpo_cg_threshold=4096,
+    mpo_cg_iterations=6,
 ):
     """
     Compiles the 3 SwiGLU MLP projections (W_gate, W_up, W_down) with optional
@@ -431,6 +440,9 @@ def compile_mlp_block(
                 site_order=site_order,
                 n_sweeps=mpo_n_sweeps,
                 alpha_awt=mpo_alpha_awt,
+                quantization_schedule=mpo_quantization_schedule,
+                cg_threshold=mpo_cg_threshold,
+                cg_iterations=mpo_cg_iterations,
                 **kwargs,
             )
         if site_order != IDENTITY_SITE_ORDER:
@@ -645,6 +657,9 @@ def compile_transformer_block(
     operator_schmidt_activation_mix=1.0,
     mpo_n_sweeps=2,
     mpo_alpha_awt=0.5,
+    mpo_quantization_schedule="in_sweep",
+    mpo_cg_threshold=4096,
+    mpo_cg_iterations=6,
 ):
     """
     Executes full Causal Inter-Layer & Intra-Block Propagation (Step 4.2) for a Transformer layer.
@@ -706,6 +721,9 @@ def compile_transformer_block(
         operator_schmidt_activation_mix=operator_schmidt_activation_mix,
         mpo_n_sweeps=mpo_n_sweeps,
         mpo_alpha_awt=mpo_alpha_awt,
+        mpo_quantization_schedule=mpo_quantization_schedule,
+        mpo_cg_threshold=mpo_cg_threshold,
+        mpo_cg_iterations=mpo_cg_iterations,
     )
 
     X_res1_dense = ref_calib_dense + attn_res["Y_attn_dense"]
@@ -743,6 +761,9 @@ def compile_transformer_block(
         operator_schmidt_activation_mix=operator_schmidt_activation_mix,
         mpo_n_sweeps=mpo_n_sweeps,
         mpo_alpha_awt=mpo_alpha_awt,
+        mpo_quantization_schedule=mpo_quantization_schedule,
+        mpo_cg_threshold=mpo_cg_threshold,
+        mpo_cg_iterations=mpo_cg_iterations,
     )
 
     X_out_dense = X_res1_dense + mlp_res["Y_mlp_dense"]

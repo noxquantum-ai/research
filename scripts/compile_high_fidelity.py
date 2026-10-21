@@ -126,6 +126,9 @@ def resume_identity_compatible(previous, current):
         "representation": "mpo4",
         "operator_schmidt_weight_mix": 1.0,
         "operator_schmidt_activation_mix": 1.0,
+        "mpo_quantization_schedule": "in_sweep",
+        "mpo_cg_threshold": 4096,
+        "mpo_cg_iterations": 6,
     }
     for identity in (previous, current):
         for key, value in legacy_defaults.items():
@@ -218,6 +221,13 @@ def main():
         help="Diagonal activation-scaling exponent used before MPO TT-SVD.",
     )
     parser.add_argument(
+        "--mpo-quantization-schedule", choices=("in_sweep", "post_sweep"),
+        default="in_sweep",
+        help="Quantize MPO factors during sweeps (historical default) or once after all sweeps.",
+    )
+    parser.add_argument("--mpo-cg-threshold", type=int, default=4096)
+    parser.add_argument("--mpo-cg-iterations", type=int, default=6)
+    parser.add_argument(
         "--representation", choices=("mpo4", "operator_schmidt"), default="mpo4",
         help=("Core tensor-network representation. operator_schmidt screens projection-aware "
               "two-site MPO cuts at the legacy four-site core coefficient budget."),
@@ -290,6 +300,8 @@ def main():
         raise ValueError("--mlp-product-ridge-ratio must be positive")
     if args.mpo_sweeps < 0:
         raise ValueError("--mpo-sweeps must be nonnegative")
+    if args.mpo_cg_threshold <= 0 or args.mpo_cg_iterations <= 0:
+        raise ValueError("MPO CG threshold and iteration count must be positive")
     if not math.isfinite(args.mpo_alpha_awt):
         raise ValueError("--mpo-alpha-awt must be finite")
     if (args.operator_schmidt_weight_mix < 0 or args.operator_schmidt_activation_mix < 0
@@ -299,8 +311,10 @@ def main():
         raise ValueError("--site-order applies only to the legacy four-site MPO representation")
     if args.representation != "mpo4" and (
         args.mpo_sweeps != 2 or args.mpo_alpha_awt != 0.5
+        or args.mpo_quantization_schedule != "in_sweep"
+        or args.mpo_cg_threshold != 4096 or args.mpo_cg_iterations != 6
     ):
-        raise ValueError("MPO sweep and AWT options apply only to --representation mpo4")
+        raise ValueError("MPO sweep, solver and quantization options apply only to --representation mpo4")
     if args.defect_bridge_linear_rank < 0 or args.defect_bridge_memory_size < 0:
         raise ValueError("Defect bridge rank and memory size must be nonnegative")
     if args.defect_bridge_mode == "hybrid" and args.defect_bridge_linear_rank == 0:
@@ -423,6 +437,9 @@ def main():
         "operator_schmidt_activation_mix": args.operator_schmidt_activation_mix,
         "mpo_n_sweeps": args.mpo_sweeps,
         "mpo_alpha_awt": args.mpo_alpha_awt,
+        "mpo_quantization_schedule": args.mpo_quantization_schedule,
+        "mpo_cg_threshold": args.mpo_cg_threshold,
+        "mpo_cg_iterations": args.mpo_cg_iterations,
         "calibration_backend": args.calibration_backend,
         "calibration_windows_per_chunk": args.calibration_windows_per_chunk,
         "statistics_dtype": args.statistics_dtype,
@@ -624,6 +641,9 @@ def main():
                     projection_budgets=per_projection_budgets,
                     mpo_n_sweeps=args.mpo_sweeps,
                     mpo_alpha_awt=args.mpo_alpha_awt,
+                    mpo_quantization_schedule=args.mpo_quantization_schedule,
+                    mpo_cg_threshold=args.mpo_cg_threshold,
+                    mpo_cg_iterations=args.mpo_cg_iterations,
                     accumulation_dtype=statistics_dtype,
                     statistics_device=args.device,
                     output_device="cpu",
@@ -650,6 +670,9 @@ def main():
                     operator_schmidt_activation_mix=args.operator_schmidt_activation_mix,
                     mpo_n_sweeps=args.mpo_sweeps,
                     mpo_alpha_awt=args.mpo_alpha_awt,
+                    mpo_quantization_schedule=args.mpo_quantization_schedule,
+                    mpo_cg_threshold=args.mpo_cg_threshold,
+                    mpo_cg_iterations=args.mpo_cg_iterations,
                     verbose=True, site_order=args.site_order, **forward_options,
                 )
             artifact = {
@@ -666,6 +689,9 @@ def main():
                 "representation": args.representation,
                 "mpo_n_sweeps": args.mpo_sweeps,
                 "mpo_alpha_awt": args.mpo_alpha_awt,
+                "mpo_quantization_schedule": args.mpo_quantization_schedule,
+                "mpo_cg_threshold": args.mpo_cg_threshold,
+                "mpo_cg_iterations": args.mpo_cg_iterations,
                 "calibration_backend": args.calibration_backend,
                 "calibration_windows_per_chunk": args.calibration_windows_per_chunk,
                 "statistics_dtype": args.statistics_dtype,
