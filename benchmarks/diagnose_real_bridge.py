@@ -87,6 +87,35 @@ def canonicalize_low_rank_factors(a, b):
     return a_canonical, b_canonical
 
 
+@torch.no_grad()
+def anchor_low_rank_factors(a, b, seed=20261021):
+    """Fix the factor gauge against a deterministic ambient input sketch.
+
+    For C=AB and fixed P, this returns (CP, (BP)^-1 B).  Under any invertible
+    gauge change A'=AQ, B'=Q^-1B, both returned factors are unchanged in exact
+    arithmetic.  The condition number is reported because an unlucky sketch
+    must not be used silently.
+    """
+    generator = torch.Generator(device="cpu")
+    generator.manual_seed(seed)
+    sketch = torch.randn(
+        b.shape[1], b.shape[0], generator=generator, dtype=torch.float32,
+    ).div_(math.sqrt(b.shape[1])).to(device=b.device, dtype=b.dtype)
+    transform = b @ sketch
+    condition = float(torch.linalg.cond(transform.float()).item())
+    a_anchored = a @ transform
+    b_anchored = torch.linalg.solve(transform, b)
+    column_norms = torch.sqrt(
+        torch.linalg.vector_norm(a_anchored, dim=0)
+        / (torch.linalg.vector_norm(b_anchored, dim=1) + 1e-8)
+    )
+    return (
+        a_anchored / column_norms.unsqueeze(0),
+        b_anchored * column_norms.unsqueeze(1),
+        condition,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
@@ -201,6 +230,18 @@ def main():
     bridge_gram_canonical_q4 = quantize_4bit_grouped(
         a_gram_canonical, group_size=64,
     ) @ quantize_4bit_grouped(b_gram_canonical, group_size=64)
+    a_direct_anchored, b_direct_anchored, direct_anchor_condition = (
+        anchor_low_rank_factors(a_direct, b_direct)
+    )
+    a_gram_anchored, b_gram_anchored, gram_anchor_condition = (
+        anchor_low_rank_factors(a_gram, b_gram)
+    )
+    bridge_direct_anchored_q4 = quantize_4bit_grouped(
+        a_direct_anchored, group_size=64,
+    ) @ quantize_4bit_grouped(b_direct_anchored, group_size=64)
+    bridge_gram_anchored_q4 = quantize_4bit_grouped(
+        a_gram_anchored, group_size=64,
+    ) @ quantize_4bit_grouped(b_gram_anchored, group_size=64)
 
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj bridge-only diagnostic",
@@ -260,6 +301,23 @@ def main():
             "gram_canonicalization_preserves_unquantized_product": relative_error(
                 a_gram_canonical @ b_gram_canonical, bridge_gram,
             ),
+            "anchored_q4_weight_relative_difference": relative_error(
+                bridge_gram_anchored_q4, bridge_direct_anchored_q4,
+            ),
+            "anchored_q4_calibration_functional_difference": functional_difference(
+                bridge_direct_anchored_q4, bridge_gram_anchored_q4, x,
+            ),
+            "anchored_q4_validation_functional_difference": functional_difference(
+                bridge_direct_anchored_q4, bridge_gram_anchored_q4, x_validation,
+            ),
+            "direct_anchoring_preserves_unquantized_product": relative_error(
+                a_direct_anchored @ b_direct_anchored, bridge_direct,
+            ),
+            "gram_anchoring_preserves_unquantized_product": relative_error(
+                a_gram_anchored @ b_gram_anchored, bridge_gram,
+            ),
+            "direct_anchor_condition_number": direct_anchor_condition,
+            "gram_anchor_condition_number": gram_anchor_condition,
         },
         "reference_stage_source": str(args.reference_output),
     }
