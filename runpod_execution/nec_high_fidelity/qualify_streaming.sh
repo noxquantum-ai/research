@@ -386,6 +386,7 @@ case "$STAGE" in
       exit 2
     fi
     bridge_output="$QUAL_ROOT/down_projection_stable/bridge-diagnostic-controls"
+    mkdir -p "$bridge_output"
     run_logged bridge-diagnostic "$bridge_output" \
       "$VENV_DIR/bin/python" benchmarks/diagnose_real_bridge.py \
         --output "$bridge_output/report.json" \
