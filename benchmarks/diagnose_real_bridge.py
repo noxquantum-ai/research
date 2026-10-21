@@ -23,8 +23,8 @@ from benchmarks.qualify_streaming_projection import (  # noqa: E402
     LAYER,
     PROJECTION,
     accumulate_down_covariance,
-    down_projection_input,
     materialize_down_inputs,
+    source_identity,
 )
 from nox.compiler import quantize_4bit_grouped  # noqa: E402
 from nox.evaluation import MODEL_ID, MODEL_REVISION, validate_llama2_config  # noqa: E402
@@ -315,6 +315,7 @@ def main():
         "scope": "real Llama-2-7B layer-0 down_proj bridge-only diagnostic",
         "model_id": MODEL_ID,
         "model_revision": MODEL_REVISION,
+        "source": source_identity(),
         "input_data": input_data,
         "shape": list(x.shape),
         "active_rank": active_rank,
@@ -332,7 +333,7 @@ def main():
             ),
             "normalized_projector_distance": normalized_projector_distance,
         },
-        "projected_target_relative_difference": relative_error(
+        "coordinate_dependent_projected_target_relative_difference": relative_error(
             projected_gram, projected_direct,
         ),
         "bridge": {
