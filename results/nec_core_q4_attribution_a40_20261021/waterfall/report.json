@@ -1,0 +1,665 @@
+{
+  "schema_version": 1,
+  "scope": "absolute-fidelity waterfall for saved NEC projection stages",
+  "analysis_source": {
+    "commit": "e5f69f1ec3ddb6a433f8aa9cb4b856d619c47063",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "qualification_source": {
+    "commit": "e5f69f1ec3ddb6a433f8aa9cb4b856d619c47063",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "layer": 0,
+  "projection": "down_proj",
+  "weight_shape": [
+    4096,
+    11008
+  ],
+  "input_data": {
+    "dataset": "wikitext-2-raw-v1",
+    "calibration_split": "train",
+    "heldout_split": "validation",
+    "evaluation_split": "test",
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "validation",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_bytes": 657209,
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "rows": 3760,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "calibration_token_count": 4096,
+    "heldout_token_count": 1024,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "metric_definitions": {
+    "absolute_relative_error": "||(W_stage-W_dense)X||_F / ||W_dense X||_F",
+    "transition_relative_error": "||(W_next-W_previous)X||_F / ||W_previous X||_F",
+    "q4_relative_error": "||(W_Q4-W_float)X||_F / ||W_float X||_F"
+  },
+  "stages": {
+    "sparse": {
+      "relative_weight_error": 0.9770931601524353,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.5220099723511641,
+        "cosine_similarity": 0.8607411192084049,
+        "angular_drift": 0.1392588807915951,
+        "norm_ratio": 0.7451137628596117
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.5353082134539149,
+        "cosine_similarity": 0.8525440445156749,
+        "angular_drift": 0.1474559554843251,
+        "norm_ratio": 0.7368451627345345
+      }
+    },
+    "sparse_plus_bridge": {
+      "relative_weight_error": 0.9677178859710693,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3691393658048554,
+        "cosine_similarity": 0.9293966165188545,
+        "angular_drift": 0.07060338348114548,
+        "norm_ratio": 0.9229203372782474
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.4224291471213523,
+        "cosine_similarity": 0.9064503567999007,
+        "angular_drift": 0.09354964320009929,
+        "norm_ratio": 0.8965189073639614
+      }
+    },
+    "tt_warmstart": {
+      "relative_weight_error": 0.954805314540863,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3630808430894572,
+        "cosine_similarity": 0.9318529153236749,
+        "angular_drift": 0.06814708467632513,
+        "norm_ratio": 0.918527960583975
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.41488019508536594,
+        "cosine_similarity": 0.9100585444787973,
+        "angular_drift": 0.0899414555212027,
+        "norm_ratio": 0.8918340925300042
+      }
+    },
+    "sweep_1": {
+      "relative_weight_error": 1.0360372066497803,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.34103801333739114,
+        "cosine_similarity": 0.9400603558141727,
+        "angular_drift": 0.05993964418582731,
+        "norm_ratio": 0.9355438178225688
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.4179052390485381,
+        "cosine_similarity": 0.9084944948360215,
+        "angular_drift": 0.09150550516397848,
+        "norm_ratio": 0.9111470360575424
+      }
+    },
+    "sweep_2": {
+      "relative_weight_error": 1.0648478269577026,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3345554534193428,
+        "cosine_similarity": 0.9423846234207119,
+        "angular_drift": 0.05761537657928806,
+        "norm_ratio": 0.9383684224713836
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.4202055011396699,
+        "cosine_similarity": 0.9074594434715028,
+        "angular_drift": 0.09254055652849724,
+        "norm_ratio": 0.9148961573516283
+      }
+    },
+    "serialized_artifact": {
+      "relative_weight_error": 1.0720112323760986,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3370403459757793,
+        "cosine_similarity": 0.9414923921247461,
+        "angular_drift": 0.058507607875253886,
+        "norm_ratio": 0.9394627995867397
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.42236638201068966,
+        "cosine_similarity": 0.9064771941853924,
+        "angular_drift": 0.09352280581460759,
+        "norm_ratio": 0.9161861721550522
+      }
+    }
+  },
+  "transitions": {
+    "sparse_to_sparse_plus_bridge": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.4933804420159324,
+        "cosine_similarity": 0.9247233158263635,
+        "angular_drift": 0.07527668417363653,
+        "norm_ratio": 1.2386301035914922
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.43902724617364064,
+        "cosine_similarity": 0.9400893872892362,
+        "angular_drift": 0.05991061271076381,
+        "norm_ratio": 1.2166991828199776
+      }
+    },
+    "sparse_plus_bridge_to_tt_warmstart": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.07187593139876804,
+        "cosine_similarity": 0.9974159522686719,
+        "angular_drift": 0.002584047731328143,
+        "norm_ratio": 0.9952407845868628
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.07699963509159025,
+        "cosine_similarity": 0.9970336806606582,
+        "angular_drift": 0.002966319339341772,
+        "norm_ratio": 0.9947744383353474
+      }
+    },
+    "tt_warmstart_to_sweep_1": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.13814808384834473,
+        "cosine_similarity": 0.9907995828320335,
+        "angular_drift": 0.00920041716796649,
+        "norm_ratio": 1.018525138012974
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.15517185991116045,
+        "cosine_similarity": 0.9884455386066309,
+        "angular_drift": 0.011554461393369131,
+        "norm_ratio": 1.0216553097591843
+      }
+    },
+    "sweep_1_to_sweep_2": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.06546656620156348,
+        "cosine_similarity": 0.9978680589547925,
+        "angular_drift": 0.0021319410452075305,
+        "norm_ratio": 1.0030192114949665
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.07741086326919282,
+        "cosine_similarity": 0.9970244880324604,
+        "angular_drift": 0.0029755119675396458,
+        "norm_ratio": 1.004114726982275
+      }
+    },
+    "sweep_2_to_serialized_artifact": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.043577375899109046,
+        "cosine_similarity": 0.9990522915005651,
+        "angular_drift": 0.0009477084994349294,
+        "norm_ratio": 1.0011662552672795
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.046749173103167806,
+        "cosine_similarity": 0.998909788685644,
+        "angular_drift": 0.0010902113143560488,
+        "norm_ratio": 1.0014100122653897
+      }
+    }
+  },
+  "q4_boundary": {
+    "from": "sweep_2",
+    "to": "serialized_artifact",
+    "calibration": {
+      "sample_count": 4096,
+      "relative_error": 0.043577375899109046,
+      "cosine_similarity": 0.9990522915005651,
+      "angular_drift": 0.0009477084994349294,
+      "norm_ratio": 1.0011662552672795
+    },
+    "validation": {
+      "sample_count": 1024,
+      "relative_error": 0.046749173103167806,
+      "cosine_similarity": 0.998909788685644,
+      "angular_drift": 0.0010902113143560488,
+      "norm_ratio": 1.0014100122653897
+    }
+  },
+  "core_q4_attribution": {
+    "definition": "Quantize selected saved FP32 pre-Q4 MPO cores and add only the resulting MPO delta to the exact saved sweep-2 dense operator.",
+    "individual_cores": {
+      "core_0": {
+        "absolute_relative_weight_error": 1.0664194822311401,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.3351321265321322,
+          "cosine_similarity": 0.9421779882483217,
+          "angular_drift": 0.05782201175167834,
+          "norm_ratio": 0.9385858054491181
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.420716971233601,
+          "cosine_similarity": 0.9072266545271042,
+          "angular_drift": 0.09277334547289584,
+          "norm_ratio": 0.9151621806842323
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.021114728841910048,
+          "cosine_similarity": 0.9997771625689309,
+          "angular_drift": 0.0002228374310691006,
+          "norm_ratio": 1.0002316605850416
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.02269319865364072,
+          "cosine_similarity": 0.9997426264769221,
+          "angular_drift": 0.000257373523077864,
+          "norm_ratio": 1.0002907688817648
+        }
+      },
+      "core_1": {
+        "absolute_relative_weight_error": 1.0665148496627808,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.33512767922966646,
+          "cosine_similarity": 0.9421794691047846,
+          "angular_drift": 0.05782053089521544,
+          "norm_ratio": 0.9386138853672812
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.42068532459497904,
+          "cosine_similarity": 0.9072412561723064,
+          "angular_drift": 0.09275874382769356,
+          "norm_ratio": 0.9151683775919781
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.020794930343996248,
+          "cosine_similarity": 0.9997838761839929,
+          "angular_drift": 0.00021612381600710773,
+          "norm_ratio": 1.000261584778451
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.022308266314251715,
+          "cosine_similarity": 0.9997512888947689,
+          "angular_drift": 0.00024871110523105866,
+          "norm_ratio": 1.000297542227238
+        }
+      },
+      "core_2": {
+        "absolute_relative_weight_error": 1.0665470361709595,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.3351262006544234,
+          "cosine_similarity": 0.942179884899005,
+          "angular_drift": 0.05782011510099505,
+          "norm_ratio": 0.938643520515614
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.42071076573213445,
+          "cosine_similarity": 0.9072300851145759,
+          "angular_drift": 0.09276991488542408,
+          "norm_ratio": 0.9152285680267488
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.020833305257380676,
+          "cosine_similarity": 0.9997830932590375,
+          "angular_drift": 0.00021690674096253026,
+          "norm_ratio": 1.0002931663487842
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.022362788329319903,
+          "cosine_similarity": 0.999750109647053,
+          "angular_drift": 0.0002498903529469798,
+          "norm_ratio": 1.0003633315895464
+        }
+      },
+      "core_3": {
+        "absolute_relative_weight_error": 1.0669317245483398,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.3352723060668994,
+          "cosine_similarity": 0.9421273801944885,
+          "angular_drift": 0.057872619805511505,
+          "norm_ratio": 0.9387333080673294
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.4208320535726156,
+          "cosine_similarity": 0.9071751648875084,
+          "angular_drift": 0.09282483511249162,
+          "norm_ratio": 0.9153236069989924
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.023351249347991418,
+          "cosine_similarity": 0.9997275411254667,
+          "angular_drift": 0.0002724588745333101,
+          "norm_ratio": 1.0003888511028374
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.025074965692123665,
+          "cosine_similarity": 0.9996858789517289,
+          "angular_drift": 0.00031412104827110987,
+          "norm_ratio": 1.0004672111079813
+        }
+      }
+    },
+    "cumulative_cores": {
+      "cores_0_through_0": {
+        "absolute_relative_weight_error": 1.0664194822311401,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.3351321265321322,
+          "cosine_similarity": 0.9421779882483217,
+          "angular_drift": 0.05782201175167834,
+          "norm_ratio": 0.9385858054491181
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.420716971233601,
+          "cosine_similarity": 0.9072266545271042,
+          "angular_drift": 0.09277334547289584,
+          "norm_ratio": 0.9151621806842323
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.021114728841910048,
+          "cosine_similarity": 0.9997771625689309,
+          "angular_drift": 0.0002228374310691006,
+          "norm_ratio": 1.0002316605850416
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.02269319865364072,
+          "cosine_similarity": 0.9997426264769221,
+          "angular_drift": 0.000257373523077864,
+          "norm_ratio": 1.0002907688817648
+        }
+      },
+      "cores_0_through_1": {
+        "absolute_relative_weight_error": 1.0681031942367554,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.3357106183351449,
+          "cosine_similarity": 0.9419703827252717,
+          "angular_drift": 0.05802961727472833,
+          "norm_ratio": 0.9388365032257237
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.42119905463773033,
+          "cosine_similarity": 0.9070074068306935,
+          "angular_drift": 0.09299259316930653,
+          "norm_ratio": 0.915438283085641
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.02972549772053116,
+          "cosine_similarity": 0.999558542015231,
+          "angular_drift": 0.00044145798476902254,
+          "norm_ratio": 1.0004988240685968
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.03189378844571372,
+          "cosine_similarity": 0.9994918697844292,
+          "angular_drift": 0.0005081302155708345,
+          "norm_ratio": 1.0005925543895406
+        }
+      },
+      "cores_0_through_2": {
+        "absolute_relative_weight_error": 1.0698453187942505,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.33629490359895176,
+          "cosine_similarity": 0.9417604374904394,
+          "angular_drift": 0.05823956250956064,
+          "norm_ratio": 0.939117746976902
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.4217175035884541,
+          "cosine_similarity": 0.906771945621831,
+          "angular_drift": 0.09322805437816895,
+          "norm_ratio": 0.9157727353916152
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.03646317523453237,
+          "cosine_similarity": 0.999336067435344,
+          "angular_drift": 0.0006639325646560224,
+          "norm_ratio": 1.0007985397713457
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.03913042711358897,
+          "cosine_similarity": 0.9992355962202145,
+          "angular_drift": 0.000764403779785483,
+          "norm_ratio": 1.0009581175228939
+        }
+      },
+      "cores_0_through_3": {
+        "absolute_relative_weight_error": 1.0720161199569702,
+        "absolute_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.3370404852858417,
+          "cosine_similarity": 0.9414922979163102,
+          "angular_drift": 0.05850770208368983,
+          "norm_ratio": 0.9394833787079807
+        },
+        "absolute_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.42236690506011226,
+          "cosine_similarity": 0.9064771887871063,
+          "angular_drift": 0.09352281121289374,
+          "norm_ratio": 0.9162083908302128
+        },
+        "q4_transition_calibration": {
+          "sample_count": 4096,
+          "relative_error": 0.04357784124807608,
+          "cosine_similarity": 0.9990523177918272,
+          "angular_drift": 0.000947682208172762,
+          "norm_ratio": 1.0011881860151055
+        },
+        "q4_transition_validation": {
+          "sample_count": 1024,
+          "relative_error": 0.04674909736805989,
+          "cosine_similarity": 0.9989098531477519,
+          "angular_drift": 0.001090146852248064,
+          "norm_ratio": 1.0014342977266217
+        }
+      }
+    },
+    "all_q4_to_serialized_artifact": {
+      "relative_weight_difference": 0.0005082931602373719,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.0002079712779304003,
+        "cosine_similarity": 0.9999999786134138,
+        "angular_drift": 2.1386586168681276e-08,
+        "norm_ratio": 0.9999780952790572
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.00020954839985816954,
+        "cosine_similarity": 0.9999999783382565,
+        "angular_drift": 2.1661743510037468e-08,
+        "norm_ratio": 0.999975749321461
+      }
+    }
+  },
+  "artifact_inventory": {
+    "artifact_file_bytes": 10765189,
+    "artifact_sha256": "6d9fb401872fb91d6e6b6402440136191a5e9bb97f2b05346ac668aece972e00",
+    "artifact_keys": [
+      "A_bridge",
+      "B_bridge",
+      "bridge_quantization_bits",
+      "bridge_quantization_diagnostics",
+      "compiler_hyperparameters",
+      "core_quantization_bits",
+      "cores",
+      "d_awt",
+      "orig_shape",
+      "precision_diagnostics",
+      "quantization_bits",
+      "ranks",
+      "sparse_bridge_quantization_bits",
+      "sparse_indices",
+      "sparse_quantization_bits",
+      "sparse_values",
+      "total_kb"
+    ],
+    "core_shapes": [
+      [
+        1,
+        8,
+        43,
+        64
+      ],
+      [
+        64,
+        8,
+        4,
+        128
+      ],
+      [
+        128,
+        8,
+        8,
+        64
+      ],
+      [
+        64,
+        8,
+        8,
+        1
+      ]
+    ],
+    "core_storage_dtypes": [
+      "torch.float16",
+      "torch.float16",
+      "torch.float16",
+      "torch.float16"
+    ],
+    "core_quantization_bits": 4,
+    "bridge_quantization_bits": 4,
+    "sparse_quantization_bits": 4,
+    "individual_pre_q4_cores_available": true,
+    "pre_q4_core_snapshot": {
+      "path": "/workspace/runs/nec-core-q4-attribution-a40_20261021/down_projection_stable/reference-full-matrix/core_stages/pre_post_sweep_q4.pt",
+      "bytes": 3299752,
+      "sha256": "2962a118cb8908f5c4642a0853381bbdefd7e61b1499c4738aa30e578d0c9d47",
+      "storage_dtype": "float32"
+    },
+    "inventory_conclusion": "A verified FP32 pre-Q4 core snapshot is available for per-core Q4 attribution."
+  },
+  "validation_use": "Validation activations are used only for measurement, never for fitting, gauge selection, or parameter selection."
+}
