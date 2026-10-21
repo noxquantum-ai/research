@@ -146,6 +146,46 @@ class StreamingCalibrationTests(unittest.TestCase):
             artifact["compiler_hyperparameters"]["bridge_refit_iterations"], 3,
         )
 
+    def test_post_sweep_core_callback_captures_exact_pre_q4_state(self):
+        torch.manual_seed(113)
+        weight = torch.randn(16, 16)
+        inputs = torch.randn(16, 32)
+        snapshots = []
+
+        def capture(stage, cores, d_awt):
+            snapshots.append((
+                stage,
+                [core.detach().clone() for core in cores],
+                d_awt.detach().clone(),
+            ))
+
+        result = nox_hybrid_dmrg_decompose(
+            W=weight,
+            X_calib=inputs,
+            Y_dense=weight @ inputs,
+            o_modes=(2, 2, 2, 2),
+            i_modes=(2, 2, 2, 2),
+            ranks=(1, 2, 4, 2, 1),
+            r_bridge=3,
+            n_outliers=8,
+            n_sweeps=2,
+            return_artifacts=True,
+            verbose=False,
+            quantize_components=True,
+            quantization_schedule="post_sweep",
+            core_diagnostic_callback=capture,
+        )
+        self.assertEqual(len(snapshots), 1)
+        stage, pre_q4_cores, d_awt = snapshots[0]
+        self.assertEqual(stage, "pre_post_sweep_q4")
+        self.assertEqual(len(pre_q4_cores), 4)
+        artifact = result[4]
+        self.assertFalse(all(
+            torch.equal(before.cpu().half(), after)
+            for before, after in zip(pre_q4_cores, artifact["cores"])
+        ))
+        torch.testing.assert_close(d_awt.cpu().half(), artifact["d_awt"])
+
     def test_direct_functional_disagreement_uses_reference_output_norm(self):
         reference = torch.eye(4)
         variant = 2.0 * reference

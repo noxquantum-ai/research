@@ -60,6 +60,7 @@ DIAGNOSTIC_STAGES = (
     "sweep_2",
     "serialized_artifact",
 )
+CORE_DIAGNOSTIC_STAGE = "pre_post_sweep_q4"
 QUALIFICATION_SOURCE_PATHS = (
     "benchmarks/benchmark_day3_cascade.py",
     "benchmarks/qualify_streaming_projection.py",
@@ -114,7 +115,7 @@ def qualification_identity(args, device):
             "cuda_total_bytes": int(torch.cuda.get_device_properties(device).total_memory),
         })
     return {
-        "schema_version": 4,
+        "schema_version": 5,
         "model_id": args.model_id,
         "model_revision": args.model_revision,
         "layer": LAYER,
@@ -145,6 +146,10 @@ def qualification_identity(args, device):
         "bridge_quantization_mode": args.bridge_quantization_mode,
         "bridge_refit_iterations": int(args.bridge_refit_iterations),
         "stage_diagnostics": list(DIAGNOSTIC_STAGES),
+        "core_stage_diagnostics": (
+            [CORE_DIAGNOSTIC_STAGE]
+            if args.quantization_schedule == "post_sweep" else []
+        ),
         "hardware": hardware,
     }
 
@@ -389,6 +394,35 @@ def validate_stage_snapshots(output, report, expected_algorithm):
     return True
 
 
+def validate_core_stage_snapshots(output, report, expected_algorithm):
+    expected = report.get("qualification_identity", {}).get(
+        "core_stage_diagnostics", [],
+    )
+    snapshots = report.get("core_stage_snapshots", {})
+    if set(snapshots) != set(expected):
+        return False
+    for stage, metadata in snapshots.items():
+        path = output / "core_stages" / f"{stage}.pt"
+        if (
+            not path.is_file()
+            or metadata.get("sha256") != sha256_file(path)
+            or metadata.get("bytes") != path.stat().st_size
+        ):
+            return False
+        payload = torch.load(path, map_location="cpu", weights_only=False)
+        cores = payload.get("cores")
+        if (
+            payload.get("stage") != stage
+            or payload.get("algorithm_identity") != expected_algorithm
+            or not isinstance(cores, list)
+            or len(cores) != 4
+            or not all(torch.is_tensor(core) for core in cores)
+            or not torch.is_tensor(payload.get("d_awt"))
+        ):
+            return False
+    return True
+
+
 def validate_completed(output, expected_identity, expected_algorithm):
     report_path = output / "report.json"
     artifact_path = output / "artifact.pt"
@@ -402,6 +436,7 @@ def validate_completed(output, expected_identity, expected_algorithm):
             and report.get("algorithm_identity") == expected_algorithm
             and report.get("qualification_identity") == expected_identity
             and validate_stage_snapshots(output, report, expected_algorithm)
+            and validate_core_stage_snapshots(output, report, expected_algorithm)
         ):
             return False
         payload = torch.load(artifact_path, map_location="cpu", weights_only=False)
@@ -538,7 +573,10 @@ def main():
         configuration = get_tier_config("high_fidelity_10x")
         stage_directory = args.output / "stage_weights"
         stage_directory.mkdir(parents=True, exist_ok=True)
+        core_stage_directory = args.output / "core_stages"
+        core_stage_directory.mkdir(parents=True, exist_ok=True)
         stage_snapshots = {}
+        core_stage_snapshots = {}
         solver_diagnostics = []
 
         def record_stage(stage, weight):
@@ -562,6 +600,31 @@ def main():
             }
             print(f"QUALIFICATION_STAGE_SNAPSHOT={stage}", flush=True)
 
+        def record_core_stage(stage, cores, d_awt):
+            if stage != CORE_DIAGNOSTIC_STAGE:
+                raise ValueError(f"Unexpected core diagnostic stage: {stage}")
+            path = core_stage_directory / f"{stage}.pt"
+            payload = {
+                "stage": stage,
+                "storage_dtype": "float32",
+                "source": current_source,
+                "algorithm_identity": current_algorithm,
+                "qualification_identity": expected_identity,
+                "cores": [
+                    core.detach().to(device="cpu", dtype=torch.float32)
+                    for core in cores
+                ],
+                "d_awt": d_awt.detach().to(device="cpu", dtype=torch.float32),
+            }
+            atomic_torch_save(payload, path)
+            core_stage_snapshots[stage] = {
+                "path": str(path),
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+                "storage_dtype": "float32",
+            }
+            print(f"QUALIFICATION_CORE_STAGE_SNAPSHOT={stage}", flush=True)
+
         common = {
             "W": dense_weight,
             "o_modes": get_modes_for_projection(*dense_weight.shape)[0],
@@ -581,6 +644,10 @@ def main():
             "diagonal_prior_strength": 0.0,
             "site_order": (0, 1, 2, 3),
             "diagnostic_callback": record_stage,
+            "core_diagnostic_callback": (
+                record_core_stage
+                if args.quantization_schedule == "post_sweep" else None
+            ),
             "solver_diagnostic_callback": solver_diagnostics.append,
             "quantization_schedule": args.quantization_schedule,
             "bridge_quantization_mode": args.bridge_quantization_mode,
@@ -655,6 +722,10 @@ def main():
         if set(stage_snapshots) != set(DIAGNOSTIC_STAGES):
             missing = sorted(set(DIAGNOSTIC_STAGES) - set(stage_snapshots))
             raise RuntimeError(f"Missing compiler stage snapshots: {missing}")
+        expected_core_stages = set(expected_identity["core_stage_diagnostics"])
+        if set(core_stage_snapshots) != expected_core_stages:
+            missing = sorted(expected_core_stages - set(core_stage_snapshots))
+            raise RuntimeError(f"Missing compiler core-stage snapshots: {missing}")
 
         record_phase("measuring_calibration_and_validation")
         calibration_metrics = projection_metrics_chunked(
@@ -850,6 +921,7 @@ def main():
             "solver_diagnostics": solver_diagnostics,
             "direct_functional_disagreement": direct_functional_disagreement,
             "stage_snapshots": stage_snapshots,
+            "core_stage_snapshots": core_stage_snapshots,
             "runtime_seconds": time.monotonic() - started,
             "core_qualification_runtime_seconds": qualification_runtime_seconds,
             "functional_diagnostic_runtime_seconds": functional_diagnostic_runtime_seconds,

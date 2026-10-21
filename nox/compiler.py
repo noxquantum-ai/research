@@ -580,6 +580,7 @@ def nox_hybrid_dmrg_decompose(
     verbose=True,
     quantize_components=True,
     diagnostic_callback=None,
+    core_diagnostic_callback=None,
     diagonal_prior_strength=0.0,
     site_order=IDENTITY_SITE_ORDER,
     calibration_statistics=None,
@@ -653,6 +654,7 @@ def nox_hybrid_dmrg_decompose(
             verbose=verbose,
             quantize_components=quantize_components,
             diagnostic_callback=restore_diagnostic if diagnostic_callback is not None else None,
+            core_diagnostic_callback=core_diagnostic_callback,
             diagonal_prior_strength=diagonal_prior_strength,
             site_order=IDENTITY_SITE_ORDER,
             calibration_statistics=ordered_statistics,
@@ -1358,6 +1360,12 @@ def nox_hybrid_dmrg_decompose(
     # completes the gauge-fixed sweep in floating point and quantizes every
     # final core exactly once, after no remaining local solve can consume it.
     if quantize_components and quantization_schedule == "post_sweep" and n_sweeps > 0:
+        if core_diagnostic_callback is not None:
+            core_diagnostic_callback(
+                "pre_post_sweep_q4",
+                (c0.unsqueeze(0), c1, c2, c3.unsqueeze(-1)),
+                d_awt,
+            )
         c0 = quantize_component(c0, "mpo_site_0")
         c1 = quantize_component(c1, "mpo_site_1")
         c2 = quantize_component(c2, "mpo_site_2")

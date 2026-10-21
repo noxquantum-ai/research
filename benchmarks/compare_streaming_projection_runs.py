@@ -64,7 +64,7 @@ def load_run(path, backend, statistics_dtype, current_algorithm):
         raise ValueError(f"{path} artifact and report input metadata differ")
     identity = report.get("qualification_identity")
     required_identity = {
-        "schema_version": 4,
+        "schema_version": 5,
         "model_id": "NousResearch/Llama-2-7b-hf",
         "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
         "layer": 0,
@@ -94,6 +94,12 @@ def load_run(path, backend, statistics_dtype, current_algorithm):
         identity.get(key) != value for key, value in required_identity.items()
     ):
         raise ValueError(f"{path} qualification settings do not match the current protocol")
+    expected_core_stages = (
+        ["pre_post_sweep_q4"]
+        if identity.get("quantization_schedule") == "post_sweep" else []
+    )
+    if identity.get("core_stage_diagnostics") != expected_core_stages:
+        raise ValueError(f"{path} has invalid core-stage diagnostics")
     if (
         identity.get("quantization_schedule") not in ("in_sweep", "post_sweep")
         or identity.get("bridge_quantization_mode") not in (

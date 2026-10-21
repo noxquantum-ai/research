@@ -2,7 +2,10 @@ import unittest
 
 import torch
 
-from benchmarks.analyze_projection_waterfall import output_metrics
+from benchmarks.analyze_projection_waterfall import (
+    core_quantization_waterfall,
+    output_metrics,
+)
 from benchmarks.diagnose_mpo_gauge_quantization import (
     apply_bond_gauges,
     left_canonicalize,
@@ -10,6 +13,7 @@ from benchmarks.diagnose_mpo_gauge_quantization import (
     right_canonicalize,
     run_diagnostic,
 )
+from nox.compiler import quantize_4bit_grouped
 from nox.utils import mpo_to_dense
 
 
@@ -73,6 +77,32 @@ class MPOQuantizationDiagnosticTests(unittest.TestCase):
         self.assertEqual([core.shape for core in result], [core.shape for core in self.cores])
         torch.testing.assert_close(result[0], self.cores[0])
         self.assertFalse(torch.equal(result[2], self.cores[2]))
+
+    def test_core_waterfall_holds_non_mpo_operator_fixed(self):
+        ranks = (1, 2, 3, 2, 1)
+        cores = [
+            torch.randn(ranks[index], 2, 2, ranks[index + 1])
+            for index in range(4)
+        ]
+        d_awt = torch.rand(16).add_(0.5)
+        fixed = torch.randn(16, 16)
+        pre_q4 = fixed + mpo_to_dense(cores) / d_awt.unsqueeze(0)
+        dense = torch.randn(16, 16)
+        calibration = torch.randn(16, 19)
+        validation = torch.randn(16, 23)
+        quantized = [
+            quantize_4bit_grouped(core, group_size=64) for core in cores
+        ]
+        final = fixed + mpo_to_dense(quantized) / d_awt.unsqueeze(0)
+
+        result = core_quantization_waterfall(
+            dense, pre_q4, final, cores, d_awt, calibration, validation,
+        )
+
+        final_delta = result["all_q4_to_serialized_artifact"]
+        self.assertLess(final_delta["relative_weight_difference"], 1e-6)
+        self.assertLess(final_delta["calibration"]["relative_error"], 1e-6)
+        self.assertLess(final_delta["validation"]["relative_error"], 1e-6)
 
 
 if __name__ == "__main__":

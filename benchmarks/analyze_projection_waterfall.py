@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT))
 
 from benchmarks.benchmark_day3_cascade import build_real_token_calibration_data  # noqa: E402
 from benchmarks.qualify_streaming_projection import (  # noqa: E402
+    CORE_DIAGNOSTIC_STAGE,
     DIAGNOSTIC_STAGES,
     LAYER,
     PROJECTION,
@@ -29,7 +30,9 @@ from benchmarks.qualify_streaming_projection import (  # noqa: E402
     source_identity,
     tensor_sha256,
 )
+from nox.compiler import quantize_4bit_grouped  # noqa: E402
 from nox.evaluation import validate_llama2_config  # noqa: E402
+from nox.utils import mpo_to_dense  # noqa: E402
 from scripts.compile_high_fidelity import (  # noqa: E402
     PinnedWeights,
     atomic_json_save,
@@ -88,6 +91,114 @@ def load_stage(run_output, report, stage, device, expected_shape):
     return weight.to(device=device, dtype=torch.float32)
 
 
+def load_core_stage(run_output, report, stage, device):
+    metadata = report.get("core_stage_snapshots", {}).get(stage)
+    if metadata is None:
+        return None
+    path = run_output / "core_stages" / f"{stage}.pt"
+    if (
+        not path.is_file()
+        or path.stat().st_size != metadata["bytes"]
+        or sha256_file(path) != metadata["sha256"]
+    ):
+        raise ValueError(f"Core-stage checksum or size mismatch: {stage}")
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    if (
+        payload.get("stage") != stage
+        or payload.get("algorithm_identity") != report.get("algorithm_identity")
+        or payload.get("qualification_identity") != report.get("qualification_identity")
+    ):
+        raise ValueError(f"Core-stage provenance mismatch: {stage}")
+    cores = payload.get("cores")
+    d_awt = payload.get("d_awt")
+    if (
+        not isinstance(cores, list)
+        or len(cores) != 4
+        or not all(torch.is_tensor(core) and torch.isfinite(core).all() for core in cores)
+        or not torch.is_tensor(d_awt)
+        or not torch.isfinite(d_awt).all()
+    ):
+        raise ValueError(f"Invalid core-stage snapshot: {stage}")
+    return (
+        [core.to(device=device, dtype=torch.float32) for core in cores],
+        d_awt.to(device=device, dtype=torch.float32),
+    )
+
+
+def core_quantization_waterfall(
+    dense_weight,
+    pre_q4_weight,
+    final_weight,
+    cores,
+    d_awt,
+    calibration_inputs,
+    validation_inputs,
+):
+    """Attribute Q4 damage while holding the saved non-MPO operator fixed."""
+    pre_mpo = mpo_to_dense(cores) / d_awt.unsqueeze(0)
+
+    def measure(selected):
+        quantized = [
+            quantize_4bit_grouped(core, group_size=64)
+            if index in selected else core
+            for index, core in enumerate(cores)
+        ]
+        quantized_mpo = mpo_to_dense(quantized) / d_awt.unsqueeze(0)
+        # The dense pre-Q4 stage contains the sparse shield and bridge at their
+        # exact compilation precision.  Adding only the MPO delta prevents
+        # FP16 serialization of those components from confounding attribution.
+        candidate = pre_q4_weight + (quantized_mpo - pre_mpo)
+        return {
+            "absolute_relative_weight_error": relative_weight_difference(
+                candidate, dense_weight,
+            ),
+            "absolute_calibration": output_metrics(
+                dense_weight, candidate, calibration_inputs,
+            ),
+            "absolute_validation": output_metrics(
+                dense_weight, candidate, validation_inputs,
+            ),
+            "q4_transition_calibration": output_metrics(
+                pre_q4_weight, candidate, calibration_inputs,
+            ),
+            "q4_transition_validation": output_metrics(
+                pre_q4_weight, candidate, validation_inputs,
+            ),
+        }, candidate
+
+    individual = {}
+    for index in range(4):
+        individual[f"core_{index}"] = measure({index})[0]
+    cumulative = {}
+    all_q4_candidate = None
+    for stop in range(1, 5):
+        metrics, candidate = measure(set(range(stop)))
+        cumulative[f"cores_0_through_{stop - 1}"] = metrics
+        if stop == 4:
+            all_q4_candidate = candidate
+        else:
+            del candidate
+    return {
+        "definition": (
+            "Quantize selected saved FP32 pre-Q4 MPO cores and add only the "
+            "resulting MPO delta to the exact saved sweep-2 dense operator."
+        ),
+        "individual_cores": individual,
+        "cumulative_cores": cumulative,
+        "all_q4_to_serialized_artifact": {
+            "relative_weight_difference": relative_weight_difference(
+                all_q4_candidate, final_weight,
+            ),
+            "calibration": output_metrics(
+                all_q4_candidate, final_weight, calibration_inputs,
+            ),
+            "validation": output_metrics(
+                all_q4_candidate, final_weight, validation_inputs,
+            ),
+        },
+    }
+
+
 def artifact_inventory(run_output, report):
     artifact_path = run_output / "artifact.pt"
     metadata = report.get("artifact", {})
@@ -95,6 +206,8 @@ def artifact_inventory(run_output, report):
         raise ValueError("Artifact checksum mismatch")
     payload = torch.load(artifact_path, map_location="cpu", weights_only=False)
     artifact = payload["artifact"]
+    core_metadata = report.get("core_stage_snapshots", {})
+    core_available = CORE_DIAGNOSTIC_STAGE in core_metadata
     return {
         "artifact_file_bytes": int(artifact_path.stat().st_size),
         "artifact_sha256": metadata["sha256"],
@@ -104,8 +217,11 @@ def artifact_inventory(run_output, report):
         "core_quantization_bits": artifact.get("core_quantization_bits"),
         "bridge_quantization_bits": artifact.get("bridge_quantization_bits"),
         "sparse_quantization_bits": artifact.get("sparse_quantization_bits"),
-        "individual_pre_q4_cores_available": False,
+        "individual_pre_q4_cores_available": core_available,
+        "pre_q4_core_snapshot": core_metadata.get(CORE_DIAGNOSTIC_STAGE),
         "inventory_conclusion": (
+            "A verified FP32 pre-Q4 core snapshot is available for per-core Q4 attribution."
+            if core_available else
             "The artifact stores only final quantized/dequantized cores; saved "
             "pre-Q4 stages are dense operators. Per-core historical Q4 ablations "
             "cannot be reconstructed without new instrumentation."
@@ -215,6 +331,27 @@ def main():
     del previous_weight
 
     q4_transition = transitions["sweep_2_to_serialized_artifact"]
+    core_q4 = None
+    core_snapshot = load_core_stage(
+        args.run_output, report, CORE_DIAGNOSTIC_STAGE, device,
+    )
+    if core_snapshot is not None:
+        pre_q4_cores, pre_q4_d_awt = core_snapshot
+        pre_q4_weight = load_stage(
+            args.run_output, report, "sweep_2", device, dense_weight.shape,
+        )
+        final_weight = load_stage(
+            args.run_output, report, "serialized_artifact", device, dense_weight.shape,
+        )
+        core_q4 = core_quantization_waterfall(
+            dense_weight,
+            pre_q4_weight,
+            final_weight,
+            pre_q4_cores,
+            pre_q4_d_awt,
+            calibration_inputs,
+            validation_inputs,
+        )
     result = {
         "schema_version": 1,
         "scope": "absolute-fidelity waterfall for saved NEC projection stages",
@@ -240,6 +377,7 @@ def main():
             "calibration": q4_transition["calibration"],
             "validation": q4_transition["validation"],
         },
+        "core_q4_attribution": core_q4,
         "artifact_inventory": artifact_inventory(args.run_output, report),
         "validation_use": (
             "Validation activations are used only for measurement, never for "
