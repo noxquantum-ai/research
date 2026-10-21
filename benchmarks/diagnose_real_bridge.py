@@ -116,6 +116,56 @@ def anchor_low_rank_factors(a, b, seed=20261021):
     )
 
 
+@torch.no_grad()
+def pivoted_operator_anchor_low_rank_factors(a, b, seed=20261021, oversampling=4):
+    """Anchor to well-conditioned columns selected from an invariant sketch CP."""
+    rank = b.shape[0]
+    generator = torch.Generator(device="cpu")
+    generator.manual_seed(seed)
+    sketch = torch.randn(
+        b.shape[1], oversampling * rank,
+        generator=generator,
+        dtype=torch.float32,
+    ).div_(math.sqrt(b.shape[1])).to(device=b.device, dtype=b.dtype)
+    coefficient_sketch = b @ sketch
+    operator_sketch = a @ coefficient_sketch
+    gram = operator_sketch.T.float() @ operator_sketch.float()
+    residual_diagonal = gram.diagonal().clone()
+    cholesky_columns = torch.zeros(
+        (gram.shape[0], rank), device=gram.device, dtype=gram.dtype,
+    )
+    pivots = []
+    for step in range(rank):
+        pivot = int(torch.argmax(residual_diagonal).item())
+        pivot_value = residual_diagonal[pivot]
+        if not torch.isfinite(pivot_value) or pivot_value <= 0:
+            raise FloatingPointError("Pivoted operator anchor lost numerical rank")
+        correction = (
+            cholesky_columns[:, :step] @ cholesky_columns[pivot, :step]
+            if step
+            else 0.0
+        )
+        column = (gram[:, pivot] - correction) / torch.sqrt(pivot_value)
+        cholesky_columns[:, step] = column
+        residual_diagonal.sub_(column.square()).clamp_min_(0)
+        residual_diagonal[pivot] = -1
+        pivots.append(pivot)
+    transform = coefficient_sketch[:, pivots]
+    condition = float(torch.linalg.cond(transform.float()).item())
+    a_anchored = a @ transform
+    b_anchored = torch.linalg.solve(transform, b)
+    column_norms = torch.sqrt(
+        torch.linalg.vector_norm(a_anchored, dim=0)
+        / (torch.linalg.vector_norm(b_anchored, dim=1) + 1e-8)
+    )
+    return (
+        a_anchored / column_norms.unsqueeze(0),
+        b_anchored * column_norms.unsqueeze(1),
+        condition,
+        pivots,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
@@ -242,6 +292,24 @@ def main():
     bridge_gram_anchored_q4 = quantize_4bit_grouped(
         a_gram_anchored, group_size=64,
     ) @ quantize_4bit_grouped(b_gram_anchored, group_size=64)
+    (
+        a_direct_pivoted,
+        b_direct_pivoted,
+        direct_pivoted_condition,
+        direct_pivots,
+    ) = pivoted_operator_anchor_low_rank_factors(a_direct, b_direct)
+    (
+        a_gram_pivoted,
+        b_gram_pivoted,
+        gram_pivoted_condition,
+        gram_pivots,
+    ) = pivoted_operator_anchor_low_rank_factors(a_gram, b_gram)
+    bridge_direct_pivoted_q4 = quantize_4bit_grouped(
+        a_direct_pivoted, group_size=64,
+    ) @ quantize_4bit_grouped(b_direct_pivoted, group_size=64)
+    bridge_gram_pivoted_q4 = quantize_4bit_grouped(
+        a_gram_pivoted, group_size=64,
+    ) @ quantize_4bit_grouped(b_gram_pivoted, group_size=64)
 
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj bridge-only diagnostic",
@@ -318,6 +386,33 @@ def main():
             ),
             "direct_anchor_condition_number": direct_anchor_condition,
             "gram_anchor_condition_number": gram_anchor_condition,
+            "pivoted_anchor_same_pivots": direct_pivots == gram_pivots,
+            "pivoted_anchor_shared_pivot_count": len(
+                set(direct_pivots).intersection(gram_pivots)
+            ),
+            "direct_pivoted_anchor_condition_number": direct_pivoted_condition,
+            "gram_pivoted_anchor_condition_number": gram_pivoted_condition,
+            "pivoted_anchor_q4_weight_relative_difference": relative_error(
+                bridge_gram_pivoted_q4, bridge_direct_pivoted_q4,
+            ),
+            "pivoted_anchor_q4_calibration_functional_difference": (
+                functional_difference(
+                    bridge_direct_pivoted_q4, bridge_gram_pivoted_q4, x,
+                )
+            ),
+            "pivoted_anchor_q4_validation_functional_difference": (
+                functional_difference(
+                    bridge_direct_pivoted_q4,
+                    bridge_gram_pivoted_q4,
+                    x_validation,
+                )
+            ),
+            "direct_pivoted_anchor_preserves_unquantized_product": relative_error(
+                a_direct_pivoted @ b_direct_pivoted, bridge_direct,
+            ),
+            "gram_pivoted_anchor_preserves_unquantized_product": relative_error(
+                a_gram_pivoted @ b_gram_pivoted, bridge_gram,
+            ),
         },
         "reference_stage_source": str(args.reference_output),
     }
