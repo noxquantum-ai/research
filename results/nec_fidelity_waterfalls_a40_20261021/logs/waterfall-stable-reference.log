@@ -1,0 +1,387 @@
+[15:57:17] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[15:57:17] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[15:57:28] WikiText-2 activations generated: train X_calib [4096, 4096] (4096 tokens), validation X_test [4096, 1024] (1024 tokens).
+{
+  "schema_version": 1,
+  "scope": "absolute-fidelity waterfall for saved NEC projection stages",
+  "analysis_source": {
+    "commit": "e61a164b305a8012bc5af5a3fe66cdd8adaaa6eb",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "qualification_source": {
+    "commit": "51f738f4234e6888570e66199b5887bc88b7632a",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "layer": 0,
+  "projection": "down_proj",
+  "weight_shape": [
+    4096,
+    11008
+  ],
+  "input_data": {
+    "dataset": "wikitext-2-raw-v1",
+    "calibration_split": "train",
+    "heldout_split": "validation",
+    "evaluation_split": "test",
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "validation",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_bytes": 657209,
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "rows": 3760,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "calibration_token_count": 4096,
+    "heldout_token_count": 1024,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "metric_definitions": {
+    "absolute_relative_error": "||(W_stage-W_dense)X||_F / ||W_dense X||_F",
+    "transition_relative_error": "||(W_next-W_previous)X||_F / ||W_previous X||_F",
+    "q4_relative_error": "||(W_Q4-W_float)X||_F / ||W_float X||_F"
+  },
+  "stages": {
+    "sparse": {
+      "relative_weight_error": 0.9770931601524353,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.5220099723511641,
+        "cosine_similarity": 0.8607411192084049,
+        "angular_drift": 0.1392588807915951,
+        "norm_ratio": 0.7451137628596117
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.5353082134539149,
+        "cosine_similarity": 0.8525440445156749,
+        "angular_drift": 0.1474559554843251,
+        "norm_ratio": 0.7368451627345345
+      }
+    },
+    "sparse_plus_bridge": {
+      "relative_weight_error": 0.9677178859710693,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3691393658048554,
+        "cosine_similarity": 0.9293966165188545,
+        "angular_drift": 0.07060338348114548,
+        "norm_ratio": 0.9229203372782474
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.4224291471213523,
+        "cosine_similarity": 0.9064503567999007,
+        "angular_drift": 0.09354964320009929,
+        "norm_ratio": 0.8965189073639614
+      }
+    },
+    "tt_warmstart": {
+      "relative_weight_error": 0.954805314540863,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3630808430894572,
+        "cosine_similarity": 0.9318529153236749,
+        "angular_drift": 0.06814708467632513,
+        "norm_ratio": 0.918527960583975
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.41488019508536594,
+        "cosine_similarity": 0.9100585444787973,
+        "angular_drift": 0.0899414555212027,
+        "norm_ratio": 0.8918340925300042
+      }
+    },
+    "sweep_1": {
+      "relative_weight_error": 1.0360372066497803,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.34103801333739114,
+        "cosine_similarity": 0.9400603558141727,
+        "angular_drift": 0.05993964418582731,
+        "norm_ratio": 0.9355438178225688
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.4179052390485381,
+        "cosine_similarity": 0.9084944948360215,
+        "angular_drift": 0.09150550516397848,
+        "norm_ratio": 0.9111470360575424
+      }
+    },
+    "sweep_2": {
+      "relative_weight_error": 1.0648478269577026,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3345554534193428,
+        "cosine_similarity": 0.9423846234207119,
+        "angular_drift": 0.05761537657928806,
+        "norm_ratio": 0.9383684224713836
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.4202055011396699,
+        "cosine_similarity": 0.9074594434715028,
+        "angular_drift": 0.09254055652849724,
+        "norm_ratio": 0.9148961573516283
+      }
+    },
+    "serialized_artifact": {
+      "relative_weight_error": 1.0720112323760986,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.3370403459757793,
+        "cosine_similarity": 0.9414923921247461,
+        "angular_drift": 0.058507607875253886,
+        "norm_ratio": 0.9394627995867397
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.42236638201068966,
+        "cosine_similarity": 0.9064771941853924,
+        "angular_drift": 0.09352280581460759,
+        "norm_ratio": 0.9161861721550522
+      }
+    }
+  },
+  "transitions": {
+    "sparse_to_sparse_plus_bridge": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.4933804420159324,
+        "cosine_similarity": 0.9247233158263635,
+        "angular_drift": 0.07527668417363653,
+        "norm_ratio": 1.2386301035914922
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.43902724617364064,
+        "cosine_similarity": 0.9400893872892362,
+        "angular_drift": 0.05991061271076381,
+        "norm_ratio": 1.2166991828199776
+      }
+    },
+    "sparse_plus_bridge_to_tt_warmstart": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.07187593139876804,
+        "cosine_similarity": 0.9974159522686719,
+        "angular_drift": 0.002584047731328143,
+        "norm_ratio": 0.9952407845868628
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.07699963509159025,
+        "cosine_similarity": 0.9970336806606582,
+        "angular_drift": 0.002966319339341772,
+        "norm_ratio": 0.9947744383353474
+      }
+    },
+    "tt_warmstart_to_sweep_1": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.13814808384834473,
+        "cosine_similarity": 0.9907995828320335,
+        "angular_drift": 0.00920041716796649,
+        "norm_ratio": 1.018525138012974
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.15517185991116045,
+        "cosine_similarity": 0.9884455386066309,
+        "angular_drift": 0.011554461393369131,
+        "norm_ratio": 1.0216553097591843
+      }
+    },
+    "sweep_1_to_sweep_2": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.06546656620156348,
+        "cosine_similarity": 0.9978680589547925,
+        "angular_drift": 0.0021319410452075305,
+        "norm_ratio": 1.0030192114949665
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.07741086326919282,
+        "cosine_similarity": 0.9970244880324604,
+        "angular_drift": 0.0029755119675396458,
+        "norm_ratio": 1.004114726982275
+      }
+    },
+    "sweep_2_to_serialized_artifact": {
+      "calibration": {
+        "sample_count": 4096,
+        "relative_error": 0.043577375899109046,
+        "cosine_similarity": 0.9990522915005651,
+        "angular_drift": 0.0009477084994349294,
+        "norm_ratio": 1.0011662552672795
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_error": 0.046749173103167806,
+        "cosine_similarity": 0.998909788685644,
+        "angular_drift": 0.0010902113143560488,
+        "norm_ratio": 1.0014100122653897
+      }
+    }
+  },
+  "q4_boundary": {
+    "from": "sweep_2",
+    "to": "serialized_artifact",
+    "calibration": {
+      "sample_count": 4096,
+      "relative_error": 0.043577375899109046,
+      "cosine_similarity": 0.9990522915005651,
+      "angular_drift": 0.0009477084994349294,
+      "norm_ratio": 1.0011662552672795
+    },
+    "validation": {
+      "sample_count": 1024,
+      "relative_error": 0.046749173103167806,
+      "cosine_similarity": 0.998909788685644,
+      "angular_drift": 0.0010902113143560488,
+      "norm_ratio": 1.0014100122653897
+    }
+  },
+  "artifact_inventory": {
+    "artifact_file_bytes": 10764869,
+    "artifact_sha256": "a3e91b1484b9315484b5a5857886dd4c0d4d42514dccc1b701bf7a1214baa3ca",
+    "artifact_keys": [
+      "A_bridge",
+      "B_bridge",
+      "compiler_hyperparameters",
+      "core_quantization_bits",
+      "cores",
+      "d_awt",
+      "orig_shape",
+      "precision_diagnostics",
+      "quantization_bits",
+      "ranks",
+      "sparse_bridge_quantization_bits",
+      "sparse_indices",
+      "sparse_values",
+      "total_kb"
+    ],
+    "core_shapes": [
+      [
+        1,
+        8,
+        43,
+        64
+      ],
+      [
+        64,
+        8,
+        4,
+        128
+      ],
+      [
+        128,
+        8,
+        8,
+        64
+      ],
+      [
+        64,
+        8,
+        8,
+        1
+      ]
+    ],
+    "core_storage_dtypes": [
+      "torch.float16",
+      "torch.float16",
+      "torch.float16",
+      "torch.float16"
+    ],
+    "core_quantization_bits": 4,
+    "bridge_quantization_bits": null,
+    "sparse_quantization_bits": null,
+    "individual_pre_q4_cores_available": false,
+    "inventory_conclusion": "The artifact stores only final quantized/dequantized cores; saved pre-Q4 stages are dense operators. Per-core historical Q4 ablations cannot be reconstructed without new instrumentation."
+  },
+  "validation_use": "Validation activations are used only for measurement, never for fitting, gauge selection, or parameter selection."
+}

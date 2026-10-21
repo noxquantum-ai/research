@@ -1,0 +1,299 @@
+{
+  "cumulative_q4": {
+    "cores_0_through_0": {
+      "calibration_relative_error": 0.1159193143248558,
+      "operator_relative_error": 0.11539898067712784,
+      "validation_relative_error": 0.13060219585895538
+    },
+    "cores_0_through_1": {
+      "calibration_relative_error": 0.1455824375152588,
+      "operator_relative_error": 0.14500726759433746,
+      "validation_relative_error": 0.15320327877998352
+    },
+    "cores_0_through_2": {
+      "calibration_relative_error": 0.15126074850559235,
+      "operator_relative_error": 0.1507764607667923,
+      "validation_relative_error": 0.15867029130458832
+    },
+    "cores_0_through_3": {
+      "calibration_relative_error": 0.15874718129634857,
+      "operator_relative_error": 0.1606258749961853,
+      "validation_relative_error": 0.1693914234638214
+    }
+  },
+  "gauge_candidates": [
+    {
+      "name": "identity",
+      "post_q4": {
+        "calibration_relative_error": 0.15874718129634857,
+        "operator_relative_error": 0.1606258749961853,
+        "validation_relative_error": 0.1693914234638214
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 0.0,
+        "operator_relative_error": 0.0,
+        "validation_relative_error": 0.0
+      }
+    },
+    {
+      "name": "sign_0",
+      "post_q4": {
+        "calibration_relative_error": 0.15874718129634857,
+        "operator_relative_error": 0.1606258749961853,
+        "validation_relative_error": 0.1693914234638214
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 0.0,
+        "operator_relative_error": 0.0,
+        "validation_relative_error": 0.0
+      }
+    },
+    {
+      "name": "orthogonal_0",
+      "post_q4": {
+        "calibration_relative_error": 0.15574225783348083,
+        "operator_relative_error": 0.15534763038158417,
+        "validation_relative_error": 0.17849306762218475
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 1.9557627695121482e-07,
+        "operator_relative_error": 1.6751852172092185e-07,
+        "validation_relative_error": 1.825152082801651e-07
+      }
+    },
+    {
+      "name": "sign_1",
+      "post_q4": {
+        "calibration_relative_error": 0.15874718129634857,
+        "operator_relative_error": 0.1606258749961853,
+        "validation_relative_error": 0.1693914234638214
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 0.0,
+        "operator_relative_error": 0.0,
+        "validation_relative_error": 0.0
+      }
+    },
+    {
+      "name": "orthogonal_1",
+      "post_q4": {
+        "calibration_relative_error": 0.16103358566761017,
+        "operator_relative_error": 0.15852558612823486,
+        "validation_relative_error": 0.1810431033372879
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 2.477635234754416e-07,
+        "operator_relative_error": 2.360761612862916e-07,
+        "validation_relative_error": 2.3585440089846088e-07
+      }
+    },
+    {
+      "name": "sign_2",
+      "post_q4": {
+        "calibration_relative_error": 0.15874718129634857,
+        "operator_relative_error": 0.1606258749961853,
+        "validation_relative_error": 0.1693914234638214
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 0.0,
+        "operator_relative_error": 0.0,
+        "validation_relative_error": 0.0
+      }
+    },
+    {
+      "name": "orthogonal_2",
+      "post_q4": {
+        "calibration_relative_error": 0.19637803733348846,
+        "operator_relative_error": 0.19324852526187897,
+        "validation_relative_error": 0.20625530183315277
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 1.9208287937999557e-07,
+        "operator_relative_error": 1.701768610473664e-07,
+        "validation_relative_error": 1.9508534876422345e-07
+      }
+    },
+    {
+      "name": "sign_3",
+      "post_q4": {
+        "calibration_relative_error": 0.15874718129634857,
+        "operator_relative_error": 0.1606258749961853,
+        "validation_relative_error": 0.1693914234638214
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 0.0,
+        "operator_relative_error": 0.0,
+        "validation_relative_error": 0.0
+      }
+    },
+    {
+      "name": "orthogonal_3",
+      "post_q4": {
+        "calibration_relative_error": 0.15580813586711884,
+        "operator_relative_error": 0.15847402811050415,
+        "validation_relative_error": 0.1583152860403061
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 2.2373365027306136e-07,
+        "operator_relative_error": 1.969506939758503e-07,
+        "validation_relative_error": 2.1798462057631696e-07
+      }
+    },
+    {
+      "name": "diagonal_exp_0.5",
+      "post_q4": {
+        "calibration_relative_error": 0.27044686675071716,
+        "operator_relative_error": 0.27221667766571045,
+        "validation_relative_error": 0.2827863097190857
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 1.5590759971928492e-07,
+        "operator_relative_error": 1.3071650073470664e-07,
+        "validation_relative_error": 1.4423665106733097e-07
+      }
+    },
+    {
+      "name": "diagonal_exp_1",
+      "post_q4": {
+        "calibration_relative_error": 0.5620969533920288,
+        "operator_relative_error": 0.5575984120368958,
+        "validation_relative_error": 0.5998660326004028
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 1.4863755382066302e-07,
+        "operator_relative_error": 1.1886758244372686e-07,
+        "validation_relative_error": 1.4577553031358548e-07
+      }
+    },
+    {
+      "name": "diagonal_exp_2",
+      "post_q4": {
+        "calibration_relative_error": 0.9648889899253845,
+        "operator_relative_error": 0.964780330657959,
+        "validation_relative_error": 0.965251624584198
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 1.3773161811059254e-07,
+        "operator_relative_error": 1.0841382902526675e-07,
+        "validation_relative_error": 1.3074107130250923e-07
+      }
+    },
+    {
+      "name": "left_canonical",
+      "post_q4": {
+        "calibration_relative_error": 0.21651576459407806,
+        "operator_relative_error": 0.21188530325889587,
+        "validation_relative_error": 0.2482900470495224
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 2.5704230210976675e-07,
+        "operator_relative_error": 2.4045425561780576e-07,
+        "validation_relative_error": 2.5636316536292725e-07
+      }
+    },
+    {
+      "name": "right_canonical",
+      "post_q4": {
+        "calibration_relative_error": 0.20888617634773254,
+        "operator_relative_error": 0.2164303958415985,
+        "validation_relative_error": 0.22593079507350922
+      },
+      "pre_quantization": {
+        "calibration_relative_error": 4.290117772143276e-07,
+        "operator_relative_error": 4.2795380750249024e-07,
+        "validation_relative_error": 4.155519377491146e-07
+      }
+    }
+  ],
+  "identity_candidate": {
+    "name": "identity",
+    "post_q4": {
+      "calibration_relative_error": 0.15874718129634857,
+      "operator_relative_error": 0.1606258749961853,
+      "validation_relative_error": 0.1693914234638214
+    },
+    "pre_quantization": {
+      "calibration_relative_error": 0.0,
+      "operator_relative_error": 0.0,
+      "validation_relative_error": 0.0
+    }
+  },
+  "mode_dimensions": [
+    [
+      2,
+      2
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      2,
+      2
+    ]
+  ],
+  "per_core_q4": {
+    "core_0": {
+      "calibration_relative_error": 0.1159193143248558,
+      "operator_relative_error": 0.11539898067712784,
+      "validation_relative_error": 0.13060219585895538
+    },
+    "core_1": {
+      "calibration_relative_error": 0.10853311419487,
+      "operator_relative_error": 0.10616188496351242,
+      "validation_relative_error": 0.09452985972166061
+    },
+    "core_2": {
+      "calibration_relative_error": 0.07659277319908142,
+      "operator_relative_error": 0.07786989212036133,
+      "validation_relative_error": 0.06938514113426208
+    },
+    "core_3": {
+      "calibration_relative_error": 0.06474724411964417,
+      "operator_relative_error": 0.0669022724032402,
+      "validation_relative_error": 0.06286219507455826
+    }
+  },
+  "provenance": {
+    "dirty_paths": [],
+    "git_commit": "e61a164b305a8012bc5af5a3fe66cdd8adaaa6eb",
+    "working_tree_clean": true
+  },
+  "ranks": [
+    1,
+    4,
+    6,
+    4,
+    1
+  ],
+  "schema_version": 1,
+  "scope": "small deterministic fixed-MPO gauge/Q4 sensitivity diagnostic",
+  "seed": 20261021,
+  "selected_candidate": {
+    "name": "orthogonal_0",
+    "post_q4": {
+      "calibration_relative_error": 0.15574225783348083,
+      "operator_relative_error": 0.15534763038158417,
+      "validation_relative_error": 0.17849306762218475
+    },
+    "pre_quantization": {
+      "calibration_relative_error": 1.9557627695121482e-07,
+      "operator_relative_error": 1.6751852172092185e-07,
+      "validation_relative_error": 1.825152082801651e-07
+    }
+  },
+  "selection_rule": "Choose the candidate with minimum calibration-output error; validation is measured only after selection.",
+  "summary": {
+    "identity_q4_validation_error": 0.1693914234638214,
+    "maximum_pre_quantization_operator_error": 4.2795380750249024e-07,
+    "maximum_q4_validation_error_across_candidates": 0.965251624584198,
+    "minimum_q4_validation_error_across_candidates": 0.1583152860403061,
+    "selected_improves_calibration": true,
+    "selected_improves_validation": false,
+    "selected_q4_validation_error": 0.17849306762218475
+  }
+}
