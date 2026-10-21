@@ -114,7 +114,7 @@ def qualification_identity(args, device):
             "cuda_total_bytes": int(torch.cuda.get_device_properties(device).total_memory),
         })
     return {
-        "schema_version": 3,
+        "schema_version": 4,
         "model_id": args.model_id,
         "model_revision": args.model_revision,
         "layer": LAYER,
@@ -142,6 +142,8 @@ def qualification_identity(args, device):
         "site_order": [0, 1, 2, 3],
         "quantize_components": True,
         "quantization_schedule": args.quantization_schedule,
+        "bridge_quantization_mode": args.bridge_quantization_mode,
+        "bridge_refit_iterations": int(args.bridge_refit_iterations),
         "stage_diagnostics": list(DIAGNOSTIC_STAGES),
         "hardware": hardware,
     }
@@ -423,6 +425,12 @@ def main():
         default="in_sweep",
         help="Historical in-sweep Q4 or the isolated post-sweep numerical control.",
     )
+    parser.add_argument(
+        "--bridge-quantization-mode",
+        choices=("independent_q4", "operator_refit_q4", "fp16_control"),
+        default="independent_q4",
+    )
+    parser.add_argument("--bridge-refit-iterations", type=int, default=4)
     parser.add_argument("--cg-threshold", type=int, default=4096)
     parser.add_argument("--cg-iterations", type=int, default=6)
     parser.add_argument("--n-calib", type=int, default=4096)
@@ -443,6 +451,8 @@ def main():
         raise ValueError("windows-per-chunk must be positive")
     if args.cg_threshold <= 0 or args.cg_iterations <= 0:
         raise ValueError("CG threshold and iteration count must be positive")
+    if args.bridge_refit_iterations < 0:
+        raise ValueError("Bridge refit iterations must be nonnegative")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA qualification requested but CUDA is unavailable")
@@ -573,6 +583,8 @@ def main():
             "diagnostic_callback": record_stage,
             "solver_diagnostic_callback": solver_diagnostics.append,
             "quantization_schedule": args.quantization_schedule,
+            "bridge_quantization_mode": args.bridge_quantization_mode,
+            "bridge_refit_iterations": args.bridge_refit_iterations,
         }
 
         record_phase("collecting_calibration_inputs")
@@ -624,14 +636,21 @@ def main():
         )
         if not math.isfinite(serialization_difference) or serialization_difference > 1e-2:
             raise RuntimeError(f"Artifact reconstruction mismatch: {serialization_difference}")
-        q4_complete = (
+        expected_precision_components = set(EXPECTED_Q4_COMPONENTS)
+        if args.bridge_quantization_mode == "fp16_control":
+            expected_precision_components.difference_update({"bridge_A", "bridge_B"})
+        expected_bridge_bits = (
+            16 if args.bridge_quantization_mode == "fp16_control" else 4
+        )
+        precision_protocol_complete = (
             artifact.get("core_quantization_bits") == 4
-            and artifact.get("sparse_bridge_quantization_bits") == 4
-            and set(artifact.get("precision_diagnostics", {})) == EXPECTED_Q4_COMPONENTS
+            and artifact.get("sparse_quantization_bits") == 4
+            and artifact.get("bridge_quantization_bits") == expected_bridge_bits
+            and set(artifact.get("precision_diagnostics", {})) == expected_precision_components
             and artifact.get("compiler_hyperparameters", {}).get("n_sweeps") == 2
         )
-        if not q4_complete:
-            raise RuntimeError("Qualification artifact does not contain complete two-sweep Q4 diagnostics")
+        if not precision_protocol_complete:
+            raise RuntimeError("Qualification artifact does not match the requested precision protocol")
         record_stage("serialized_artifact", reconstructed)
         if set(stage_snapshots) != set(DIAGNOSTIC_STAGES):
             missing = sorted(set(DIAGNOSTIC_STAGES) - set(stage_snapshots))
@@ -805,17 +824,24 @@ def main():
                 "sweeps": 2,
                 "activation_scale_exponent": 0.5,
                 "quantization": (
-                    "Q4 simulation for shield, bridge, and final-sweep MPO cores; "
+                    "Q4 simulation for shield and final-sweep MPO cores; "
+                    f"bridge mode={args.bridge_quantization_mode}; "
                     f"MPO schedule={args.quantization_schedule}"
                 ),
                 "quantization_schedule": args.quantization_schedule,
+                "bridge_quantization_mode": args.bridge_quantization_mode,
+                "bridge_refit_iterations": args.bridge_refit_iterations,
                 "cg_threshold": args.cg_threshold,
                 "cg_iterations": args.cg_iterations,
                 "windows_per_chunk": args.windows_per_chunk,
             },
             "realized_ranks": list(realized_ranks),
             "independent_numerical_coefficients": artifact_coefficient_count(artifact),
-            "two_sweep_q4_diagnostics_complete": q4_complete,
+            "precision_protocol_complete": precision_protocol_complete,
+            "two_sweep_q4_diagnostics_complete": bool(
+                precision_protocol_complete
+                and args.bridge_quantization_mode != "fp16_control"
+            ),
             "serialization_relative_difference": serialization_difference,
             "calibration_metrics": calibration_metrics,
             "validation_metrics": validation_metrics,

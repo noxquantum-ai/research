@@ -2,12 +2,9 @@
 """Deterministic CPU audit of direct-SVD versus streaming-statistics NEC.
 
 This diagnostic deliberately uses an ill-conditioned calibration matrix.  It
-separates four effects that the real A40 qualification combined:
-
-1. the Gram identity used to recover singular coordinates;
-2. unquantized bridge and DMRG differences;
-3. historical in-sweep Q4 amplification; and
-4. Q4 applied once after a completed, gauge-fixed sweep.
+separates the Gram identity, unquantized compiler differences, historical
+in-sweep Q4, post-sweep Q4, solver convergence, an FP16 bridge control, and an
+operator-refit Q4 bridge.
 
 It is a numerical control, not evidence about Llama model quality.
 """
@@ -16,9 +13,13 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import torch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from nox.calibration import accumulate_calibration_statistics
 from nox.compiler import (
@@ -27,8 +28,6 @@ from nox.compiler import (
     nox_hybrid_dmrg_decompose_from_statistics,
 )
 
-
-ROOT = Path(__file__).resolve().parents[1]
 NUMERICAL_SOURCES = (
     "benchmarks/diagnose_streaming_numerics.py",
     "nox/calibration.py",
@@ -86,6 +85,7 @@ def run_compiler(
     quantize,
     schedule,
     cg_iterations,
+    bridge_quantization_mode="independent_q4",
 ):
     stages = {}
     solvers = []
@@ -112,6 +112,8 @@ def run_compiler(
         "verbose": False,
         "quantize_components": quantize,
         "quantization_schedule": schedule,
+        "bridge_quantization_mode": bridge_quantization_mode,
+        "bridge_refit_iterations": 4,
         "diagonal_prior_strength": 0.0,
         "diagnostic_callback": record_stage,
         "solver_diagnostic_callback": solvers.append,
@@ -225,11 +227,13 @@ def main():
     )
 
     experiments = {}
-    for name, quantize, schedule, cg_iterations in (
-        ("unquantized_6cg", False, "in_sweep", 6),
-        ("historical_in_sweep_q4_6cg", True, "in_sweep", 6),
-        ("post_sweep_q4_6cg_control", True, "post_sweep", 6),
-        ("post_sweep_q4_48cg_control", True, "post_sweep", 48),
+    for name, quantize, schedule, cg_iterations, bridge_mode in (
+        ("unquantized_6cg", False, "in_sweep", 6, "independent_q4"),
+        ("historical_in_sweep_q4_6cg", True, "in_sweep", 6, "independent_q4"),
+        ("post_sweep_q4_6cg_control", True, "post_sweep", 6, "independent_q4"),
+        ("post_sweep_q4_48cg_control", True, "post_sweep", 48, "independent_q4"),
+        ("post_sweep_fp16_bridge_48cg_control", True, "post_sweep", 48, "fp16_control"),
+        ("post_sweep_operator_refit_bridge_48cg", True, "post_sweep", 48, "operator_refit_q4"),
     ):
         reference = run_compiler(
             weight,
@@ -239,6 +243,7 @@ def main():
             quantize=quantize,
             schedule=schedule,
             cg_iterations=cg_iterations,
+            bridge_quantization_mode=bridge_mode,
         )
         streamed = run_compiler(
             weight,
@@ -248,6 +253,7 @@ def main():
             quantize=quantize,
             schedule=schedule,
             cg_iterations=cg_iterations,
+            bridge_quantization_mode=bridge_mode,
         )
         experiments[name] = compare_pair(
             reference, streamed, weight, calibration, validation,
@@ -256,6 +262,12 @@ def main():
     unquantized = experiments["unquantized_6cg"]["stages"]["final"]
     historical = experiments["historical_in_sweep_q4_6cg"]["stages"]["final"]
     post_sweep_48 = experiments["post_sweep_q4_48cg_control"]["stages"]["final"]
+    fp16_bridge = experiments[
+        "post_sweep_fp16_bridge_48cg_control"
+    ]["stages"]["final"]
+    operator_refit_bridge = experiments[
+        "post_sweep_operator_refit_bridge_48cg"
+    ]["stages"]["final"]
     post_sweep_48_residual = max(
         diagnostic["relative_normal_residual"]
         for side in ("reference_solver_diagnostics", "streaming_solver_diagnostics")
@@ -273,6 +285,29 @@ def main():
         "torch_version": torch.__version__,
         "singular_identity": singular_identity(calibration, targets),
         "experiments": experiments,
+        "bridge_control_findings": {
+            "baseline_post_sweep_q4_48cg_validation_disagreement": (
+                post_sweep_48["validation_functional_disagreement"]
+            ),
+            "fp16_bridge_validation_disagreement": (
+                fp16_bridge["validation_functional_disagreement"]
+            ),
+            "operator_refit_q4_bridge_validation_disagreement": (
+                operator_refit_bridge["validation_functional_disagreement"]
+            ),
+            "fp16_bridge_improves_cross_backend_parity": bool(
+                fp16_bridge["validation_functional_disagreement"]
+                < post_sweep_48["validation_functional_disagreement"]
+            ),
+            "operator_refit_improves_cross_backend_parity": bool(
+                operator_refit_bridge["validation_functional_disagreement"]
+                < post_sweep_48["validation_functional_disagreement"]
+            ),
+            "interpretation": (
+                "These controls test direct-SVD/Gram compiler parity, not each "
+                "quantizer's fidelity to its own unquantized bridge."
+            ),
+        },
         "acceptance": {
             "unquantized_functional_disagreement_below_1e-4": (
                 unquantized["calibration_functional_disagreement"] < 1e-4

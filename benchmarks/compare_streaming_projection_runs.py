@@ -64,7 +64,7 @@ def load_run(path, backend, statistics_dtype, current_algorithm):
         raise ValueError(f"{path} artifact and report input metadata differ")
     identity = report.get("qualification_identity")
     required_identity = {
-        "schema_version": 3,
+        "schema_version": 4,
         "model_id": "NousResearch/Llama-2-7b-hf",
         "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
         "layer": 0,
@@ -96,6 +96,11 @@ def load_run(path, backend, statistics_dtype, current_algorithm):
         raise ValueError(f"{path} qualification settings do not match the current protocol")
     if (
         identity.get("quantization_schedule") not in ("in_sweep", "post_sweep")
+        or identity.get("bridge_quantization_mode") not in (
+            "independent_q4", "operator_refit_q4", "fp16_control",
+        )
+        or not isinstance(identity.get("bridge_refit_iterations"), int)
+        or identity["bridge_refit_iterations"] < 0
         or not isinstance(identity.get("cg_threshold"), int)
         or identity["cg_threshold"] <= 0
         or not isinstance(identity.get("cg_iterations"), int)
@@ -141,10 +146,16 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
         reference_artifact.get("ranks") == variant_artifact.get("ranks")
         and artifact_coefficient_count(reference_artifact) == artifact_coefficient_count(variant_artifact)
     )
-    q4_complete = (
+    bridge_mode = variant_identity.get("bridge_quantization_mode")
+    expected_components = set(EXPECTED_COMPONENTS)
+    if bridge_mode == "fp16_control":
+        expected_components.difference_update({"bridge_A", "bridge_B"})
+    expected_bridge_bits = 16 if bridge_mode == "fp16_control" else 4
+    precision_protocol_complete = (
         variant_artifact.get("core_quantization_bits") == 4
-        and variant_artifact.get("sparse_bridge_quantization_bits") == 4
-        and set(variant_artifact.get("precision_diagnostics", {})) == EXPECTED_COMPONENTS
+        and variant_artifact.get("sparse_quantization_bits") == 4
+        and variant_artifact.get("bridge_quantization_bits") == expected_bridge_bits
+        and set(variant_artifact.get("precision_diagnostics", {})) == expected_components
         and variant_artifact.get("compiler_hyperparameters", {}).get("n_sweeps") == 2
     )
     combined_runtime = reference_report["runtime_seconds"] + variant_report["runtime_seconds"]
@@ -176,7 +187,11 @@ def compare(reference_report, reference_artifact, variant_report, variant_artifa
     return {
         "relative_reconstructed_weight_difference": difference,
         "structure_matches": same_structure,
-        "two_sweep_q4_diagnostics_complete": q4_complete,
+        "precision_protocol_complete": precision_protocol_complete,
+        "two_sweep_q4_diagnostics_complete": bool(
+            precision_protocol_complete and bridge_mode != "fp16_control"
+        ),
+        "bridge_quantization_mode": bridge_mode,
         "reference_coefficients": artifact_coefficient_count(reference_artifact),
         "variant_coefficients": artifact_coefficient_count(variant_artifact),
         "reference_calibration_metrics": reference_report["calibration_metrics"],
@@ -260,8 +275,12 @@ def main():
             math.isfinite(fp32["relative_reconstructed_weight_difference"])
             and fp32["relative_reconstructed_weight_difference"] <= args.max_relative_weight_difference
         )
+        fp32["passes_requested_precision_structure"] = bool(
+            fp32["structure_matches"] and fp32["precision_protocol_complete"]
+        )
         fp32["passes_complete_production_structure"] = bool(
-            fp32["structure_matches"] and fp32["two_sweep_q4_diagnostics_complete"]
+            fp32["passes_requested_precision_structure"]
+            and fp32["bridge_quantization_mode"] != "fp16_control"
         )
         fp32["passes_activation_metric_parity"] = all(
             item["relative_error_absolute_difference"] <= args.max_metric_absolute_difference
@@ -293,8 +312,12 @@ def main():
             math.isfinite(fp64["relative_reconstructed_weight_difference"])
             and fp64["relative_reconstructed_weight_difference"] <= args.max_relative_weight_difference
         )
+        fp64["passes_requested_precision_structure"] = bool(
+            fp64["structure_matches"] and fp64["precision_protocol_complete"]
+        )
         fp64["passes_complete_production_structure"] = bool(
-            fp64["structure_matches"] and fp64["two_sweep_q4_diagnostics_complete"]
+            fp64["passes_requested_precision_structure"]
+            and fp64["bridge_quantization_mode"] != "fp16_control"
         )
         fp64["passes_activation_metric_parity"] = all(
             item["relative_error_absolute_difference"] <= args.max_metric_absolute_difference
@@ -318,7 +341,7 @@ def main():
     if "fp32" in report:
         report["fp32_passes"] = bool(
             report["fp32"]["passes_weight_parity_threshold"]
-            and report["fp32"]["passes_complete_production_structure"]
+            and report["fp32"]["passes_requested_precision_structure"]
             and report["fp32"]["passes_activation_metric_parity"]
             and report["fp32"]["passes_direct_functional_parity"]
             and report["fp32"]["passes_algorithm_identity"]
@@ -326,7 +349,7 @@ def main():
     if "fp64" in report:
         report["fp64_passes"] = bool(
             report["fp64"]["passes_weight_parity_threshold"]
-            and report["fp64"]["passes_complete_production_structure"]
+            and report["fp64"]["passes_requested_precision_structure"]
             and report["fp64"]["passes_activation_metric_parity"]
             and report["fp64"]["passes_direct_functional_parity"]
             and report["fp64"]["passes_algorithm_identity"]

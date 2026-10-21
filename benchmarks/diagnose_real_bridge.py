@@ -26,7 +26,10 @@ from benchmarks.qualify_streaming_projection import (  # noqa: E402
     materialize_down_inputs,
     source_identity,
 )
-from nox.compiler import quantize_4bit_grouped  # noqa: E402
+from nox.compiler import (  # noqa: E402
+    quantize_4bit_grouped,
+    quantize_low_rank_bridge_operator_refit,
+)
 from nox.evaluation import MODEL_ID, MODEL_REVISION, validate_llama2_config  # noqa: E402
 from scripts.compile_high_fidelity import PinnedWeights, atomic_json_save  # noqa: E402
 
@@ -310,6 +313,28 @@ def main():
     bridge_gram_pivoted_q4 = quantize_4bit_grouped(
         a_gram_pivoted, group_size=64,
     ) @ quantize_4bit_grouped(b_gram_pivoted, group_size=64)
+    (
+        a_direct_refit_q4,
+        b_direct_refit_q4,
+        _,
+        _,
+        direct_refit_diagnostics,
+    ) = quantize_low_rank_bridge_operator_refit(
+        a_direct, b_direct, iterations=4, return_diagnostics=True,
+    )
+    (
+        a_gram_refit_q4,
+        b_gram_refit_q4,
+        _,
+        _,
+        gram_refit_diagnostics,
+    ) = quantize_low_rank_bridge_operator_refit(
+        a_gram, b_gram, iterations=4, return_diagnostics=True,
+    )
+    bridge_direct_refit_q4 = a_direct_refit_q4 @ b_direct_refit_q4
+    bridge_gram_refit_q4 = a_gram_refit_q4 @ b_gram_refit_q4
+    bridge_direct_fp16 = a_direct.half().float() @ b_direct.half().float()
+    bridge_gram_fp16 = a_gram.half().float() @ b_gram.half().float()
 
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj bridge-only diagnostic",
@@ -413,6 +438,30 @@ def main():
             ),
             "gram_pivoted_anchor_preserves_unquantized_product": relative_error(
                 a_gram_pivoted @ b_gram_pivoted, bridge_gram,
+            ),
+            "operator_refit_q4_weight_relative_difference": relative_error(
+                bridge_gram_refit_q4, bridge_direct_refit_q4,
+            ),
+            "operator_refit_q4_calibration_functional_difference": (
+                functional_difference(
+                    bridge_direct_refit_q4, bridge_gram_refit_q4, x,
+                )
+            ),
+            "operator_refit_q4_validation_functional_difference": (
+                functional_difference(
+                    bridge_direct_refit_q4, bridge_gram_refit_q4, x_validation,
+                )
+            ),
+            "operator_refit_direct_diagnostics": direct_refit_diagnostics,
+            "operator_refit_gram_diagnostics": gram_refit_diagnostics,
+            "fp16_control_weight_relative_difference": relative_error(
+                bridge_gram_fp16, bridge_direct_fp16,
+            ),
+            "fp16_control_calibration_functional_difference": functional_difference(
+                bridge_direct_fp16, bridge_gram_fp16, x,
+            ),
+            "fp16_control_validation_functional_difference": functional_difference(
+                bridge_direct_fp16, bridge_gram_fp16, x_validation,
             ),
         },
         "reference_stage_source": str(args.reference_output),

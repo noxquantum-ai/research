@@ -11,9 +11,12 @@ from nox.calibration import (
     accumulate_calibration_statistics,
 )
 from nox.compiler import (
+    _low_rank_product_relative_error,
     _left_singular_system_from_gram,
     nox_hybrid_dmrg_decompose,
     nox_hybrid_dmrg_decompose_from_statistics,
+    quantize_4bit_grouped,
+    quantize_low_rank_bridge_operator_refit,
 )
 from nox.sequential_compiler import (
     compile_independent_transformer_block_streaming,
@@ -36,6 +39,113 @@ from benchmarks.compare_streaming_projection_runs import compare as compare_stag
 
 
 class StreamingCalibrationTests(unittest.TestCase):
+    def test_low_rank_product_error_matches_materialized_float64_objective(self):
+        torch.manual_seed(108)
+        left = torch.randn(19, 5)
+        right = torch.randn(5, 23)
+        target_left = torch.randn(19, 5)
+        target_right = torch.randn(5, 23)
+        implicit = _low_rank_product_relative_error(
+            left, right, target_left, target_right,
+        )
+        actual = left.double() @ right.double()
+        target = target_left.double() @ target_right.double()
+        explicit = torch.linalg.vector_norm(actual - target).div(
+            torch.linalg.vector_norm(target),
+        )
+        torch.testing.assert_close(implicit, explicit, atol=1e-12, rtol=1e-12)
+
+    def test_operator_refit_bridge_q4_never_worsens_its_operator_objective(self):
+        torch.manual_seed(109)
+        left = torch.randn(48, 8)
+        right = torch.randn(8, 64)
+        independent = (
+            quantize_4bit_grouped(left) @ quantize_4bit_grouped(right)
+        )
+        refit_left, refit_right, _, _, diagnostics = (
+            quantize_low_rank_bridge_operator_refit(
+                left, right, iterations=5, return_diagnostics=True,
+            )
+        )
+        target = left @ right
+        independent_error = torch.linalg.vector_norm(independent - target)
+        refit_error = torch.linalg.vector_norm(refit_left @ refit_right - target)
+        self.assertLessEqual(float(refit_error), float(independent_error) + 1e-5)
+        self.assertLessEqual(
+            diagnostics["selected_q4_relative_operator_error"],
+            diagnostics["independent_q4_relative_operator_error"] + 1e-6,
+        )
+
+    def test_fp16_bridge_control_keeps_other_components_q4(self):
+        torch.manual_seed(111)
+        weight = torch.randn(16, 16)
+        inputs = torch.randn(16, 32)
+        _, _, _, _, artifact = nox_hybrid_dmrg_decompose(
+            W=weight,
+            X_calib=inputs,
+            Y_dense=weight @ inputs,
+            o_modes=(2, 2, 2, 2),
+            i_modes=(2, 2, 2, 2),
+            ranks=(1, 2, 4, 2, 1),
+            r_bridge=3,
+            n_outliers=8,
+            n_sweeps=2,
+            return_artifacts=True,
+            verbose=False,
+            quantize_components=True,
+            quantization_schedule="post_sweep",
+            bridge_quantization_mode="fp16_control",
+        )
+        self.assertEqual(artifact["sparse_quantization_bits"], 4)
+        self.assertEqual(artifact["bridge_quantization_bits"], 16)
+        self.assertEqual(artifact["core_quantization_bits"], 4)
+        self.assertEqual(
+            set(artifact["precision_diagnostics"]),
+            {
+                "sparse_shield",
+                "mpo_site_0", "mpo_site_1", "mpo_site_2", "mpo_site_3",
+            },
+        )
+        self.assertEqual(
+            artifact["compiler_hyperparameters"]["bridge_quantization_mode"],
+            "fp16_control",
+        )
+        self.assertEqual(
+            artifact["bridge_quantization_diagnostics"]["mode"],
+            "fp16_control",
+        )
+
+    def test_operator_refit_bridge_mode_records_nonworsening_objective(self):
+        torch.manual_seed(112)
+        weight = torch.randn(16, 16)
+        inputs = torch.randn(16, 32)
+        _, _, _, _, artifact = nox_hybrid_dmrg_decompose(
+            W=weight,
+            X_calib=inputs,
+            Y_dense=weight @ inputs,
+            o_modes=(2, 2, 2, 2),
+            i_modes=(2, 2, 2, 2),
+            ranks=(1, 2, 4, 2, 1),
+            r_bridge=3,
+            n_outliers=8,
+            n_sweeps=1,
+            return_artifacts=True,
+            verbose=False,
+            quantize_components=True,
+            bridge_quantization_mode="operator_refit_q4",
+            bridge_refit_iterations=3,
+        )
+        diagnostics = artifact["bridge_quantization_diagnostics"]
+        self.assertEqual(diagnostics["mode"], "operator_refit_q4")
+        self.assertLessEqual(
+            diagnostics["selected_q4_relative_operator_error"],
+            diagnostics["independent_q4_relative_operator_error"] + 1e-6,
+        )
+        self.assertEqual(artifact["bridge_quantization_bits"], 4)
+        self.assertEqual(
+            artifact["compiler_hyperparameters"]["bridge_refit_iterations"], 3,
+        )
+
     def test_direct_functional_disagreement_uses_reference_output_norm(self):
         reference = torch.eye(4)
         variant = 2.0 * reference

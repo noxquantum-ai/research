@@ -76,6 +76,160 @@ def quantize_4bit_grouped(tensor, group_size=64, return_diagnostics=False):
     return deq, diagnostics
 
 
+def _low_rank_product_relative_error(a, b, target_a, target_b):
+    """Compute ||AB-A0B0||_F/||A0B0||_F without materializing either product."""
+    # The factors are small in their shared dimension but may be very tall or
+    # wide.  All dense work below is therefore rank-by-rank.
+    a_work = a.double()
+    b_work = b.double()
+    target_a_work = target_a.double()
+    target_b_work = target_b.double()
+    norm = torch.sum((a_work.T @ a_work) * (b_work @ b_work.T).T)
+    target_norm = torch.sum(
+        (target_a_work.T @ target_a_work)
+        * (target_b_work @ target_b_work.T).T
+    )
+    inner = torch.trace(
+        (a_work.T @ target_a_work) @ (target_b_work @ b_work.T)
+    )
+    squared_error = (norm + target_norm - 2.0 * inner).clamp_min(0)
+    return torch.sqrt(squared_error / target_norm.clamp_min(1e-30))
+
+
+@torch.no_grad()
+def quantize_low_rank_bridge_operator_refit(
+    a,
+    b,
+    *,
+    group_size=64,
+    iterations=4,
+    return_diagnostics=False,
+):
+    """Q4-quantize a low-rank product using alternating operator refits.
+
+    The historical path rounds ``a`` and ``b`` independently.  Here each
+    candidate factor is first refit against the represented product ``a @ b``
+    while the other Q4 factor is held fixed.  Candidate selection minimizes
+    exact Frobenius operator error using only rank-sized Gram matrices.  The
+    historical pair is always retained as a candidate, so this routine cannot
+    knowingly return a worse pair under its stated objective.
+
+    This is an experimental quantizer.  It does not change rank or coefficient
+    count and performs no gradient optimization.
+    """
+    if a.ndim != 2 or b.ndim != 2 or a.shape[1] != b.shape[0]:
+        raise ValueError("Expected low-rank factors A[d_out,r] and B[r,d_in]")
+    if iterations < 0:
+        raise ValueError("iterations must be nonnegative")
+
+    target_a = a
+    target_b = b
+
+    def quantized(tensor):
+        return quantize_4bit_grouped(tensor, group_size=group_size)
+
+    best_raw_a = a
+    best_raw_b = b
+    baseline_a = quantized(a)
+    baseline_b = quantized(b)
+    best_a = baseline_a
+    best_b = baseline_b
+    baseline_error = _low_rank_product_relative_error(
+        best_a, best_b, target_a, target_b,
+    )
+    best_error = baseline_error
+    selected_step = "independent"
+    current_a = best_a
+    current_b = best_b
+    rank = int(a.shape[1])
+    identity = torch.eye(rank, device=a.device, dtype=torch.float32)
+
+    for iteration in range(iterations):
+        # argmin_B ||current_a B - target_a target_b||_F
+        left = current_a.float()
+        normal = left.T @ left
+        ridge = torch.trace(normal).div(max(rank, 1)).mul(1e-8).clamp_min(1e-12)
+        try:
+            transfer = torch.linalg.solve(
+                normal + ridge * identity,
+                left.T @ target_a.float(),
+            )
+            raw_b = (transfer @ target_b.float()).to(dtype=b.dtype)
+        except torch.linalg.LinAlgError:
+            raw_b = None
+        if raw_b is not None and torch.isfinite(raw_b).all():
+            candidate_b = quantized(raw_b)
+            candidate_error = _low_rank_product_relative_error(
+                current_a, candidate_b, target_a, target_b,
+            )
+            if torch.isfinite(candidate_error) and candidate_error < best_error:
+                best_raw_a = current_a
+                best_raw_b = raw_b
+                best_a = current_a
+                best_b = candidate_b
+                best_error = candidate_error
+                selected_step = f"iteration_{iteration + 1}_right"
+            current_b = candidate_b
+
+        # argmin_A ||A current_b - target_a target_b||_F
+        right = current_b.float()
+        normal = right @ right.T
+        ridge = torch.trace(normal).div(max(rank, 1)).mul(1e-8).clamp_min(1e-12)
+        try:
+            transfer = (target_b.float() @ right.T) @ torch.linalg.solve(
+                normal + ridge * identity,
+                identity,
+            )
+            raw_a = (target_a.float() @ transfer).to(dtype=a.dtype)
+        except torch.linalg.LinAlgError:
+            raw_a = None
+        if raw_a is not None and torch.isfinite(raw_a).all():
+            candidate_a = quantized(raw_a)
+            candidate_error = _low_rank_product_relative_error(
+                candidate_a, current_b, target_a, target_b,
+            )
+            if torch.isfinite(candidate_error) and candidate_error < best_error:
+                best_raw_a = raw_a
+                best_raw_b = current_b
+                best_a = candidate_a
+                best_b = current_b
+                best_error = candidate_error
+                selected_step = f"iteration_{iteration + 1}_left"
+            current_a = candidate_a
+
+    if not return_diagnostics:
+        return best_a, best_b
+
+    # Requantize the selected pre-rounding tensors once to obtain diagnostics
+    # for the factors actually returned.  When a fixed factor came from a prior
+    # iteration, it is already on the Q4 grid and requantization is idempotent.
+    best_a, a_diagnostics = quantize_4bit_grouped(
+        best_raw_a, group_size=group_size, return_diagnostics=True,
+    )
+    best_b, b_diagnostics = quantize_4bit_grouped(
+        best_raw_b, group_size=group_size, return_diagnostics=True,
+    )
+    final_error = _low_rank_product_relative_error(
+        best_a, best_b, target_a, target_b,
+    )
+    if not torch.isfinite(final_error) or final_error > baseline_error:
+        best_a, a_diagnostics = quantize_4bit_grouped(
+            a, group_size=group_size, return_diagnostics=True,
+        )
+        best_b, b_diagnostics = quantize_4bit_grouped(
+            b, group_size=group_size, return_diagnostics=True,
+        )
+        final_error = baseline_error
+        selected_step = "independent_fallback"
+    return best_a, best_b, a_diagnostics, b_diagnostics, {
+        "objective": "relative Frobenius error of the represented bridge operator",
+        "iterations": int(iterations),
+        "selected_step": selected_step,
+        "independent_q4_relative_operator_error": float(baseline_error.item()),
+        "selected_q4_relative_operator_error": float(final_error.item()),
+    }
+
+
 def augment_diagonal_weight_prior(X, Y, W, channel_scale, strength):
     """Add N*strength*||(W_hat-W) diag(channel_scale)||_F^2 to fit loss.
 
@@ -431,6 +585,8 @@ def nox_hybrid_dmrg_decompose(
     calibration_statistics=None,
     statistics_factorization_cache=None,
     quantization_schedule="in_sweep",
+    bridge_quantization_mode="independent_q4",
+    bridge_refit_iterations=4,
     solver_diagnostic_callback=None,
     cg_threshold=4096,
     cg_iterations=6,
@@ -502,6 +658,8 @@ def nox_hybrid_dmrg_decompose(
             calibration_statistics=ordered_statistics,
             statistics_factorization_cache=statistics_factorization_cache,
             quantization_schedule=quantization_schedule,
+            bridge_quantization_mode=bridge_quantization_mode,
+            bridge_refit_iterations=bridge_refit_iterations,
             solver_diagnostic_callback=solver_diagnostic_callback,
             cg_threshold=cg_threshold,
             cg_iterations=cg_iterations,
@@ -534,6 +692,15 @@ def nox_hybrid_dmrg_decompose(
         raise ValueError(
             "quantization_schedule must be 'in_sweep' or 'post_sweep'"
         )
+    if bridge_quantization_mode not in (
+        "independent_q4", "operator_refit_q4", "fp16_control",
+    ):
+        raise ValueError(
+            "bridge_quantization_mode must be 'independent_q4', "
+            "'operator_refit_q4', or 'fp16_control'"
+        )
+    if bridge_refit_iterations < 0:
+        raise ValueError("bridge_refit_iterations must be nonnegative")
     if cg_threshold < 1 or cg_iterations < 1:
         raise ValueError("cg_threshold and cg_iterations must be positive")
     in_sweep_quantization = (
@@ -650,8 +817,47 @@ def nox_hybrid_dmrg_decompose(
         A_bridge = U_r / col_norms.unsqueeze(0)
         B_bridge = B_raw * col_norms.unsqueeze(1)
 
-        A_q = quantize_component(A_bridge, "bridge_A", group_size=64)
-        B_q = quantize_component(B_bridge, "bridge_B", group_size=64)
+        if not quantize_components:
+            A_q = A_bridge
+            B_q = B_bridge
+            bridge_quantization_diagnostics = {
+                "mode": "unquantized_control",
+                "iterations": 0,
+            }
+        elif bridge_quantization_mode == "fp16_control":
+            # Match the tensors that inference reconstructs from the artifact.
+            # Keeping FP32 factors during the sweeps and casting only while
+            # serializing would test a different operator from the saved one.
+            A_q = A_bridge.to(dtype=torch.float16).to(dtype=W.dtype)
+            B_q = B_bridge.to(dtype=torch.float16).to(dtype=W.dtype)
+            bridge_quantization_diagnostics = {
+                "mode": "fp16_control",
+                "iterations": 0,
+            }
+        elif bridge_quantization_mode == "independent_q4":
+            A_q = quantize_component(A_bridge, "bridge_A", group_size=64)
+            B_q = quantize_component(B_bridge, "bridge_B", group_size=64)
+            bridge_quantization_diagnostics = {
+                "mode": "independent_q4",
+                "iterations": 0,
+            }
+        else:
+            (
+                A_q,
+                B_q,
+                a_diagnostics,
+                b_diagnostics,
+                bridge_quantization_diagnostics,
+            ) = quantize_low_rank_bridge_operator_refit(
+                A_bridge,
+                B_bridge,
+                group_size=64,
+                iterations=bridge_refit_iterations,
+                return_diagnostics=True,
+            )
+            precision_diagnostics["bridge_A"] = a_diagnostics
+            precision_diagnostics["bridge_B"] = b_diagnostics
+            bridge_quantization_diagnostics["mode"] = "operator_refit_q4"
         S_bridge = A_q @ B_q
         del A_bridge, B_bridge, U_r, B_raw
         if verbose:
@@ -1183,7 +1389,20 @@ def nox_hybrid_dmrg_decompose(
             # than labeling an FP16 warm start as a simulated 4-bit core.
             "quantization_bits": 4 if quantize_components and n_sweeps > 0 else 16,
             "core_quantization_bits": 4 if quantize_components and n_sweeps > 0 else 16,
-            "sparse_bridge_quantization_bits": 4 if quantize_components else 16,
+            "sparse_bridge_quantization_bits": (
+                4
+                if quantize_components and bridge_quantization_mode != "fp16_control"
+                else (16 if not quantize_components else None)
+            ),
+            "sparse_quantization_bits": 4 if quantize_components else 16,
+            "bridge_quantization_bits": (
+                4
+                if quantize_components and bridge_quantization_mode != "fp16_control"
+                else 16
+            ),
+            "bridge_quantization_diagnostics": (
+                bridge_quantization_diagnostics if r_bridge > 0 else None
+            ),
             "cores": [c.detach().to(dtype=torch.float16, device="cpu") for c in final_cores],
             "A_bridge": A_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and A_q is not None else None,
             "B_bridge": B_q.detach().to(dtype=torch.float16, device="cpu") if r_bridge > 0 and B_q is not None else None,
@@ -1205,6 +1424,8 @@ def nox_hybrid_dmrg_decompose(
                 "realized_sparse_count": int(sparse_count),
                 "quantize_components": bool(quantize_components),
                 "quantization_schedule": quantization_schedule,
+                "bridge_quantization_mode": bridge_quantization_mode,
+                "bridge_refit_iterations": int(bridge_refit_iterations),
                 "cg_threshold": int(cg_threshold),
                 "cg_iterations": int(cg_iterations),
                 "calibration_backend": (

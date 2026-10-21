@@ -32,6 +32,12 @@ Each invocation runs exactly one stage and then stops:
   down-stable-reference  Post-sweep-Q4/48-CG full-matrix numerical control
   down-stable-fp64       Matching FP64 streaming numerical control
   down-stable-compare    Compare the two stable-control variants
+  down-bridge-fp16-reference  Stable control with only the bridge kept FP16
+  down-bridge-fp16-fp64       Matching FP64 streaming bridge-without-Q4 control
+  down-bridge-fp16-compare    Compare the bridge-without-Q4 variants
+  down-bridge-refit-reference Stable control with operator-refit bridge Q4
+  down-bridge-refit-fp64      Matching FP64 streaming operator-refit control
+  down-bridge-refit-compare   Compare the operator-refit variants
   layer-reference    All seven layer-0 projections, full-matrix reference
   layer-fp32         All seven layer-0 projections, FP32 streaming statistics
   layer-fp64         Optional all-seven FP64 streaming diagnostic
@@ -207,6 +213,45 @@ down_stable_stage() {
       --model-revision 8efe6c9b93655b934e27bd9981e3ec13e55aee9d
 }
 
+down_bridge_control_stage() {
+  local family="$1"
+  local mode="$2"
+  local name="$3"
+  local backend="$4"
+  local root="$QUAL_ROOT/down_projection_bridge_$family"
+  local output="$root/$name"
+  local reference_argument=()
+  if [[ "$backend" == "streaming_statistics" ]]; then
+    reference_argument=(--reference-output "$root/reference-full-matrix")
+  fi
+  run_logged "bridge-$family-$name" "$output" \
+    "$VENV_DIR/bin/python" benchmarks/qualify_streaming_projection.py \
+      --output "$output" \
+      --backend "$backend" \
+      --statistics-dtype float64 \
+      --quantization-schedule post_sweep \
+      --bridge-quantization-mode "$mode" \
+      --bridge-refit-iterations 4 \
+      --cg-threshold 4096 --cg-iterations 48 \
+      "${reference_argument[@]}" \
+      --n-calib 4096 --n-validation 1024 --seq-len 128 \
+      --windows-per-chunk "$WINDOWS_PER_CHUNK" \
+      --device cuda:0 \
+      --model-id NousResearch/Llama-2-7b-hf \
+      --model-revision 8efe6c9b93655b934e27bd9981e3ec13e55aee9d
+}
+
+compare_bridge_control() {
+  local family="$1"
+  local root="$QUAL_ROOT/down_projection_bridge_$family"
+  run_logged "bridge-$family-compare" "$root" \
+    "$VENV_DIR/bin/python" benchmarks/compare_streaming_projection_runs.py \
+      --reference "$root/reference-full-matrix" \
+      --fp64 "$root/streaming-fp64" \
+      --output "$root/comparison-fp64.json" \
+      --gpu-hourly-usd "$GPU_HOURLY_USD"
+}
+
 require_down_gate() {
   local variant="${1:-any}"
   local gate="$QUAL_ROOT/down_projection/comparison.json"
@@ -332,6 +377,24 @@ case "$STAGE" in
         --fp64 "$QUAL_ROOT/down_projection_stable/streaming-fp64" \
         --output "$QUAL_ROOT/down_projection_stable/comparison-fp64.json" \
         --gpu-hourly-usd "$GPU_HOURLY_USD"
+    ;;
+  down-bridge-fp16-reference)
+    down_bridge_control_stage fp16 fp16_control reference-full-matrix full_matrix
+    ;;
+  down-bridge-fp16-fp64)
+    down_bridge_control_stage fp16 fp16_control streaming-fp64 streaming_statistics
+    ;;
+  down-bridge-fp16-compare)
+    compare_bridge_control fp16
+    ;;
+  down-bridge-refit-reference)
+    down_bridge_control_stage refit operator_refit_q4 reference-full-matrix full_matrix
+    ;;
+  down-bridge-refit-fp64)
+    down_bridge_control_stage refit operator_refit_q4 streaming-fp64 streaming_statistics
+    ;;
+  down-bridge-refit-compare)
+    compare_bridge_control refit
     ;;
   layer-reference)
     layer_stage reference-full-matrix full_matrix float64 any
