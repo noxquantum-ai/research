@@ -77,3 +77,8 @@ RunPod network-volume directory:
 `/workspace/runs/nec-core-q4-attribution-a40_20261021/`. The repository copy
 contains the reports and logs; bulky tensor snapshots remain on that persistent
 volume.
+
+A follow-up measured each saved projection stage inside an otherwise dense
+Llama-2-7B on the complete pinned WikiText-2 raw test split. Results, paired
+token-level NLLs, prediction sidecars, and the execution log are recorded in
+[`nec_projection_stage_ppl_a40_20261021`](../nec_projection_stage_ppl_a40_20261021/README.md).
