@@ -90,6 +90,8 @@ def compute_perplexity(
     return_details=False,
     verify_reference_loss=False,
     batch_size=1,
+    return_token_nll=False,
+    progress_interval=0,
 ):
     """
     Computes sliding-window language model perplexity across tokens.
@@ -97,6 +99,10 @@ def compute_perplexity(
     model.eval()
     if not isinstance(batch_size, int) or batch_size < 1:
         raise ValueError("batch_size must be a positive integer")
+    if return_token_nll and not return_details:
+        raise ValueError("return_token_nll requires return_details=True")
+    if not isinstance(progress_interval, int) or progress_interval < 0:
+        raise ValueError("progress_interval must be a nonnegative integer")
     encodings = tokenizer(text, return_tensors="pt", add_special_tokens=True)
     total_tokens = encodings.input_ids.size(1)
     if total_tokens < 2:
@@ -119,11 +125,14 @@ def compute_perplexity(
     total_nll = 0.0
     total_evaluated_tokens = 0
     predictions = []
+    token_nlls = []
     correct = 0
     maximum_logit_abs = 0.0
     reference_loss_crosscheck = None
 
     forward_passes = 0
+    processed_windows = 0
+    evaluation_started = time.monotonic()
     window_index = 0
     while window_index < len(windows):
         window_length = windows[window_index]["end"] - windows[window_index]["begin"]
@@ -157,12 +166,22 @@ def compute_perplexity(
             raise FloatingPointError("Model returned non-finite logits (possible inference overflow)")
         maximum_logit_abs = max(maximum_logit_abs, float(logits.abs().max().item()))
         mask = labels != -100
-        nll = F.cross_entropy(
-            logits.reshape(-1, logits.shape[-1]),
-            labels.reshape(-1),
-            ignore_index=-100,
-            reduction="sum",
-        )
+        if return_token_nll:
+            per_token_nll = F.cross_entropy(
+                logits.reshape(-1, logits.shape[-1]),
+                labels.reshape(-1),
+                ignore_index=-100,
+                reduction="none",
+            ).reshape_as(labels)
+            nll = per_token_nll.sum()
+        else:
+            per_token_nll = None
+            nll = F.cross_entropy(
+                logits.reshape(-1, logits.shape[-1]),
+                labels.reshape(-1),
+                ignore_index=-100,
+                reduction="sum",
+            )
         window_nll = float(nll.item())
         if not math.isfinite(window_nll):
             raise FloatingPointError("Model returned non-finite shifted-token NLL")
@@ -195,12 +214,25 @@ def compute_perplexity(
                 "absolute_relative_tolerance": tolerance,
             }
         total_nll += window_nll
+        if return_token_nll:
+            # Preserve scored losses in original corpus order for paired
+            # comparisons; non-capture calls keep the original sum-reduction path.
+            token_nlls.append(per_token_nll[mask].detach().to(device="cpu", dtype=torch.float32))
         if return_details:
             predicted = logits.argmax(dim=-1)[mask]
             correct += int((predicted == labels[mask]).sum().item())
             predictions.append(predicted.cpu())
 
         total_evaluated_tokens += scored_tokens
+        processed_windows += len(group)
+        if progress_interval and (
+            processed_windows % progress_interval == 0 or processed_windows == len(windows)
+        ):
+            log_step(
+                f"Evaluation progress: windows={processed_windows}/{len(windows)} "
+                f"scored_tokens={total_evaluated_tokens} nll={total_nll:.4f} "
+                f"elapsed_s={time.monotonic() - evaluation_started:.1f}"
+            )
 
     if total_evaluated_tokens == 0:
         raise ValueError("Perplexity requires at least two input tokens")
@@ -209,7 +241,7 @@ def compute_perplexity(
     if return_details:
         token_ids = encodings.input_ids[0, :eval_limit].to(torch.int64).contiguous()
         token_ids_sha256 = hashlib.sha256(token_ids.numpy().tobytes()).hexdigest()
-        return ppl, total_evaluated_tokens, {
+        details = {
             "top1_predictions": torch.cat(predictions),
             "next_token_accuracy": correct / total_evaluated_tokens,
             "mean_nll": mean_nll,
@@ -223,6 +255,15 @@ def compute_perplexity(
             "forward_passes": forward_passes,
             "window_specification": windows,
         }
+        if return_token_nll:
+            details["token_nll"] = torch.cat(token_nlls) if token_nlls else torch.empty(0)
+            if details["token_nll"].numel() != total_evaluated_tokens:
+                raise RuntimeError("Per-token NLL sidecar length disagrees with scored-token count")
+            per_token_sum = float(details["token_nll"].double().sum().item())
+            tolerance = 1e-4 + 1e-6 * max(abs(total_nll), 1.0)
+            if abs(per_token_sum - total_nll) > tolerance:
+                raise RuntimeError("Per-token NLL sidecar sum disagrees with aggregate loss")
+        return ppl, total_evaluated_tokens, details
     return ppl, total_evaluated_tokens
 
 

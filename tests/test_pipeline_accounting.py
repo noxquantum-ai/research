@@ -12,6 +12,7 @@ from benchmarks.benchmark_day4_perplexity import (
     compute_perplexity,
     sliding_window_specifications,
 )
+from benchmarks.evaluate_single_projection_stages import block_bootstrap_paired_delta
 from nox.artifacts import checkpoint_file_sizes, checkpoint_storage_bytes, fingerprint
 from nox.compiler import estimate_artifact_tensor_bytes
 from nox.sequential_compiler import compute_dense_argmax_metrics
@@ -137,6 +138,82 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertEqual(details["top1_predictions"].tolist(), [0, 0, 0, 0])
         self.assertEqual(details["next_token_accuracy"], 0.25)
 
+    def test_per_token_nll_sidecar_matches_aggregate_and_causal_targets(self):
+        class Tokenizer:
+            bos_token_id = 0
+
+            def __len__(self):
+                return 3
+
+            def __call__(self, text, return_tensors, add_special_tokens=True):
+                return SimpleNamespace(input_ids=torch.tensor([[0, 1, 2, 1, 0, 2, 1]]))
+
+        class DeterministicModel:
+            def eval(self):
+                return self
+
+            def __call__(self, input_ids):
+                target = (input_ids + 1) % 3
+                classes = torch.arange(3).view(1, 1, 3)
+                return SimpleNamespace(logits=-((classes - target.unsqueeze(-1)) ** 2).float())
+
+        with patch("benchmarks.benchmark_day4_perplexity.log_step"):
+            ppl, scored, details = compute_perplexity(
+                DeterministicModel(), Tokenizer(), "ignored",
+                seq_len=4, stride=2, max_eval_tokens=7, device="cpu",
+                return_details=True, return_token_nll=True,
+                verify_reference_loss=True,
+            )
+        self.assertEqual(scored, 6)
+        self.assertEqual(details["token_nll"].numel(), scored)
+        self.assertAlmostEqual(float(details["token_nll"].double().mean()), details["mean_nll"], places=6)
+        self.assertAlmostEqual(ppl, math.exp(float(details["token_nll"].double().mean())), places=6)
+        self.assertTrue(torch.isfinite(details["token_nll"]).all())
+
+    def test_full_window_token_nll_prefix_matches_shorter_causal_run(self):
+        class Tokenizer:
+            bos_token_id = 0
+
+            def __len__(self):
+                return 4
+
+            def __call__(self, text, return_tensors, add_special_tokens=True):
+                return SimpleNamespace(input_ids=torch.tensor([[0, 1, 2, 3, 0, 2, 1, 3, 2, 0, 1]]))
+
+        class CausalBigramModel:
+            def eval(self):
+                return self
+
+            def __call__(self, input_ids):
+                # The current token alone determines logits; future tokens
+                # cannot affect earlier predictions, as in a causal decoder.
+                target = (input_ids * 3 + 1) % 4
+                classes = torch.arange(4).view(1, 1, 4)
+                return SimpleNamespace(logits=-((classes - target.unsqueeze(-1)) ** 2).float())
+
+        def run(limit):
+            with patch("benchmarks.benchmark_day4_perplexity.log_step"):
+                return compute_perplexity(
+                    CausalBigramModel(), Tokenizer(), "ignored",
+                    seq_len=6, stride=2, max_eval_tokens=limit, device="cpu",
+                    return_details=True, return_token_nll=True,
+                )
+
+        _, _, prefix = run(8)
+        _, _, full = run(0)
+        self.assertTrue(torch.allclose(prefix["token_nll"], full["token_nll"][:7], atol=1e-7, rtol=0))
+
+    def test_paired_block_bootstrap_is_deterministic_and_recovers_constant_delta(self):
+        reference = torch.linspace(0.1, 2.0, 2049).numpy()
+        candidate = reference + 0.25
+        first = block_bootstrap_paired_delta(reference, candidate, block_tokens=128, repetitions=1000, seed=9)
+        second = block_bootstrap_paired_delta(reference, candidate, block_tokens=128, repetitions=1000, seed=9)
+        self.assertEqual(first, second)
+        self.assertAlmostEqual(first["mean_nll_delta_candidate_minus_dense"], 0.25)
+        self.assertAlmostEqual(first["perplexity_ratio_candidate_over_dense"], math.exp(0.25))
+        self.assertAlmostEqual(first["mean_nll_delta_ci95"][0], 0.25, places=6)
+        self.assertAlmostEqual(first["mean_nll_delta_ci95"][1], 0.25, places=6)
+
     def test_sliding_windows_start_full_and_score_every_target_once(self):
         windows, limit = sliding_window_specifications(
             10_317, seq_len=2048, stride=512, max_eval_tokens=10_000,
@@ -255,7 +332,7 @@ class PipelineAccountingTests(unittest.TestCase):
                     DeterministicNextTokenModel(), Tokenizer(), "ignored",
                     seq_len=4, stride=2, max_eval_tokens=10, device="cpu",
                     return_details=True, verify_reference_loss=True,
-                    batch_size=batch_size,
+                    batch_size=batch_size, return_token_nll=True,
                 )
 
         serial_ppl, serial_scored, serial = evaluate(1)
@@ -264,6 +341,7 @@ class PipelineAccountingTests(unittest.TestCase):
         self.assertAlmostEqual(serial_ppl, batched_ppl, places=7)
         self.assertAlmostEqual(serial["mean_nll"], batched["mean_nll"], places=7)
         self.assertEqual(serial["top1_predictions"].tolist(), batched["top1_predictions"].tolist())
+        self.assertTrue(torch.allclose(serial["token_nll"], batched["token_nll"], atol=1e-7, rtol=0))
         self.assertEqual(serial["token_ids_sha256"], batched["token_ids_sha256"])
         self.assertEqual(serial["window_specification"], batched["window_specification"])
         self.assertEqual(serial["forward_passes"], 4)

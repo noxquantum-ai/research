@@ -35,6 +35,7 @@ Each invocation runs exactly one stage and then stops:
   bridge-diagnostic      Bridge-only real-activation Q4/FP16/refit diagnostic
   waterfall-stable-reference  Absolute fidelity of saved stable-reference stages
   waterfall-fp16-reference    Absolute fidelity of saved FP16-bridge stages
+  projection-stage-ppl        Dense-model WikiText PPL waterfall using saved down_proj stages
   down-bridge-fp16-reference  Stable control with only the bridge kept FP16
   down-bridge-fp16-fp64       Matching FP64 streaming bridge-without-Q4 control
   down-bridge-fp16-compare    Compare the bridge-without-Q4 variants
@@ -272,6 +273,28 @@ waterfall_stage() {
       --windows-per-chunk "$WINDOWS_PER_CHUNK"
 }
 
+projection_stage_ppl() {
+  local root="${NEC_STAGE_PPL_ROOT:-$WORKSPACE_ROOT/runs/nec-core-q4-attribution-a40_20261021}"
+  local run_output="$root/down_projection_stable/reference-full-matrix"
+  local output="$root/single_projection_ppl"
+  if [[ ! -f "$run_output/report.json" || ! -d "$run_output/stage_weights" ]]; then
+    echo "ERROR: projection-stage-ppl requires saved stable-reference stage weights at $run_output" >&2
+    exit 2
+  fi
+  export NEC_EVAL_GPU_MEMORY_GIB="${NEC_EVAL_GPU_MEMORY_GIB:-32}"
+  export NEC_EVAL_CPU_MEMORY_GIB="${NEC_EVAL_CPU_MEMORY_GIB:-24}"
+  run_logged projection-stage-ppl "$output" \
+    "$VENV_DIR/bin/python" benchmarks/evaluate_single_projection_stages.py \
+      --run-output "$run_output" \
+      --output-dir "$output" \
+      --batch-size 1 \
+      --context-length 2048 \
+      --stride 512 \
+      --block-tokens 512 \
+      --bootstrap-repetitions 5000 \
+      --offload-folder "$root/evaluation_offload"
+}
+
 require_down_gate() {
   local variant="${1:-any}"
   local gate="$QUAL_ROOT/down_projection/comparison.json"
@@ -421,6 +444,9 @@ case "$STAGE" in
   waterfall-fp16-reference)
     waterfall_stage fp16-reference \
       "$QUAL_ROOT/down_projection_bridge_fp16/reference-full-matrix"
+    ;;
+  projection-stage-ppl)
+    projection_stage_ppl
     ;;
   down-bridge-fp16-reference)
     down_bridge_control_stage fp16 fp16_control reference-full-matrix full_matrix
