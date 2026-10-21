@@ -33,6 +33,8 @@ Each invocation runs exactly one stage and then stops:
   down-stable-fp64       Matching FP64 streaming numerical control
   down-stable-compare    Compare the two stable-control variants
   bridge-diagnostic      Bridge-only real-activation Q4/FP16/refit diagnostic
+  waterfall-stable-reference  Absolute fidelity of saved stable-reference stages
+  waterfall-fp16-reference    Absolute fidelity of saved FP16-bridge stages
   down-bridge-fp16-reference  Stable control with only the bridge kept FP16
   down-bridge-fp16-fp64       Matching FP64 streaming bridge-without-Q4 control
   down-bridge-fp16-compare    Compare the bridge-without-Q4 variants
@@ -253,6 +255,23 @@ compare_bridge_control() {
       --gpu-hourly-usd "$GPU_HOURLY_USD"
 }
 
+waterfall_stage() {
+  local family="$1"
+  local run_output="$2"
+  local output="$run_output/absolute-fidelity-waterfall"
+  if [[ ! -f "$run_output/report.json" || ! -d "$run_output/stage_weights" ]]; then
+    echo "ERROR: waterfall requires a completed qualification with stage snapshots: $run_output" >&2
+    exit 2
+  fi
+  mkdir -p "$output"
+  run_logged "waterfall-$family" "$output" \
+    "$VENV_DIR/bin/python" benchmarks/analyze_projection_waterfall.py \
+      --run-output "$run_output" \
+      --output "$output/report.json" \
+      --device cuda:0 \
+      --windows-per-chunk "$WINDOWS_PER_CHUNK"
+}
+
 require_down_gate() {
   local variant="${1:-any}"
   local gate="$QUAL_ROOT/down_projection/comparison.json"
@@ -394,6 +413,14 @@ case "$STAGE" in
         --device cuda:0 \
         --n-calib 4096 --n-validation 1024 --seq-len 128 \
         --windows-per-chunk "$WINDOWS_PER_CHUNK"
+    ;;
+  waterfall-stable-reference)
+    waterfall_stage stable-reference \
+      "$QUAL_ROOT/down_projection_stable/reference-full-matrix"
+    ;;
+  waterfall-fp16-reference)
+    waterfall_stage fp16-reference \
+      "$QUAL_ROOT/down_projection_bridge_fp16/reference-full-matrix"
     ;;
   down-bridge-fp16-reference)
     down_bridge_control_stage fp16 fp16_control reference-full-matrix full_matrix
