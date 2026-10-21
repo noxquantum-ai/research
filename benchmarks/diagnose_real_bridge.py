@@ -72,7 +72,19 @@ def construct_bridge(residual, u_x, singular_values, projected_target, rank):
     b = b_raw * column_norms.unsqueeze(1)
     a_q = quantize_4bit_grouped(a, group_size=64)
     b_q = quantize_4bit_grouped(b, group_size=64)
-    return a @ b, a_q @ b_q
+    return a, b, a @ b, a_q @ b_q
+
+
+@torch.no_grad()
+def canonicalize_low_rank_factors(a, b):
+    """Return balanced SVD-gauge factors without forming the dense product."""
+    q_a, r_a = torch.linalg.qr(a, mode="reduced")
+    q_b, r_b = torch.linalg.qr(b.T, mode="reduced")
+    u, singular_values, vh = torch.linalg.svd(r_a @ r_b.T, full_matrices=False)
+    root = torch.sqrt(singular_values.clamp_min(0))
+    a_canonical = (q_a @ u) * root.unsqueeze(0)
+    b_canonical = root.unsqueeze(1) * (vh @ q_b.T)
+    return a_canonical, b_canonical
 
 
 def main():
@@ -171,12 +183,24 @@ def main():
     projected_gram = projected_gram.to(dtype=x.dtype)
 
     print("BRIDGE_DIAGNOSTIC_PHASE=constructing_bridges", flush=True)
-    bridge_direct, bridge_direct_q4 = construct_bridge(
+    a_direct, b_direct, bridge_direct, bridge_direct_q4 = construct_bridge(
         residual, ud, sd, projected_direct, rank=128,
     )
-    bridge_gram, bridge_gram_q4 = construct_bridge(
+    a_gram, b_gram, bridge_gram, bridge_gram_q4 = construct_bridge(
         residual, ug, sg, projected_gram, rank=128,
     )
+    a_direct_canonical, b_direct_canonical = canonicalize_low_rank_factors(
+        a_direct, b_direct,
+    )
+    a_gram_canonical, b_gram_canonical = canonicalize_low_rank_factors(
+        a_gram, b_gram,
+    )
+    bridge_direct_canonical_q4 = quantize_4bit_grouped(
+        a_direct_canonical, group_size=64,
+    ) @ quantize_4bit_grouped(b_direct_canonical, group_size=64)
+    bridge_gram_canonical_q4 = quantize_4bit_grouped(
+        a_gram_canonical, group_size=64,
+    ) @ quantize_4bit_grouped(b_gram_canonical, group_size=64)
 
     report = {
         "scope": "real Llama-2-7B layer-0 down_proj bridge-only diagnostic",
@@ -220,6 +244,21 @@ def main():
             ),
             "q4_validation_functional_difference": functional_difference(
                 bridge_direct_q4, bridge_gram_q4, x_validation,
+            ),
+            "canonical_q4_weight_relative_difference": relative_error(
+                bridge_gram_canonical_q4, bridge_direct_canonical_q4,
+            ),
+            "canonical_q4_calibration_functional_difference": functional_difference(
+                bridge_direct_canonical_q4, bridge_gram_canonical_q4, x,
+            ),
+            "canonical_q4_validation_functional_difference": functional_difference(
+                bridge_direct_canonical_q4, bridge_gram_canonical_q4, x_validation,
+            ),
+            "direct_canonicalization_preserves_unquantized_product": relative_error(
+                a_direct_canonical @ b_direct_canonical, bridge_direct,
+            ),
+            "gram_canonicalization_preserves_unquantized_product": relative_error(
+                a_gram_canonical @ b_gram_canonical, bridge_gram,
             ),
         },
         "reference_stage_source": str(args.reference_output),
