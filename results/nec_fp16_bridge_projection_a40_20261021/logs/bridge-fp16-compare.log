@@ -1,0 +1,419 @@
+{
+  "acceptance": {
+    "maximum_activation_metric_absolute_difference": 0.01,
+    "maximum_direct_functional_disagreement": 0.01,
+    "maximum_relative_weight_difference": 0.01
+  },
+  "algorithm_identity": {
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "9d7c0e804db84dc63debd558ae43385697b957cc10e0965f26fef7b425af4f00",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "5433105bd52795d53ac6f3b096adc021f37755b7bffec02254d08d9c0a5cabc3",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "schema_version": 1,
+    "sha256": "4c7cceb230260ea0bbcfca8b5fa438f10703a43622e37a19160a1e1a21b390ee"
+  },
+  "fp64": {
+    "bridge_quantization_mode": "fp16_control",
+    "bridge_statistics_diagnostics": {
+      "conventional_numerical_rank": 4096,
+      "eigenvalue_tolerance": 7.300411655549923e-22,
+      "largest_eigenvalue": 122.19404937359275,
+      "maximum_modes": 4096,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 4096,
+      "positive_modes_below_conventional_cutoff": 0,
+      "singular_value_tolerance": 2.7019273964246196e-11,
+      "statistics_dtype": "torch.float64"
+    },
+    "calibration_statistics_diagnostics": {
+      "conventional_numerical_rank": 4096,
+      "eigenvalue_tolerance": 3.4616161573307665e-20,
+      "largest_eigenvalue": 5794.041700644884,
+      "maximum_modes": 4096,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 4096,
+      "positive_modes_below_conventional_cutoff": 0,
+      "singular_value_tolerance": 1.8605418988377463e-10,
+      "statistics_dtype": "torch.float64"
+    },
+    "clean_source_trees": true,
+    "combined_observed_gpu_cost_usd": 0.14805977581285923,
+    "combined_runtime_seconds": 903.4155812310055,
+    "direct_functional_disagreement": {
+      "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+      "final_artifact": {
+        "calibration": {
+          "angular_drift": 0.0008154456277170707,
+          "cosine_similarity": 0.9991845543722829,
+          "norm_ratio": 0.9999181405046276,
+          "relative_functional_disagreement": 0.04038272467863716,
+          "sample_count": 4096
+        },
+        "relative_reconstructed_weight_difference": 0.18458300828933716,
+        "validation": {
+          "angular_drift": 0.0009404206564563866,
+          "cosine_similarity": 0.9990595793435436,
+          "norm_ratio": 0.999917328010548,
+          "relative_functional_disagreement": 0.04336695348677121,
+          "sample_count": 1024
+        }
+      },
+      "stages": {
+        "serialized_artifact": {
+          "calibration": {
+            "angular_drift": 0.0008154705642684501,
+            "cosine_similarity": 0.9991845294357315,
+            "norm_ratio": 0.9999114339447392,
+            "relative_functional_disagreement": 0.04038322085330112,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.18458330631256104,
+          "validation": {
+            "angular_drift": 0.0009404451601090491,
+            "cosine_similarity": 0.999059554839891,
+            "norm_ratio": 0.9999086910980175,
+            "relative_functional_disagreement": 0.043367348494642896,
+            "sample_count": 1024
+          }
+        },
+        "sparse": {
+          "calibration": {
+            "angular_drift": 0.0,
+            "cosine_similarity": 1.0,
+            "norm_ratio": 1.0,
+            "relative_functional_disagreement": 0.0,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.0,
+          "validation": {
+            "angular_drift": 0.0,
+            "cosine_similarity": 1.0,
+            "norm_ratio": 1.0,
+            "relative_functional_disagreement": 0.0,
+            "sample_count": 1024
+          }
+        },
+        "sparse_plus_bridge": {
+          "calibration": {
+            "angular_drift": 2.6810514697217513e-08,
+            "cosine_similarity": 0.9999999731894853,
+            "norm_ratio": 0.9999886283435105,
+            "relative_functional_disagreement": 0.00023183988889942394,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.00048640029854141176,
+          "validation": {
+            "angular_drift": 2.0326317407004524e-08,
+            "cosine_similarity": 0.9999999796736826,
+            "norm_ratio": 0.9999912696839055,
+            "relative_functional_disagreement": 0.00020181302780763913,
+            "sample_count": 1024
+          }
+        },
+        "sweep_1": {
+          "calibration": {
+            "angular_drift": 1.282960717885473e-06,
+            "cosine_similarity": 0.9999987170392821,
+            "norm_ratio": 0.9999676248011002,
+            "relative_functional_disagreement": 0.0016021505913934875,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.010192512534558773,
+          "validation": {
+            "angular_drift": 1.8222203630458012e-06,
+            "cosine_similarity": 0.999998177779637,
+            "norm_ratio": 0.999963476536479,
+            "relative_functional_disagreement": 0.001909356326574503,
+            "sample_count": 1024
+          }
+        },
+        "sweep_2": {
+          "calibration": {
+            "angular_drift": 1.7789578190541278e-06,
+            "cosine_similarity": 0.999998221042181,
+            "norm_ratio": 0.9999626298000496,
+            "relative_functional_disagreement": 0.0018865787048626763,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.011437458917498589,
+          "validation": {
+            "angular_drift": 2.688517139803892e-06,
+            "cosine_similarity": 0.9999973114828602,
+            "norm_ratio": 0.999961215344579,
+            "relative_functional_disagreement": 0.002319122675164392,
+            "sample_count": 1024
+          }
+        },
+        "tt_warmstart": {
+          "calibration": {
+            "angular_drift": 2.1158115715014247e-07,
+            "cosine_similarity": 0.9999997884188428,
+            "norm_ratio": 0.9999807578921989,
+            "relative_functional_disagreement": 0.0006507875463865642,
+            "sample_count": 4096
+          },
+          "relative_reconstructed_weight_difference": 0.005055299028754234,
+          "validation": {
+            "angular_drift": 2.3248896507954697e-07,
+            "cosine_similarity": 0.9999997675110349,
+            "norm_ratio": 0.9999841307258345,
+            "relative_functional_disagreement": 0.0006820721262136317,
+            "sample_count": 1024
+          }
+        }
+      }
+    },
+    "first_stage_over_one_percent_disagreement": "sweep_1",
+    "metric_differences": {
+      "calibration": {
+        "cosine_similarity_absolute_difference": 5.709010138632564e-06,
+        "relative_error_absolute_difference": 1.6634418854577504e-05
+      },
+      "validation": {
+        "cosine_similarity_absolute_difference": 1.2795657511222025e-05,
+        "relative_error_absolute_difference": 2.622103364408046e-05
+      }
+    },
+    "passes_activation_metric_parity": true,
+    "passes_algorithm_identity": true,
+    "passes_complete_production_structure": false,
+    "passes_direct_functional_parity": false,
+    "passes_requested_precision_structure": true,
+    "passes_weight_parity_threshold": false,
+    "planning_upper_bound_for_two_full_layer_variants": {
+      "gpu_cost_usd": 1.0364184306900146,
+      "method": "seven times the observed two-variant down_proj runtime; conservative planning bound, not a runtime model",
+      "seconds": 6323.909068617038
+    },
+    "precision_protocol_complete": true,
+    "reference_calibration_metrics": {
+      "angular_drift": 0.05809281894516105,
+      "cosine_similarity": 0.941907181054839,
+      "norm_ratio": 0.9389905828050058,
+      "relative_error": 0.3358859461531852,
+      "sample_count": 4096
+    },
+    "reference_coefficients": 3280994,
+    "reference_memory": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "process_peak_rss_bytes": 2532573184,
+      "sampler_count": 1729,
+      "sampler_interval_seconds": 0.25,
+      "sampler_peak_cuda_device_used_bytes": 5475139584,
+      "torch_peak_cuda_allocated_bytes": 4727735808,
+      "torch_peak_cuda_reserved_bytes": 4808769536
+    },
+    "reference_runtime_seconds": 435.68418522100546,
+    "reference_solver_diagnostics": [
+      {
+        "iterations": 0,
+        "local_width": 2752,
+        "regularization_scale": 0.14598335325717926,
+        "relative_normal_residual": 1.007127366392524e-06,
+        "site": 0,
+        "solver": "cholesky",
+        "sweep": 1
+      },
+      {
+        "iterations": 19,
+        "local_width": 32768,
+        "regularization_scale": 0.14927426794312695,
+        "relative_normal_residual": 1.0084869245474692e-05,
+        "site": 1,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 1
+      },
+      {
+        "iterations": 26,
+        "local_width": 65536,
+        "regularization_scale": 0.14715175483565746,
+        "relative_normal_residual": 5.658762802340789e-06,
+        "site": 2,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 1
+      },
+      {
+        "iterations": 0,
+        "local_width": 512,
+        "regularization_scale": 0.14644154906272888,
+        "relative_normal_residual": 4.913147222396219e-07,
+        "site": 3,
+        "solver": "cholesky",
+        "sweep": 1
+      },
+      {
+        "iterations": 0,
+        "local_width": 2752,
+        "regularization_scale": 0.03603394329547882,
+        "relative_normal_residual": 1.109439153879066e-06,
+        "site": 0,
+        "solver": "cholesky",
+        "sweep": 2
+      },
+      {
+        "iterations": 17,
+        "local_width": 32768,
+        "regularization_scale": 0.03689659936747948,
+        "relative_normal_residual": 7.094445663824445e-06,
+        "site": 1,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 2
+      },
+      {
+        "iterations": 24,
+        "local_width": 65536,
+        "regularization_scale": 0.03680279630572151,
+        "relative_normal_residual": 7.428275239362847e-06,
+        "site": 2,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 2
+      },
+      {
+        "iterations": 0,
+        "local_width": 512,
+        "regularization_scale": 0.036577802151441574,
+        "relative_normal_residual": 4.975654519512318e-07,
+        "site": 3,
+        "solver": "cholesky",
+        "sweep": 2
+      }
+    ],
+    "reference_validation_metrics": {
+      "angular_drift": 0.09319292032622073,
+      "cosine_similarity": 0.9068070796737793,
+      "norm_ratio": 0.9155363224497461,
+      "relative_error": 0.4216362412375273,
+      "sample_count": 1024
+    },
+    "relative_reconstructed_weight_difference": 0.18454892933368683,
+    "same_algorithm_fingerprint": true,
+    "source_commits": {
+      "reference": "23b781b6e7a4ffdbad11a1758ba7236f72e4b298",
+      "variant": "23b781b6e7a4ffdbad11a1758ba7236f72e4b298"
+    },
+    "structure_matches": true,
+    "two_sweep_q4_diagnostics_complete": false,
+    "variant_calibration_metrics": {
+      "angular_drift": 0.058098527955299684,
+      "cosine_similarity": 0.9419014720447003,
+      "norm_ratio": 0.938913717509738,
+      "relative_error": 0.33590258057203976,
+      "sample_count": 4096
+    },
+    "variant_coefficients": 3280994,
+    "variant_memory": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "process_peak_rss_bytes": 2524782592,
+      "sampler_count": 1831,
+      "sampler_interval_seconds": 0.25,
+      "sampler_peak_cuda_device_used_bytes": 11937185792,
+      "torch_peak_cuda_allocated_bytes": 10847297024,
+      "torch_peak_cuda_reserved_bytes": 11557404672
+    },
+    "variant_runtime_seconds": 467.73139601,
+    "variant_solver_diagnostics": [
+      {
+        "iterations": 0,
+        "local_width": 2752,
+        "regularization_scale": 0.14607299864292145,
+        "relative_normal_residual": 1.01887405890011e-06,
+        "site": 0,
+        "solver": "cholesky",
+        "sweep": 1
+      },
+      {
+        "iterations": 19,
+        "local_width": 32768,
+        "regularization_scale": 0.14936487426987907,
+        "relative_normal_residual": 1.0109692084370181e-05,
+        "site": 1,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 1
+      },
+      {
+        "iterations": 26,
+        "local_width": 65536,
+        "regularization_scale": 0.14724069029404394,
+        "relative_normal_residual": 5.681296897819266e-06,
+        "site": 2,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 1
+      },
+      {
+        "iterations": 0,
+        "local_width": 512,
+        "regularization_scale": 0.14652951061725616,
+        "relative_normal_residual": 4.773952468895004e-07,
+        "site": 3,
+        "solver": "cholesky",
+        "sweep": 1
+      },
+      {
+        "iterations": 0,
+        "local_width": 2752,
+        "regularization_scale": 0.036055926233530045,
+        "relative_normal_residual": 1.1462537941042683e-06,
+        "site": 0,
+        "solver": "cholesky",
+        "sweep": 2
+      },
+      {
+        "iterations": 17,
+        "local_width": 32768,
+        "regularization_scale": 0.036919073440006264,
+        "relative_normal_residual": 7.106731573003344e-06,
+        "site": 1,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 2
+      },
+      {
+        "iterations": 24,
+        "local_width": 65536,
+        "regularization_scale": 0.03682508740523878,
+        "relative_normal_residual": 7.456741059286287e-06,
+        "site": 2,
+        "solver": "matrix_free_conjugate_gradient",
+        "sweep": 2
+      },
+      {
+        "iterations": 0,
+        "local_width": 512,
+        "regularization_scale": 0.036599863320589066,
+        "relative_normal_residual": 5.048148636888072e-07,
+        "site": 3,
+        "solver": "cholesky",
+        "sweep": 2
+      }
+    ],
+    "variant_validation_metrics": {
+      "angular_drift": 0.09320571598373195,
+      "cosine_similarity": 0.906794284016268,
+      "norm_ratio": 0.9154606332405536,
+      "relative_error": 0.4216624622711714,
+      "sample_count": 1024
+    }
+  },
+  "fp64_passes": false,
+  "gpu_hourly_usd": 0.59,
+  "identical_input_data_and_hidden_states": true,
+  "recommended_next_stage": "implement_numerically_stable_factorization",
+  "scientific_scope_warning": "Projection parity and memory savings do not establish full-model quality; PPL and MMLU still require a complete 32-layer evaluation.",
+  "scope": "real Llama-2-7B layer-0 down_proj staged streaming qualification",
+  "source": {
+    "clean": true,
+    "commit": "23b781b6e7a4ffdbad11a1758ba7236f72e4b298",
+    "dirty_paths": []
+  }
+}

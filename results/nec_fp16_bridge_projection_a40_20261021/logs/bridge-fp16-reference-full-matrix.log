@@ -1,0 +1,408 @@
+QUALIFICATION_PHASE=loading_pinned_model_and_data
+[15:24:53] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[15:24:53] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[15:25:04] WikiText-2 activations generated: train X_calib [4096, 4096] (4096 tokens), validation X_test [4096, 1024] (1024 tokens).
+QUALIFICATION_PHASE=collecting_calibration_inputs
+QUALIFICATION_PHASE=compiling_projection
+    [Nox Step 1A] Sparse Outlier Shield (524130 stored entries; 5118.5 KiB tensor payload)
+QUALIFICATION_STAGE_SNAPSHOT=sparse
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+QUALIFICATION_STAGE_SNAPSHOT=sparse_plus_bridge
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+QUALIFICATION_STAGE_SNAPSHOT=tt_warmstart
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (1.3s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (58.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (148.1s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.3s); sweep complete (208.2s)
+QUALIFICATION_STAGE_SNAPSHOT=sweep_1
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final Pass (in-loop 4-bit quantization)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.8s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (53.1s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (137.7s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.3s); sweep complete (191.9s)
+QUALIFICATION_STAGE_SNAPSHOT=sweep_2
+QUALIFICATION_PHASE=validating_artifact
+QUALIFICATION_STAGE_SNAPSHOT=serialized_artifact
+QUALIFICATION_PHASE=measuring_calibration_and_validation
+{
+  "algorithm_identity": {
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "9d7c0e804db84dc63debd558ae43385697b957cc10e0965f26fef7b425af4f00",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "5433105bd52795d53ac6f3b096adc021f37755b7bffec02254d08d9c0a5cabc3",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "schema_version": 1,
+    "sha256": "4c7cceb230260ea0bbcfca8b5fa438f10703a43622e37a19160a1e1a21b390ee"
+  },
+  "artifact": {
+    "bytes": 10764933,
+    "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/artifact.pt",
+    "sha256": "115bc471f892db1caff3fe79ca252419b5dc3cb5af20c797b567c06be8d5754d"
+  },
+  "backend": "full_matrix",
+  "bridge_statistics_diagnostics": null,
+  "calibration_metrics": {
+    "angular_drift": 0.05809281894516105,
+    "cosine_similarity": 0.941907181054839,
+    "norm_ratio": 0.9389905828050058,
+    "relative_error": 0.3358859461531852,
+    "sample_count": 4096
+  },
+  "calibration_statistics_diagnostics": null,
+  "completed_at_utc": "2026-10-21T15:32:00.219352+00:00",
+  "configuration": {
+    "activation_scale_exponent": 0.5,
+    "bridge_quantization_mode": "fp16_control",
+    "bridge_rank": 128,
+    "bridge_refit_iterations": 4,
+    "cg_iterations": 48,
+    "cg_threshold": 4096,
+    "quantization": "Q4 simulation for shield and final-sweep MPO cores; bridge mode=fp16_control; MPO schedule=post_sweep",
+    "quantization_schedule": "post_sweep",
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "windows_per_chunk": 4
+  },
+  "core_qualification_runtime_seconds": 435.04916485300055,
+  "direct_functional_disagreement": null,
+  "functional_diagnostic_memory": null,
+  "functional_diagnostic_runtime_seconds": 0.0,
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "independent_numerical_coefficients": 3280994,
+  "input_data": {
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "fallback": false,
+      "literal_unk_count": 0,
+      "rows": 36718,
+      "source_bytes": 6357543,
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "split": "train",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5"
+    },
+    "calibration_split": "train",
+    "calibration_token_count": 4096,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "dataset": "wikitext-2-raw-v1",
+    "evaluation_split": "test",
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "fallback": false,
+      "literal_unk_count": 0,
+      "rows": 3760,
+      "source_bytes": 657209,
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "split": "validation",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e"
+    },
+    "heldout_split": "validation",
+    "heldout_token_count": 1024,
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "layer": 0,
+  "memory": {
+    "cuda_device_name": "NVIDIA A40",
+    "cuda_total_bytes": 47699722240,
+    "process_peak_rss_bytes": 2532573184,
+    "sampler_count": 1729,
+    "sampler_interval_seconds": 0.25,
+    "sampler_peak_cuda_device_used_bytes": 5475139584,
+    "torch_peak_cuda_allocated_bytes": 4727735808,
+    "torch_peak_cuda_reserved_bytes": 4808769536
+  },
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "precision_protocol_complete": true,
+  "projection": "down_proj",
+  "qualification_identity": {
+    "activation_scale_exponent": 0.5,
+    "backend": "full_matrix",
+    "bridge_quantization_mode": "fp16_control",
+    "bridge_rank": 128,
+    "bridge_refit_iterations": 4,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_tokens": 4096,
+    "cg_iterations": 48,
+    "cg_threshold": 4096,
+    "diagonal_prior_strength": 0.0,
+    "dmrg_chunk_size": 32,
+    "hardware": {
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240,
+      "requested_device": "cuda:0"
+    },
+    "layer": 0,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "prior_gamma": 0.01,
+    "projection": "down_proj",
+    "quantization_schedule": "post_sweep",
+    "quantize_components": true,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "schema_version": 4,
+    "sequence_length": 128,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "sparse_budget": 524288,
+    "stage_diagnostics": [
+      "sparse",
+      "sparse_plus_bridge",
+      "tt_warmstart",
+      "sweep_1",
+      "sweep_2",
+      "serialized_artifact"
+    ],
+    "statistics_dtype": "float64",
+    "sweeps": 2,
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_tokens": 1024,
+    "windows_per_chunk": 4
+  },
+  "realized_ranks": [
+    1,
+    64,
+    128,
+    64,
+    1
+  ],
+  "runtime": {
+    "cuda_runtime_version": "12.8",
+    "torch_version": "2.11.0+cu128"
+  },
+  "runtime_seconds": 435.68418522100546,
+  "scope": "real Llama-2-7B layer-0 down_proj qualification; not a model-quality benchmark",
+  "serialization_relative_difference": 0.00041580805554986,
+  "solver_diagnostics": [
+    {
+      "iterations": 0,
+      "local_width": 2752,
+      "regularization_scale": 0.14598335325717926,
+      "relative_normal_residual": 1.007127366392524e-06,
+      "site": 0,
+      "solver": "cholesky",
+      "sweep": 1
+    },
+    {
+      "iterations": 19,
+      "local_width": 32768,
+      "regularization_scale": 0.14927426794312695,
+      "relative_normal_residual": 1.0084869245474692e-05,
+      "site": 1,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 1
+    },
+    {
+      "iterations": 26,
+      "local_width": 65536,
+      "regularization_scale": 0.14715175483565746,
+      "relative_normal_residual": 5.658762802340789e-06,
+      "site": 2,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 1
+    },
+    {
+      "iterations": 0,
+      "local_width": 512,
+      "regularization_scale": 0.14644154906272888,
+      "relative_normal_residual": 4.913147222396219e-07,
+      "site": 3,
+      "solver": "cholesky",
+      "sweep": 1
+    },
+    {
+      "iterations": 0,
+      "local_width": 2752,
+      "regularization_scale": 0.03603394329547882,
+      "relative_normal_residual": 1.109439153879066e-06,
+      "site": 0,
+      "solver": "cholesky",
+      "sweep": 2
+    },
+    {
+      "iterations": 17,
+      "local_width": 32768,
+      "regularization_scale": 0.03689659936747948,
+      "relative_normal_residual": 7.094445663824445e-06,
+      "site": 1,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 2
+    },
+    {
+      "iterations": 24,
+      "local_width": 65536,
+      "regularization_scale": 0.03680279630572151,
+      "relative_normal_residual": 7.428275239362847e-06,
+      "site": 2,
+      "solver": "matrix_free_conjugate_gradient",
+      "sweep": 2
+    },
+    {
+      "iterations": 0,
+      "local_width": 512,
+      "regularization_scale": 0.036577802151441574,
+      "relative_normal_residual": 4.975654519512318e-07,
+      "site": 3,
+      "solver": "cholesky",
+      "sweep": 2
+    }
+  ],
+  "source": {
+    "clean": true,
+    "commit": "23b781b6e7a4ffdbad11a1758ba7236f72e4b298",
+    "dirty_paths": []
+  },
+  "stage_snapshots": {
+    "serialized_artifact": {
+      "bytes": 90182034,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/stage_weights/serialized_artifact.pt",
+      "sha256": "f2b9c7558c81a364a8cb0253dc684cef8bab5395970a45d61d774f66fa4bd3de",
+      "storage_dtype": "float16"
+    },
+    "sparse": {
+      "bytes": 90181879,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/stage_weights/sparse.pt",
+      "sha256": "6e1281036a087282debc228a7ea4891f21068abfa262f850e6fa603c43d19b17",
+      "storage_dtype": "float16"
+    },
+    "sparse_plus_bridge": {
+      "bytes": 90181963,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/stage_weights/sparse_plus_bridge.pt",
+      "sha256": "8fdb1e411da31c4dc90f48c14e0861b532488ccfde4c390b17c919ff2326fe5d",
+      "storage_dtype": "float16"
+    },
+    "sweep_1": {
+      "bytes": 90181886,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/stage_weights/sweep_1.pt",
+      "sha256": "bf462066fe607a57025e345551739bb9827c5a760c0fa1680511ec84483e346a",
+      "storage_dtype": "float16"
+    },
+    "sweep_2": {
+      "bytes": 90181886,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/stage_weights/sweep_2.pt",
+      "sha256": "d474f447830b7730a39032d03932dc0dbcdd7fc87bb03d371e8784095b1fab3b",
+      "storage_dtype": "float16"
+    },
+    "tt_warmstart": {
+      "bytes": 90181921,
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/reference-full-matrix/stage_weights/tt_warmstart.pt",
+      "sha256": "b94785e8b3b20e4a716f6be89d5ef03e9e80b097fa622d8cf39bc23a1ded18c8",
+      "storage_dtype": "float16"
+    }
+  },
+  "statistics_dtype": "float64",
+  "status": "PASS",
+  "two_sweep_q4_diagnostics_complete": false,
+  "validation_metrics": {
+    "angular_drift": 0.09319292032622073,
+    "cosine_similarity": 0.9068070796737793,
+    "norm_ratio": 0.9155363224497461,
+    "relative_error": 0.4216362412375273,
+    "sample_count": 1024
+  },
+  "weight_shape": [
+    4096,
+    11008
+  ]
+}

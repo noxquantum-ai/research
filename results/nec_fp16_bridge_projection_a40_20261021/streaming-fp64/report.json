@@ -1,0 +1,518 @@
+{
+  "status": "PASS",
+  "completed_at_utc": "2026-10-21T15:40:22.243611+00:00",
+  "scope": "real Llama-2-7B layer-0 down_proj qualification; not a model-quality benchmark",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source": {
+    "commit": "23b781b6e7a4ffdbad11a1758ba7236f72e4b298",
+    "dirty_paths": [],
+    "clean": true
+  },
+  "algorithm_identity": {
+    "schema_version": 1,
+    "files": {
+      "benchmarks/benchmark_day3_cascade.py": "ad12f7bab524511f8b286e3f37b903c8c3fc4aca192c59d6d37845ae6029e232",
+      "benchmarks/qualify_streaming_projection.py": "9d7c0e804db84dc63debd558ae43385697b957cc10e0965f26fef7b425af4f00",
+      "nox/artifacts.py": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd",
+      "nox/block_compiler.py": "e295c3c37339d205e231a05a7a4fae925eaefb65fe262d98d46f01e409e6ec64",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "5433105bd52795d53ac6f3b096adc021f37755b7bffec02254d08d9c0a5cabc3",
+      "nox/data.py": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10",
+      "nox/evaluation.py": "0df2cf2ae1bc434c58082fa33ef6efe4561f77a9ee90b2bbdc67becd16dfddf0",
+      "nox/sequential_compiler.py": "d51b21bae70f82930b9c1f2698c97bd283710997487bfe4267fcb6321020d05f",
+      "nox/tensor_order.py": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b",
+      "nox/utils.py": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274",
+      "scripts/compile_high_fidelity.py": "aac8a5baaf15b23fe41a086362a0ff3d64b8843532db84ae8587dc7f3d8e38cb"
+    },
+    "sha256": "4c7cceb230260ea0bbcfca8b5fa438f10703a43622e37a19160a1e1a21b390ee"
+  },
+  "qualification_identity": {
+    "schema_version": 4,
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "layer": 0,
+    "projection": "down_proj",
+    "backend": "streaming_statistics",
+    "statistics_dtype": "float64",
+    "calibration_tokens": 4096,
+    "validation_tokens": 1024,
+    "sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "validation_sampling": "uniform",
+    "calibration_seed": 42,
+    "validation_seed": 43,
+    "windows_per_chunk": 4,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "prior_gamma": 0.01,
+    "activation_scale_exponent": 0.5,
+    "dmrg_chunk_size": 32,
+    "cg_threshold": 4096,
+    "cg_iterations": 48,
+    "diagonal_prior_strength": 0.0,
+    "site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "quantize_components": true,
+    "quantization_schedule": "post_sweep",
+    "bridge_quantization_mode": "fp16_control",
+    "bridge_refit_iterations": 4,
+    "stage_diagnostics": [
+      "sparse",
+      "sparse_plus_bridge",
+      "tt_warmstart",
+      "sweep_1",
+      "sweep_2",
+      "serialized_artifact"
+    ],
+    "hardware": {
+      "requested_device": "cuda:0",
+      "cuda_device_name": "NVIDIA A40",
+      "cuda_total_bytes": 47699722240
+    }
+  },
+  "runtime": {
+    "torch_version": "2.11.0+cu128",
+    "cuda_runtime_version": "12.8"
+  },
+  "layer": 0,
+  "projection": "down_proj",
+  "weight_shape": [
+    4096,
+    11008
+  ],
+  "backend": "streaming_statistics",
+  "statistics_dtype": "float64",
+  "input_data": {
+    "dataset": "wikitext-2-raw-v1",
+    "calibration_split": "train",
+    "heldout_split": "validation",
+    "evaluation_split": "test",
+    "calibration_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "heldout_source": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "validation",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_bytes": 657209,
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "rows": 3760,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+    "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "calibration_token_count": 4096,
+    "heldout_token_count": 1024,
+    "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+    "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+    "activation_sequence_length": 128,
+    "calibration_sampling": "uniform",
+    "calibration_seed": 42,
+    "calibration_window_offsets": [
+      2681856,
+      466944,
+      104832,
+      1153536,
+      1027072,
+      936192,
+      585216,
+      429824,
+      2838272,
+      2287360,
+      364544,
+      2476672,
+      1769600,
+      133248,
+      124928,
+      392960,
+      916992,
+      975744,
+      2119552,
+      2524928,
+      111232,
+      2353920,
+      833920,
+      2725760,
+      2285568,
+      1759488,
+      924544,
+      1884032,
+      2471552,
+      1166720,
+      27136,
+      669568
+    ],
+    "validation_sampling": "uniform",
+    "validation_seed": 43,
+    "validation_window_offsets": [
+      20096,
+      149888,
+      75392,
+      242432,
+      193920,
+      50432,
+      237568,
+      261120
+    ]
+  },
+  "hidden_state_sha256": {
+    "calibration": "0405c9b8e7211ac4bcb101e8e730c00a6d3a01daa1dd1e516e1249348cb01735",
+    "validation": "1dbff949c472f9444965ba96a4d355a2afa7feac3a7f678839e770a96359daa8"
+  },
+  "configuration": {
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "bridge_rank": 128,
+    "sparse_budget": 524288,
+    "sweeps": 2,
+    "activation_scale_exponent": 0.5,
+    "quantization": "Q4 simulation for shield and final-sweep MPO cores; bridge mode=fp16_control; MPO schedule=post_sweep",
+    "quantization_schedule": "post_sweep",
+    "bridge_quantization_mode": "fp16_control",
+    "bridge_refit_iterations": 4,
+    "cg_threshold": 4096,
+    "cg_iterations": 48,
+    "windows_per_chunk": 4
+  },
+  "realized_ranks": [
+    1,
+    64,
+    128,
+    64,
+    1
+  ],
+  "independent_numerical_coefficients": 3280994,
+  "precision_protocol_complete": true,
+  "two_sweep_q4_diagnostics_complete": false,
+  "serialization_relative_difference": 0.00041002267971634865,
+  "calibration_metrics": {
+    "sample_count": 4096,
+    "relative_error": 0.33590258057203976,
+    "cosine_similarity": 0.9419014720447003,
+    "angular_drift": 0.058098527955299684,
+    "norm_ratio": 0.938913717509738
+  },
+  "validation_metrics": {
+    "sample_count": 1024,
+    "relative_error": 0.4216624622711714,
+    "cosine_similarity": 0.906794284016268,
+    "angular_drift": 0.09320571598373195,
+    "norm_ratio": 0.9154606332405536
+  },
+  "calibration_statistics_diagnostics": {
+    "maximum_modes": 4096,
+    "numerical_rank": 4096,
+    "conventional_numerical_rank": 4096,
+    "positive_modes_below_conventional_cutoff": 0,
+    "eigenvalue_tolerance": 3.4616161573307665e-20,
+    "singular_value_tolerance": 1.8605418988377463e-10,
+    "largest_eigenvalue": 5794.041700644884,
+    "negative_eigenvalues_in_candidate_range": 0,
+    "statistics_dtype": "torch.float64"
+  },
+  "bridge_statistics_diagnostics": {
+    "maximum_modes": 4096,
+    "numerical_rank": 4096,
+    "conventional_numerical_rank": 4096,
+    "positive_modes_below_conventional_cutoff": 0,
+    "eigenvalue_tolerance": 7.300411655549923e-22,
+    "singular_value_tolerance": 2.7019273964246196e-11,
+    "largest_eigenvalue": 122.19404937359275,
+    "negative_eigenvalues_in_candidate_range": 0,
+    "statistics_dtype": "torch.float64"
+  },
+  "solver_diagnostics": [
+    {
+      "solver": "cholesky",
+      "iterations": 0,
+      "regularization_scale": 0.14607299864292145,
+      "relative_normal_residual": 1.01887405890011e-06,
+      "sweep": 1,
+      "site": 0,
+      "local_width": 2752
+    },
+    {
+      "sweep": 1,
+      "site": 1,
+      "local_width": 32768,
+      "solver": "matrix_free_conjugate_gradient",
+      "iterations": 19,
+      "regularization_scale": 0.14936487426987907,
+      "relative_normal_residual": 1.0109692084370181e-05
+    },
+    {
+      "sweep": 1,
+      "site": 2,
+      "local_width": 65536,
+      "solver": "matrix_free_conjugate_gradient",
+      "iterations": 26,
+      "regularization_scale": 0.14724069029404394,
+      "relative_normal_residual": 5.681296897819266e-06
+    },
+    {
+      "solver": "cholesky",
+      "iterations": 0,
+      "regularization_scale": 0.14652951061725616,
+      "relative_normal_residual": 4.773952468895004e-07,
+      "sweep": 1,
+      "site": 3,
+      "local_width": 512
+    },
+    {
+      "solver": "cholesky",
+      "iterations": 0,
+      "regularization_scale": 0.036055926233530045,
+      "relative_normal_residual": 1.1462537941042683e-06,
+      "sweep": 2,
+      "site": 0,
+      "local_width": 2752
+    },
+    {
+      "sweep": 2,
+      "site": 1,
+      "local_width": 32768,
+      "solver": "matrix_free_conjugate_gradient",
+      "iterations": 17,
+      "regularization_scale": 0.036919073440006264,
+      "relative_normal_residual": 7.106731573003344e-06
+    },
+    {
+      "sweep": 2,
+      "site": 2,
+      "local_width": 65536,
+      "solver": "matrix_free_conjugate_gradient",
+      "iterations": 24,
+      "regularization_scale": 0.03682508740523878,
+      "relative_normal_residual": 7.456741059286287e-06
+    },
+    {
+      "solver": "cholesky",
+      "iterations": 0,
+      "regularization_scale": 0.036599863320589066,
+      "relative_normal_residual": 5.048148636888072e-07,
+      "sweep": 2,
+      "site": 3,
+      "local_width": 512
+    }
+  ],
+  "direct_functional_disagreement": {
+    "definition": "||((W_variant-W_reference)X)||_F / ||W_reference X||_F",
+    "final_artifact": {
+      "relative_reconstructed_weight_difference": 0.18458300828933716,
+      "calibration": {
+        "sample_count": 4096,
+        "relative_functional_disagreement": 0.04038272467863716,
+        "cosine_similarity": 0.9991845543722829,
+        "angular_drift": 0.0008154456277170707,
+        "norm_ratio": 0.9999181405046276
+      },
+      "validation": {
+        "sample_count": 1024,
+        "relative_functional_disagreement": 0.04336695348677121,
+        "cosine_similarity": 0.9990595793435436,
+        "angular_drift": 0.0009404206564563866,
+        "norm_ratio": 0.999917328010548
+      }
+    },
+    "stages": {
+      "sparse": {
+        "relative_reconstructed_weight_difference": 0.0,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.0,
+          "cosine_similarity": 1.0,
+          "angular_drift": 0.0,
+          "norm_ratio": 1.0
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.0,
+          "cosine_similarity": 1.0,
+          "angular_drift": 0.0,
+          "norm_ratio": 1.0
+        }
+      },
+      "sparse_plus_bridge": {
+        "relative_reconstructed_weight_difference": 0.00048640029854141176,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.00023183988889942394,
+          "cosine_similarity": 0.9999999731894853,
+          "angular_drift": 2.6810514697217513e-08,
+          "norm_ratio": 0.9999886283435105
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.00020181302780763913,
+          "cosine_similarity": 0.9999999796736826,
+          "angular_drift": 2.0326317407004524e-08,
+          "norm_ratio": 0.9999912696839055
+        }
+      },
+      "tt_warmstart": {
+        "relative_reconstructed_weight_difference": 0.005055299028754234,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.0006507875463865642,
+          "cosine_similarity": 0.9999997884188428,
+          "angular_drift": 2.1158115715014247e-07,
+          "norm_ratio": 0.9999807578921989
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.0006820721262136317,
+          "cosine_similarity": 0.9999997675110349,
+          "angular_drift": 2.3248896507954697e-07,
+          "norm_ratio": 0.9999841307258345
+        }
+      },
+      "sweep_1": {
+        "relative_reconstructed_weight_difference": 0.010192512534558773,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.0016021505913934875,
+          "cosine_similarity": 0.9999987170392821,
+          "angular_drift": 1.282960717885473e-06,
+          "norm_ratio": 0.9999676248011002
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.001909356326574503,
+          "cosine_similarity": 0.999998177779637,
+          "angular_drift": 1.8222203630458012e-06,
+          "norm_ratio": 0.999963476536479
+        }
+      },
+      "sweep_2": {
+        "relative_reconstructed_weight_difference": 0.011437458917498589,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.0018865787048626763,
+          "cosine_similarity": 0.999998221042181,
+          "angular_drift": 1.7789578190541278e-06,
+          "norm_ratio": 0.9999626298000496
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.002319122675164392,
+          "cosine_similarity": 0.9999973114828602,
+          "angular_drift": 2.688517139803892e-06,
+          "norm_ratio": 0.999961215344579
+        }
+      },
+      "serialized_artifact": {
+        "relative_reconstructed_weight_difference": 0.18458330631256104,
+        "calibration": {
+          "sample_count": 4096,
+          "relative_functional_disagreement": 0.04038322085330112,
+          "cosine_similarity": 0.9991845294357315,
+          "angular_drift": 0.0008154705642684501,
+          "norm_ratio": 0.9999114339447392
+        },
+        "validation": {
+          "sample_count": 1024,
+          "relative_functional_disagreement": 0.043367348494642896,
+          "cosine_similarity": 0.999059554839891,
+          "angular_drift": 0.0009404451601090491,
+          "norm_ratio": 0.9999086910980175
+        }
+      }
+    }
+  },
+  "stage_snapshots": {
+    "sparse": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/stage_weights/sparse.pt",
+      "bytes": 90181879,
+      "sha256": "ef83bb23d706713462731542da61462b3a9ed5c5116fdbd54c9d1e6062b59d19",
+      "storage_dtype": "float16"
+    },
+    "sparse_plus_bridge": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/stage_weights/sparse_plus_bridge.pt",
+      "bytes": 90181963,
+      "sha256": "bfc71eb12384ddf237f15eeea0959b1ae2a549e1339b2093b77ab76d7f22e956",
+      "storage_dtype": "float16"
+    },
+    "tt_warmstart": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/stage_weights/tt_warmstart.pt",
+      "bytes": 90181921,
+      "sha256": "730751befc82128a681d1370859580b12d798c0b9c8a29195a6c2e9d484a42fb",
+      "storage_dtype": "float16"
+    },
+    "sweep_1": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/stage_weights/sweep_1.pt",
+      "bytes": 90181886,
+      "sha256": "625c432a7c3bc42ca41870f38baf29c7f5b0aaff40b28826c06ff2da219dda6c",
+      "storage_dtype": "float16"
+    },
+    "sweep_2": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/stage_weights/sweep_2.pt",
+      "bytes": 90181886,
+      "sha256": "92902e942f0aa95080a22ef269ab1d08211bfdc6e21bdb83c435bf6f45370574",
+      "storage_dtype": "float16"
+    },
+    "serialized_artifact": {
+      "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/stage_weights/serialized_artifact.pt",
+      "bytes": 90182034,
+      "sha256": "d6a4905fdc0a4c5594cc932670b396766697575c4901b36f51e89b663516f960",
+      "storage_dtype": "float16"
+    }
+  },
+  "runtime_seconds": 467.73139601,
+  "core_qualification_runtime_seconds": 462.2474381630018,
+  "functional_diagnostic_runtime_seconds": 4.773937235004269,
+  "memory": {
+    "process_peak_rss_bytes": 2524782592,
+    "sampler_peak_cuda_device_used_bytes": 11937185792,
+    "sampler_interval_seconds": 0.25,
+    "sampler_count": 1831,
+    "torch_peak_cuda_allocated_bytes": 10847297024,
+    "torch_peak_cuda_reserved_bytes": 11557404672,
+    "cuda_device_name": "NVIDIA A40",
+    "cuda_total_bytes": 47699722240
+  },
+  "functional_diagnostic_memory": {
+    "torch_peak_cuda_allocated_bytes": 2128880128,
+    "torch_peak_cuda_reserved_bytes": 3466592256
+  },
+  "artifact": {
+    "path": "/workspace/runs/nec-streaming-qualification/down_projection_bridge_fp16/streaming-fp64/artifact.pt",
+    "bytes": 10765509,
+    "sha256": "0f7905f29f7e61476c1bd5797865d2de724deb0f1cd58d68cb63f74ae93bfc79"
+  }
+}
