@@ -1007,7 +1007,14 @@ def nox_hybrid_dmrg_decompose(
         is_final = (sweep == n_sweeps - 1)
         cur_gamma = prior_gamma * (0.25 if is_final else 1.0)
         if verbose:
-            mode_str = "Final Pass (in-loop 4-bit quantization)" if is_final else "QR isometric gauge-fixing"
+            if not is_final:
+                mode_str = "QR isometric gauge-fixing"
+            elif in_sweep_quantization:
+                mode_str = "Final Pass (in-loop 4-bit quantization)"
+            elif quantize_components:
+                mode_str = "Final optimization pass (4-bit quantization after sweep)"
+            else:
+                mode_str = "Final optimization pass (unquantized control)"
             print(f"    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep {sweep+1}/{n_sweeps} [{mode_str}]...", flush=True)
 
         # Site 0
