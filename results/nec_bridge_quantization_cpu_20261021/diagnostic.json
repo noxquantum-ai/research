@@ -1,0 +1,1289 @@
+{
+  "acceptance": {
+    "historical_q4_exhibits_amplification_above_1e-2": true,
+    "post_sweep_48cg_normal_residual_below_1e-3": true,
+    "post_sweep_48cg_validation_disagreement_below_5e-3": true,
+    "unquantized_functional_disagreement_below_1e-4": true
+  },
+  "bridge_control_findings": {
+    "baseline_post_sweep_q4_48cg_validation_disagreement": 0.003608019556850195,
+    "fp16_bridge_improves_cross_backend_parity": false,
+    "fp16_bridge_validation_disagreement": 0.039507683366537094,
+    "interpretation": "These controls test direct-SVD/Gram compiler parity, not each quantizer's fidelity to its own unquantized bridge.",
+    "operator_refit_improves_cross_backend_parity": false,
+    "operator_refit_q4_bridge_validation_disagreement": 0.024232570081949234
+  },
+  "calibration_samples": 16,
+  "dimension": 16,
+  "experiments": {
+    "historical_in_sweep_q4_6cg": {
+      "reference_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007372189778834581,
+          "relative_normal_residual": 3.375302242147882e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.008880617609143994,
+          "relative_normal_residual": 0.020082633942365646,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.009992181163756468,
+          "relative_normal_residual": 0.008360053412616253,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009982891380786896,
+          "relative_normal_residual": 2.932739562311326e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.002159951953217387,
+          "relative_normal_residual": 3.205682901352702e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.0004911388474113873,
+          "relative_normal_residual": 0.010291391052305698,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.0002396250745934877,
+          "relative_normal_residual": 0.007617397699505091,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.00046215529437176883,
+          "relative_normal_residual": 2.0533161659841426e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ],
+      "stages": {
+        "final": {
+          "calibration_functional_disagreement": 0.012790022417902946,
+          "reference_calibration_error": 0.025383638218045235,
+          "reference_validation_error": 0.7244614958763123,
+          "relative_weight_difference": 0.03341038152575493,
+          "streaming_calibration_error": 0.024497756734490395,
+          "streaming_validation_error": 0.7252023220062256,
+          "validation_functional_disagreement": 0.03168214485049248
+        },
+        "sparse": {
+          "calibration_functional_disagreement": 0.0,
+          "reference_calibration_error": 0.8812154531478882,
+          "reference_validation_error": 0.9111177325248718,
+          "relative_weight_difference": 0.0,
+          "streaming_calibration_error": 0.8812154531478882,
+          "streaming_validation_error": 0.9111177325248718,
+          "validation_functional_disagreement": 0.0
+        },
+        "sparse_plus_bridge": {
+          "calibration_functional_disagreement": 0.00012480902660172433,
+          "reference_calibration_error": 0.11413395404815674,
+          "reference_validation_error": 0.774100661277771,
+          "relative_weight_difference": 0.00010638801177265123,
+          "streaming_calibration_error": 0.11412911862134933,
+          "streaming_validation_error": 0.7741015553474426,
+          "validation_functional_disagreement": 0.00010865979129448533
+        },
+        "sweep_1": {
+          "calibration_functional_disagreement": 1.7179887436213903e-05,
+          "reference_calibration_error": 0.014252769760787487,
+          "reference_validation_error": 0.7267985343933105,
+          "relative_weight_difference": 0.0004058272752445191,
+          "streaming_calibration_error": 0.014251516200602055,
+          "streaming_validation_error": 0.7267821431159973,
+          "validation_functional_disagreement": 0.00038642334402538836
+        },
+        "sweep_2": {
+          "calibration_functional_disagreement": 0.012790022417902946,
+          "reference_calibration_error": 0.025383638218045235,
+          "reference_validation_error": 0.7244614958763123,
+          "relative_weight_difference": 0.03341038152575493,
+          "streaming_calibration_error": 0.024497756734490395,
+          "streaming_validation_error": 0.7252023220062256,
+          "validation_functional_disagreement": 0.03168214485049248
+        },
+        "tt_warmstart": {
+          "calibration_functional_disagreement": 0.00014110171468928456,
+          "reference_calibration_error": 0.22936557233333588,
+          "reference_validation_error": 0.25263896584510803,
+          "relative_weight_difference": 0.00016042834613472223,
+          "streaming_calibration_error": 0.22937580943107605,
+          "streaming_validation_error": 0.25262853503227234,
+          "validation_functional_disagreement": 0.0001558098738314584
+        }
+      },
+      "streaming_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007371729239821434,
+          "relative_normal_residual": 2.804368648412492e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.008880689730760904,
+          "relative_normal_residual": 0.02008151076734066,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.009991637569466815,
+          "relative_normal_residual": 0.008356420323252678,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009983411058783531,
+          "relative_normal_residual": 2.641677951942256e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0021595715079456568,
+          "relative_normal_residual": 2.7462152729640366e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.0004905990900657395,
+          "relative_normal_residual": 0.010284091345965862,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.00023915226071176098,
+          "relative_normal_residual": 0.007827842608094215,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.00046176937757991254,
+          "relative_normal_residual": 1.239302633848638e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ]
+    },
+    "post_sweep_fp16_bridge_48cg_control": {
+      "reference_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.00735605088993907,
+          "relative_normal_residual": 1.1432467772465316e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.008910150512059357,
+          "relative_normal_residual": 0.0026220250874757767,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 21,
+          "local_width": 64,
+          "regularization_scale": 0.009204586260122863,
+          "relative_normal_residual": 0.004961261060088873,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.008658945560455322,
+          "relative_normal_residual": 5.522849733097246e-06,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0019109180429950356,
+          "relative_normal_residual": 1.385143150400836e-05,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 30,
+          "local_width": 64,
+          "regularization_scale": 0.0021777249896450775,
+          "relative_normal_residual": 0.0061493609100580215,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 26,
+          "local_width": 64,
+          "regularization_scale": 0.0023269708698658207,
+          "relative_normal_residual": 0.011163911782205105,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.002530800411477685,
+          "relative_normal_residual": 2.1688047127099708e-05,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ],
+      "stages": {
+        "final": {
+          "calibration_functional_disagreement": 0.039463527500629425,
+          "reference_calibration_error": 0.046547889709472656,
+          "reference_validation_error": 0.5594048500061035,
+          "relative_weight_difference": 0.04043564945459366,
+          "streaming_calibration_error": 0.046536535024642944,
+          "streaming_validation_error": 0.5594350099563599,
+          "validation_functional_disagreement": 0.039507683366537094
+        },
+        "sparse": {
+          "calibration_functional_disagreement": 0.0,
+          "reference_calibration_error": 0.8812154531478882,
+          "reference_validation_error": 0.9111177325248718,
+          "relative_weight_difference": 0.0,
+          "streaming_calibration_error": 0.8812154531478882,
+          "streaming_validation_error": 0.9111177325248718,
+          "validation_functional_disagreement": 0.0
+        },
+        "sparse_plus_bridge": {
+          "calibration_functional_disagreement": 0.00012622585927601904,
+          "reference_calibration_error": 0.013331067748367786,
+          "reference_validation_error": 0.7691585421562195,
+          "relative_weight_difference": 0.00019011551921721548,
+          "streaming_calibration_error": 0.013340245932340622,
+          "streaming_validation_error": 0.7691527009010315,
+          "validation_functional_disagreement": 0.0001937001070473343
+        },
+        "sweep_1": {
+          "calibration_functional_disagreement": 1.45848225656664e-05,
+          "reference_calibration_error": 0.007723769173026085,
+          "reference_validation_error": 0.6411751508712769,
+          "relative_weight_difference": 0.0004064626118633896,
+          "streaming_calibration_error": 0.007723789196461439,
+          "streaming_validation_error": 0.6411178112030029,
+          "validation_functional_disagreement": 0.000394652335671708
+        },
+        "sweep_2": {
+          "calibration_functional_disagreement": 0.0001529919682070613,
+          "reference_calibration_error": 0.004018768202513456,
+          "reference_validation_error": 0.5604212880134583,
+          "relative_weight_difference": 0.004299552645534277,
+          "streaming_calibration_error": 0.004006803501397371,
+          "streaming_validation_error": 0.5597633719444275,
+          "validation_functional_disagreement": 0.004095999523997307
+        },
+        "tt_warmstart": {
+          "calibration_functional_disagreement": 0.00011320198245812207,
+          "reference_calibration_error": 0.21974311769008636,
+          "reference_validation_error": 0.24422591924667358,
+          "relative_weight_difference": 0.00012169448018539697,
+          "streaming_calibration_error": 0.21972881257534027,
+          "streaming_validation_error": 0.24423962831497192,
+          "validation_functional_disagreement": 0.0001147336297435686
+        }
+      },
+      "streaming_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007356388494372368,
+          "relative_normal_residual": 1.5419359442603309e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.008910182698605267,
+          "relative_normal_residual": 0.003061658702790737,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 21,
+          "local_width": 64,
+          "regularization_scale": 0.009205502383335852,
+          "relative_normal_residual": 0.005019467324018478,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.008657569997012615,
+          "relative_normal_residual": 5.228770532994531e-06,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0019111065194010735,
+          "relative_normal_residual": 8.94403910933761e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 31,
+          "local_width": 64,
+          "regularization_scale": 0.002177767010922913,
+          "relative_normal_residual": 0.004005285911262035,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 30,
+          "local_width": 64,
+          "regularization_scale": 0.0023272101824544466,
+          "relative_normal_residual": 0.0039648800157010555,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0025194601621478796,
+          "relative_normal_residual": 2.551717625465244e-05,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ]
+    },
+    "post_sweep_operator_refit_bridge_48cg": {
+      "reference_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0071878693997859955,
+          "relative_normal_residual": 2.6757450655168213e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.008921625584058032,
+          "relative_normal_residual": 4.5290085836313665e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 21,
+          "local_width": 64,
+          "regularization_scale": 0.009474665518896001,
+          "relative_normal_residual": 9.954780398402363e-05,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.00982318539172411,
+          "relative_normal_residual": 1.7382971861934493e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.002034679986536503,
+          "relative_normal_residual": 1.9751058744077454e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.002255054405632879,
+          "relative_normal_residual": 6.731299072271213e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 22,
+          "local_width": 64,
+          "regularization_scale": 0.0023517793424269293,
+          "relative_normal_residual": 9.787213639356196e-05,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0027032862417399883,
+          "relative_normal_residual": 3.77376892402026e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ],
+      "stages": {
+        "final": {
+          "calibration_functional_disagreement": 0.009045600891113281,
+          "reference_calibration_error": 0.036203689873218536,
+          "reference_validation_error": 0.6320345997810364,
+          "relative_weight_difference": 0.023504653945565224,
+          "streaming_calibration_error": 0.03690994903445244,
+          "streaming_validation_error": 0.6302496194839478,
+          "validation_functional_disagreement": 0.024232570081949234
+        },
+        "sparse": {
+          "calibration_functional_disagreement": 0.0,
+          "reference_calibration_error": 0.8812154531478882,
+          "reference_validation_error": 0.9111177325248718,
+          "relative_weight_difference": 0.0,
+          "streaming_calibration_error": 0.8812154531478882,
+          "streaming_validation_error": 0.9111177325248718,
+          "validation_functional_disagreement": 0.0
+        },
+        "sparse_plus_bridge": {
+          "calibration_functional_disagreement": 4.171643013251014e-06,
+          "reference_calibration_error": 0.104827381670475,
+          "reference_validation_error": 0.773935854434967,
+          "relative_weight_difference": 3.4539700664026896e-06,
+          "streaming_calibration_error": 0.10482780635356903,
+          "streaming_validation_error": 0.773935854434967,
+          "validation_functional_disagreement": 3.5347788980288897e-06
+        },
+        "sweep_1": {
+          "calibration_functional_disagreement": 6.160720658954233e-06,
+          "reference_calibration_error": 0.007756815291941166,
+          "reference_validation_error": 0.6666596531867981,
+          "relative_weight_difference": 4.8073154175654054e-05,
+          "streaming_calibration_error": 0.007756957784295082,
+          "streaming_validation_error": 0.6666589975357056,
+          "validation_functional_disagreement": 4.764609911944717e-05
+        },
+        "sweep_2": {
+          "calibration_functional_disagreement": 0.000181777446414344,
+          "reference_calibration_error": 0.00474023399874568,
+          "reference_validation_error": 0.6279525756835938,
+          "relative_weight_difference": 0.004353295546025038,
+          "streaming_calibration_error": 0.004722471348941326,
+          "streaming_validation_error": 0.6274384260177612,
+          "validation_functional_disagreement": 0.004170644097030163
+        },
+        "tt_warmstart": {
+          "calibration_functional_disagreement": 4.605161848303396e-06,
+          "reference_calibration_error": 0.23832297325134277,
+          "reference_validation_error": 0.2481941431760788,
+          "relative_weight_difference": 5.966673143120715e-06,
+          "streaming_calibration_error": 0.23832157254219055,
+          "streaming_validation_error": 0.24819403886795044,
+          "validation_functional_disagreement": 5.706564479623921e-06
+        }
+      },
+      "streaming_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007187886629253626,
+          "relative_normal_residual": 3.0791690619480505e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.00892162141173915,
+          "relative_normal_residual": 5.288183456286788e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 21,
+          "local_width": 64,
+          "regularization_scale": 0.009474637504730222,
+          "relative_normal_residual": 6.636168109253049e-05,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009823203086853027,
+          "relative_normal_residual": 1.895921144523527e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0020347011741250753,
+          "relative_normal_residual": 2.406811745458981e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.002255050531333793,
+          "relative_normal_residual": 7.007284148130566e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 25,
+          "local_width": 64,
+          "regularization_scale": 0.0023517538614395827,
+          "relative_normal_residual": 7.045655365800485e-05,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0026931087486445904,
+          "relative_normal_residual": 3.510446902055264e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ]
+    },
+    "post_sweep_q4_48cg_control": {
+      "reference_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007372189778834581,
+          "relative_normal_residual": 3.375302242147882e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.008880617609143994,
+          "relative_normal_residual": 6.506427598651499e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 22,
+          "local_width": 64,
+          "regularization_scale": 0.010295992008126927,
+          "relative_normal_residual": 8.776295726420358e-05,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009963269345462322,
+          "relative_normal_residual": 2.0273522238767328e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0024096525739878416,
+          "relative_normal_residual": 1.3334647519513965e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 26,
+          "local_width": 64,
+          "regularization_scale": 0.0022374889285371033,
+          "relative_normal_residual": 9.022132871905342e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 22,
+          "local_width": 64,
+          "regularization_scale": 0.0025147572294577066,
+          "relative_normal_residual": 0.00011141995491925627,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.00275246100500226,
+          "relative_normal_residual": 2.757584809387481e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ],
+      "stages": {
+        "final": {
+          "calibration_functional_disagreement": 0.0021140670869499445,
+          "reference_calibration_error": 0.04747868329286575,
+          "reference_validation_error": 0.6663049459457397,
+          "relative_weight_difference": 0.0038819292094558477,
+          "streaming_calibration_error": 0.04768584296107292,
+          "streaming_validation_error": 0.6663612127304077,
+          "validation_functional_disagreement": 0.003608019556850195
+        },
+        "sparse": {
+          "calibration_functional_disagreement": 0.0,
+          "reference_calibration_error": 0.8812154531478882,
+          "reference_validation_error": 0.9111177325248718,
+          "relative_weight_difference": 0.0,
+          "streaming_calibration_error": 0.8812154531478882,
+          "streaming_validation_error": 0.9111177325248718,
+          "validation_functional_disagreement": 0.0
+        },
+        "sparse_plus_bridge": {
+          "calibration_functional_disagreement": 0.00012480902660172433,
+          "reference_calibration_error": 0.11413395404815674,
+          "reference_validation_error": 0.774100661277771,
+          "relative_weight_difference": 0.00010638801177265123,
+          "streaming_calibration_error": 0.11412911862134933,
+          "streaming_validation_error": 0.7741015553474426,
+          "validation_functional_disagreement": 0.00010865979129448533
+        },
+        "sweep_1": {
+          "calibration_functional_disagreement": 1.5561718100798316e-05,
+          "reference_calibration_error": 0.008485538884997368,
+          "reference_validation_error": 0.7020853757858276,
+          "relative_weight_difference": 0.0003993338905274868,
+          "streaming_calibration_error": 0.008484446443617344,
+          "streaming_validation_error": 0.7020761370658875,
+          "validation_functional_disagreement": 0.0003852179506793618
+        },
+        "sweep_2": {
+          "calibration_functional_disagreement": 6.96657025400782e-06,
+          "reference_calibration_error": 0.005418510176241398,
+          "reference_validation_error": 0.6565992832183838,
+          "relative_weight_difference": 0.0003747534065041691,
+          "streaming_calibration_error": 0.005417782347649336,
+          "streaming_validation_error": 0.6566215753555298,
+          "validation_functional_disagreement": 0.00036310023278929293
+        },
+        "tt_warmstart": {
+          "calibration_functional_disagreement": 0.00014110171468928456,
+          "reference_calibration_error": 0.22936557233333588,
+          "reference_validation_error": 0.25263896584510803,
+          "relative_weight_difference": 0.00016042834613472223,
+          "streaming_calibration_error": 0.22937580943107605,
+          "streaming_validation_error": 0.25262853503227234,
+          "validation_functional_disagreement": 0.0001558098738314584
+        }
+      },
+      "streaming_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007371729239821434,
+          "relative_normal_residual": 2.804368648412492e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 27,
+          "local_width": 64,
+          "regularization_scale": 0.008880689730760904,
+          "relative_normal_residual": 4.189911487628706e-05,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 22,
+          "local_width": 64,
+          "regularization_scale": 0.010296628585752525,
+          "relative_normal_residual": 5.680188405676745e-05,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009966233745217323,
+          "relative_normal_residual": 2.1103483049955685e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.002409660955891013,
+          "relative_normal_residual": 2.1873823641271883e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 25,
+          "local_width": 64,
+          "regularization_scale": 0.002237472686273036,
+          "relative_normal_residual": 0.00010707449109759182,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 22,
+          "local_width": 64,
+          "regularization_scale": 0.0025148773328228795,
+          "relative_normal_residual": 0.00011568727495614439,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0027534186374396086,
+          "relative_normal_residual": 2.2692867673868022e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ]
+    },
+    "post_sweep_q4_6cg_control": {
+      "reference_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007372189778834581,
+          "relative_normal_residual": 3.375302242147882e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.008880617609143994,
+          "relative_normal_residual": 0.020082633942365646,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.009992181163756468,
+          "relative_normal_residual": 0.008360053412616253,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009982891380786896,
+          "relative_normal_residual": 2.932739562311326e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.002159951953217387,
+          "relative_normal_residual": 3.205682901352702e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.00229514301866234,
+          "relative_normal_residual": 0.008607021532952785,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.0025273347157402765,
+          "relative_normal_residual": 0.005912251304835081,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0024767194408923388,
+          "relative_normal_residual": 1.4057616226637037e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ],
+      "stages": {
+        "final": {
+          "calibration_functional_disagreement": 0.009016323834657669,
+          "reference_calibration_error": 0.03993929922580719,
+          "reference_validation_error": 0.7251339554786682,
+          "relative_weight_difference": 0.017260679975152016,
+          "streaming_calibration_error": 0.03735793009400368,
+          "streaming_validation_error": 0.7243478298187256,
+          "validation_functional_disagreement": 0.01681329309940338
+        },
+        "sparse": {
+          "calibration_functional_disagreement": 0.0,
+          "reference_calibration_error": 0.8812154531478882,
+          "reference_validation_error": 0.9111177325248718,
+          "relative_weight_difference": 0.0,
+          "streaming_calibration_error": 0.8812154531478882,
+          "streaming_validation_error": 0.9111177325248718,
+          "validation_functional_disagreement": 0.0
+        },
+        "sparse_plus_bridge": {
+          "calibration_functional_disagreement": 0.00012480902660172433,
+          "reference_calibration_error": 0.11413395404815674,
+          "reference_validation_error": 0.774100661277771,
+          "relative_weight_difference": 0.00010638801177265123,
+          "streaming_calibration_error": 0.11412911862134933,
+          "streaming_validation_error": 0.7741015553474426,
+          "validation_functional_disagreement": 0.00010865979129448533
+        },
+        "sweep_1": {
+          "calibration_functional_disagreement": 1.7179887436213903e-05,
+          "reference_calibration_error": 0.014252769760787487,
+          "reference_validation_error": 0.7267985343933105,
+          "relative_weight_difference": 0.0004058272752445191,
+          "streaming_calibration_error": 0.014251516200602055,
+          "streaming_validation_error": 0.7267821431159973,
+          "validation_functional_disagreement": 0.00038642334402538836
+        },
+        "sweep_2": {
+          "calibration_functional_disagreement": 1.819656063162256e-05,
+          "reference_calibration_error": 0.01102533470839262,
+          "reference_validation_error": 0.7164178490638733,
+          "relative_weight_difference": 0.00041934021282941103,
+          "streaming_calibration_error": 0.011026530526578426,
+          "streaming_validation_error": 0.7164157032966614,
+          "validation_functional_disagreement": 0.00039592577377334237
+        },
+        "tt_warmstart": {
+          "calibration_functional_disagreement": 0.00014110171468928456,
+          "reference_calibration_error": 0.22936557233333588,
+          "reference_validation_error": 0.25263896584510803,
+          "relative_weight_difference": 0.00016042834613472223,
+          "streaming_calibration_error": 0.22937580943107605,
+          "streaming_validation_error": 0.25262853503227234,
+          "validation_functional_disagreement": 0.0001558098738314584
+        }
+      },
+      "streaming_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007371729239821434,
+          "relative_normal_residual": 2.804368648412492e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.008880689730760904,
+          "relative_normal_residual": 0.02008151076734066,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.009991637569466815,
+          "relative_normal_residual": 0.008356420323252678,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.009983411058783531,
+          "relative_normal_residual": 2.641677951942256e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0021595715079456568,
+          "relative_normal_residual": 2.7462152729640366e-07,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.002295017103847392,
+          "relative_normal_residual": 0.008608618751168251,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.002527192558682471,
+          "relative_normal_residual": 0.005925838835537434,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.002476712455973029,
+          "relative_normal_residual": 1.4147290983146377e-07,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ]
+    },
+    "unquantized_6cg": {
+      "reference_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.007390231359750032,
+          "relative_normal_residual": 2.231509142802679e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.008922294964757452,
+          "relative_normal_residual": 0.769181489944458,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.009362937309902957,
+          "relative_normal_residual": 0.41251301765441895,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.006917336490005255,
+          "relative_normal_residual": 3.6185233511787374e-06,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0017951325280591846,
+          "relative_normal_residual": 9.445500836591236e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.0022332602660049324,
+          "relative_normal_residual": 0.45745420455932617,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.002313856807793388,
+          "relative_normal_residual": 0.5202389359474182,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.001788996858522296,
+          "relative_normal_residual": 1.1417905625421554e-05,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ],
+      "stages": {
+        "final": {
+          "calibration_functional_disagreement": 7.813974320924899e-07,
+          "reference_calibration_error": 0.008487756364047527,
+          "reference_validation_error": 0.5936014652252197,
+          "relative_weight_difference": 2.0411665900610387e-05,
+          "streaming_calibration_error": 0.008487692102789879,
+          "streaming_validation_error": 0.5936009883880615,
+          "validation_functional_disagreement": 1.915268694574479e-05
+        },
+        "sparse": {
+          "calibration_functional_disagreement": 0.0,
+          "reference_calibration_error": 0.8730283379554749,
+          "reference_validation_error": 0.9115127325057983,
+          "relative_weight_difference": 0.0,
+          "streaming_calibration_error": 0.8730283379554749,
+          "streaming_validation_error": 0.9115127325057983,
+          "validation_functional_disagreement": 0.0
+        },
+        "sparse_plus_bridge": {
+          "calibration_functional_disagreement": 5.511371909960872e-07,
+          "reference_calibration_error": 0.013393593020737171,
+          "reference_validation_error": 0.7701559662818909,
+          "relative_weight_difference": 1.2218170013511553e-05,
+          "streaming_calibration_error": 0.013393551111221313,
+          "streaming_validation_error": 0.7701569199562073,
+          "validation_functional_disagreement": 9.87120802165009e-06
+        },
+        "sweep_1": {
+          "calibration_functional_disagreement": 4.43401944494326e-07,
+          "reference_calibration_error": 0.010402092710137367,
+          "reference_validation_error": 0.660710871219635,
+          "relative_weight_difference": 1.1770370292651933e-05,
+          "streaming_calibration_error": 0.010402072221040726,
+          "streaming_validation_error": 0.6607102751731873,
+          "validation_functional_disagreement": 1.016379155771574e-05
+        },
+        "sweep_2": {
+          "calibration_functional_disagreement": 7.813974320924899e-07,
+          "reference_calibration_error": 0.008487756364047527,
+          "reference_validation_error": 0.5936014652252197,
+          "relative_weight_difference": 2.0411665900610387e-05,
+          "streaming_calibration_error": 0.008487692102789879,
+          "streaming_validation_error": 0.5936009883880615,
+          "validation_functional_disagreement": 1.915268694574479e-05
+        },
+        "tt_warmstart": {
+          "calibration_functional_disagreement": 7.597499916300876e-06,
+          "reference_calibration_error": 0.22860150039196014,
+          "reference_validation_error": 0.24380558729171753,
+          "relative_weight_difference": 7.962870768096764e-06,
+          "streaming_calibration_error": 0.2285984456539154,
+          "streaming_validation_error": 0.24380597472190857,
+          "validation_functional_disagreement": 7.64290143706603e-06
+        }
+      },
+      "streaming_solver_diagnostics": [
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.00739021273329854,
+          "relative_normal_residual": 1.1441943570389412e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.008922301521273351,
+          "relative_normal_residual": 0.7692226767539978,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.009362954595249445,
+          "relative_normal_residual": 0.41266077756881714,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.006917353253811598,
+          "relative_normal_residual": 4.899146460957127e-06,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 1
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0017951307818293571,
+          "relative_normal_residual": 8.005645213415846e-06,
+          "site": 0,
+          "solver": "cholesky",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.00223326503437774,
+          "relative_normal_residual": 0.45745429396629333,
+          "site": 1,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 6,
+          "local_width": 64,
+          "regularization_scale": 0.0023138585959320565,
+          "relative_normal_residual": 0.520315945148468,
+          "site": 2,
+          "solver": "matrix_free_conjugate_gradient",
+          "sweep": 2
+        },
+        {
+          "iterations": 0,
+          "local_width": 8,
+          "regularization_scale": 0.0017890188610181212,
+          "relative_normal_residual": 1.0724922503868584e-05,
+          "site": 3,
+          "solver": "cholesky",
+          "sweep": 2
+        }
+      ]
+    }
+  },
+  "prescribed_condition_number": 10000000.0,
+  "provenance": {
+    "dirty_paths": [],
+    "files": {
+      "benchmarks/diagnose_streaming_numerics.py": "1105b4b39097b5ededbe70bc86006bbbf3233c6eccf74390f67294a027313c39",
+      "nox/calibration.py": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3",
+      "nox/compiler.py": "5433105bd52795d53ac6f3b096adc021f37755b7bffec02254d08d9c0a5cabc3"
+    },
+    "git_commit": "d492137fe145b7f86498a09439d696ed60a227cc",
+    "numerical_source_sha256": "9499ef8cdf95ff003c971b04a531aa74308a1857b6089eb795802b028d0bd9c8",
+    "working_tree_clean": true
+  },
+  "schema_version": 1,
+  "scope": "deterministic CPU numerical control; not a model-quality benchmark",
+  "seed": 1234,
+  "singular_identity": {
+    "gram_diagnostics": {
+      "conventional_numerical_rank": 16,
+      "eigenvalue_tolerance": 1.2621774405822331e-29,
+      "largest_eigenvalue": 0.9999999938428739,
+      "maximum_modes": 16,
+      "negative_eigenvalues_in_candidate_range": 0,
+      "numerical_rank": 16,
+      "positive_modes_below_conventional_cutoff": 0,
+      "singular_value_tolerance": 3.5527136678632478e-15,
+      "statistics_dtype": "torch.float64"
+    },
+    "left_singular_vector_relative_difference_after_sign_alignment": 6.912048910647997e-05,
+    "projected_target_relative_difference": 5.200231653824614e-10,
+    "singular_value_relative_difference": 7.983422893588985e-11
+  },
+  "torch_version": "2.11.0+cpu",
+  "validation_samples": 64
+}
