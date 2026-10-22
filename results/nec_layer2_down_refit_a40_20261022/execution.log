@@ -1,0 +1,30 @@
+[2026-10-22T11:06:41Z] START layer=2 output=/workspace/runs/nec-layer2-down-refit-a40_20261022-v1
+[2026-10-22T11:06:42Z] LOAD pinned layer weights and decode saved Gate/Up/Down artifacts
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[2026-10-22T11:06:50Z] BUILD dense post-attention MLP contexts from saved disjoint windows
+[2026-10-22T11:06:50Z] BASELINE heldout product=0.802027 saved_down_on_compressed=0.841738
+[2026-10-22T11:06:50Z] COMPILE only layer2.down_proj on compressed Gate/Up SwiGLU products
+    [Nox Step 1A] Sparse Outlier Shield (524043 stored entries; 5117.6 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.9s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (58.4s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (153.4s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.3s); sweep complete (213.0s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.8s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (58.6s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (148.2s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.3s); sweep complete (208.0s)
+[2026-10-22T11:14:00Z] RESULT heldout_saved=0.841738 heldout_refit=0.835778 coeff_delta=-28
+[2026-10-22T11:14:00Z] COMPLETE compile_seconds=429.2 output=/workspace/runs/nec-layer2-down-refit-a40_20261022-v1

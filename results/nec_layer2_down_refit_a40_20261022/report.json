@@ -1,0 +1,228 @@
+{
+  "baseline_metrics": {
+    "heldout": {
+      "dense_down_applied_to_compressed_product": {
+        "angular_drift": 0.377277672290802,
+        "cosine_similarity": 0.622722327709198,
+        "norm_ratio": 0.5649723502307159,
+        "relative_error": 0.7845712673895467
+      },
+      "gate_up_product_relative_error": {
+        "angular_drift": 0.40075767040252686,
+        "cosine_similarity": 0.5992423295974731,
+        "norm_ratio": 0.5508872568560961,
+        "relative_error": 0.8020266547746028
+      },
+      "saved_down_on_compressed_product": {
+        "angular_drift": 0.4584663510322571,
+        "cosine_similarity": 0.5415336489677429,
+        "norm_ratio": 0.49933066978747376,
+        "relative_error": 0.8417377624747788
+      },
+      "saved_down_on_dense_product": {
+        "angular_drift": 0.3963932991027832,
+        "cosine_similarity": 0.6036067008972168,
+        "norm_ratio": 0.6664641234095611,
+        "relative_error": 0.7997562083238895
+      }
+    },
+    "train": {
+      "dense_down_applied_to_compressed_product": {
+        "angular_drift": 0.2797636389732361,
+        "cosine_similarity": 0.7202363610267639,
+        "norm_ratio": 0.6572501629808821,
+        "relative_error": 0.6965822468258837
+      },
+      "gate_up_product_relative_error": {
+        "angular_drift": 0.3037365674972534,
+        "cosine_similarity": 0.6962634325027466,
+        "norm_ratio": 0.6488831964894295,
+        "relative_error": 0.7193484721729321
+      },
+      "saved_down_on_compressed_product": {
+        "angular_drift": 0.3497328758239746,
+        "cosine_similarity": 0.6502671241760254,
+        "norm_ratio": 0.5687464335033603,
+        "relative_error": 0.7640669358946892
+      },
+      "saved_down_on_dense_product": {
+        "angular_drift": 0.23898500204086304,
+        "cosine_similarity": 0.761014997959137,
+        "norm_ratio": 0.7558916651203665,
+        "relative_error": 0.6487544552234668
+      }
+    }
+  },
+  "coefficient_audit": {
+    "compiler_reported_payload_kb": 10502.107421875,
+    "count_delta": -28,
+    "original_artifact_bytes": 70008770,
+    "original_down": {
+      "bridge_rank": 128,
+      "core_shapes": [
+        [
+          1,
+          8,
+          43,
+          64
+        ],
+        [
+          64,
+          8,
+          4,
+          128
+        ],
+        [
+          128,
+          8,
+          8,
+          64
+        ],
+        [
+          64,
+          8,
+          8,
+          1
+        ]
+      ],
+      "independent_numerical_coefficients": 3280935,
+      "shape": [
+        4096,
+        11008
+      ],
+      "sparse_coefficients": 524071
+    },
+    "refit_down": {
+      "bridge_rank": 128,
+      "core_shapes": [
+        [
+          1,
+          8,
+          43,
+          64
+        ],
+        [
+          64,
+          8,
+          4,
+          128
+        ],
+        [
+          128,
+          8,
+          8,
+          64
+        ],
+        [
+          64,
+          8,
+          8,
+          1
+        ]
+      ],
+      "independent_numerical_coefficients": 3280907,
+      "shape": [
+        4096,
+        11008
+      ],
+      "sparse_coefficients": 524043
+    },
+    "refit_projection_artifact_bytes": 10759561,
+    "same_coefficient_count": false
+  },
+  "compile_seconds": 429.17082883400144,
+  "elapsed_seconds": 438.5370999769948,
+  "gpu": "NVIDIA A40",
+  "heldout_activation_sha256": "874e4091afca9f810fa6718e509dd738148b8981596dd5e77d5ac6ed74c9dcb7",
+  "heldout_tokens": 1024,
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "objective": "min ||D_hat p_hat - D p_dense||_F^2 on training tokens; p_hat=SiLU(G_hat x)*U_hat x",
+  "parent_checkpoint_sha256": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+  "parent_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "parent_run_fingerprint": "4e8facac2850adf427ff10520013a7ad34eee6ebf4d6aca011cf5bd1886b491d",
+  "peak_cuda_allocated_bytes": 5891654144,
+  "refit_artifact_sha256": "d73569e0b10eb1ff7f96ecef030ff1e7b6ac51d0753eb8159347ca94280dde20",
+  "refit_metrics": {
+    "heldout": {
+      "dense_down_on_compressed_product": {
+        "angular_drift": 0.377277672290802,
+        "cosine_similarity": 0.622722327709198,
+        "norm_ratio": 0.5649723502307159,
+        "relative_error": 0.7845712673895467
+      },
+      "refit_down_on_compressed_product": {
+        "angular_drift": 0.4504220485687256,
+        "cosine_similarity": 0.5495779514312744,
+        "norm_ratio": 0.5732725422960582,
+        "relative_error": 0.8357784245641975
+      },
+      "refit_down_on_dense_product": {
+        "angular_drift": 0.5059906542301178,
+        "cosine_similarity": 0.4940093457698822,
+        "norm_ratio": 0.8701508953642806,
+        "relative_error": 0.9473316105677169
+      },
+      "saved_down_on_compressed_product": {
+        "angular_drift": 0.4584663510322571,
+        "cosine_similarity": 0.5415336489677429,
+        "norm_ratio": 0.49933066978747376,
+        "relative_error": 0.8417377624747788
+      }
+    },
+    "train": {
+      "refit_down_on_compressed_product": {
+        "angular_drift": 0.2996828556060791,
+        "cosine_similarity": 0.7003171443939209,
+        "norm_ratio": 0.6934690675436226,
+        "relative_error": 0.7138646338540661
+      },
+      "refit_down_on_dense_product": {
+        "angular_drift": 0.35898685455322266,
+        "cosine_similarity": 0.6410131454467773,
+        "norm_ratio": 0.9332057808711446,
+        "relative_error": 0.8212664614498238
+      },
+      "saved_down_on_compressed_product": {
+        "angular_drift": 0.3497328758239746,
+        "cosine_similarity": 0.6502671241760254,
+        "norm_ratio": 0.5687464335033603,
+        "relative_error": 0.7640669358946892
+      }
+    }
+  },
+  "scope": "single layer-2 Down refit; no other projections or checkpoints changed",
+  "script_sha256": "c681399383a53954b8679b667ea816ea22693b4704ef17780f642e9d8712aaf1",
+  "serialized_matrix_relative_difference": 0.0004449541447684169,
+  "settings": {
+    "alpha_awt": 0.5,
+    "bridge_quantization_mode": "independent_q4",
+    "cg_iterations": 48,
+    "diagonal_prior_strength": 0.0,
+    "gradient_updates": 0,
+    "layer": 2,
+    "mode": "same dense-context input x for dense teacher and saved compressed Gate/Up; no prefix trajectory compensation",
+    "prior_gamma": 0.01,
+    "projection_budget": {
+      "n_outliers": 524288,
+      "r_bridge": 128
+    },
+    "quantization_schedule": "post_sweep",
+    "quantize_components": true,
+    "ranks": [
+      1,
+      64,
+      128,
+      64,
+      1
+    ],
+    "rms_norm_eps": 1e-05,
+    "sequence_length": 128,
+    "sweeps": 2
+  },
+  "source_commit": "cd1583e33620fc64c8be5011191f55c54689a99f",
+  "status": "COMPLETE",
+  "train_activation_sha256": "bf3e2984438094cb1d3785ac0d75d9a3029be8ed549ed638c699533cdbfee106",
+  "train_tokens": 4096,
+  "validation_is_disjoint_by_manifest": true
+}
