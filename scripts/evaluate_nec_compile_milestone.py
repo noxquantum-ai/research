@@ -22,7 +22,7 @@ import torch
 
 from benchmarks.benchmark_day4_perplexity import inject_nox_checkpoints
 from benchmarks.evaluate_high_fidelity_nec import load_model
-from huggingface_hub import snapshot_download
+from huggingface_hub import hf_hub_download
 from nox.evaluation import MODEL_ID, MODEL_REVISION, sha256_file
 from preflight_nec_compression_targets import inspect_dense_model
 from search_nec_layer_allocation import evaluate_ppl_kl, sample_ids, storage_summary
@@ -104,9 +104,18 @@ def main() -> None:
     )
     manifest_path = args.checkpoint_dir / "model_manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    source_model_info = inspect_dense_model(Path(snapshot_download(
-        repo_id=MODEL_ID, revision=MODEL_REVISION, local_files_only=True,
-    )))
+    # Resolve only the model index file. snapshot_download validates every
+    # repository file, including README/license metadata that this compute
+    # node does not cache, even though the tokenizer/config/weight shards used
+    # above are present and complete. inspect_dense_model reads the index,
+    # shard headers, and config from this same pinned snapshot.
+    model_index = Path(hf_hub_download(
+        repo_id=MODEL_ID,
+        filename="model.safetensors.index.json",
+        revision=MODEL_REVISION,
+        local_files_only=True,
+    ))
+    source_model_info = inspect_dense_model(model_index.parent)
     report = {
         "status": "COMPLETE",
         "purpose": "intermediate cumulative-prefix diagnostic; not a final adaptive allocation",
