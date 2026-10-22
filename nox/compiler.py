@@ -688,6 +688,9 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
     if codec_type == "nec_operator_schmidt_v1":
         from nox.operator_schmidt import reconstruct_operator_schmidt
         return reconstruct_operator_schmidt(artifact, device=device, dtype=dtype)
+    if codec_type == "nec_activation_schmidt_correction_v1":
+        from nox.schmidt_correction import reconstruct_schmidt_correction
+        return reconstruct_schmidt_correction(artifact, device=device, dtype=dtype)
     if codec_type == CODEC_TYPE:
         return decode_groupwise(artifact, device=device, dtype=dtype)
     if codec_type == "nec_hybrid_residual_v1":
