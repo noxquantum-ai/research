@@ -16,11 +16,16 @@ import time
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from benchmarks.benchmark_day4_perplexity import compute_perplexity, inject_nox_checkpoints
+from benchmarks.benchmark_day4_perplexity import (
+    compute_perplexity,
+    inject_nox_checkpoints,
+    sliding_window_specifications,
+)
 from benchmarks.evaluate_high_fidelity_nec import load_model
 from nox.compiler import reconstruct_from_artifact
 from nox.data import load_wikitext2_raw_split
@@ -98,6 +103,121 @@ def columns(tensor, device):
 
 
 @torch.inference_mode()
+def teacher_student_kl(model, ids, dense, compressed, selected, max_eval_tokens,
+                       seq_len=2048, stride=512, chunk_tokens=128):
+    """Measure mean tokenwise KL(P_dense || P_selected) on the PPL windows."""
+    windows, eval_limit = sliding_window_specifications(
+        ids.shape[1], seq_len=seq_len, stride=stride,
+        max_eval_tokens=max_eval_tokens,
+    )
+    token_kls = []
+    for window in windows:
+        input_ids = ids[:, window["begin"]:window["end"]].to(model.device)
+        targets = input_ids.clone()
+        if window["target_length"] < input_ids.shape[1]:
+            targets[:, :-window["target_length"]] = -100
+        labels = targets[:, 1:]
+        mask = labels != -100
+        if int(mask.sum().item()) != window["scored_tokens"]:
+            raise RuntimeError("Teacher-student KL target count differs from the PPL window")
+
+        install(model, dense, compressed, {})
+        teacher_logits = model(input_ids, use_cache=False).logits[:, :-1][mask]
+        teacher_logits = teacher_logits.detach().to(device="cpu", dtype=torch.float16)
+        install(model, dense, compressed, selected)
+        student_logits = model(input_ids, use_cache=False).logits[:, :-1][mask]
+        student_logits = student_logits.detach().to(device="cpu", dtype=torch.float16)
+        if not torch.isfinite(teacher_logits).all() or not torch.isfinite(student_logits).all():
+            raise FloatingPointError("Non-finite logits in teacher-student KL evaluation")
+
+        for begin in range(0, teacher_logits.shape[0], chunk_tokens):
+            end = min(begin + chunk_tokens, teacher_logits.shape[0])
+            teacher = teacher_logits[begin:end].to(device=model.device, dtype=torch.float32)
+            student = student_logits[begin:end].to(device=model.device, dtype=torch.float32)
+            log_teacher = F.log_softmax(teacher, dim=-1)
+            log_student = F.log_softmax(student, dim=-1)
+            per_token = F.kl_div(
+                log_student, log_teacher, reduction="none", log_target=True,
+            ).sum(dim=-1)
+            token_kls.append(per_token.detach().cpu())
+        del input_ids, targets, labels, mask, teacher_logits, student_logits
+
+    values = torch.cat(token_kls).float()
+    if values.numel() != sum(window["scored_tokens"] for window in windows):
+        raise RuntimeError("Teacher-student KL token count differs from the PPL protocol")
+    return {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": float(values.mean()),
+        "token_kl_quantiles_nats": [
+            float(value) for value in torch.quantile(values, torch.tensor([0., .5, .9, .99, 1.]))
+        ],
+        "scored_tokens": int(values.numel()),
+        "input_tokens": int(eval_limit),
+        "token_ids_sha256": hashlib.sha256(
+            ids[0, :eval_limit].to(torch.int64).contiguous().cpu().numpy().tobytes()
+        ).hexdigest(),
+        "context": seq_len,
+        "stride": stride,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32",
+    }
+
+
+def storage_accounting(checkpoint_dir, dense, variants):
+    """Compare four-layer dense tensor payloads with serialized layer checkpoints."""
+    layers = {}
+    dense_total = 0
+    for index in range(4):
+        dense_bytes = sum(
+            int(dense[index][name].numel() * dense[index][name].element_size())
+            for name in (*PROJECTIONS, *NORMS)
+        )
+        compressed_bytes = int(
+            (checkpoint_dir / f"compressed_layer_{index}.pt").stat().st_size
+        )
+        dense_total += dense_bytes
+        layers[str(index)] = {
+            "dense_projection_and_norm_tensor_bytes": dense_bytes,
+            "serialized_compressed_checkpoint_bytes": compressed_bytes,
+            "bytes_saved_when_compressed": dense_bytes - compressed_bytes,
+        }
+
+    allocations = {}
+    for name, selected in variants.items():
+        compressed_layers = [
+            index for index in range(4)
+            if tuple(selected.get(index, ())) == PROJECTIONS
+        ]
+        partially_compressed = [
+            index for index in range(4)
+            if selected.get(index) and tuple(selected[index]) != PROJECTIONS
+        ]
+        if partially_compressed:
+            continue
+        variant_bytes = sum(
+            layers[str(index)]["serialized_compressed_checkpoint_bytes"]
+            if index in compressed_layers
+            else layers[str(index)]["dense_projection_and_norm_tensor_bytes"]
+            for index in range(4)
+        )
+        allocations[name] = {
+            "compressed_layers": compressed_layers,
+            "dense_layers": [index for index in range(4) if index not in compressed_layers],
+            "four_layer_payload_bytes": variant_bytes,
+            "bytes_saved_vs_all_dense": dense_total - variant_bytes,
+        }
+    return {
+        "scope": "layers 0-3 only; suffix layers 4-31 are identical dense weights",
+        "dense_payload_definition": "seven projection tensors and two norm tensors per layer",
+        "compressed_payload_definition": "actual serialized compressed_layer_N.pt file size",
+        "all_dense_four_layer_payload_bytes": dense_total,
+        "layers": layers,
+        "whole_layer_allocations": allocations,
+    }
+
+
+@torch.inference_mode()
 def trace(model, dense, compressed, ids):
     install(model, dense, compressed, {})
     clean = capture(model, ids)
@@ -169,7 +289,7 @@ def main():
               "diagnostic_script_sha256": sha256_file(__file__), "torch": torch.__version__,
               "checkpoint_manifest_sha256": sha256_file(manifest_path), "checkpoint_sha256": hashes,
               "ppl_protocol": {"split": "validation", "context": 2048, "stride": 512, "max_eval_tokens": args.max_eval_tokens, "batch_size": 1},
-              "decoding": {}, "ppl": {}, "traces": {}}
+              "decoding": {}, "ppl": {}, "teacher_student_kl": {}, "traces": {}}
 
     def save():
         record["elapsed_seconds"] = time.monotonic() - start
@@ -204,16 +324,29 @@ def main():
                 "fp16_vs_fp32_decode_relative_error": relative(decoded32, decoded16),
                 "finite": bool(torch.isfinite(decoded16).all())}
             del decoded16, decoded32
+    variants = {
+        "dense": {},
+        **{f"layer{i}_only": {i: PROJECTIONS} for i in range(4)},
+        **{f"prefix{n}": {i: PROJECTIONS for i in range(n)} for n in (2, 3, 4)},
+        "prefix4_layer0_dense": {i: PROJECTIONS for i in range(1, 4)},
+        "prefix4_layer3_dense": {i: PROJECTIONS for i in range(3)},
+        "prefix4_boundaries_dense": {i: PROJECTIONS for i in (1, 2)},
+        "prefix4_attention_only": {i: PROJECTIONS[:4] for i in range(4)},
+        "prefix4_mlp_only": {i: PROJECTIONS[4:] for i in range(4)},
+        "prefix4_fp32_decode_then_cast": {i: PROJECTIONS for i in range(4)},
+    }
+    record["storage"] = storage_accounting(args.checkpoint_dir, dense, variants)
+    kl_variants = {
+        "prefix4",
+        "prefix4_layer0_dense",
+        "prefix4_layer3_dense",
+        "prefix4_boundaries_dense",
+    }
     save()
     text, data = load_wikitext2_raw_split("validation")
     record["dataset"] = data
     ids = tokenizer(text, return_tensors="pt", add_special_tokens=True).input_ids
     record["token_ids_sha256"] = hashlib.sha256(ids.numpy().tobytes()).hexdigest()
-    variants = {"dense": {}, **{f"layer{i}_only": {i: PROJECTIONS} for i in range(4)},
-                **{f"prefix{n}": {i: PROJECTIONS for i in range(n)} for n in (2, 3, 4)},
-                "prefix4_attention_only": {i: PROJECTIONS[:4] for i in range(4)},
-                "prefix4_mlp_only": {i: PROJECTIONS[4:] for i in range(4)},
-                "prefix4_fp32_decode_then_cast": {i: PROJECTIONS for i in range(4)}}
     dense_predictions = None
     for name, selected in variants.items():
         print(f"PHASE=ppl variant={name}", flush=True)
@@ -232,6 +365,20 @@ def main():
             "dense_top1_agreement": float((predictions == dense_predictions).float().mean()),
             "nll_formula_crosscheck": details.get("nll_formula_crosscheck"),
             "selected": {str(k): list(v) for k, v in selected.items()}}
+        allocation = record["storage"]["whole_layer_allocations"].get(name)
+        if allocation is not None:
+            record["ppl"][name]["storage"] = allocation
+        if name in kl_variants:
+            print(f"PHASE=teacher_student_kl variant={name}", flush=True)
+            kl = teacher_student_kl(
+                model, ids, dense, compressed, selected,
+                max_eval_tokens=args.max_eval_tokens,
+            )
+            if kl["scored_tokens"] != count or kl["token_ids_sha256"] != details["token_ids_sha256"]:
+                raise RuntimeError("Teacher-student KL and PPL use different scored tokens")
+            record["teacher_student_kl"][name] = kl
+            record["ppl"][name]["teacher_student_kl"] = kl
+            print(f"RESULT teacher_student_kl {name} {json.dumps(kl)}", flush=True)
         print(f"RESULT {name} {json.dumps(record['ppl'][name])}", flush=True)
         save()
     del fp32decoded
