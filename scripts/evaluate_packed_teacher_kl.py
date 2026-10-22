@@ -34,6 +34,11 @@ def main() -> None:
     parser.add_argument("--seq-len", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
     parser.add_argument("--kl-chunk-tokens", type=int, default=128)
+    parser.add_argument(
+        "--projections",
+        default="q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj",
+        help="Comma-separated NEC projections to inject; all other weights remain dense.",
+    )
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -78,11 +83,13 @@ def main() -> None:
         if index == 1 or index % 10 == 0 or index == len(windows):
             print(f"teacher windows={index}/{len(windows)}", flush=True)
 
+    projections = tuple(part.strip() for part in args.projections.split(",") if part.strip())
     injected = inject_nox_checkpoints(
         model,
         args.checkpoint_dir,
         device=args.device,
         dtype=dtype,
+        projections=projections,
     )
     totals = {"teacher_nll": 0.0, "student_nll": 0.0, "kl": 0.0}
     student_correct = 0
@@ -135,6 +142,7 @@ def main() -> None:
         "model_revision": args.model_revision,
         "checkpoint_dir": str(args.checkpoint_dir.resolve()),
         "compressed_layers": sorted(int(index) for index in injected),
+        "compressed_projections": list(projections),
         "test_split": split_metadata,
         "input_tokens": int(input_tokens),
         "scored_tokens": int(scored_tokens),

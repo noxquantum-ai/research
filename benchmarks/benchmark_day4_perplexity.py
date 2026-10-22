@@ -304,6 +304,7 @@ def inject_nox_checkpoints(
     dtype=torch.float16,
     diagnostics: list[dict] | None = None,
     expected_layers: list[int] | None = None,
+    projections: tuple[str, ...] | list[str] | None = None,
 ):
     """
     Loads NEC MPO, NEC-plus-packed-residual, or direct packed-codec checkpoints
@@ -312,6 +313,15 @@ def inject_nox_checkpoints(
     Codec dispatch lives in ``reconstruct_from_artifact`` so legacy NEC files
     retain their original loading path and codec checkpoints share evaluation.
     """
+    all_projections = (
+        "q_proj", "k_proj", "v_proj", "o_proj",
+        "gate_proj", "up_proj", "down_proj",
+    )
+    selected_projections = all_projections if projections is None else tuple(projections)
+    unknown = set(selected_projections) - set(all_projections)
+    if unknown or not selected_projections:
+        raise ValueError(f"Invalid NEC projection selection: {sorted(unknown)}")
+
     ckpt_files = sorted(glob.glob(os.path.join(checkpoint_dir, "compressed_layer_*.pt")))
     if not ckpt_files:
         raise FileNotFoundError(f"No 'compressed_layer_*.pt' files found in '{checkpoint_dir}'")
@@ -346,7 +356,10 @@ def inject_nox_checkpoints(
             "up_proj": target_layer.mlp.up_proj,
             "down_proj": target_layer.mlp.down_proj,
         }
-        for name, module in modules.items():
+        for name in selected_projections:
+            module = modules[name]
+            if name not in arts:
+                raise KeyError(f"Layer {l_idx} checkpoint has no {name!r} artifact")
             source_weight = module.weight.detach().float()
             if not torch.isfinite(source_weight).all():
                 raise FloatingPointError(f"Layer {l_idx} {name} source weight contains non-finite values")
