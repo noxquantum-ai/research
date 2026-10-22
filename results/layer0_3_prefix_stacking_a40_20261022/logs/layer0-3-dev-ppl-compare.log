@@ -1,0 +1,18 @@
+{
+  "scored_tokens": 299963,
+  "mean_nll_delta_nec_minus_dense": 4.085562851924493,
+  "mean_nll_delta_95pct_block_bootstrap_ci": [
+    4.049485608976772,
+    4.12093126435075
+  ],
+  "perplexity_ratio_nec_over_dense": 59.475404177740415,
+  "next_token_accuracy_delta": -0.40931714911505745,
+  "top1_agreement_with_dense": 0.25935532048952703,
+  "bootstrap": {
+    "block_tokens": 512,
+    "blocks": 586,
+    "repetitions": 5000,
+    "seed": 20261021,
+    "interval": "percentile 95%; contiguous NLL-difference blocks"
+  }
+}

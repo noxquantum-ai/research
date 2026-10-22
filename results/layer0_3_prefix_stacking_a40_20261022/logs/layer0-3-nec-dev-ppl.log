@@ -1,0 +1,35 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   3%|▎         | 8/291 [00:00<00:03, 75.90it/s]Loading weights:   7%|▋         | 19/291 [00:00<00:02, 91.83it/s]Loading weights:  10%|▉         | 29/291 [00:00<00:03, 85.26it/s]Loading weights:  13%|█▎        | 38/291 [00:00<00:03, 79.54it/s]Loading weights:  16%|█▌        | 47/291 [00:00<00:02, 81.68it/s]Loading weights:  19%|█▉        | 56/291 [00:00<00:02, 83.23it/s]Loading weights:  22%|██▏       | 65/291 [00:00<00:02, 82.53it/s]Loading weights:  25%|██▌       | 74/291 [00:00<00:02, 80.30it/s]Loading weights:  29%|██▊       | 83/291 [00:01<00:02, 78.79it/s]Loading weights:  31%|███▏      | 91/291 [00:01<00:02, 77.25it/s]Loading weights:  34%|███▍      | 99/291 [00:01<00:02, 76.12it/s]Loading weights:  37%|███▋      | 107/291 [00:01<00:02, 75.37it/s]Loading weights:  40%|███▉      | 115/291 [00:01<00:02, 74.80it/s]Loading weights:  42%|████▏     | 123/291 [00:01<00:02, 72.39it/s]Loading weights:  45%|████▌     | 132/291 [00:01<00:02, 73.29it/s]Loading weights:  48%|████▊     | 141/291 [00:01<00:02, 74.12it/s]Loading weights:  52%|█████▏    | 150/291 [00:01<00:01, 74.47it/s]Loading weights:  55%|█████▍    | 159/291 [00:02<00:01, 74.87it/s]Loading weights:  58%|█████▊    | 168/291 [00:02<00:01, 75.04it/s]Loading weights:  61%|██████    | 177/291 [00:02<00:01, 75.26it/s]Loading weights:  64%|██████▍   | 186/291 [00:02<00:01, 75.37it/s]Loading weights:  67%|██████▋   | 195/291 [00:02<00:01, 75.44it/s]Loading weights:  70%|███████   | 204/291 [00:02<00:01, 75.45it/s]Loading weights:  73%|███████▎  | 213/291 [00:02<00:01, 75.55it/s]Loading weights:  76%|███████▋  | 222/291 [00:02<00:00, 75.49it/s]Loading weights:  79%|███████▉  | 231/291 [00:03<00:00, 74.66it/s]Loading weights:  82%|████████▏ | 240/291 [00:03<00:00, 77.70it/s]Loading weights:  86%|████████▌ | 249/291 [00:03<00:00, 77.81it/s]Loading weights:  89%|████████▊ | 258/291 [00:03<00:00, 77.16it/s]Loading weights:  92%|█████████▏| 267/291 [00:03<00:00, 76.76it/s]Loading weights:  95%|█████████▍| 276/291 [00:03<00:00, 76.29it/s]Loading weights:  98%|█████████▊| 285/291 [00:03<00:00, 75.95it/s]Loading weights: 100%|██████████| 291/291 [00:03<00:00, 77.59it/s]
+[10:18:58] Found 4 compressed layer checkpoints in '/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg'. Injecting weights...
+[10:18:59]   Layer 00: Reconstructed and injected (68120.4 KB artifact)
+[10:19:00]   Layer 01: Reconstructed and injected (68335.2 KB artifact)
+[10:19:00]   Layer 02: Reconstructed and injected (68309.0 KB artifact)
+[10:19:00]   Layer 03: Reconstructed and injected (68396.4 KB artifact)
+[10:19:02] Loaded WikiText-2 raw validation split: 657209 bytes, sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c from https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet
+[10:19:03] Computing Perplexity over 299964 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:19:14] Evaluation progress: windows=32/583 scored_tokens=17919 nll=92715.8092 elapsed_s=11.2
+[10:19:25] Evaluation progress: windows=64/583 scored_tokens=34303 nll=185165.2587 elapsed_s=22.3
+[10:19:36] Evaluation progress: windows=96/583 scored_tokens=50687 nll=276892.2526 elapsed_s=33.4
+[10:19:47] Evaluation progress: windows=128/583 scored_tokens=67071 nll=369273.6217 elapsed_s=44.5
+[10:19:58] Evaluation progress: windows=160/583 scored_tokens=83455 nll=460181.4406 elapsed_s=55.6
+[10:20:09] Evaluation progress: windows=192/583 scored_tokens=99839 nll=554824.3969 elapsed_s=66.7
+[10:20:20] Evaluation progress: windows=224/583 scored_tokens=116223 nll=645456.9476 elapsed_s=77.8
+[10:20:32] Evaluation progress: windows=256/583 scored_tokens=132607 nll=742129.9623 elapsed_s=89.0
+[10:20:43] Evaluation progress: windows=288/583 scored_tokens=148991 nll=832285.0829 elapsed_s=100.1
+[10:20:54] Evaluation progress: windows=320/583 scored_tokens=165375 nll=929962.3053 elapsed_s=111.2
+[10:21:05] Evaluation progress: windows=352/583 scored_tokens=181759 nll=1025493.3590 elapsed_s=122.4
+[10:21:16] Evaluation progress: windows=384/583 scored_tokens=198143 nll=1120094.4689 elapsed_s=133.6
+[10:21:27] Evaluation progress: windows=416/583 scored_tokens=214527 nll=1211102.3329 elapsed_s=144.7
+[10:21:38] Evaluation progress: windows=448/583 scored_tokens=230911 nll=1301641.4122 elapsed_s=155.9
+[10:21:50] Evaluation progress: windows=480/583 scored_tokens=247295 nll=1393053.1132 elapsed_s=167.0
+[10:22:01] Evaluation progress: windows=512/583 scored_tokens=263679 nll=1486859.7567 elapsed_s=178.2
+[10:22:12] Evaluation progress: windows=544/583 scored_tokens=280063 nll=1584447.2684 elapsed_s=189.4
+[10:22:23] Evaluation progress: windows=576/583 scored_tokens=296447 nll=1684626.5704 elapsed_s=200.5
+[10:22:26] Evaluation progress: windows=583/583 scored_tokens=299963 nll=1705087.5109 elapsed_s=203.0
+{
+  "output": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg/evaluation-dev-prefix4/nec.json",
+  "ppl": 294.21950461578194,
+  "mean_nll": 5.684326103100242,
+  "next_token_accuracy": 0.21374636205131967,
+  "scored_tokens": 299963
+}

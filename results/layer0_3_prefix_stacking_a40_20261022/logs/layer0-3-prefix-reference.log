@@ -1,0 +1,509 @@
+[01:51:47] WikiText-2 raw splits loaded: train sha256=e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7 (6357543 bytes), valid sha256=204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c (657209 bytes).
+[01:51:47] Tokenizing WikiText-2 train/validation with 'NousResearch/Llama-2-7b-hf' tokenizer...
+[01:51:59] WikiText-2 activations generated: train X_calib [4096, 4096] (4096 tokens), validation X_test [4096, 1024] (1024 tokens).
+layer=0 resumed_from=/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg/compressed_layer_0.pt
+  [Attention Sub-Block] Compressing Q, K, V projections...
+    [NEC projection] Starting q_proj...
+    [Nox Step 1A] Sparse Outlier Shield (523514 stored entries; 5112.4 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.3s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.1s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.4s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.0s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.3s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.1s)
+    [NEC projection] Starting k_proj...
+    [Nox Step 1A] Sparse Outlier Shield (523581 stored entries; 5113.1 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.7s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.3s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.3s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.7s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.4s)
+    [NEC projection] Starting v_proj...
+    [Nox Step 1A] Sparse Outlier Shield (520393 stored entries; 5082.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.4s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.4s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.1s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.4s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.1s)
+  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...
+    [NEC projection] Starting o_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524203 stored entries; 5119.2 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.3s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.1s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.5s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.3s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.2s)
+  [SwiGLU MLP Sub-Block] Compressing Gate and Up projections...
+    [NEC projection] Starting gate_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524229 stored entries; 5119.4 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.1s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (1463.6s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (698.8s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.4s); sweep complete (2163.0s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.1s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (1172.9s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (629.6s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.4s); sweep complete (1803.0s)
+    [NEC projection] Starting up_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524282 stored entries; 5119.9 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.1s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (592.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (379.8s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.5s); sweep complete (972.9s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.1s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (592.7s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (365.8s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.4s); sweep complete (959.1s)
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on clean SwiGLU context (bridge: r=128, outliers=524288)...
+    [NEC projection] Starting down_proj...
+    [Nox Step 1A] Sparse Outlier Shield (518418 stored entries; 5062.7 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.8s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (138.7s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (263.0s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.3s); sweep complete (402.9s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.8s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (138.7s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (263.1s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.3s); sweep complete (402.9s)
+{"layer": 1, "calibration_activation_mode": "dense", "construction_mode": "independent", "mpo_site_order": [0, 1, 2, 3], "same_input_validation": {"relative_error": 0.030066888231533452, "angular_drift": 0.00043785572052001953, "norm_ratio": 0.994201861759323, "cosine_similarity": 0.99956214427948}, "cascade_validation": {"relative_error": 0.15114745218690154, "angular_drift": 0.011479854583740234, "norm_ratio": 0.9842933258429926, "cosine_similarity": 0.9885201454162598}, "calibration": {"relative_error": 0.04986882526586251, "angular_drift": 0.0012054443359375, "norm_ratio": 0.9899852988871727, "cosine_similarity": 0.9987945556640625}, "heldout_block_output": {"relative_error": 0.030066888231533452, "angular_drift": 0.00043785572052001953, "norm_ratio": 0.994201861759323, "cosine_similarity": 0.99956214427948}, "attention_gauge": null, "mlp_gauge": null, "mlp_objective": "independent", "mlp_product_aware": null, "budget_allocation": "uniform", "projection_budgets": {"q_proj": {"r_bridge": 128, "n_outliers": 524288}, "k_proj": {"r_bridge": 128, "n_outliers": 524288}, "v_proj": {"r_bridge": 128, "n_outliers": 524288}, "o_proj": {"r_bridge": 128, "n_outliers": 524288}, "gate_proj": {"r_bridge": 128, "n_outliers": 524288}, "up_proj": {"r_bridge": 128, "n_outliers": 524288}, "down_proj": {"r_bridge": 128, "n_outliers": 524288}}, "representation": "mpo4", "calibration_backend": "full_matrix", "calibration_windows_per_chunk": 4, "statistics_dtype": "float64", "projection_serialization_audit": {"q_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.0003844771708827466}, "k_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00038821937050670385}, "v_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00041969100129790604}, "o_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00042638584272935987}, "gate_proj": {"shape": [11008, 4096], "relative_frobenius_error": 0.00031241768738254905}, "up_proj": {"shape": [11008, 4096], "relative_frobenius_error": 0.0003185530658811331}, "down_proj": {"shape": [4096, 11008], "relative_frobenius_error": 0.00043815976823680103}}, "serialized_bytes": 70035714, "base_checkpoint_bytes_before_bridge": null, "bridge_tensor_bytes": 0, "pees": null, "base_checkpoint_bytes_before_pees": null, "pees_tensor_bytes": 0, "pees_checkpoint_multiplier": 1.0, "checkpoint_multiplier": 1.0, "dense_fp16_tensor_bytes": 404766720, "seconds": 11105.41141084599, "peak_cuda_allocated_bytes": 15978709504, "peak_cuda_reserved_bytes": 16244539392, "process_max_rss_kib": 2356560}
+layer=1 elapsed=11106.03s
+  [Attention Sub-Block] Compressing Q, K, V projections...
+    [NEC projection] Starting q_proj...
+    [Nox Step 1A] Sparse Outlier Shield (521475 stored entries; 5092.5 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.0s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.2s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (539.5s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.1s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.2s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (539.7s)
+    [NEC projection] Starting k_proj...
+    [Nox Step 1A] Sparse Outlier Shield (522158 stored entries; 5099.2 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.5s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.3s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.4s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.2s)
+    [NEC projection] Starting v_proj...
+    [Nox Step 1A] Sparse Outlier Shield (515356 stored entries; 5032.8 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.3s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.5s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.2s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.4s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.2s)
+  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...
+    [NEC projection] Starting o_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524285 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.6s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (225.0s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (503.9s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.5s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (209.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (488.3s)
+  [SwiGLU MLP Sub-Block] Compressing Gate and Up projections...
+    [NEC projection] Starting gate_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524293 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.1s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (1204.8s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (601.8s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.4s); sweep complete (1807.1s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.1s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (979.5s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (532.5s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.5s); sweep complete (1512.6s)
+    [NEC projection] Starting up_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524293 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.1s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (506.4s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (324.3s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.5s); sweep complete (831.3s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.1s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (506.4s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (310.4s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.4s); sweep complete (817.4s)
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on clean SwiGLU context (bridge: r=128, outliers=524288)...
+    [NEC projection] Starting down_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524071 stored entries; 5117.9 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.8s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (36.6s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (90.7s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.3s); sweep complete (128.4s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.8s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (36.6s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (85.5s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.4s); sweep complete (123.2s)
+{"layer": 2, "calibration_activation_mode": "dense", "construction_mode": "independent", "mpo_site_order": [0, 1, 2, 3], "same_input_validation": {"relative_error": 0.008683973549842466, "angular_drift": 3.7550926208496094e-05, "norm_ratio": 0.999893073318786, "cosine_similarity": 0.9999624490737915}, "cascade_validation": {"relative_error": 0.15112264439244003, "angular_drift": 0.011475920677185059, "norm_ratio": 0.984326957121379, "cosine_similarity": 0.9885240793228149}, "calibration": {"relative_error": 0.00726670509091844, "angular_drift": 2.6464462280273438e-05, "norm_ratio": 0.9999023001582885, "cosine_similarity": 0.9999735355377197}, "heldout_block_output": {"relative_error": 0.008683973549842466, "angular_drift": 3.7550926208496094e-05, "norm_ratio": 0.999893073318786, "cosine_similarity": 0.9999624490737915}, "attention_gauge": null, "mlp_gauge": null, "mlp_objective": "independent", "mlp_product_aware": null, "budget_allocation": "uniform", "projection_budgets": {"q_proj": {"r_bridge": 128, "n_outliers": 524288}, "k_proj": {"r_bridge": 128, "n_outliers": 524288}, "v_proj": {"r_bridge": 128, "n_outliers": 524288}, "o_proj": {"r_bridge": 128, "n_outliers": 524288}, "gate_proj": {"r_bridge": 128, "n_outliers": 524288}, "up_proj": {"r_bridge": 128, "n_outliers": 524288}, "down_proj": {"r_bridge": 128, "n_outliers": 524288}}, "representation": "mpo4", "calibration_backend": "full_matrix", "calibration_windows_per_chunk": 4, "statistics_dtype": "float64", "projection_serialization_audit": {"q_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00035856288741342723}, "k_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00035627660690806806}, "v_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00036909940536133945}, "o_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00038174912333488464}, "gate_proj": {"shape": [11008, 4096], "relative_frobenius_error": 0.0002982834994327277}, "up_proj": {"shape": [11008, 4096], "relative_frobenius_error": 0.00030012638308107853}, "down_proj": {"shape": [4096, 11008], "relative_frobenius_error": 0.00036524454480968416}}, "serialized_bytes": 70008770, "base_checkpoint_bytes_before_bridge": null, "bridge_tensor_bytes": 0, "pees": null, "base_checkpoint_bytes_before_pees": null, "pees_tensor_bytes": 0, "pees_checkpoint_multiplier": 1.0, "checkpoint_multiplier": 1.0, "dense_fp16_tensor_bytes": 404766720, "seconds": 9530.033885626995, "peak_cuda_allocated_bytes": 16440082944, "peak_cuda_reserved_bytes": 16747855872, "process_max_rss_kib": 2356560}
+layer=2 elapsed=9530.52s
+  [Attention Sub-Block] Compressing Q, K, V projections...
+    [NEC projection] Starting q_proj...
+    [Nox Step 1A] Sparse Outlier Shield (523099 stored entries; 5108.4 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.9s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.5s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.7s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.8s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.5s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.7s)
+    [NEC projection] Starting k_proj...
+    [Nox Step 1A] Sparse Outlier Shield (523246 stored entries; 5109.8 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (279.0s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (261.4s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (540.8s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (279.0s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (261.5s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (540.8s)
+    [NEC projection] Starting v_proj...
+    [Nox Step 1A] Sparse Outlier Shield (521383 stored entries; 5091.6 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (262.3s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (251.1s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (513.7s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (256.7s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (245.9s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (503.0s)
+  [Attention Sub-Block] Independent mode: Solving W_o on uncorrupted context A_dense...
+    [NEC projection] Starting o_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524285 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1048576 params = 512.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.2s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (278.8s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (199.4s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.2s); sweep complete (478.6s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.2s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (278.8s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (194.1s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.2s); sweep complete (473.3s)
+  [SwiGLU MLP Sub-Block] Compressing Gate and Up projections...
+    [NEC projection] Starting gate_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524290 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.1s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (941.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (491.0s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.5s); sweep complete (1433.0s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.1s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (796.1s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (463.2s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.4s); sweep complete (1259.8s)
+    [NEC projection] Starting up_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524290 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.1s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (477.5s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (296.5s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.4s); sweep complete (774.6s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.1s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (477.4s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (296.7s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.4s); sweep complete (774.6s)
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on uncorrupted activation H_swiglu_dense...
+  [SwiGLU MLP Sub-Block] Independent mode: Solving W_down on clean SwiGLU context (bridge: r=128, outliers=524288)...
+    [NEC projection] Starting down_proj...
+    [Nox Step 1A] Sparse Outlier Shield (524289 stored entries; 5120.0 KiB tensor payload)
+    [Nox Step 1B] Covariance-Projected SVD Bridge (r=128, 1933312 params = 944.0 KB)
+    [Nox Step 2] Exact AWT preconditioning applied from full calibration matrix; keeping r=4096 calibration modes (chunk_size=32)
+    [Nox Step 3.1] Area-Law Ranks initialized: [1, 64, 128, 64, 1]
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 1/2 [QR isometric gauge-fixing]...
+      [DMRG sweep 1/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 1/2] site 0/3 complete (0.8s)
+      [DMRG sweep 1/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 1/3 complete (36.7s)
+      [DMRG sweep 1/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 1/2] site 2/3 complete (96.0s)
+      [DMRG sweep 1/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 1/2] site 3/3 complete (0.3s); sweep complete (133.8s)
+    [Nox Step 3.2] Starting Prior-Anchored DMRG Sweep 2/2 [Final optimization pass (4-bit quantization after sweep)]...
+      [DMRG sweep 2/2] site 0/3 start (local_width=2752, calibration_modes=4096)
+      [DMRG sweep 2/2] site 0/3 complete (0.8s)
+      [DMRG sweep 2/2] site 1/3 start (local_width=32768, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 1/3 complete (36.7s)
+      [DMRG sweep 2/2] site 2/3 start (local_width=65536, solver=matrix-free-CG, calibration_modes=4096)
+      [DMRG sweep 2/2] site 2/3 complete (90.7s)
+      [DMRG sweep 2/2] site 3/3 start (local_width=512, calibration_modes=4096)
+      [DMRG sweep 2/2] site 3/3 complete (0.3s); sweep complete (128.5s)
+{"layer": 3, "calibration_activation_mode": "dense", "construction_mode": "independent", "mpo_site_order": [0, 1, 2, 3], "same_input_validation": {"relative_error": 0.01192186222387143, "angular_drift": 7.11679458618164e-05, "norm_ratio": 0.9998871094210362, "cosine_similarity": 0.9999288320541382}, "cascade_validation": {"relative_error": 0.15177398569055356, "angular_drift": 0.011575818061828613, "norm_ratio": 0.9842041487835074, "cosine_similarity": 0.9884241819381714}, "calibration": {"relative_error": 0.010164749987145196, "angular_drift": 5.1856040954589844e-05, "norm_ratio": 0.9999135648429719, "cosine_similarity": 0.9999481439590454}, "heldout_block_output": {"relative_error": 0.01192186222387143, "angular_drift": 7.11679458618164e-05, "norm_ratio": 0.9998871094210362, "cosine_similarity": 0.9999288320541382}, "attention_gauge": null, "mlp_gauge": null, "mlp_objective": "independent", "mlp_product_aware": null, "budget_allocation": "uniform", "projection_budgets": {"q_proj": {"r_bridge": 128, "n_outliers": 524288}, "k_proj": {"r_bridge": 128, "n_outliers": 524288}, "v_proj": {"r_bridge": 128, "n_outliers": 524288}, "o_proj": {"r_bridge": 128, "n_outliers": 524288}, "gate_proj": {"r_bridge": 128, "n_outliers": 524288}, "up_proj": {"r_bridge": 128, "n_outliers": 524288}, "down_proj": {"r_bridge": 128, "n_outliers": 524288}}, "representation": "mpo4", "calibration_backend": "full_matrix", "calibration_windows_per_chunk": 4, "statistics_dtype": "float64", "projection_serialization_audit": {"q_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.000338874728186056}, "k_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.0003352489147800952}, "v_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.00034833146492019296}, "o_proj": {"shape": [4096, 4096], "relative_frobenius_error": 0.0003705573617480695}, "gate_proj": {"shape": [11008, 4096], "relative_frobenius_error": 0.0002861167013179511}, "up_proj": {"shape": [11008, 4096], "relative_frobenius_error": 0.00028418927104212344}, "down_proj": {"shape": [4096, 11008], "relative_frobenius_error": 0.0003786364395637065}}, "serialized_bytes": 70098370, "base_checkpoint_bytes_before_bridge": null, "bridge_tensor_bytes": 0, "pees": null, "base_checkpoint_bytes_before_pees": null, "pees_tensor_bytes": 0, "pees_checkpoint_multiplier": 1.0, "checkpoint_multiplier": 1.0, "dense_fp16_tensor_bytes": 404766720, "seconds": 8711.611370176019, "peak_cuda_allocated_bytes": 16440082944, "peak_cuda_reserved_bytes": 16705912832, "process_max_rss_kib": 2356560}
+layer=3 elapsed=8712.06s
+COMPLETE: /workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg
