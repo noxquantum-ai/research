@@ -185,8 +185,8 @@ def main() -> None:
         help="Also assess the ratio against all serialized source model files",
     )
     parser.add_argument(
-        "--compression-targets", type=float, nargs="+", default=(3.0, 10.0),
-        help="Compression ratios to assess; default: 3x 10x",
+        "--compression-targets", type=float, nargs="+", default=(5.0, 10.0),
+        help="Compression ratios to assess; default: 5x 10x",
     )
     parser.add_argument("--output-json", type=Path)
     args = parser.parse_args()
@@ -375,6 +375,7 @@ def main() -> None:
                 "maximize measured serialized compression within the selected layer scope subject to quality constraints"
             ),
             "aspirational_ratio": 10.0,
+            "minimum_objective_ratio": 5.0,
             "3x_is_insufficient": True,
             "max_dense_weight_fraction_is_a_ceiling": args.max_dense_weight_fraction,
             "max_dense_layer_count_in_scope": args.max_dense_layers,
