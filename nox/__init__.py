@@ -43,6 +43,19 @@ from nox.operator_schmidt import (
     nox_operator_schmidt_decompose,
     operator_schmidt_to_dense,
 )
+from nox.model_adapter import (
+    CompressionTarget,
+    ModelInventory,
+    discover_block_container,
+    inventory_model,
+    resolve_module,
+)
+from nox.schmidt_budget import (
+    SchmidtModelPlan,
+    SchmidtTargetPlan,
+    plan_uniform_schmidt_budget,
+    schmidt_payload_bytes,
+)
 
 __all__ = [
     "nox_4step_compiler",
@@ -72,6 +85,15 @@ __all__ = [
     "candidate_layouts",
     "nox_operator_schmidt_decompose",
     "operator_schmidt_to_dense",
+    "CompressionTarget",
+    "ModelInventory",
+    "discover_block_container",
+    "inventory_model",
+    "resolve_module",
+    "SchmidtModelPlan",
+    "SchmidtTargetPlan",
+    "plan_uniform_schmidt_budget",
+    "schmidt_payload_bytes",
     "CalibrationStatistics",
     "CalibrationStatisticsAccumulator",
     "InputCovariance",
