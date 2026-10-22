@@ -1,0 +1,386 @@
+{
+  "run_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "compression_path": "no_healing_independent",
+    "calibration_activation_mode": "dense",
+    "construction_mode": "independent",
+    "config": {
+      "ranks": [
+        1,
+        64,
+        128,
+        64,
+        1
+      ],
+      "r_bridge": 128,
+      "n_outliers": 524288,
+      "epsilon": 0.005,
+      "description": "High-fidelity experimental configuration; quality and serialized size require measurement",
+      "diagonal_prior_strength": 0.0,
+      "representation": "mpo4",
+      "operator_schmidt_weight_mix": 1.0,
+      "operator_schmidt_activation_mix": 1.0,
+      "mpo_n_sweeps": 2,
+      "mpo_alpha_awt": 0.5
+    },
+    "attention_gauge": "none",
+    "mlp_gauge": "none",
+    "mlp_objective": "independent",
+    "mlp_product_ridge_ratio": 0.05,
+    "budget_allocation": "uniform",
+    "projection_budgets": {
+      "q_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "k_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "v_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "o_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "gate_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "up_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      },
+      "down_proj": {
+        "r_bridge": 128,
+        "n_outliers": 524288
+      }
+    },
+    "representation": "mpo4",
+    "operator_schmidt_weight_mix": 1.0,
+    "operator_schmidt_activation_mix": 1.0,
+    "mpo_n_sweeps": 2,
+    "mpo_alpha_awt": 0.5,
+    "mpo_quantization_schedule": "post_sweep",
+    "mpo_cg_threshold": 4096,
+    "mpo_cg_iterations": 48,
+    "calibration_backend": "full_matrix",
+    "calibration_windows_per_chunk": 4,
+    "statistics_dtype": "float64",
+    "defect_bridge_mode": "none",
+    "defect_bridge_linear_rank": 512,
+    "defect_bridge_memory_size": 512,
+    "defect_bridge_memory_top_k": 8,
+    "defect_bridge_ridge_ratio": 0.01,
+    "max_checkpoint_multiplier": 1.25,
+    "pees_rank": 0,
+    "pees_projections": [
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "down_proj"
+    ],
+    "pees_tokens": 4096,
+    "pees_ridge_ratio": 0.01,
+    "mpo_site_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "forward_options": {
+      "n_heads": 32,
+      "n_kv_heads": 32,
+      "seq_len": 128,
+      "rms_norm_eps": 1e-05
+    },
+    "input_data": {
+      "dataset": "wikitext-2-raw-v1",
+      "calibration_split": "train",
+      "heldout_split": "validation",
+      "evaluation_split": "test",
+      "calibration_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "train",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+        "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+        "source_bytes": 6357543,
+        "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+        "text_bytes": 10988279,
+        "text_join": "double_newline",
+        "rows": 36718,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "heldout_source": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "validation",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+        "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+        "source_bytes": 657209,
+        "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+        "text_bytes": 1151766,
+        "text_join": "double_newline",
+        "rows": 3760,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "tokenizer_model_id": "NousResearch/Llama-2-7b-hf",
+      "tokenizer_model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "calibration_token_count": 4096,
+      "heldout_token_count": 1024,
+      "calibration_token_ids_sha256": "3ed646bea80e32854597198a7c54c3116e3ea14d8ce828ececc9cc656385dc9b",
+      "heldout_token_ids_sha256": "c85cf5a679c6ae7bc8e9ed882b30f74ec9b6ce50dcd401005e7c35cb71071d54",
+      "activation_sequence_length": 128,
+      "calibration_sampling": "uniform",
+      "calibration_seed": 42,
+      "calibration_window_offsets": [
+        2681856,
+        466944,
+        104832,
+        1153536,
+        1027072,
+        936192,
+        585216,
+        429824,
+        2838272,
+        2287360,
+        364544,
+        2476672,
+        1769600,
+        133248,
+        124928,
+        392960,
+        916992,
+        975744,
+        2119552,
+        2524928,
+        111232,
+        2353920,
+        833920,
+        2725760,
+        2285568,
+        1759488,
+        924544,
+        1884032,
+        2471552,
+        1166720,
+        27136,
+        669568
+      ],
+      "validation_sampling": "uniform",
+      "validation_seed": 43,
+      "validation_window_offsets": [
+        20096,
+        149888,
+        75392,
+        242432,
+        193920,
+        50432,
+        237568,
+        261120
+      ]
+    },
+    "layers": [
+      0
+    ],
+    "source_fingerprint": "8016bbab30c8753a9ecd70420984eacc94b9616eeb8cc10ecba4a28acc8f3d42"
+  },
+  "run_fingerprint": "3533d0a30171f4ff48bd9d86ce4728f2a5bfa4df0009159dbc52c170d01d6611",
+  "tier": "high_fidelity_10x",
+  "compression_path": "no_healing_independent",
+  "calibration_activation_mode": "dense",
+  "construction_mode": "independent",
+  "mpo_site_order": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "rms_norm_eps": 1e-05,
+  "history": [
+    {
+      "layer": 0,
+      "calibration_activation_mode": "dense",
+      "construction_mode": "independent",
+      "mpo_site_order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "same_input_validation": {
+        "relative_error": 0.2576834144397083,
+        "angular_drift": 0.031175673007965088,
+        "norm_ratio": 0.8979635459059132,
+        "cosine_similarity": 0.9688243269920349
+      },
+      "cascade_validation": {
+        "relative_error": 0.2576834144397083,
+        "angular_drift": 0.031175673007965088,
+        "norm_ratio": 0.8979635459059132,
+        "cosine_similarity": 0.9688243269920349
+      },
+      "calibration": {
+        "relative_error": 0.2343545759403326,
+        "angular_drift": 0.025673747062683105,
+        "norm_ratio": 0.9092591570962342,
+        "cosine_similarity": 0.9743262529373169
+      },
+      "heldout_block_output": {
+        "relative_error": 0.2576834144397083,
+        "angular_drift": 0.031175673007965088,
+        "norm_ratio": 0.8979635459059132,
+        "cosine_similarity": 0.9688243269920349
+      },
+      "attention_gauge": null,
+      "mlp_gauge": null,
+      "mlp_objective": "independent",
+      "mlp_product_aware": null,
+      "budget_allocation": "uniform",
+      "projection_budgets": {
+        "q_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "k_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "v_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "o_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "gate_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "up_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        },
+        "down_proj": {
+          "r_bridge": 128,
+          "n_outliers": 524288
+        }
+      },
+      "representation": "mpo4",
+      "calibration_backend": "full_matrix",
+      "calibration_windows_per_chunk": 4,
+      "statistics_dtype": "float64",
+      "projection_serialization_audit": {
+        "q_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.00035442851367406547
+        },
+        "k_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.0003956687869504094
+        },
+        "v_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.00040309521136805415
+        },
+        "o_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "relative_frobenius_error": 0.0004264142771717161
+        },
+        "gate_proj": {
+          "shape": [
+            11008,
+            4096
+          ],
+          "relative_frobenius_error": 0.00030894242809154093
+        },
+        "up_proj": {
+          "shape": [
+            11008,
+            4096
+          ],
+          "relative_frobenius_error": 0.0003146857488900423
+        },
+        "down_proj": {
+          "shape": [
+            4096,
+            11008
+          ],
+          "relative_frobenius_error": 0.00041766755748540163
+        }
+      },
+      "serialized_bytes": 69815746,
+      "base_checkpoint_bytes_before_bridge": null,
+      "bridge_tensor_bytes": 0,
+      "pees": null,
+      "base_checkpoint_bytes_before_pees": null,
+      "pees_tensor_bytes": 0,
+      "pees_checkpoint_multiplier": 1.0,
+      "checkpoint_multiplier": 1.0,
+      "dense_fp16_tensor_bytes": 404766720,
+      "seconds": 11246.172470498015,
+      "peak_cuda_allocated_bytes": 15978709504,
+      "peak_cuda_reserved_bytes": 16181624832,
+      "process_max_rss_kib": 2351840
+    }
+  ],
+  "layers_compressed": [
+    0
+  ],
+  "serialized_checkpoint_bytes": 69815746,
+  "checkpoint_file_sizes": {
+    "compressed_layer_0.pt": 69815746
+  },
+  "checkpoint_file_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09"
+  },
+  "intermediate_files": {
+    "dense_input_layer_0.pt": {
+      "bytes": 16779026,
+      "sha256": "23f97379ea50c6ec1d27794ca56985970bf4195faf5b59ebcba94b2964b27b18"
+    },
+    "calibration_input_layer_0.pt": {
+      "bytes": 67110652,
+      "sha256": "0e749e83fe840e9a99433fcadebc41493309c153a7b3f3b7d3dcaa02454202e9"
+    },
+    "layer_input_validation_layer_0.pt": {
+      "bytes": 16779103,
+      "sha256": "dd4c8759ee6f5b8988816746fb9f9d0581cb42029c2581f22306e19042ac90b0"
+    }
+  },
+  "resume_events": [
+    {
+      "previous_run_fingerprint": "3533d0a30171f4ff48bd9d86ce4728f2a5bfa4df0009159dbc52c170d01d6611",
+      "previous_source_fingerprint": "8016bbab30c8753a9ecd70420984eacc94b9616eeb8cc10ecba4a28acc8f3d42",
+      "resumed_source_fingerprint": "8016bbab30c8753a9ecd70420984eacc94b9616eeb8cc10ecba4a28acc8f3d42",
+      "previous_layers": [
+        0
+      ],
+      "resumed_layers": [
+        0
+      ],
+      "reason": "resume after completed layer artifacts; source repair or layer-prefix extension"
+    }
+  ]
+}

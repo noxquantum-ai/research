@@ -1,0 +1,1024 @@
+{
+  "status": "PASS",
+  "manifest_sha256": "427ea84c80de3b8292c2ba0edf0e6dce97fce596155ce9d877ed0f090835d4d1",
+  "run_fingerprint": "3533d0a30171f4ff48bd9d86ce4728f2a5bfa4df0009159dbc52c170d01d6611",
+  "layers": [
+    {
+      "layer": 0,
+      "file": "compressed_layer_0.pt",
+      "bytes": 69815746,
+      "sha256": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+      "projections": {
+        "q_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "core_shapes": [
+            [
+              1,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 518994,
+          "independent_numerical_coefficients": 2628434,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 16777216,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 5295,
+              "q4_positive_max_code_count": 116879,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.7734375,
+              "dequantized_max_abs": 0.7734375,
+              "stored_fp16_max_abs": 0.7734375
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 87618,
+              "q4_positive_max_code_count": 5899,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.2576774060726166,
+              "dequantized_max_abs": 0.25767743587493896,
+              "stored_fp16_max_abs": 0.257568359375
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 213266,
+              "q4_positive_max_code_count": 4715,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.3460158109664917,
+              "dequantized_max_abs": 0.3460158109664917,
+              "stored_fp16_max_abs": 0.345947265625
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 2886,
+              "q4_positive_max_code_count": 43,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.5909730792045593,
+              "dequantized_max_abs": 0.5909730792045593,
+              "stored_fp16_max_abs": 0.5908203125
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77751,
+              "q4_positive_max_code_count": 6204,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.11931530386209488,
+              "dequantized_max_abs": 0.11931530386209488,
+              "stored_fp16_max_abs": 0.11932373046875
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 79736,
+              "q4_positive_max_code_count": 6120,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.1642993837594986,
+              "dequantized_max_abs": 0.1642993986606598,
+              "stored_fp16_max_abs": 0.164306640625
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 1185,
+              "q4_positive_max_code_count": 37,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.6075528264045715,
+              "dequantized_max_abs": 0.6075528860092163,
+              "stored_fp16_max_abs": 0.607421875
+            }
+          }
+        },
+        "k_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "core_shapes": [
+            [
+              1,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 519800,
+          "independent_numerical_coefficients": 2629240,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 16777216,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 4498,
+              "q4_positive_max_code_count": 119952,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.81640625,
+              "dequantized_max_abs": 0.81640625,
+              "stored_fp16_max_abs": 0.81640625
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 93739,
+              "q4_positive_max_code_count": 5883,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.1298981010913849,
+              "dequantized_max_abs": 0.1298981010913849,
+              "stored_fp16_max_abs": 0.1298828125
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 206632,
+              "q4_positive_max_code_count": 4789,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.33838626742362976,
+              "dequantized_max_abs": 0.33838629722595215,
+              "stored_fp16_max_abs": 0.33837890625
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 1822,
+              "q4_positive_max_code_count": 37,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.6458186507225037,
+              "dequantized_max_abs": 0.6458186507225037,
+              "stored_fp16_max_abs": 0.64599609375
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77503,
+              "q4_positive_max_code_count": 6208,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.1000412181019783,
+              "dequantized_max_abs": 0.1000412255525589,
+              "stored_fp16_max_abs": 0.10003662109375
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 82140,
+              "q4_positive_max_code_count": 6003,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.2616370916366577,
+              "dequantized_max_abs": 0.2616370916366577,
+              "stored_fp16_max_abs": 0.26171875
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 1573,
+              "q4_positive_max_code_count": 45,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.7786806225776672,
+              "dequantized_max_abs": 0.778680682182312,
+              "stored_fp16_max_abs": 0.77880859375
+            }
+          }
+        },
+        "v_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "core_shapes": [
+            [
+              1,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 503367,
+          "independent_numerical_coefficients": 2612807,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 16777216,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 20922,
+              "q4_positive_max_code_count": 99119,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.134765625,
+              "dequantized_max_abs": 0.134765625,
+              "stored_fp16_max_abs": 0.134765625
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 80711,
+              "q4_positive_max_code_count": 6176,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.1324387639760971,
+              "dequantized_max_abs": 0.1324387639760971,
+              "stored_fp16_max_abs": 0.1324462890625
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 189988,
+              "q4_positive_max_code_count": 4851,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.2076614946126938,
+              "dequantized_max_abs": 0.2076614946126938,
+              "stored_fp16_max_abs": 0.2076416015625
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 3288,
+              "q4_positive_max_code_count": 37,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.4928933382034302,
+              "dequantized_max_abs": 0.4928933382034302,
+              "stored_fp16_max_abs": 0.492919921875
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77516,
+              "q4_positive_max_code_count": 6241,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.1929699331521988,
+              "dequantized_max_abs": 0.19296994805335999,
+              "stored_fp16_max_abs": 0.1929931640625
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77069,
+              "q4_positive_max_code_count": 6108,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.11391652375459671,
+              "dequantized_max_abs": 0.11391652375459671,
+              "stored_fp16_max_abs": 0.1138916015625
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 864,
+              "q4_positive_max_code_count": 41,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.7339096665382385,
+              "dequantized_max_abs": 0.7339097261428833,
+              "stored_fp16_max_abs": 0.73388671875
+            }
+          }
+        },
+        "o_proj": {
+          "shape": [
+            4096,
+            4096
+          ],
+          "core_shapes": [
+            [
+              1,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 523336,
+          "independent_numerical_coefficients": 2632776,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 16777216,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 958,
+              "q4_positive_max_code_count": 94453,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.451171875,
+              "dequantized_max_abs": 0.451171875,
+              "stored_fp16_max_abs": 0.451171875
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77974,
+              "q4_positive_max_code_count": 6163,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.07040712982416153,
+              "dequantized_max_abs": 0.07040712982416153,
+              "stored_fp16_max_abs": 0.0704345703125
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 158588,
+              "q4_positive_max_code_count": 4982,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.1676817089319229,
+              "dequantized_max_abs": 0.1676817238330841,
+              "stored_fp16_max_abs": 0.167724609375
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 1687,
+              "q4_positive_max_code_count": 40,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.21562889218330383,
+              "dequantized_max_abs": 0.21562890708446503,
+              "stored_fp16_max_abs": 0.215576171875
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 76689,
+              "q4_positive_max_code_count": 6290,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.06190899759531021,
+              "dequantized_max_abs": 0.06190899759531021,
+              "stored_fp16_max_abs": 0.061920166015625
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77289,
+              "q4_positive_max_code_count": 6146,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.07493379712104797,
+              "dequantized_max_abs": 0.07493379712104797,
+              "stored_fp16_max_abs": 0.074951171875
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 829,
+              "q4_positive_max_code_count": 43,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.6811056137084961,
+              "dequantized_max_abs": 0.6811056137084961,
+              "stored_fp16_max_abs": 0.68115234375
+            }
+          }
+        },
+        "gate_proj": {
+          "shape": [
+            11008,
+            4096
+          ],
+          "core_shapes": [
+            [
+              1,
+              43,
+              8,
+              64
+            ],
+            [
+              64,
+              4,
+              8,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 523798,
+          "independent_numerical_coefficients": 3273750,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 45088768,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 491,
+              "q4_positive_max_code_count": 184737,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.890625,
+              "dequantized_max_abs": 0.8906250596046448,
+              "stored_fp16_max_abs": 0.890625
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 1409024,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 221689,
+              "q4_positive_max_code_count": 15780,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.19942374527454376,
+              "dequantized_max_abs": 0.19942374527454376,
+              "stored_fp16_max_abs": 0.199462890625
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 91277,
+              "q4_positive_max_code_count": 5710,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.39088529348373413,
+              "dequantized_max_abs": 0.3908853232860565,
+              "stored_fp16_max_abs": 0.390869140625
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 22016,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 3745,
+              "q4_positive_max_code_count": 208,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.19975332915782928,
+              "dequantized_max_abs": 0.19975334405899048,
+              "stored_fp16_max_abs": 0.19970703125
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 262144,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 39442,
+              "q4_positive_max_code_count": 3033,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.22823920845985413,
+              "dequantized_max_abs": 0.22823922336101532,
+              "stored_fp16_max_abs": 0.228271484375
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 78668,
+              "q4_positive_max_code_count": 6102,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.23945613205432892,
+              "dequantized_max_abs": 0.2394561469554901,
+              "stored_fp16_max_abs": 0.239501953125
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 701,
+              "q4_positive_max_code_count": 48,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.5371367335319519,
+              "dequantized_max_abs": 0.5371367335319519,
+              "stored_fp16_max_abs": 0.537109375
+            }
+          }
+        },
+        "up_proj": {
+          "shape": [
+            11008,
+            4096
+          ],
+          "core_shapes": [
+            [
+              1,
+              43,
+              8,
+              64
+            ],
+            [
+              64,
+              4,
+              8,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 523199,
+          "independent_numerical_coefficients": 3273151,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 45088768,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 1100,
+              "q4_positive_max_code_count": 187884,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.341796875,
+              "dequantized_max_abs": 0.3417969048023224,
+              "stored_fp16_max_abs": 0.341796875
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 1409024,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 222277,
+              "q4_positive_max_code_count": 16221,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.2454463392496109,
+              "dequantized_max_abs": 0.2454463541507721,
+              "stored_fp16_max_abs": 0.2454833984375
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 90796,
+              "q4_positive_max_code_count": 5764,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.3538185954093933,
+              "dequantized_max_abs": 0.3538186252117157,
+              "stored_fp16_max_abs": 0.353759765625
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 22016,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 3203,
+              "q4_positive_max_code_count": 267,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.20265354216098785,
+              "dequantized_max_abs": 0.20265354216098785,
+              "stored_fp16_max_abs": 0.20263671875
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 262144,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 38291,
+              "q4_positive_max_code_count": 3082,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.0694604143500328,
+              "dequantized_max_abs": 0.0694604218006134,
+              "stored_fp16_max_abs": 0.0694580078125
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 76852,
+              "q4_positive_max_code_count": 6164,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.07646387815475464,
+              "dequantized_max_abs": 0.07646387815475464,
+              "stored_fp16_max_abs": 0.07647705078125
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 697,
+              "q4_positive_max_code_count": 53,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.4943983852863312,
+              "dequantized_max_abs": 0.49439841508865356,
+              "stored_fp16_max_abs": 0.494384765625
+            }
+          }
+        },
+        "down_proj": {
+          "shape": [
+            4096,
+            11008
+          ],
+          "core_shapes": [
+            [
+              1,
+              8,
+              43,
+              64
+            ],
+            [
+              64,
+              8,
+              4,
+              128
+            ],
+            [
+              128,
+              8,
+              8,
+              64
+            ],
+            [
+              64,
+              8,
+              8,
+              1
+            ]
+          ],
+          "bridge_rank": 128,
+          "sparse_coefficients": 524130,
+          "independent_numerical_coefficients": 3280994,
+          "precision_diagnostics": {
+            "sparse_shield": {
+              "group_size": 64,
+              "input_coefficients": 45088768,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 160,
+              "q4_positive_max_code_count": 187745,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.52734375,
+              "dequantized_max_abs": 0.52734375,
+              "stored_fp16_max_abs": 0.52734375
+            },
+            "bridge_A": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 78315,
+              "q4_positive_max_code_count": 6133,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.4464935064315796,
+              "dequantized_max_abs": 0.44649356603622437,
+              "stored_fp16_max_abs": 0.446533203125
+            },
+            "bridge_B": {
+              "group_size": 64,
+              "input_coefficients": 1409024,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 497618,
+              "q4_positive_max_code_count": 13134,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.37630248069763184,
+              "dequantized_max_abs": 0.3763025104999542,
+              "stored_fp16_max_abs": 0.376220703125
+            },
+            "mpo_site_0": {
+              "group_size": 64,
+              "input_coefficients": 22016,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 3264,
+              "q4_positive_max_code_count": 261,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.13780835270881653,
+              "dequantized_max_abs": 0.13780835270881653,
+              "stored_fp16_max_abs": 0.1378173828125
+            },
+            "mpo_site_1": {
+              "group_size": 64,
+              "input_coefficients": 262144,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 38285,
+              "q4_positive_max_code_count": 3137,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.07060445100069046,
+              "dequantized_max_abs": 0.07060445100069046,
+              "stored_fp16_max_abs": 0.07061767578125
+            },
+            "mpo_site_2": {
+              "group_size": 64,
+              "input_coefficients": 524288,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 77169,
+              "q4_positive_max_code_count": 6154,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.10073539614677429,
+              "dequantized_max_abs": 0.10073539614677429,
+              "stored_fp16_max_abs": 0.1007080078125
+            },
+            "mpo_site_3": {
+              "group_size": 64,
+              "input_coefficients": 4096,
+              "q4_clipped_code_count": 0,
+              "q4_nonzero_input_rounded_to_zero_count": 755,
+              "q4_positive_max_code_count": 32,
+              "q4_negative_min_code_count": 0,
+              "fp16_nonzero_value_underflow_to_zero_count": 0,
+              "fp16_subnormal_count": 0,
+              "fp16_overflow_count": 0,
+              "fp16_nonfinite_count": 0,
+              "input_max_abs": 0.7803004384040833,
+              "dequantized_max_abs": 0.780300498008728,
+              "stored_fp16_max_abs": 0.7802734375
+            }
+          }
+        }
+      }
+    }
+  ],
+  "compressed_layer_count": 1,
+  "compressed_layers": [
+    0
+  ],
+  "projection_coefficients": 20331152,
+  "layer_norm_coefficients": 262144,
+  "uncompressed_dense_projection_coefficients": 6273630208,
+  "unchanged_embedding_head_final_norm_coefficients": 262148096,
+  "independent_numerical_coefficients": 6556371600,
+  "dense_reference_coefficients": 6738415616,
+  "structural_parameter_reduction": 0.027015848587277125,
+  "parameter_compression_ratio": 1.027765969823919,
+  "serialized_layer_checkpoint_bytes": 69815746,
+  "serialized_intermediate_artifact_bytes": 100668781,
+  "reconstruction_checked": true
+}
