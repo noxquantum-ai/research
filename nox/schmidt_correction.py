@@ -25,6 +25,14 @@ def _tensor_bytes(value) -> int:
     return 0
 
 
+def _pack_int8_rows(value: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    scales = value.abs().amax(dim=1).div(127).clamp_min(2.0 ** -24)
+    codes = torch.round(value / scales[:, None]).clamp(-127, 127).to(torch.int8)
+    stored_scales = scales.to(dtype=torch.float16)
+    decoded = codes.float() * stored_scales.float()[:, None]
+    return codes.cpu(), stored_scales.cpu(), decoded
+
+
 def reconstruct_schmidt_correction(
     artifact,
     *,
@@ -38,8 +46,14 @@ def reconstruct_schmidt_correction(
     if artifact.get("codec_type") != CODEC_TYPE:
         raise ValueError(f"unsupported Schmidt correction: {artifact.get('codec_type')!r}")
     base = reconstruct_from_artifact(artifact["base_artifact"], device=device, dtype=dtype)
-    left = artifact["left_factor"].to(device=device, dtype=dtype)
-    right = artifact["right_factor"].to(device=device, dtype=dtype)
+    if artifact.get("factor_bits", 16) == 8:
+        left = artifact["left_codes"].to(device=device, dtype=dtype)
+        left.mul_(artifact["left_scales"].to(device=device, dtype=dtype)[:, None])
+        right = artifact["right_codes"].to(device=device, dtype=dtype)
+        right.mul_(artifact["right_scales"].to(device=device, dtype=dtype)[:, None])
+    else:
+        left = artifact["left_factor"].to(device=device, dtype=dtype)
+        right = artifact["right_factor"].to(device=device, dtype=dtype)
     if left.ndim != 2 or right.ndim != 2 or left.shape[1] != right.shape[0]:
         raise ValueError("malformed Schmidt correction factors")
     if base.shape != (left.shape[0], right.shape[1]):
@@ -58,6 +72,7 @@ def compile_schmidt_correction(
     oversample: int = 16,
     power_iterations: int = 1,
     seed: int = 0,
+    factor_bits: int = 16,
 ):
     """Fit a byte-explicit Schmidt correction on corrupted-prefix inputs.
 
@@ -78,6 +93,8 @@ def compile_schmidt_correction(
         raise ValueError("input and teacher token counts differ")
     if rank <= 0 or ridge_ratio <= 0 or oversample < 0 or power_iterations < 0:
         raise ValueError("invalid Schmidt fit configuration")
+    if factor_bits not in (8, 16):
+        raise ValueError("Schmidt factors support 8-bit or 16-bit storage")
     if not torch.isfinite(inputs).all() or not torch.isfinite(teacher_outputs).all():
         raise ValueError("Schmidt fit received non-finite calibration values")
 
@@ -108,7 +125,24 @@ def compile_schmidt_correction(
     response = residual @ sample_basis
     response.mul_((singular_values / (singular_values.square() + ridge))[None, :])
     right = left_basis.T.contiguous()
-    correction_output = response @ (right @ x)
+    if factor_bits == 8:
+        left_codes, left_scales, decoded_left = _pack_int8_rows(response)
+        right_codes, right_scales, decoded_right = _pack_int8_rows(right)
+        correction_output = decoded_left @ (decoded_right @ x)
+        factor_payload = {
+            "left_codes": left_codes,
+            "left_scales": left_scales,
+            "right_codes": right_codes,
+            "right_scales": right_scales,
+        }
+    else:
+        decoded_left = response.half().float()
+        decoded_right = right.half().float()
+        correction_output = decoded_left @ (decoded_right @ x)
+        factor_payload = {
+            "left_factor": response.to(device="cpu", dtype=torch.float16),
+            "right_factor": right.to(device="cpu", dtype=torch.float16),
+        }
     corrected = base @ x + correction_output
 
     target_energy = target.square().sum().clamp_min(1e-30)
@@ -117,10 +151,10 @@ def compile_schmidt_correction(
     artifact = {
         "codec_type": CODEC_TYPE,
         "base_artifact": base_artifact,
-        "left_factor": response.to(device="cpu", dtype=torch.float16),
-        "right_factor": right.to(device="cpu", dtype=torch.float16),
+        **factor_payload,
         "orig_shape": (int(base.shape[0]), int(base.shape[1])),
         "rank": actual_rank,
+        "factor_bits": factor_bits,
         "construction": "corrupted_activation_schmidt_ridge",
         "ridge_ratio": float(ridge_ratio),
         "ridge": float(ridge),

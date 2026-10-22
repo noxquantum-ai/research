@@ -56,6 +56,7 @@ def main() -> None:
     parser.add_argument("--qk-rank", type=int, default=None)
     parser.add_argument("--v-rank", type=int, default=None)
     parser.add_argument("--ridge-ratio", type=float, default=0.02)
+    parser.add_argument("--factor-bits", type=int, choices=(8, 16), default=8)
     parser.add_argument("--drift-compensation", type=float, default=1.0)
     parser.add_argument(
         "--teacher-target",
@@ -160,6 +161,7 @@ def main() -> None:
                 rank=projection_rank,
                 ridge_ratio=args.ridge_ratio,
                 seed=10_000 + 3 * index + projection_offset,
+                factor_bits=args.factor_bits,
             )
             qkv_artifacts[name] = artifact
             qkv_outputs[name] = output
@@ -180,6 +182,7 @@ def main() -> None:
             rank=args.rank,
             ridge_ratio=args.ridge_ratio,
             seed=42 + index,
+            factor_bits=args.factor_bits,
         )
 
         residual_hidden = compressed_hidden + compressed_attention
@@ -212,6 +215,7 @@ def main() -> None:
         record = {
             "layer": index,
             "rank": corrected_o["rank"],
+            "factor_bits": args.factor_bits,
             "qk_rank": qk_rank,
             "v_rank": v_rank,
             "qkv_fit_error_after": {
@@ -248,6 +252,7 @@ def main() -> None:
         "qk_schmidt_rank": qk_rank,
         "v_schmidt_rank": v_rank,
         "ridge_ratio": args.ridge_ratio,
+        "factor_bits": args.factor_bits,
         "drift_compensation": args.drift_compensation,
         "teacher_target": args.teacher_target,
         "layers": layer_records,
