@@ -1195,6 +1195,7 @@ def nox_hybrid_dmrg_decompose(
         # old eight-mode cap existed only to keep that design matrix below the
         # VRAM limit and caused hundreds of undersized GPU launches per step.
         step_chunk1 = chunk_size
+        design_chunk1 = min(8, chunk_size)
 
         if D1 > cg_threshold:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
@@ -1205,8 +1206,8 @@ def nox_hybrid_dmrg_decompose(
             # FP64 preserves the previous Python-float accumulation precision;
             # only scalar additions use FP64, not the expensive contractions.
             sum_frob1 = torch.zeros((), device=device, dtype=torch.float64)
-            for r_start in range(0, r_cov, step_chunk1):
-                r_end = min(r_start + step_chunk1, r_cov)
+            for r_start in range(0, r_cov, design_chunk1):
+                r_end = min(r_start + design_chunk1, r_cov)
                 L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
                 Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
                 del L0_c
@@ -1313,14 +1314,15 @@ def nox_hybrid_dmrg_decompose(
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
         step_chunk2 = chunk_size
+        design_chunk2 = min(8, chunk_size)
 
         if D2 > cg_threshold:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
             rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
             # As at site 1, avoid a host synchronization for every chunk.
             sum_frob2 = torch.zeros((), device=device, dtype=torch.float64)
-            for r_start in range(0, r_cov, step_chunk2):
-                r_end = min(r_start + step_chunk2, r_cov)
+            for r_start in range(0, r_cov, design_chunk2):
+                r_end = min(r_start + design_chunk2, r_cov)
                 L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
                 Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
                 del L01_X_c
