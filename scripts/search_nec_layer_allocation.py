@@ -271,7 +271,11 @@ def main():
     )
     parser.add_argument("--search-split", choices=("train", "validation", "test"), default="train")
     parser.add_argument("--search-start-token", type=int, default=4096)
-    parser.add_argument("--search-tokens", type=int, default=4096)
+    parser.add_argument("--search-tokens", type=int, default=1024)
+    parser.add_argument("--refine-split", choices=("train", "validation", "test"), default="train")
+    parser.add_argument("--refine-start-token", type=int, default=8192)
+    parser.add_argument("--refine-tokens", type=int, default=4096)
+    parser.add_argument("--refine-candidates", type=int, default=2)
     parser.add_argument("--heldout-split", choices=("train", "validation", "test"), default="test")
     parser.add_argument("--heldout-start-token", type=int, default=0)
     parser.add_argument("--heldout-tokens", type=int, default=4096,
@@ -291,8 +295,10 @@ def main():
         raise ValueError("Specify --compress-count or --keep-dense-layers, not both")
     if args.compress_count is None and args.keep_dense_layers is None:
         parser.error("Specify --compress-count or --keep-dense-layers")
-    if args.search_split == args.heldout_split:
-        raise ValueError("Search and held-out data splits must differ")
+    if args.heldout_split in {args.search_split, args.refine_split}:
+        raise ValueError("Held-out data split must differ from both selection splits")
+    if args.refine_candidates < 1:
+        raise ValueError("--refine-candidates must be positive")
     if args.max_ppl <= 0:
         raise ValueError("--max-ppl must be positive")
     args.output.mkdir(parents=True)
@@ -313,6 +319,16 @@ def main():
     calibration_range = ensure_selection_disjoint(
         manifest, args.search_split, args.search_start_token, args.search_tokens,
     )
+    refine_range = ensure_selection_disjoint(
+        manifest, args.refine_split, args.refine_start_token, args.refine_tokens,
+    )
+    if args.refine_split == args.search_split:
+        search_begin = args.search_start_token
+        search_end = search_begin + args.search_tokens
+        refine_begin = args.refine_start_token
+        refine_end = refine_begin + args.refine_tokens
+        if search_begin < refine_end and refine_begin < search_end:
+            raise ValueError("Proxy and exact-refinement token ranges overlap")
 
     print("PHASE=load_dense_model", flush=True)
     model, tokenizer, _, compatibility, _ = load_model(
@@ -358,6 +374,8 @@ def main():
     search_ids, search_metadata, search_hash, search_split_tokens = sample_ids(
         tokenizer, args.search_split, args.search_start_token, args.search_tokens,
     )
+    setup_seconds = time.monotonic() - started
+    selection_started = time.monotonic()
     print(
         f"PHASE=single_layer_probes split={args.search_split} "
         f"token_range=[{args.search_start_token},{args.search_start_token + args.search_tokens})",
@@ -403,17 +421,79 @@ def main():
         beam_width=args.beam_width,
         random_seed=args.random_seed,
     )
-    selected = set(search.selected_layers)
-    selected_proxy = proxy.predict(selected)
-    selected_proxy.update({
-        "compressed_layers": list(search.selected_layers),
-        "predicted_quality_feasible": selected_proxy["predicted_perplexity"] <= args.max_ppl,
-    })
-    selection_seconds = time.monotonic() - started
+    selection_seconds = time.monotonic() - selection_started
+    possible_allocation_count = math.comb(len(eligible_layers), compress_count)
+    if args.refine_candidates >= possible_allocation_count:
+        raise ValueError(
+            "Exact refinement must evaluate fewer than all possible allocations; "
+            "reduce --refine-candidates"
+        )
+    proxy_shortlist = [
+        tuple(row["compressed_layers"])
+        for row in search.ranked_allocations[:args.refine_candidates]
+    ]
     independent_sensitivity_layers = tuple(sorted(
         eligible_layers,
         key=lambda layer: singleton_metrics[str(layer)]["mean_kl_nats_per_token"],
     )[:compress_count])
+
+    refine_ids, refine_metadata, refine_hash, refine_split_tokens = sample_ids(
+        tokenizer, args.refine_split, args.refine_start_token, args.refine_tokens,
+    )
+    refinement_started = time.monotonic()
+    print(
+        f"PHASE=exact_shortlist_refinement split={args.refine_split} "
+        f"candidates={len(proxy_shortlist)} token_range="
+        f"[{args.refine_start_token},{args.refine_start_token + args.refine_tokens})",
+        flush=True,
+    )
+    t0 = time.monotonic()
+    install_allocation(model, dense, compressed, set())
+    refine_teacher_logits, refine_targets = collect_logits(
+        model, refine_ids, seq_len=args.seq_len, stride=args.stride,
+    )
+    refine_dense_seconds = time.monotonic() - t0
+    refinement_rows = []
+    refinement_seconds = {}
+    for mask in proxy_shortlist:
+        t0 = time.monotonic()
+        install_allocation(model, dense, compressed, set(mask))
+        student_logits, student_targets = collect_logits(
+            model, refine_ids, seq_len=args.seq_len, stride=args.stride,
+        )
+        if not torch.equal(refine_targets, student_targets):
+            raise RuntimeError("Exact refinement candidates used different target tokens")
+        metrics = token_logit_metrics(
+            refine_teacher_logits, student_logits, refine_targets, device=model.device,
+        )
+        row = {"compressed_layers": list(mask), "metrics": metrics}
+        row["quality_feasible"] = metrics["perplexity"] <= args.max_ppl
+        refinement_rows.append(row)
+        refinement_seconds["_".join(str(i) for i in mask)] = time.monotonic() - t0
+        print(
+            f"REFINED layers={list(mask)} ppl={metrics['perplexity']:.6g} "
+            f"kl={metrics['mean_kl_nats_per_token']:.6g} "
+            f"seconds={refinement_seconds['_'.join(str(i) for i in mask)]:.1f}",
+            flush=True,
+        )
+
+    def refinement_key(row):
+        metrics = row["metrics"]
+        if row["quality_feasible"]:
+            return (0.0, metrics["perplexity"], metrics["mean_kl_nats_per_token"], row["compressed_layers"])
+        return (1.0, metrics["perplexity"], metrics["mean_kl_nats_per_token"], row["compressed_layers"])
+
+    chosen_refinement = min(refinement_rows, key=refinement_key)
+    selected = set(chosen_refinement["compressed_layers"])
+    for row in refinement_rows:
+        row["selected_after_refinement"] = row is chosen_refinement
+    selected_proxy = proxy.predict(selected)
+    selected_proxy.update({
+        "compressed_layers": sorted(selected),
+        "predicted_quality_feasible": selected_proxy["predicted_perplexity"] <= args.max_ppl,
+    })
+    refinement_wall_seconds = time.monotonic() - refinement_started
+
     validation_ids, heldout_metadata, heldout_hash, heldout_split_tokens = sample_ids(
         tokenizer, args.heldout_split, args.heldout_start_token,
         args.heldout_tokens if args.heldout_tokens > 0 else 2,
@@ -429,7 +509,7 @@ def main():
 
     print(
         f"PHASE=independent_heldout split={args.heldout_split} "
-        f"selected={list(search.selected_layers)} tokens={validation_ids.shape[1]}",
+        f"selected={sorted(selected)} tokens={validation_ids.shape[1]}",
         flush=True,
     )
     heldout = evaluate_ppl_kl(
@@ -442,17 +522,26 @@ def main():
         "status": "COMPLETE",
         "scope": "fixed-count NEC layer allocation predicted from single-layer end-to-end logit probes",
         "method": {
-            "name": "Fisher quadratic interaction proxy with conditional beam and swap search",
+            "name": "Fisher quadratic interaction proxy with conditional beam, swap search, and exact shortlist refinement",
             "proxy_objective": "second-order dense-teacher KL and NLL Taylor expansion in logit space",
             "uses_prior_multi_layer_rankings": False,
-            "multi_layer_full_model_evaluations_during_selection": 0,
+            "multi_layer_full_model_evaluations_during_proxy_search": 0,
+            "multi_layer_full_model_evaluations_during_selection": len(proxy_shortlist),
             "selection_model_evaluation_count": 1 + len(eligible_layers),
             "selection_model_evaluations": ["dense reference", *[f"layer_{i}_only" for i in eligible_layers]],
+            "exact_refinement_model_evaluation_count": 1 + len(proxy_shortlist),
+            "exact_refinement_candidate_count": len(proxy_shortlist),
+            "total_possible_allocations": possible_allocation_count,
+            "refinement_is_strict_shortlist": True,
+            "exact_refinement_evaluations": [list(mask) for mask in proxy_shortlist],
             "heldout_model_evaluation_count": 2,
             "proxy_allocations_scored": search.proxy_allocations_scored,
             "proxy_search_strategy": search.strategy,
             "proxy_optimal_within_search": search.is_proxy_optimal,
-            "max_ppl_constraint_applied_to": "selection-sample proxy estimate only; held-out PPL is the independent check",
+            "max_ppl_constraint_applied_to": "proxy and exact-refinement selection samples; held-out PPL is the independent check",
+            "total_model_configuration_runs_before_heldout": (
+                1 + len(eligible_layers) + 1 + len(proxy_shortlist)
+            ),
         },
         "model_id": MODEL_ID,
         "model_revision": MODEL_REVISION,
@@ -469,7 +558,12 @@ def main():
         "requested_compressed_count": compress_count,
         "resulting_dense_layer_count": model_layer_count - compress_count,
         "max_ppl": args.max_ppl,
-        "selected_allocation": selected_proxy,
+        "selected_allocation": {
+            "compressed_layers": sorted(selected),
+            "proxy_estimate": selected_proxy,
+            "exact_refinement_metrics": chosen_refinement["metrics"],
+            "exact_refinement_quality_feasible": chosen_refinement["quality_feasible"],
+        },
         "storage": storage_summary(args.checkpoint_dir, dense, layers, selected),
         "independent_sensitivity_baseline": {
             "compressed_layers": list(independent_sensitivity_layers),
@@ -484,6 +578,18 @@ def main():
         },
         "single_layer_probe_metrics": singleton_metrics,
         "proxy_ranked_allocations": list(search.ranked_allocations),
+        "exact_refinement": {
+            "split": args.refine_split,
+            "split_metadata": refine_metadata,
+            "token_ids_sha256": refine_hash,
+            "split_token_count": refine_split_tokens,
+            "token_start": args.refine_start_token,
+            "token_end_exclusive": args.refine_start_token + args.refine_tokens,
+            "scored_tokens": int(refine_targets.numel()),
+            "checkpoint_calibration_disjointness": refine_range,
+            "measured_candidates": refinement_rows,
+            "selected_layers": sorted(selected),
+        },
         "selection_data": {
             "split": args.search_split,
             "split_metadata": search_metadata,
@@ -501,7 +607,9 @@ def main():
             "split_token_count": heldout_split_tokens,
             "token_start": args.heldout_start_token,
             "input_token_count": int(validation_ids.shape[1]),
-            "is_disjoint_from_selection_split": args.heldout_split != args.search_split,
+            "is_disjoint_from_selection_splits": (
+                args.heldout_split not in {args.search_split, args.refine_split}
+            ),
             "metrics": heldout,
             "ppl_constraint_passed": heldout["perplexity"] <= args.max_ppl,
         },
@@ -510,9 +618,13 @@ def main():
         "script_sha256": sha256_file(__file__),
         "allocator_module_sha256": sha256_file(ROOT / "nox/layer_allocator.py"),
         "selection_runtime": {
+            "setup_seconds": setup_seconds,
             "dense_probe_seconds": dense_seconds,
             "singleton_probe_seconds": singleton_seconds,
             "selection_probe_wall_seconds": selection_seconds,
+            "refinement_dense_seconds": refine_dense_seconds,
+            "refinement_candidate_seconds": refinement_seconds,
+            "refinement_wall_seconds": refinement_wall_seconds,
         },
         "protocol": {
             "context": args.seq_len,
@@ -530,7 +642,7 @@ def main():
     report["elapsed_seconds"] = time.monotonic() - started
     (args.output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(
-        f"COMPLETE selected={list(search.selected_layers)} "
+        f"COMPLETE selected={sorted(selected)} "
         f"heldout_ppl={heldout['perplexity']:.6g} "
         f"heldout_kl={heldout['teacher_kl_nats_per_token']:.6g} "
         f"report={args.output / 'report.json'}",
