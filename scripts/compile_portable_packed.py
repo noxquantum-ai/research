@@ -37,6 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--activation-alpha", type=float, default=0.5)
     parser.add_argument("--calibration-tokens", type=int, default=1024)
     parser.add_argument("--sequence-length", type=int, default=128)
+    parser.add_argument("--calibration-sampling", choices=("prefix", "uniform"), default="uniform")
     parser.add_argument("--include-embeddings", action="store_true")
     parser.add_argument("--include-output-head", action="store_true")
     parser.add_argument("--trust-remote-code", action="store_true")
@@ -99,8 +100,17 @@ def main() -> None:
         ids = tokenizer(text, return_tensors="pt", add_special_tokens=True).input_ids
         if ids.shape[1] < args.calibration_tokens:
             raise ValueError("calibration corpus is shorter than requested token count")
+        window_count = args.calibration_tokens // args.sequence_length
+        if args.calibration_sampling == "prefix":
+            starts = [index * args.sequence_length for index in range(window_count)]
+        else:
+            maximum_start = int(ids.shape[1] - args.sequence_length)
+            starts = [
+                round(index * maximum_start / max(window_count - 1, 1))
+                for index in range(window_count)
+            ]
         with ActivationRMSCollector(model, candidates) as collector:
-            for begin in range(0, args.calibration_tokens, args.sequence_length):
+            for begin in starts:
                 batch = ids[:, begin:begin + args.sequence_length].to(model.device)
                 model(batch, use_cache=False)
         del ids
@@ -185,6 +195,8 @@ def main() -> None:
                 **calibration_source,
                 "tokens": args.calibration_tokens,
                 "sequence_length": args.sequence_length,
+                "sampling": args.calibration_sampling,
+                "window_starts": starts,
             },
             "dense_parameter_payload_bytes": inventory.total_unique_parameter_bytes,
             "compressed_modules": compressed_records,
