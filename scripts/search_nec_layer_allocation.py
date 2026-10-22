@@ -744,11 +744,18 @@ def main():
         compression_counts = (compress_count,)
 
     print("PHASE=inspect_source_storage", flush=True)
-    from huggingface_hub import snapshot_download
-    source_snapshot = Path(snapshot_download(
-        repo_id=MODEL_ID, revision=MODEL_REVISION, local_files_only=True,
+    # The runner caches the tokenizer/config/weight shards, but often omits
+    # repository metadata such as README and license files. snapshot_download
+    # rejects that otherwise usable cache as incomplete; resolve just the
+    # pinned safetensors index needed by inspect_dense_model instead.
+    from huggingface_hub import hf_hub_download
+    model_index = Path(hf_hub_download(
+        repo_id=MODEL_ID,
+        filename="model.safetensors.index.json",
+        revision=MODEL_REVISION,
+        local_files_only=True,
     ))
-    source_model_info = inspect_dense_model(source_snapshot)
+    source_model_info = inspect_dense_model(model_index.parent)
 
     dense = {
         layer: {
