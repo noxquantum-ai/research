@@ -1,0 +1,5082 @@
+{
+  "status": "COMPLETE",
+  "scope": "saved four-layer checkpoint diagnostic; no fitting",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source_commit": "74d2960674a3ebfbfffa3f6f9073efaa2bd0afa4",
+  "diagnostic_script_sha256": "e30f49917f4dc4c0d6cff27547631066df9cc73e7e18237f4c83a611ec377d32",
+  "torch": "2.11.0+cu128",
+  "checkpoint_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "checkpoint_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+    "compressed_layer_1.pt": "95762275f29132a7114e447352f0c869c595f0c584a05c2547c6839d1ca0597f",
+    "compressed_layer_2.pt": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+    "compressed_layer_3.pt": "c05f05a73f8365451508b573d496d30cbae9ff00c750a3144a96393a9c3beb88"
+  },
+  "ppl_protocol": {
+    "split": "validation",
+    "context": 2048,
+    "stride": 512,
+    "max_eval_tokens": 4096,
+    "batch_size": 1
+  },
+  "decoding": {
+    "0.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036335110780783,
+      "finite": true
+    },
+    "0.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003897432761732489,
+      "finite": true
+    },
+    "0.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00040901059401221573,
+      "finite": true
+    },
+    "0.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004266783071216196,
+      "finite": true
+    },
+    "0.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00031435623532161117,
+      "finite": true
+    },
+    "0.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003172524448018521,
+      "finite": true
+    },
+    "0.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004279068671166897,
+      "finite": true
+    },
+    "1.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003979170578531921,
+      "finite": true
+    },
+    "1.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00039495990495197475,
+      "finite": true
+    },
+    "1.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.000414279435062781,
+      "finite": true
+    },
+    "1.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004293163074180484,
+      "finite": true
+    },
+    "1.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003021369338966906,
+      "finite": true
+    },
+    "1.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00031143613159656525,
+      "finite": true
+    },
+    "1.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00040276983054354787,
+      "finite": true
+    },
+    "2.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003626254328992218,
+      "finite": true
+    },
+    "2.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036256754538044333,
+      "finite": true
+    },
+    "2.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00037916042492724955,
+      "finite": true
+    },
+    "2.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003933655971195549,
+      "finite": true
+    },
+    "2.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002993143571075052,
+      "finite": true
+    },
+    "2.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00030365900602191687,
+      "finite": true
+    },
+    "2.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003923012991435826,
+      "finite": true
+    },
+    "3.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00035155206569470465,
+      "finite": true
+    },
+    "3.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003555781440809369,
+      "finite": true
+    },
+    "3.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036542193265631795,
+      "finite": true
+    },
+    "3.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00037717947270721197,
+      "finite": true
+    },
+    "3.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002967393957078457,
+      "finite": true
+    },
+    "3.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002976525283884257,
+      "finite": true
+    },
+    "3.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003890476655215025,
+      "finite": true
+    }
+  },
+  "ppl": {
+    "dense": {
+      "perplexity": 4.0828722858587865,
+      "scored_tokens": 4095,
+      "seconds": 5.718833227001596,
+      "mean_nll": 1.4068007323622558,
+      "next_token_accuracy": 0.6637362637362637,
+      "dense_top1_agreement": 1.0,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 2915.835693359375,
+        "independent_formula_sum": 2915.835693359375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003015835693359375
+      },
+      "selected": {},
+      "storage": {
+        "compressed_layers": [],
+        "dense_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1619066880,
+        "bytes_saved_vs_all_dense": 0
+      }
+    },
+    "layer0_only": {
+      "perplexity": 4.158689652696289,
+      "scored_tokens": 4095,
+      "seconds": 5.575223766005365,
+      "mean_nll": 1.4252000373216194,
+      "next_token_accuracy": 0.6615384615384615,
+      "dense_top1_agreement": 0.9479853510856628,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 2971.745361328125,
+        "independent_formula_sum": 2971.745361328125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003071745361328125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0
+        ],
+        "dense_layers": [
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1284115906,
+        "bytes_saved_vs_all_dense": 334950974
+      }
+    },
+    "layer1_only": {
+      "perplexity": 4.554726263810077,
+      "scored_tokens": 4095,
+      "seconds": 5.019745987985516,
+      "mean_nll": 1.5161654331454135,
+      "next_token_accuracy": 0.6476190476190476,
+      "dense_top1_agreement": 0.8769230842590332,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 3163.69189453125,
+        "independent_formula_sum": 3163.69189453125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00326369189453125
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1
+        ],
+        "dense_layers": [
+          0,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1284335874,
+        "bytes_saved_vs_all_dense": 334731006
+      }
+    },
+    "layer2_only": {
+      "perplexity": 5.008923486763371,
+      "scored_tokens": 4095,
+      "seconds": 4.7965011990163475,
+      "mean_nll": 1.6112210191067613,
+      "next_token_accuracy": 0.6315018315018315,
+      "dense_top1_agreement": 0.848840057849884,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 3343.49951171875,
+        "independent_formula_sum": 3343.49951171875,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00344349951171875
+      },
+      "selected": {
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          2
+        ],
+        "dense_layers": [
+          0,
+          1,
+          3
+        ],
+        "four_layer_payload_bytes": 1284308930,
+        "bytes_saved_vs_all_dense": 334757950
+      }
+    },
+    "layer3_only": {
+      "perplexity": 4.497271304491331,
+      "scored_tokens": 4095,
+      "seconds": 5.291432843980147,
+      "mean_nll": 1.5034708360758164,
+      "next_token_accuracy": 0.645909645909646,
+      "dense_top1_agreement": 0.8822954893112183,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 3104.51513671875,
+        "independent_formula_sum": 3104.51513671875,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00320451513671875
+      },
+      "selected": {
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          3
+        ],
+        "dense_layers": [
+          0,
+          1,
+          2
+        ],
+        "four_layer_payload_bytes": 1284398530,
+        "bytes_saved_vs_all_dense": 334668350
+      }
+    },
+    "prefix2": {
+      "perplexity": 7.4972205529604485,
+      "scored_tokens": 4095,
+      "seconds": 5.057844825001666,
+      "mean_nll": 2.0145323589171245,
+      "next_token_accuracy": 0.5687423687423687,
+      "dense_top1_agreement": 0.7284493446350098,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4120.77490234375,
+        "independent_formula_sum": 4120.77490234375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00422077490234375
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "dense_layers": [
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 949384900,
+        "bytes_saved_vs_all_dense": 669681980
+      }
+    },
+    "prefix3": {
+      "perplexity": 30.38364165326039,
+      "scored_tokens": 4095,
+      "seconds": 4.9032999240153,
+      "mean_nll": 3.4139043600713523,
+      "next_token_accuracy": 0.39584859584859583,
+      "dense_top1_agreement": 0.48547008633613586,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 6365.23828125,
+        "independent_formula_sum": 6365.23828125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00646523828125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          2
+        ],
+        "dense_layers": [
+          3
+        ],
+        "four_layer_payload_bytes": 614626950,
+        "bytes_saved_vs_all_dense": 1004439930
+      }
+    },
+    "prefix4": {
+      "perplexity": 233.4994659711836,
+      "scored_tokens": 4095,
+      "seconds": 4.78576173298643,
+      "mean_nll": 5.4531797900450245,
+      "next_token_accuracy": 0.2402930402930403,
+      "dense_top1_agreement": 0.2844932973384857,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 10902.125,
+        "independent_formula_sum": 10902.125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.011002125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [],
+        "four_layer_payload_bytes": 279958600,
+        "bytes_saved_vs_all_dense": 1339108280
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 4.068836212158203,
+        "token_kl_quantiles_nats": [
+          0.00040543096838518977,
+          3.458684206008911,
+          8.598029136657715,
+          11.772364616394043,
+          14.60124683380127
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "prefix4_layer0_dense": {
+      "perplexity": 44.867362592715644,
+      "scored_tokens": 4095,
+      "seconds": 4.599698731995886,
+      "mean_nll": 3.803710639403999,
+      "next_token_accuracy": 0.3658119658119658,
+      "dense_top1_agreement": 0.43394383788108826,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 7897.1123046875,
+        "independent_formula_sum": 7897.11279296875,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.007997112792968749
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [
+          0
+        ],
+        "four_layer_payload_bytes": 614909574,
+        "bytes_saved_vs_all_dense": 1004157306
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 2.408583879470825,
+        "token_kl_quantiles_nats": [
+          0.0002526136813685298,
+          1.7504245042800903,
+          5.600157260894775,
+          9.168534278869629,
+          13.023794174194336
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "prefix4_layer3_dense": {
+      "perplexity": 30.38364165326039,
+      "scored_tokens": 4095,
+      "seconds": 4.596593971014954,
+      "mean_nll": 3.4139043600713523,
+      "next_token_accuracy": 0.39584859584859583,
+      "dense_top1_agreement": 0.48547008633613586,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 6365.23828125,
+        "independent_formula_sum": 6365.23828125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00646523828125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          2
+        ],
+        "dense_layers": [
+          3
+        ],
+        "four_layer_payload_bytes": 614626950,
+        "bytes_saved_vs_all_dense": 1004439930
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 2.0369880199432373,
+        "token_kl_quantiles_nats": [
+          7.866294617997482e-05,
+          1.3252663612365723,
+          5.138641834259033,
+          9.307440757751465,
+          14.642186164855957
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "prefix4_boundaries_dense": {
+      "perplexity": 7.543081998535648,
+      "scored_tokens": 4095,
+      "seconds": 5.127375279989792,
+      "mean_nll": 2.020630851624504,
+      "next_token_accuracy": 0.5706959706959707,
+      "dense_top1_agreement": 0.7294261455535889,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4224.57470703125,
+        "independent_formula_sum": 4224.5751953125,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.0043245751953125
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1,
+          2
+        ],
+        "dense_layers": [
+          0,
+          3
+        ],
+        "four_layer_payload_bytes": 949577924,
+        "bytes_saved_vs_all_dense": 669488956
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.6302202939987183,
+        "token_kl_quantiles_nats": [
+          2.526024036342278e-05,
+          0.29053252935409546,
+          1.569819688796997,
+          4.941465377807617,
+          9.314241409301758
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "prefix4_attention_only": {
+      "perplexity": 4.855569307322505,
+      "scored_tokens": 4095,
+      "seconds": 4.835356569994474,
+      "mean_nll": 1.5801263569329975,
+      "next_token_accuracy": 0.6393162393162393,
+      "dense_top1_agreement": 0.8612942695617676,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 3273.11376953125,
+        "independent_formula_sum": 3273.11376953125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.0033731137695312496
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj"
+        ]
+      }
+    },
+    "prefix4_mlp_only": {
+      "perplexity": 106.44280678021387,
+      "scored_tokens": 4095,
+      "seconds": 4.7589967400126625,
+      "mean_nll": 4.6676078153617215,
+      "next_token_accuracy": 0.2862026862026862,
+      "dense_top1_agreement": 0.3384615480899811,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 9486.681640625,
+        "independent_formula_sum": 9486.681640625,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.009586681640624999
+      },
+      "selected": {
+        "0": [
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      }
+    },
+    "prefix4_fp32_decode_then_cast": {
+      "perplexity": 233.7517820440153,
+      "scored_tokens": 4095,
+      "seconds": 4.530564657994546,
+      "mean_nll": 5.4542597918574485,
+      "next_token_accuracy": 0.2402930402930403,
+      "dense_top1_agreement": 0.2844932973384857,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 10905.869140625,
+        "independent_formula_sum": 10905.869140625,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.011005869140625
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [],
+        "four_layer_payload_bytes": 279958600,
+        "bytes_saved_vs_all_dense": 1339108280
+      }
+    }
+  },
+  "teacher_student_kl": {
+    "prefix4": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 4.068836212158203,
+      "token_kl_quantiles_nats": [
+        0.00040543096838518977,
+        3.458684206008911,
+        8.598029136657715,
+        11.772364616394043,
+        14.60124683380127
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "prefix4_layer0_dense": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 2.408583879470825,
+      "token_kl_quantiles_nats": [
+        0.0002526136813685298,
+        1.7504245042800903,
+        5.600157260894775,
+        9.168534278869629,
+        13.023794174194336
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "prefix4_layer3_dense": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 2.0369880199432373,
+      "token_kl_quantiles_nats": [
+        7.866294617997482e-05,
+        1.3252663612365723,
+        5.138641834259033,
+        9.307440757751465,
+        14.642186164855957
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "prefix4_boundaries_dense": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.6302202939987183,
+      "token_kl_quantiles_nats": [
+        2.526024036342278e-05,
+        0.29053252935409546,
+        1.569819688796997,
+        4.941465377807617,
+        9.314241409301758
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    }
+  },
+  "traces": {
+    "saved_validation_128": {
+      "0": {
+        "hf_input": {
+          "relative_error": 0.0,
+          "token_relative_error_mean": 0.0,
+          "token_relative_error_quantiles": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "token_norm_quantiles": [
+            0.2000630497932434,
+            0.8505889773368835,
+            1.0958101749420166,
+            1.189948558807373,
+            1.2343257665634155
+          ],
+          "largest_token_energy_fraction": 0.0020605071913450956,
+          "cosine_similarity": 1.0000500679016113,
+          "mean_token_cosine": 1.0000009536743164,
+          "norm_ratio": 1.0,
+          "largest_channels": [
+            3964,
+            1411,
+            4030,
+            2459,
+            1571,
+            4051,
+            1307,
+            2403
+          ],
+          "largest_channel_energy_fractions": [
+            0.00489383889362216,
+            0.00447920523583889,
+            0.004364923574030399,
+            0.002387191401794553,
+            0.0023552884813398123,
+            0.0021274813916534185,
+            0.002088830340653658,
+            0.0016538299387320876
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.25770285725593567,
+          "token_relative_error_mean": 0.23438042402267456,
+          "token_relative_error_quantiles": [
+            0.048631682991981506,
+            0.262127548456192,
+            0.37019288539886475,
+            0.4502410888671875,
+            0.5908162593841553
+          ],
+          "token_norm_quantiles": [
+            1.3579567670822144,
+            1.8780097961425781,
+            2.444472074508667,
+            3.4596543312072754,
+            4.410693168640137
+          ],
+          "largest_token_energy_fraction": 0.004653621930629015,
+          "cosine_similarity": 0.9692765474319458,
+          "mean_token_cosine": 0.9700978994369507,
+          "norm_ratio": 0.8979477882385254,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            3431,
+            588,
+            1793
+          ],
+          "largest_channel_energy_fractions": [
+            0.2811086177825928,
+            0.23777876794338226,
+            0.004190858453512192,
+            0.00401943689212203,
+            0.003952853847295046,
+            0.0038454376626759768,
+            0.003188038244843483,
+            0.002934806514531374
+          ]
+        },
+        "custom_dense_vs_hf": 0.00040154930320568383,
+        "custom_compressed_vs_hf": 0.0003974676947109401,
+        "same_clean_input_full_block": {
+          "relative_error": 0.2576881945133209,
+          "token_relative_error_mean": 0.23437683284282684,
+          "token_relative_error_quantiles": [
+            0.048623912036418915,
+            0.26210975646972656,
+            0.3700888752937317,
+            0.45031091570854187,
+            0.5910581946372986
+          ],
+          "token_norm_quantiles": [
+            1.3577431440353394,
+            1.8779916763305664,
+            2.4444925785064697,
+            3.460137128829956,
+            4.409307479858398
+          ],
+          "largest_token_energy_fraction": 0.0046504284255206585,
+          "cosine_similarity": 0.9692776799201965,
+          "mean_token_cosine": 0.9700987339019775,
+          "norm_ratio": 0.8979730010032654,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            3431,
+            588,
+            1793
+          ],
+          "largest_channel_energy_fractions": [
+            0.2811087667942047,
+            0.23778508603572845,
+            0.004190312698483467,
+            0.00401971023529768,
+            0.003952770493924618,
+            0.0038462025113403797,
+            0.003188107628375292,
+            0.0029342935886234045
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.30622297525405884,
+          "token_relative_error_mean": 0.3130412995815277,
+          "token_relative_error_quantiles": [
+            0.05002100020647049,
+            0.3465844690799713,
+            0.5265331268310547,
+            0.6305258274078369,
+            0.6826778054237366
+          ],
+          "token_norm_quantiles": [
+            0.8954472541809082,
+            1.482872724533081,
+            2.3374557495117188,
+            3.3853137493133545,
+            4.351297855377197
+          ],
+          "largest_token_energy_fraction": 0.006393761374056339,
+          "cosine_similarity": 0.953280508518219,
+          "mean_token_cosine": 0.9333007335662842,
+          "norm_ratio": 0.9217231869697571,
+          "largest_channels": [
+            1512,
+            2298,
+            257,
+            3431,
+            3656,
+            3135,
+            1571,
+            1793
+          ],
+          "largest_channel_energy_fractions": [
+            0.39093443751335144,
+            0.33522170782089233,
+            0.00461376179009676,
+            0.0045943837612867355,
+            0.00372855132445693,
+            0.0034542318899184465,
+            0.003183136461302638,
+            0.0030680287163704634
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.1027885153889656,
+          "token_relative_error_mean": 0.09631677716970444,
+          "token_relative_error_quantiles": [
+            0.04102122411131859,
+            0.0822991132736206,
+            0.15173964202404022,
+            0.30899766087532043,
+            0.5370017290115356
+          ],
+          "token_norm_quantiles": [
+            0.5558164119720459,
+            1.0068199634552002,
+            1.2253237962722778,
+            1.4850190877914429,
+            1.6454685926437378
+          ],
+          "largest_token_energy_fraction": 0.0025194112677127123,
+          "cosine_similarity": 0.9955803155899048,
+          "mean_token_cosine": 0.9940679669380188,
+          "norm_ratio": 0.9997280836105347,
+          "largest_channels": [
+            1512,
+            2298,
+            310,
+            3431,
+            2944,
+            1793,
+            580,
+            1415
+          ],
+          "largest_channel_energy_fractions": [
+            0.4061684012413025,
+            0.336390882730484,
+            0.011151176877319813,
+            0.008591286838054657,
+            0.008534657768905163,
+            0.0067893327213823795,
+            0.005608486942946911,
+            0.00522426376119256
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.4991687834262848,
+          "token_relative_error_mean": 0.5233360528945923,
+          "token_relative_error_quantiles": [
+            0.06931395083665848,
+            0.6238242387771606,
+            0.8219690322875977,
+            0.8844648003578186,
+            0.9305014610290527
+          ],
+          "token_norm_quantiles": [
+            0.3351946473121643,
+            0.8425318002700806,
+            1.4127804040908813,
+            2.6089813709259033,
+            3.8548011779785156
+          ],
+          "largest_token_energy_fraction": 0.013840141706168652,
+          "cosine_similarity": 0.8704959154129028,
+          "mean_token_cosine": 0.8024271726608276,
+          "norm_ratio": 0.7914623022079468,
+          "largest_channels": [
+            2298,
+            1512,
+            310,
+            3656,
+            257,
+            1571,
+            4071,
+            216
+          ],
+          "largest_channel_energy_fractions": [
+            0.21856355667114258,
+            0.205264613032341,
+            0.011281853541731834,
+            0.008373739197850227,
+            0.006701063364744186,
+            0.005526904948055744,
+            0.005341625772416592,
+            0.004924893379211426
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.0,
+        "local_error_on_changed_input_relative_to_clean_output": 0.25768235325813293,
+        "total_error_relative_to_clean_output": 0.25768235325813293,
+        "inherited_local_cosine": 0.0,
+        "decomposition_identity_residual": 0.0,
+        "active_transform_to_full_output_norm_ratio": 0.8416227698326111,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.2510125935077667,
+          "token_relative_error_mean": 0.23258574306964874,
+          "token_relative_error_quantiles": [
+            0.048631682991981506,
+            0.2593168616294861,
+            0.3677959442138672,
+            0.43110716342926025,
+            0.5908162593841553
+          ],
+          "token_norm_quantiles": [
+            1.3579567670822144,
+            1.8765839338302612,
+            2.4127626419067383,
+            3.306366205215454,
+            4.369807243347168
+          ],
+          "largest_token_energy_fraction": 0.004682043567299843,
+          "cosine_similarity": 0.9709357023239136,
+          "mean_token_cosine": 0.9707093238830566,
+          "norm_ratio": 0.9008289575576782,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            3431,
+            588,
+            1793
+          ],
+          "largest_channel_energy_fractions": [
+            0.28366735577583313,
+            0.2369840443134308,
+            0.004251833073794842,
+            0.004080988932400942,
+            0.00403228122740984,
+            0.003929277881979942,
+            0.0032440805807709694,
+            0.0029987625312060118
+          ]
+        },
+        "first_position_energy_fraction": 0.024411659687757492
+      },
+      "1": {
+        "hf_input": {
+          "relative_error": 0.25770285725593567,
+          "token_relative_error_mean": 0.23438042402267456,
+          "token_relative_error_quantiles": [
+            0.048631682991981506,
+            0.262127548456192,
+            0.37019288539886475,
+            0.4502410888671875,
+            0.5908162593841553
+          ],
+          "token_norm_quantiles": [
+            1.3579567670822144,
+            1.8780097961425781,
+            2.444472074508667,
+            3.4596543312072754,
+            4.410693168640137
+          ],
+          "largest_token_energy_fraction": 0.004653621930629015,
+          "cosine_similarity": 0.9692765474319458,
+          "mean_token_cosine": 0.9700978994369507,
+          "norm_ratio": 0.8979477882385254,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            3431,
+            588,
+            1793
+          ],
+          "largest_channel_energy_fractions": [
+            0.2811086177825928,
+            0.23777876794338226,
+            0.004190858453512192,
+            0.00401943689212203,
+            0.003952853847295046,
+            0.0038454376626759768,
+            0.003188038244843483,
+            0.002934806514531374
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.15125779807567596,
+          "token_relative_error_mean": 0.48509103059768677,
+          "token_relative_error_quantiles": [
+            0.01253373920917511,
+            0.530485987663269,
+            0.6786208152770996,
+            0.8066855669021606,
+            3.172180652618408
+          ],
+          "token_norm_quantiles": [
+            2.049140453338623,
+            2.713156223297119,
+            3.1981141567230225,
+            850.886962890625,
+            3131.75048828125
+          ],
+          "largest_token_energy_fraction": 0.2201046198606491,
+          "cosine_similarity": 0.9885458946228027,
+          "mean_token_cosine": 0.8622962832450867,
+          "norm_ratio": 0.9844391942024231,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7357267141342163,
+            0.25623977184295654,
+            0.002752161817625165,
+            0.0008287762757390738,
+            0.00038025155663490295,
+            0.00032973906490951777,
+            0.00032397371251136065,
+            0.0003239264478906989
+          ]
+        },
+        "custom_dense_vs_hf": 0.00033316059852950275,
+        "custom_compressed_vs_hf": 0.0004155488859396428,
+        "same_clean_input_full_block": {
+          "relative_error": 0.030042679980397224,
+          "token_relative_error_mean": 0.39797505736351013,
+          "token_relative_error_quantiles": [
+            0.0017073082271963358,
+            0.3927837610244751,
+            0.5864158868789673,
+            0.7753632664680481,
+            0.8302952647209167
+          ],
+          "token_norm_quantiles": [
+            2.0490756034851074,
+            2.7130990028381348,
+            3.198194980621338,
+            851.3521728515625,
+            3131.413818359375
+          ],
+          "largest_token_energy_fraction": 0.22006270289421082,
+          "cosine_similarity": 0.99961256980896,
+          "mean_token_cosine": 0.9070835709571838,
+          "norm_ratio": 0.9942166805267334,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7357980608940125,
+            0.2561712861061096,
+            0.0027508805505931377,
+            0.0008286398951895535,
+            0.00038013720768503845,
+            0.00032973953057080507,
+            0.0003238035424146801,
+            0.00032378817559219897
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.030046293511986732,
+          "token_relative_error_mean": 0.5696473717689514,
+          "token_relative_error_quantiles": [
+            0.0017074105562642217,
+            0.6216925382614136,
+            0.7924104332923889,
+            0.8506945967674255,
+            0.8934661149978638
+          ],
+          "token_norm_quantiles": [
+            1.3391504287719727,
+            1.8865089416503906,
+            2.3163843154907227,
+            851.1962890625,
+            3131.227783203125
+          ],
+          "largest_token_energy_fraction": 0.22009484469890594,
+          "cosine_similarity": 0.9995980262756348,
+          "mean_token_cosine": 0.7878589630126953,
+          "norm_ratio": 0.9942222237586975,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7358764410018921,
+            0.2561228573322296,
+            0.0027975982520729303,
+            0.0008595134131610394,
+            0.00037500576581805944,
+            0.00032561796251684427,
+            0.0003220251528546214,
+            0.0003199977509211749
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.3664799630641937,
+          "token_relative_error_mean": 0.33643651008605957,
+          "token_relative_error_quantiles": [
+            0.13048559427261353,
+            0.32272642850875854,
+            0.5084417462348938,
+            0.5963504910469055,
+            0.6443103551864624
+          ],
+          "token_norm_quantiles": [
+            0.8549689054489136,
+            1.1512978076934814,
+            1.4577971696853638,
+            2.5843255519866943,
+            3.2943239212036133
+          ],
+          "largest_token_energy_fraction": 0.006861535832285881,
+          "cosine_similarity": 0.9307867288589478,
+          "mean_token_cosine": 0.9351439476013184,
+          "norm_ratio": 0.9224249124526978,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            1076,
+            339,
+            2158,
+            575,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.09736663103103638,
+            0.07610786706209183,
+            0.06874872744083405,
+            0.04937692731618881,
+            0.03816899284720421,
+            0.037227146327495575,
+            0.025273649021983147,
+            0.023022281005978584
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.02997375838458538,
+          "token_relative_error_mean": 0.7559746503829956,
+          "token_relative_error_quantiles": [
+            0.001694628968834877,
+            0.8398325443267822,
+            0.9614464640617371,
+            0.9802584648132324,
+            0.9952325224876404
+          ],
+          "token_norm_quantiles": [
+            0.7305951118469238,
+            1.3253830671310425,
+            1.7448906898498535,
+            850.791015625,
+            3131.36865234375
+          ],
+          "largest_token_energy_fraction": 0.22013625502586365,
+          "cosine_similarity": 0.9995877742767334,
+          "mean_token_cosine": 0.579562783241272,
+          "norm_ratio": 0.9942308664321899,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.735885739326477,
+            0.2562319338321686,
+            0.00272676395252347,
+            0.0008245018543675542,
+            0.00037486193468794227,
+            0.00032605978776700795,
+            0.0003238663193769753,
+            0.00032057033968158066
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.17448188364505768,
+        "local_error_on_changed_input_relative_to_clean_output": 0.03825412690639496,
+        "total_error_relative_to_clean_output": 0.15122243762016296,
+        "inherited_local_cosine": -0.6771204471588135,
+        "decomposition_identity_residual": 1.9399930273333865e-10,
+        "active_transform_to_full_output_norm_ratio": 0.9998675584793091,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.11183051764965057,
+          "token_relative_error_mean": 0.4870760440826416,
+          "token_relative_error_quantiles": [
+            0.013782341033220291,
+            0.5335140228271484,
+            0.6792652606964111,
+            0.8067253828048706,
+            3.172180652618408
+          ],
+          "token_norm_quantiles": [
+            2.049140453338623,
+            2.71120548248291,
+            3.175769329071045,
+            3.5728604793548584,
+            3131.75048828125
+          ],
+          "largest_token_energy_fraction": 0.25755876302719116,
+          "cosine_similarity": 0.9957361221313477,
+          "mean_token_cosine": 0.8612121343612671,
+          "norm_ratio": 0.9330537915229797,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7363249063491821,
+            0.2554112374782562,
+            0.0029117166996002197,
+            0.0008953820797614753,
+            0.00039157626451924443,
+            0.0003678060311358422,
+            0.00034658939694054425,
+            0.0003271600289735943
+          ]
+        },
+        "first_position_energy_fraction": 0.14541979134082794
+      },
+      "2": {
+        "hf_input": {
+          "relative_error": 0.15125779807567596,
+          "token_relative_error_mean": 0.48509103059768677,
+          "token_relative_error_quantiles": [
+            0.01253373920917511,
+            0.530485987663269,
+            0.6786208152770996,
+            0.8066855669021606,
+            3.172180652618408
+          ],
+          "token_norm_quantiles": [
+            2.049140453338623,
+            2.713156223297119,
+            3.1981141567230225,
+            850.886962890625,
+            3131.75048828125
+          ],
+          "largest_token_energy_fraction": 0.2201046198606491,
+          "cosine_similarity": 0.9885458946228027,
+          "mean_token_cosine": 0.8622962832450867,
+          "norm_ratio": 0.9844391942024231,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7357267141342163,
+            0.25623977184295654,
+            0.002752161817625165,
+            0.0008287762757390738,
+            0.00038025155663490295,
+            0.00032973906490951777,
+            0.00032397371251136065,
+            0.0003239264478906989
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.15117989480495453,
+          "token_relative_error_mean": 0.6553984880447388,
+          "token_relative_error_quantiles": [
+            0.011890473775565624,
+            0.6934391260147095,
+            0.855535626411438,
+            0.9219823479652405,
+            2.763972520828247
+          ],
+          "token_norm_quantiles": [
+            2.8387532234191895,
+            3.7090513706207275,
+            4.2298054695129395,
+            856.0364990234375,
+            3136.467041015625
+          ],
+          "largest_token_energy_fraction": 0.2197909951210022,
+          "cosine_similarity": 0.98856520652771,
+          "mean_token_cosine": 0.7381893396377563,
+          "norm_ratio": 0.9843903183937073,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7355896830558777,
+            0.25639551877975464,
+            0.002759774914011359,
+            0.0008101454586721957,
+            0.00037389094359241426,
+            0.00032420133356936276,
+            0.00031477364245802164,
+            0.00031428979127667844
+          ]
+        },
+        "custom_dense_vs_hf": 0.00014188808563631028,
+        "custom_compressed_vs_hf": 0.0001775097771314904,
+        "same_clean_input_full_block": {
+          "relative_error": 0.008683624677360058,
+          "token_relative_error_mean": 0.44714784622192383,
+          "token_relative_error_quantiles": [
+            0.00043497595470398664,
+            0.4231500029563904,
+            0.667738139629364,
+            0.8022024035453796,
+            0.824413537979126
+          ],
+          "token_norm_quantiles": [
+            2.83854341506958,
+            3.708923101425171,
+            4.229782581329346,
+            855.8611450195312,
+            3136.48876953125
+          ],
+          "largest_token_energy_fraction": 0.21980538964271545,
+          "cosine_similarity": 1.0000354051589966,
+          "mean_token_cosine": 0.8799082636833191,
+          "norm_ratio": 0.999911904335022,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7356534600257874,
+            0.25633132457733154,
+            0.002759625669568777,
+            0.0008103795116767287,
+            0.00037383969174697995,
+            0.00032405051751993597,
+            0.00031483275233767927,
+            0.00031443245825357735
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.8249102830886841,
+          "token_relative_error_mean": 0.8340336680412292,
+          "token_relative_error_quantiles": [
+            0.08605685830116272,
+            0.8912740349769592,
+            0.9686776995658875,
+            0.9919179677963257,
+            1.0055533647537231
+          ],
+          "token_norm_quantiles": [
+            0.9180849194526672,
+            1.8483881950378418,
+            2.9328744411468506,
+            6.3102030754089355,
+            7.9610700607299805
+          ],
+          "largest_token_energy_fraction": 0.012777572497725487,
+          "cosine_similarity": 0.5657266974449158,
+          "mean_token_cosine": 0.49504345655441284,
+          "norm_ratio": 0.5842791199684143,
+          "largest_channels": [
+            2533,
+            1512,
+            1415,
+            3431,
+            2298,
+            3135,
+            1076,
+            575
+          ],
+          "largest_channel_energy_fractions": [
+            0.044757451862096786,
+            0.020257962867617607,
+            0.018023423850536346,
+            0.006121896672993898,
+            0.004662410356104374,
+            0.0033204560168087482,
+            0.0026001795195043087,
+            0.0024165017530322075
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.7454131245613098,
+          "token_relative_error_mean": 0.7581532001495361,
+          "token_relative_error_quantiles": [
+            0.21360565721988678,
+            0.7763746976852417,
+            0.8965204358100891,
+            0.97068190574646,
+            1.1367934942245483
+          ],
+          "token_norm_quantiles": [
+            0.5518456697463989,
+            1.0148766040802002,
+            1.646065592765808,
+            2.4924263954162598,
+            4.2267560958862305
+          ],
+          "largest_token_energy_fraction": 0.012096087448298931,
+          "cosine_similarity": 0.6730238795280457,
+          "mean_token_cosine": 0.651261568069458,
+          "norm_ratio": 0.7643926739692688,
+          "largest_channels": [
+            1512,
+            3431,
+            2298,
+            1076,
+            3135,
+            339,
+            2393,
+            3209
+          ],
+          "largest_channel_energy_fractions": [
+            0.048859089612960815,
+            0.016993198543787003,
+            0.006954241078346968,
+            0.004734973423182964,
+            0.004509410820901394,
+            0.003753981087356806,
+            0.0033878395333886147,
+            0.0033652891870588064
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.8499301671981812,
+          "token_relative_error_mean": 0.8569365739822388,
+          "token_relative_error_quantiles": [
+            0.03497108817100525,
+            0.9283525943756104,
+            0.9855605959892273,
+            0.9952116012573242,
+            1.0205425024032593
+          ],
+          "token_norm_quantiles": [
+            0.603583574295044,
+            1.521215558052063,
+            2.5662169456481934,
+            6.0151824951171875,
+            6.4383063316345215
+          ],
+          "largest_token_energy_fraction": 0.011584226973354816,
+          "cosine_similarity": 0.5278550386428833,
+          "mean_token_cosine": 0.43360909819602966,
+          "norm_ratio": 0.49869951605796814,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            2168,
+            575,
+            2944,
+            2350
+          ],
+          "largest_channel_energy_fractions": [
+            0.06007063016295433,
+            0.02435765601694584,
+            0.012440587393939495,
+            0.004000465851277113,
+            0.0026350021362304688,
+            0.002054963493719697,
+            0.001963868737220764,
+            0.0016963945236057043
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.1512308120727539,
+        "local_error_on_changed_input_relative_to_clean_output": 0.004931052215397358,
+        "total_error_relative_to_clean_output": 0.15126563608646393,
+        "inherited_local_cosine": -0.009242672473192215,
+        "decomposition_identity_residual": 4.6088297067647943e-10,
+        "active_transform_to_full_output_norm_ratio": 0.010527407750487328,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.1122531145811081,
+          "token_relative_error_mean": 0.6587391495704651,
+          "token_relative_error_quantiles": [
+            0.013948051258921623,
+            0.6942121982574463,
+            0.855760931968689,
+            0.9223192930221558,
+            2.763972520828247
+          ],
+          "token_norm_quantiles": [
+            2.8387532234191895,
+            3.704817295074463,
+            4.202375411987305,
+            4.790726661682129,
+            3136.467041015625
+          ],
+          "largest_token_energy_fraction": 0.2575020492076874,
+          "cosine_similarity": 0.9957003593444824,
+          "mean_token_cosine": 0.736128032207489,
+          "norm_ratio": 0.9330120086669922,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.736169695854187,
+            0.2555680274963379,
+            0.002917723497375846,
+            0.0008763443329371512,
+            0.00038508890429511666,
+            0.00035938015207648277,
+            0.00033793863258324564,
+            0.0003230477450415492
+          ]
+        },
+        "first_position_energy_fraction": 0.14644946157932281
+      },
+      "3": {
+        "hf_input": {
+          "relative_error": 0.15117989480495453,
+          "token_relative_error_mean": 0.6553984880447388,
+          "token_relative_error_quantiles": [
+            0.011890473775565624,
+            0.6934391260147095,
+            0.855535626411438,
+            0.9219823479652405,
+            2.763972520828247
+          ],
+          "token_norm_quantiles": [
+            2.8387532234191895,
+            3.7090513706207275,
+            4.2298054695129395,
+            856.0364990234375,
+            3136.467041015625
+          ],
+          "largest_token_energy_fraction": 0.2197909951210022,
+          "cosine_similarity": 0.98856520652771,
+          "mean_token_cosine": 0.7381893396377563,
+          "norm_ratio": 0.9843903183937073,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7355896830558777,
+            0.25639551877975464,
+            0.002759774914011359,
+            0.0008101454586721957,
+            0.00037389094359241426,
+            0.00032420133356936276,
+            0.00031477364245802164,
+            0.00031428979127667844
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.15180711448192596,
+          "token_relative_error_mean": 0.7481848001480103,
+          "token_relative_error_quantiles": [
+            0.011900500394403934,
+            0.7945518493652344,
+            0.9110551476478577,
+            0.9569455981254578,
+            2.2379608154296875
+          ],
+          "token_norm_quantiles": [
+            3.7875349521636963,
+            5.074351787567139,
+            5.8139801025390625,
+            856.0377807617188,
+            3136.2822265625
+          ],
+          "largest_token_energy_fraction": 0.2197248339653015,
+          "cosine_similarity": 0.9884889721870422,
+          "mean_token_cosine": 0.6396988034248352,
+          "norm_ratio": 0.9843080639839172,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7354550957679749,
+            0.2563486099243164,
+            0.002729714149609208,
+            0.0008014895720407367,
+            0.0003745287540368736,
+            0.000324669003020972,
+            0.0003150372358504683,
+            0.0003123616916127503
+          ]
+        },
+        "custom_dense_vs_hf": 0.00011307835666229948,
+        "custom_compressed_vs_hf": 8.650183735881001e-05,
+        "same_clean_input_full_block": {
+          "relative_error": 0.011921420693397522,
+          "token_relative_error_mean": 0.4650377929210663,
+          "token_relative_error_quantiles": [
+            0.0006035928963683546,
+            0.4714730978012085,
+            0.5985442399978638,
+            0.6735691428184509,
+            0.752835750579834
+          ],
+          "token_norm_quantiles": [
+            3.7878451347351074,
+            5.075867652893066,
+            5.813797950744629,
+            856.145751953125,
+            3136.523193359375
+          ],
+          "largest_token_energy_fraction": 0.21971827745437622,
+          "cosine_similarity": 1.0000373125076294,
+          "mean_token_cosine": 0.8787177205085754,
+          "norm_ratio": 0.9999189972877502,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7354975342750549,
+            0.25630655884742737,
+            0.00273073255084455,
+            0.000801091140601784,
+            0.00037436894490383565,
+            0.00032466548145748675,
+            0.0003150745469611138,
+            0.00031228477018885314
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.8861562609672546,
+          "token_relative_error_mean": 0.8640403747558594,
+          "token_relative_error_quantiles": [
+            0.3045148551464081,
+            0.9092718958854675,
+            0.9782800674438477,
+            0.997072160243988,
+            1.0043177604675293
+          ],
+          "token_norm_quantiles": [
+            1.0034441947937012,
+            2.7192792892456055,
+            3.5224575996398926,
+            4.273210525512695,
+            4.969189167022705
+          ],
+          "largest_token_energy_fraction": 0.003047218779101968,
+          "cosine_similarity": 0.46368351578712463,
+          "mean_token_cosine": 0.4508051574230194,
+          "norm_ratio": 0.47816699743270874,
+          "largest_channels": [
+            1512,
+            3431,
+            2298,
+            3135,
+            2789,
+            4071,
+            339,
+            1076
+          ],
+          "largest_channel_energy_fractions": [
+            0.042882055044174194,
+            0.00562549801543355,
+            0.0044331722892820835,
+            0.0023758583702147007,
+            0.002121465280652046,
+            0.0019184870179742575,
+            0.0018505582120269537,
+            0.0018251900328323245
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.7134679555892944,
+          "token_relative_error_mean": 0.7128179669380188,
+          "token_relative_error_quantiles": [
+            0.3405528962612152,
+            0.7009598612785339,
+            0.8895280361175537,
+            0.9719672203063965,
+            1.0317357778549194
+          ],
+          "token_norm_quantiles": [
+            0.6700047254562378,
+            1.5523310899734497,
+            2.1438581943511963,
+            2.9033772945404053,
+            4.957029819488525
+          ],
+          "largest_token_energy_fraction": 0.008465155027806759,
+          "cosine_similarity": 0.7014434337615967,
+          "mean_token_cosine": 0.6918540596961975,
+          "norm_ratio": 0.6737014055252075,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            339,
+            2789,
+            3135,
+            2393,
+            4071
+          ],
+          "largest_channel_energy_fractions": [
+            0.26149067282676697,
+            0.020476438105106354,
+            0.01893778145313263,
+            0.005747934803366661,
+            0.005569152534008026,
+            0.00550032127648592,
+            0.0031053132843226194,
+            0.0030865257140249014
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.9023078680038452,
+          "token_relative_error_mean": 0.8697684407234192,
+          "token_relative_error_quantiles": [
+            0.27606257796287537,
+            0.9252018928527832,
+            0.9796651601791382,
+            0.9894014596939087,
+            1.0459727048873901
+          ],
+          "token_norm_quantiles": [
+            0.6767817735671997,
+            2.357868194580078,
+            3.1741397380828857,
+            3.7459213733673096,
+            4.307267189025879
+          ],
+          "largest_token_energy_fraction": 0.0029633634258061647,
+          "cosine_similarity": 0.4315820634365082,
+          "mean_token_cosine": 0.43389856815338135,
+          "norm_ratio": 0.41298678517341614,
+          "largest_channels": [
+            1512,
+            2298,
+            2350,
+            3656,
+            1571,
+            94,
+            1076,
+            2459
+          ],
+          "largest_channel_energy_fractions": [
+            0.03162979334592819,
+            0.0031909483950585127,
+            0.0017597879050299525,
+            0.0016309925122186542,
+            0.0010517481714487076,
+            0.0009455494000576437,
+            0.0009415410459041595,
+            0.0009054153342731297
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.15189124643802643,
+        "local_error_on_changed_input_relative_to_clean_output": 0.007520543877035379,
+        "total_error_relative_to_clean_output": 0.1519092172384262,
+        "inherited_local_cosine": -0.022364361211657524,
+        "decomposition_identity_residual": 7.566601234465509e-10,
+        "active_transform_to_full_output_norm_ratio": 0.013452930375933647,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.11329253762960434,
+          "token_relative_error_mean": 0.7522559762001038,
+          "token_relative_error_quantiles": [
+            0.013957766816020012,
+            0.795396089553833,
+            0.9113549590110779,
+            0.9569759368896484,
+            2.2379608154296875
+          ],
+          "token_norm_quantiles": [
+            3.7875349521636963,
+            5.064214706420898,
+            5.795452117919922,
+            6.335232734680176,
+            3136.2822265625
+          ],
+          "largest_token_energy_fraction": 0.2574165165424347,
+          "cosine_similarity": 0.9956098198890686,
+          "mean_token_cosine": 0.63686203956604,
+          "norm_ratio": 0.9329162240028381,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7360121607780457,
+            0.2555133104324341,
+            0.0028854499105364084,
+            0.0008668577647767961,
+            0.00038550907629542053,
+            0.0003605510573834181,
+            0.00033491410431452096,
+            0.0003237436758354306
+          ]
+        },
+        "first_position_energy_fraction": 0.14642296731472015
+      }
+    },
+    "first2048_long": {
+      "0": {
+        "hf_input": {
+          "relative_error": 0.0,
+          "token_relative_error_mean": 0.0,
+          "token_relative_error_quantiles": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "token_norm_quantiles": [
+            0.2000630497932434,
+            0.81999671459198,
+            1.1006879806518555,
+            1.1895493268966675,
+            1.215864896774292
+          ],
+          "largest_token_energy_fraction": 0.0010307455668225884,
+          "cosine_similarity": 1.0005128383636475,
+          "mean_token_cosine": 1.0000009536743164,
+          "norm_ratio": 1.0,
+          "largest_channels": [
+            3964,
+            1411,
+            4030,
+            2459,
+            1571,
+            4051,
+            1307,
+            22
+          ],
+          "largest_channel_energy_fractions": [
+            0.005119859240949154,
+            0.0049483138136565685,
+            0.0048129563219845295,
+            0.0023610934149473906,
+            0.0023260076995939016,
+            0.002232801169157028,
+            0.0018963742768391967,
+            0.0016197060467675328
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.2756154537200928,
+          "token_relative_error_mean": 0.24948248267173767,
+          "token_relative_error_quantiles": [
+            0.05907871574163437,
+            0.2656998038291931,
+            0.38014066219329834,
+            0.46155601739883423,
+            0.8119613528251648
+          ],
+          "token_norm_quantiles": [
+            1.2953572273254395,
+            1.767196536064148,
+            2.0937891006469727,
+            2.3670296669006348,
+            5.626703262329102
+          ],
+          "largest_token_energy_fraction": 0.00467724958434701,
+          "cosine_similarity": 0.9652060270309448,
+          "mean_token_cosine": 0.9672157168388367,
+          "norm_ratio": 0.8912907242774963,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            3656,
+            257,
+            2393,
+            1571
+          ],
+          "largest_channel_energy_fractions": [
+            0.2701409161090851,
+            0.18800665438175201,
+            0.008665633387863636,
+            0.006242578383535147,
+            0.005011905450373888,
+            0.0050061484798789024,
+            0.0045531135983765125,
+            0.004256889224052429
+          ]
+        },
+        "custom_dense_vs_hf": 0.00042870681500062346,
+        "custom_compressed_vs_hf": 0.00043556944001466036,
+        "same_clean_input_full_block": {
+          "relative_error": 0.27558255195617676,
+          "token_relative_error_mean": 0.24947738647460938,
+          "token_relative_error_quantiles": [
+            0.05909338966012001,
+            0.2656327188014984,
+            0.3802003860473633,
+            0.461561381816864,
+            0.8119649291038513
+          ],
+          "token_norm_quantiles": [
+            1.2954355478286743,
+            1.7671453952789307,
+            2.0937235355377197,
+            2.3669018745422363,
+            5.626311779022217
+          ],
+          "largest_token_energy_fraction": 0.004676391836255789,
+          "cosine_similarity": 0.9652057886123657,
+          "mean_token_cosine": 0.9672182202339172,
+          "norm_ratio": 0.8911591172218323,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            3656,
+            257,
+            2393,
+            1571
+          ],
+          "largest_channel_energy_fractions": [
+            0.2701469361782074,
+            0.1880130171775818,
+            0.008665317669510841,
+            0.006241861265152693,
+            0.005011553876101971,
+            0.005006242077797651,
+            0.004555588588118553,
+            0.004256750922650099
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.3391989469528198,
+          "token_relative_error_mean": 0.3402475416660309,
+          "token_relative_error_quantiles": [
+            0.06095677241683006,
+            0.3492165803909302,
+            0.5714169144630432,
+            0.6789326071739197,
+            0.8139486908912659
+          ],
+          "token_norm_quantiles": [
+            0.870763897895813,
+            1.4082146883010864,
+            1.8982102870941162,
+            2.2837092876434326,
+            5.6125993728637695
+          ],
+          "largest_token_energy_fraction": 0.007043362129479647,
+          "cosine_similarity": 0.9433211088180542,
+          "mean_token_cosine": 0.9218599796295166,
+          "norm_ratio": 0.9152098894119263,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            2393,
+            257,
+            3656,
+            3209
+          ],
+          "largest_channel_energy_fractions": [
+            0.40452203154563904,
+            0.28382566571235657,
+            0.012541851960122585,
+            0.007429676130414009,
+            0.006622153799980879,
+            0.006600610446184874,
+            0.00468921335414052,
+            0.004279331769794226
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.10697346180677414,
+          "token_relative_error_mean": 0.08321711421012878,
+          "token_relative_error_quantiles": [
+            0.042935509234666824,
+            0.0749640166759491,
+            0.11415506899356842,
+            0.26156604290008545,
+            0.8515748977661133
+          ],
+          "token_norm_quantiles": [
+            0.5362923741340637,
+            0.9663965702056885,
+            1.1364766359329224,
+            1.2668216228485107,
+            2.3234362602233887
+          ],
+          "largest_token_energy_fraction": 0.0028727117460221052,
+          "cosine_similarity": 0.9968640804290771,
+          "mean_token_cosine": 0.9954783916473389,
+          "norm_ratio": 1.0017954111099243,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            310,
+            1793,
+            2393,
+            3946,
+            575
+          ],
+          "largest_channel_energy_fractions": [
+            0.4399728775024414,
+            0.3261975347995758,
+            0.012930215336382389,
+            0.012240627780556679,
+            0.01186876930296421,
+            0.007787366863340139,
+            0.005261124577373266,
+            0.005132530350238085
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.585021436214447,
+          "token_relative_error_mean": 0.5617644190788269,
+          "token_relative_error_quantiles": [
+            0.09406567364931107,
+            0.6670387983322144,
+            0.8225417137145996,
+            0.889738142490387,
+            0.9203165173530579
+          ],
+          "token_norm_quantiles": [
+            0.3742757737636566,
+            0.7833113670349121,
+            1.0723309516906738,
+            1.3739877939224243,
+            4.747471332550049
+          ],
+          "largest_token_energy_fraction": 0.01551844272762537,
+          "cosine_similarity": 0.8154316544532776,
+          "mean_token_cosine": 0.7843917608261108,
+          "norm_ratio": 0.7405595779418945,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            4071,
+            2944,
+            216
+          ],
+          "largest_channel_energy_fractions": [
+            0.1715937703847885,
+            0.15036001801490784,
+            0.011718147434294224,
+            0.007856646552681923,
+            0.007706830743700266,
+            0.00615524360910058,
+            0.005978186149150133,
+            0.005717224907130003
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.0,
+        "local_error_on_changed_input_relative_to_clean_output": 0.2755550444126129,
+        "total_error_relative_to_clean_output": 0.2755550444126129,
+        "inherited_local_cosine": 0.0,
+        "decomposition_identity_residual": 0.0,
+        "active_transform_to_full_output_norm_ratio": 0.8128407597541809,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.2706012427806854,
+          "token_relative_error_mean": 0.24920769035816193,
+          "token_relative_error_quantiles": [
+            0.05907871574163437,
+            0.2656554579734802,
+            0.37991395592689514,
+            0.4583205282688141,
+            0.5418182015419006
+          ],
+          "token_norm_quantiles": [
+            1.2953572273254395,
+            1.7671087980270386,
+            2.092803478240967,
+            2.359102487564087,
+            3.6525847911834717
+          ],
+          "largest_token_energy_fraction": 0.0019802460446953773,
+          "cosine_similarity": 0.9666200876235962,
+          "mean_token_cosine": 0.9673980474472046,
+          "norm_ratio": 0.8927645683288574,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            3656,
+            257,
+            2393,
+            1571
+          ],
+          "largest_channel_energy_fractions": [
+            0.27093836665153503,
+            0.18804597854614258,
+            0.008699681609869003,
+            0.006176384165883064,
+            0.005025441292673349,
+            0.00501094339415431,
+            0.0045531997457146645,
+            0.00427615363150835
+          ]
+        },
+        "first_position_energy_fraction": 0.00467724958434701
+      },
+      "1": {
+        "hf_input": {
+          "relative_error": 0.2756154537200928,
+          "token_relative_error_mean": 0.24948248267173767,
+          "token_relative_error_quantiles": [
+            0.05907871574163437,
+            0.2656998038291931,
+            0.38014066219329834,
+            0.46155601739883423,
+            0.8119613528251648
+          ],
+          "token_norm_quantiles": [
+            1.2953572273254395,
+            1.767196536064148,
+            2.0937891006469727,
+            2.3670296669006348,
+            5.626703262329102
+          ],
+          "largest_token_energy_fraction": 0.00467724958434701,
+          "cosine_similarity": 0.9652060270309448,
+          "mean_token_cosine": 0.9672157168388367,
+          "norm_ratio": 0.8912907242774963,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            3656,
+            257,
+            2393,
+            1571
+          ],
+          "largest_channel_energy_fractions": [
+            0.2701409161090851,
+            0.18800665438175201,
+            0.008665633387863636,
+            0.006242578383535147,
+            0.005011905450373888,
+            0.0050061484798789024,
+            0.0045531135983765125,
+            0.004256889224052429
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.47497233748435974,
+          "token_relative_error_mean": 0.5385122895240784,
+          "token_relative_error_quantiles": [
+            0.20299698412418365,
+            0.5761195421218872,
+            0.7254907488822937,
+            0.8230485916137695,
+            0.8797693848609924
+          ],
+          "token_norm_quantiles": [
+            2.0195677280426025,
+            2.6372811794281006,
+            3.0531492233276367,
+            3.34591007232666,
+            2312.946533203125
+          ],
+          "largest_token_energy_fraction": 0.834809422492981,
+          "cosine_similarity": 0.9820113182067871,
+          "mean_token_cosine": 0.8257449865341187,
+          "norm_ratio": 0.5466394424438477,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            339,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7335800528526306,
+            0.256417840719223,
+            0.0029923669062554836,
+            0.000933449191506952,
+            0.0004062448861077428,
+            0.00033291056752204895,
+            0.0003327855374664068,
+            0.00031652156030759215
+          ]
+        },
+        "custom_dense_vs_hf": 0.0003102716291323304,
+        "custom_compressed_vs_hf": 0.00016764334577601403,
+        "same_clean_input_full_block": {
+          "relative_error": 0.09889931231737137,
+          "token_relative_error_mean": 0.43707937002182007,
+          "token_relative_error_quantiles": [
+            0.07464752346277237,
+            0.42303669452667236,
+            0.6308470368385315,
+            0.7790297865867615,
+            0.8350635766983032
+          ],
+          "token_norm_quantiles": [
+            2.019442319869995,
+            2.6371920108795166,
+            3.0537633895874023,
+            3.3457846641540527,
+            2312.2001953125
+          ],
+          "largest_token_energy_fraction": 0.834765613079071,
+          "cosine_similarity": 0.9993677139282227,
+          "mean_token_cosine": 0.8889133930206299,
+          "norm_ratio": 0.9106388688087463,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            339,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.733642578125,
+            0.2563539147377014,
+            0.0029915720224380493,
+            0.0009334111819043756,
+            0.00040649768197909,
+            0.00033296638866886497,
+            0.00033272014115937054,
+            0.0003168347175233066
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.09897938370704651,
+          "token_relative_error_mean": 0.6413067579269409,
+          "token_relative_error_quantiles": [
+            0.07465812563896179,
+            0.6778846979141235,
+            0.840282142162323,
+            0.8997657299041748,
+            0.9361335039138794
+          ],
+          "token_norm_quantiles": [
+            1.2191394567489624,
+            1.7832833528518677,
+            2.175442695617676,
+            2.7708005905151367,
+            2311.871826171875
+          ],
+          "largest_token_energy_fraction": 0.8359695076942444,
+          "cosine_similarity": 0.999210774898529,
+          "mean_token_cosine": 0.735374927520752,
+          "norm_ratio": 0.9106338024139404,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7345302104949951,
+            0.2565842568874359,
+            0.0028996034525334835,
+            0.0008747451356612146,
+            0.00038691607187502086,
+            0.00032531010219827294,
+            0.0003174117882736027,
+            0.0003131901321467012
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.4784203767776489,
+          "token_relative_error_mean": 0.459122896194458,
+          "token_relative_error_quantiles": [
+            0.19327464699745178,
+            0.46120303869247437,
+            0.6012918949127197,
+            0.6733726859092712,
+            0.7258153557777405
+          ],
+          "token_norm_quantiles": [
+            0.7716637849807739,
+            1.0617930889129639,
+            1.314542531967163,
+            1.5670051574707031,
+            3.1824722290039062
+          ],
+          "largest_token_energy_fraction": 0.004092664457857609,
+          "cosine_similarity": 0.8805411458015442,
+          "mean_token_cosine": 0.8855696320533752,
+          "norm_ratio": 0.9338158965110779,
+          "largest_channels": [
+            1512,
+            1076,
+            3431,
+            2393,
+            2158,
+            2298,
+            575,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.04767452925443649,
+            0.04713581129908562,
+            0.04629708454012871,
+            0.0329979844391346,
+            0.02971102111041546,
+            0.02763180248439312,
+            0.02592644654214382,
+            0.024821223691105843
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.09857242554426193,
+          "token_relative_error_mean": 0.7839639186859131,
+          "token_relative_error_quantiles": [
+            0.07463698089122772,
+            0.857006311416626,
+            0.9688080549240112,
+            0.9864043593406677,
+            0.9957488179206848
+          ],
+          "token_norm_quantiles": [
+            0.7079532742500305,
+            1.3047151565551758,
+            1.7295812368392944,
+            2.410917043685913,
+            2311.827880859375
+          ],
+          "largest_token_energy_fraction": 0.8364227414131165,
+          "cosine_similarity": 0.9991651773452759,
+          "mean_token_cosine": 0.5516663789749146,
+          "norm_ratio": 0.9106390476226807,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7348592877388,
+            0.25683990120887756,
+            0.0027966760098934174,
+            0.0008128623594529927,
+            0.000362728867912665,
+            0.00031764895538799465,
+            0.00031125626992434263,
+            0.00030032964423298836
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.25370660424232483,
+        "local_error_on_changed_input_relative_to_clean_output": 0.22504860162734985,
+        "total_error_relative_to_clean_output": 0.47486692667007446,
+        "inherited_local_cosine": 0.9675289988517761,
+        "decomposition_identity_residual": 8.029656939356755e-10,
+        "active_transform_to_full_output_norm_ratio": 0.999138593673706,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.41871848702430725,
+          "token_relative_error_mean": 0.5384356379508972,
+          "token_relative_error_quantiles": [
+            0.20299698412418365,
+            0.5757030844688416,
+            0.7255130410194397,
+            0.823050320148468,
+            0.8797693848609924
+          ],
+          "token_norm_quantiles": [
+            2.0195677280426025,
+            2.637197256088257,
+            3.0524697303771973,
+            3.343160629272461,
+            2312.946533203125
+          ],
+          "largest_token_energy_fraction": 0.997269868850708,
+          "cosine_similarity": 0.9997425079345703,
+          "mean_token_cosine": 0.8256599307060242,
+          "norm_ratio": 0.5821830630302429,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7337793111801147,
+            0.2556208074092865,
+            0.003189309500157833,
+            0.001025775563903153,
+            0.00042096275137737393,
+            0.00036230331170372665,
+            0.0003574834845494479,
+            0.0003294752968940884
+          ]
+        },
+        "first_position_energy_fraction": 0.16290511190891266
+      },
+      "2": {
+        "hf_input": {
+          "relative_error": 0.47497233748435974,
+          "token_relative_error_mean": 0.5385122895240784,
+          "token_relative_error_quantiles": [
+            0.20299698412418365,
+            0.5761195421218872,
+            0.7254907488822937,
+            0.8230485916137695,
+            0.8797693848609924
+          ],
+          "token_norm_quantiles": [
+            2.0195677280426025,
+            2.6372811794281006,
+            3.0531492233276367,
+            3.34591007232666,
+            2312.946533203125
+          ],
+          "largest_token_energy_fraction": 0.834809422492981,
+          "cosine_similarity": 0.9820113182067871,
+          "mean_token_cosine": 0.8257449865341187,
+          "norm_ratio": 0.5466394424438477,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            339,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7335800528526306,
+            0.256417840719223,
+            0.0029923669062554836,
+            0.000933449191506952,
+            0.0004062448861077428,
+            0.00033291056752204895,
+            0.0003327855374664068,
+            0.00031652156030759215
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.4748106598854065,
+          "token_relative_error_mean": 0.6911951303482056,
+          "token_relative_error_quantiles": [
+            0.2638457417488098,
+            0.7249633073806763,
+            0.8874692320823669,
+            0.9373955130577087,
+            1.004695177078247
+          ],
+          "token_norm_quantiles": [
+            2.750354051589966,
+            3.6298022270202637,
+            4.164583206176758,
+            4.628395080566406,
+            2317.82666015625
+          ],
+          "largest_token_energy_fraction": 0.8323822021484375,
+          "cosine_similarity": 0.9816442131996155,
+          "mean_token_cosine": 0.6980239748954773,
+          "norm_ratio": 0.5474064946174622,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7320549488067627,
+            0.2560918629169464,
+            0.0031238202936947346,
+            0.0009477854473516345,
+            0.0004305342154111713,
+            0.0003572290006559342,
+            0.0003439181309659034,
+            0.0003426083130761981
+          ]
+        },
+        "custom_dense_vs_hf": 0.0002535334788262844,
+        "custom_compressed_vs_hf": 0.0002515240921638906,
+        "same_clean_input_full_block": {
+          "relative_error": 0.032072070986032486,
+          "token_relative_error_mean": 0.45226889848709106,
+          "token_relative_error_quantiles": [
+            0.0005368007114157081,
+            0.41803187131881714,
+            0.680979311466217,
+            0.7771812677383423,
+            0.8493241667747498
+          ],
+          "token_norm_quantiles": [
+            2.7502102851867676,
+            3.6292762756347656,
+            4.165304660797119,
+            4.629824161529541,
+            2317.3857421875
+          ],
+          "largest_token_energy_fraction": 0.8323511481285095,
+          "cosine_similarity": 1.0001224279403687,
+          "mean_token_cosine": 0.8778162002563477,
+          "norm_ratio": 0.9993956089019775,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7321193218231201,
+            0.2560226023197174,
+            0.003125991905108094,
+            0.0009482123423367739,
+            0.0004306576447561383,
+            0.0003570012340787798,
+            0.000344170635798946,
+            0.00034257530933246017
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.8739487528800964,
+          "token_relative_error_mean": 0.8393604755401611,
+          "token_relative_error_quantiles": [
+            0.08649593591690063,
+            0.8824522495269775,
+            0.972037672996521,
+            0.9886983633041382,
+            1.0012280941009521
+          ],
+          "token_norm_quantiles": [
+            1.0340683460235596,
+            1.8178231716156006,
+            2.854666233062744,
+            3.6087448596954346,
+            6.372299671173096
+          ],
+          "largest_token_energy_fraction": 0.004672577604651451,
+          "cosine_similarity": 0.48866143822669983,
+          "mean_token_cosine": 0.5019856691360474,
+          "norm_ratio": 0.5362386703491211,
+          "largest_channels": [
+            1512,
+            2393,
+            2298,
+            2533,
+            1076,
+            3431,
+            2789,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.02280406281352043,
+            0.005460387095808983,
+            0.005169478710740805,
+            0.0044597964733839035,
+            0.003880768781527877,
+            0.003416588995605707,
+            0.0022539834026247263,
+            0.002238542539998889
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.7535867094993591,
+          "token_relative_error_mean": 0.7607986330986023,
+          "token_relative_error_quantiles": [
+            0.25811052322387695,
+            0.7680374383926392,
+            0.9047374725341797,
+            0.9729680418968201,
+            1.0981264114379883
+          ],
+          "token_norm_quantiles": [
+            0.5651935338973999,
+            1.0075528621673584,
+            1.5023075342178345,
+            2.3889107704162598,
+            2.9080557823181152
+          ],
+          "largest_token_energy_fraction": 0.00315077998675406,
+          "cosine_similarity": 0.6768046617507935,
+          "mean_token_cosine": 0.6724154353141785,
+          "norm_ratio": 0.8354580402374268,
+          "largest_channels": [
+            1512,
+            2393,
+            3431,
+            2298,
+            1076,
+            339,
+            2789,
+            1404
+          ],
+          "largest_channel_energy_fractions": [
+            0.07580973207950592,
+            0.012192311696708202,
+            0.00845453143119812,
+            0.007277995347976685,
+            0.0054077389650046825,
+            0.0038086639251559973,
+            0.0035898368805646896,
+            0.003185184672474861
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.9086560606956482,
+          "token_relative_error_mean": 0.8619849681854248,
+          "token_relative_error_quantiles": [
+            0.03334657475352287,
+            0.9227472543716431,
+            0.9843913316726685,
+            0.9926058053970337,
+            1.010663628578186
+          ],
+          "token_norm_quantiles": [
+            0.7213596105575562,
+            1.500889778137207,
+            2.5784850120544434,
+            3.2929670810699463,
+            6.443971633911133
+          ],
+          "largest_token_energy_fraction": 0.0066225104965269566,
+          "cosine_similarity": 0.42060586810112,
+          "mean_token_cosine": 0.4422990679740906,
+          "norm_ratio": 0.37168511748313904,
+          "largest_channels": [
+            1512,
+            2533,
+            2298,
+            1415,
+            2927,
+            2350,
+            3656,
+            257
+          ],
+          "largest_channel_energy_fractions": [
+            0.012973271310329437,
+            0.006387827452272177,
+            0.004508156795054674,
+            0.002490244572982192,
+            0.0011468088487163186,
+            0.0011412003077566624,
+            0.0010830333922058344,
+            0.0010242365533486009
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.4747198820114136,
+        "local_error_on_changed_input_relative_to_clean_output": 0.022285448387265205,
+        "total_error_relative_to_clean_output": 0.47515711188316345,
+        "inherited_local_cosine": -0.003845709376037121,
+        "decomposition_identity_residual": 1.8145699387517311e-09,
+        "active_transform_to_full_output_norm_ratio": 0.03670045733451843,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.4193683862686157,
+          "token_relative_error_mean": 0.6911945343017578,
+          "token_relative_error_quantiles": [
+            0.2638457417488098,
+            0.7249934077262878,
+            0.8874828219413757,
+            0.9373976588249207,
+            1.004695177078247
+          ],
+          "token_norm_quantiles": [
+            2.750354051589966,
+            3.6293516159057617,
+            4.164331436157227,
+            4.624413967132568,
+            2317.82666015625
+          ],
+          "largest_token_energy_fraction": 0.9949212670326233,
+          "cosine_similarity": 0.9989742040634155,
+          "mean_token_cosine": 0.6978766322135925,
+          "norm_ratio": 0.5828513503074646,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            2168,
+            2393
+          ],
+          "largest_channel_energy_fractions": [
+            0.731914758682251,
+            0.2552490234375,
+            0.003343000542372465,
+            0.0010455023730173707,
+            0.0004510075377766043,
+            0.00037276462535373867,
+            0.0003529954410623759,
+            0.0003508554364088923
+          ]
+        },
+        "first_position_energy_fraction": 0.16336876153945923
+      },
+      "3": {
+        "hf_input": {
+          "relative_error": 0.4748106598854065,
+          "token_relative_error_mean": 0.6911951303482056,
+          "token_relative_error_quantiles": [
+            0.2638457417488098,
+            0.7249633073806763,
+            0.8874692320823669,
+            0.9373955130577087,
+            1.004695177078247
+          ],
+          "token_norm_quantiles": [
+            2.750354051589966,
+            3.6298022270202637,
+            4.164583206176758,
+            4.628395080566406,
+            2317.82666015625
+          ],
+          "largest_token_energy_fraction": 0.8323822021484375,
+          "cosine_similarity": 0.9816442131996155,
+          "mean_token_cosine": 0.6980239748954773,
+          "norm_ratio": 0.5474064946174622,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7320549488067627,
+            0.2560918629169464,
+            0.0031238202936947346,
+            0.0009477854473516345,
+            0.0004305342154111713,
+            0.0003572290006559342,
+            0.0003439181309659034,
+            0.0003426083130761981
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.47651660442352295,
+          "token_relative_error_mean": 0.761626124382019,
+          "token_relative_error_quantiles": [
+            0.32567599415779114,
+            0.7949024438858032,
+            0.9167063236236572,
+            0.9606097936630249,
+            0.9930199980735779
+          ],
+          "token_norm_quantiles": [
+            3.7623331546783447,
+            4.982910633087158,
+            5.717255115509033,
+            6.226866722106934,
+            2317.8310546875
+          ],
+          "largest_token_energy_fraction": 0.8292567133903503,
+          "cosine_similarity": 0.9805797934532166,
+          "mean_token_cosine": 0.6257835626602173,
+          "norm_ratio": 0.5472366213798523,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            2393,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7293049693107605,
+            0.2551301121711731,
+            0.003557785414159298,
+            0.0010370264062657952,
+            0.000486738164909184,
+            0.00041413886356167495,
+            0.00039440381806343794,
+            0.0003780459228437394
+          ]
+        },
+        "custom_dense_vs_hf": 9.766189759830013e-05,
+        "custom_compressed_vs_hf": 8.908363815862685e-05,
+        "same_clean_input_full_block": {
+          "relative_error": 0.043194640427827835,
+          "token_relative_error_mean": 0.4621644914150238,
+          "token_relative_error_quantiles": [
+            0.0005564225721172988,
+            0.4523482322692871,
+            0.5979670286178589,
+            0.6884899735450745,
+            0.7455769181251526
+          ],
+          "token_norm_quantiles": [
+            3.763221502304077,
+            4.9831953048706055,
+            5.717263221740723,
+            6.227031230926514,
+            2317.9443359375
+          ],
+          "largest_token_energy_fraction": 0.8292412161827087,
+          "cosine_similarity": 1.000207781791687,
+          "mean_token_cosine": 0.882168710231781,
+          "norm_ratio": 0.9989103674888611,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            2393,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7293108105659485,
+            0.25512567162513733,
+            0.00355749623849988,
+            0.0010368830990046263,
+            0.0004866202361881733,
+            0.0004140965756960213,
+            0.0003945204080082476,
+            0.00037803471786901355
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.8653498888015747,
+          "token_relative_error_mean": 0.8444176912307739,
+          "token_relative_error_quantiles": [
+            0.3541393280029297,
+            0.8757147789001465,
+            0.9594435691833496,
+            0.9889021515846252,
+            1.009158730506897
+          ],
+          "token_norm_quantiles": [
+            1.005910873413086,
+            2.6828861236572266,
+            3.5182714462280273,
+            4.228010177612305,
+            5.305322170257568
+          ],
+          "largest_token_energy_fraction": 0.0017439376097172499,
+          "cosine_similarity": 0.5014355778694153,
+          "mean_token_cosine": 0.5016669034957886,
+          "norm_ratio": 0.5061203241348267,
+          "largest_channels": [
+            1512,
+            2298,
+            2393,
+            3431,
+            1076,
+            3209,
+            2789,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.05132943019270897,
+            0.006706897635012865,
+            0.004718987736850977,
+            0.003645844291895628,
+            0.003086514538154006,
+            0.0027094357647001743,
+            0.0021365038119256496,
+            0.002114708535373211
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.6472684144973755,
+          "token_relative_error_mean": 0.6446244716644287,
+          "token_relative_error_quantiles": [
+            0.39361682534217834,
+            0.6230465769767761,
+            0.8056367635726929,
+            0.9519264698028564,
+            1.0784382820129395
+          ],
+          "token_norm_quantiles": [
+            0.6550986766815186,
+            1.7177073955535889,
+            2.2626681327819824,
+            2.9091029167175293,
+            3.540605068206787
+          ],
+          "largest_token_energy_fraction": 0.001898645656183362,
+          "cosine_similarity": 0.7631742358207703,
+          "mean_token_cosine": 0.7605783343315125,
+          "norm_ratio": 0.7473378777503967,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            2393,
+            339,
+            3209,
+            2789,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.2942087948322296,
+            0.024033397436141968,
+            0.011879540048539639,
+            0.009484929032623768,
+            0.005446879658848047,
+            0.004963111598044634,
+            0.0048126280307769775,
+            0.003972672391682863
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.8985642194747925,
+          "token_relative_error_mean": 0.8695790767669678,
+          "token_relative_error_quantiles": [
+            0.33150818943977356,
+            0.9131115078926086,
+            0.975792646408081,
+            0.9894935488700867,
+            1.0085004568099976
+          ],
+          "token_norm_quantiles": [
+            0.679757833480835,
+            2.2638609409332275,
+            3.1636805534362793,
+            3.880723476409912,
+            5.2209882736206055
+          ],
+          "largest_token_energy_fraction": 0.0022569596767425537,
+          "cosine_similarity": 0.439718097448349,
+          "mean_token_cosine": 0.44648122787475586,
+          "norm_ratio": 0.41699397563934326,
+          "largest_channels": [
+            1512,
+            2298,
+            2350,
+            3656,
+            1076,
+            1571,
+            310,
+            94
+          ],
+          "largest_channel_energy_fractions": [
+            0.035642869770526886,
+            0.0030302139930427074,
+            0.0018690554425120354,
+            0.0017124713631346822,
+            0.0012851019855588675,
+            0.0012712066527456045,
+            0.001076127402484417,
+            0.0009909715736284852
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.4771721363067627,
+        "local_error_on_changed_input_relative_to_clean_output": 0.030243998393416405,
+        "total_error_relative_to_clean_output": 0.4771271049976349,
+        "inherited_local_cosine": -0.033179886639118195,
+        "decomposition_identity_residual": 2.9127928957706217e-09,
+        "active_transform_to_full_output_norm_ratio": 0.049909431487321854,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.4221091866493225,
+          "token_relative_error_mean": 0.7616599798202515,
+          "token_relative_error_quantiles": [
+            0.32567599415779114,
+            0.7949343919754028,
+            0.916724681854248,
+            0.9606111645698547,
+            0.9930199980735779
+          ],
+          "token_norm_quantiles": [
+            3.7623331546783447,
+            4.982823371887207,
+            5.716479301452637,
+            6.210631370544434,
+            2317.8310546875
+          ],
+          "largest_token_energy_fraction": 0.990459144115448,
+          "cosine_similarity": 0.9976979494094849,
+          "mean_token_cosine": 0.6256008744239807,
+          "norm_ratio": 0.582533061504364,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2393,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7286310791969299,
+            0.25410422682762146,
+            0.003863514168187976,
+            0.0011524026049301028,
+            0.0005177248967811465,
+            0.0004360587627161294,
+            0.0004131900204811245,
+            0.00037917541339993477
+          ]
+        },
+        "first_position_energy_fraction": 0.16275513172149658
+      }
+    },
+    "first2048_reset128": {
+      "0": {
+        "hf_input": {
+          "relative_error": 0.0,
+          "token_relative_error_mean": 0.0,
+          "token_relative_error_quantiles": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "token_norm_quantiles": [
+            0.2000630497932434,
+            0.81999671459198,
+            1.1006879806518555,
+            1.1895493268966675,
+            1.215864896774292
+          ],
+          "largest_token_energy_fraction": 0.0010307455668225884,
+          "cosine_similarity": 1.0005128383636475,
+          "mean_token_cosine": 1.0000009536743164,
+          "norm_ratio": 1.0,
+          "largest_channels": [
+            3964,
+            1411,
+            4030,
+            2459,
+            1571,
+            4051,
+            1307,
+            22
+          ],
+          "largest_channel_energy_fractions": [
+            0.005119859240949154,
+            0.0049483138136565685,
+            0.0048129563219845295,
+            0.0023610934149473906,
+            0.0023260076995939016,
+            0.002232801169157028,
+            0.0018963742768391967,
+            0.0016197060467675328
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.269212931394577,
+          "token_relative_error_mean": 0.24282947182655334,
+          "token_relative_error_quantiles": [
+            0.04087909311056137,
+            0.2626895308494568,
+            0.3848779797554016,
+            0.5013045072555542,
+            0.8119613528251648
+          ],
+          "token_norm_quantiles": [
+            1.3808238506317139,
+            1.8760290145874023,
+            2.471938371658325,
+            3.628246545791626,
+            6.152140140533447
+          ],
+          "largest_token_energy_fraction": 0.004461903590708971,
+          "cosine_similarity": 0.9668829441070557,
+          "mean_token_cosine": 0.9673432111740112,
+          "norm_ratio": 0.8961558938026428,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            1793,
+            257,
+            1571,
+            3431,
+            588
+          ],
+          "largest_channel_energy_fractions": [
+            0.2717703580856323,
+            0.24101613461971283,
+            0.004220556002110243,
+            0.0037151353899389505,
+            0.0036671650595963,
+            0.0034122923389077187,
+            0.003116902895271778,
+            0.002960863057523966
+          ]
+        },
+        "custom_dense_vs_hf": 0.00041560898534953594,
+        "custom_compressed_vs_hf": 0.0004208162135910243,
+        "same_clean_input_full_block": {
+          "relative_error": 0.269194632768631,
+          "token_relative_error_mean": 0.24282437562942505,
+          "token_relative_error_quantiles": [
+            0.04085071012377739,
+            0.26273196935653687,
+            0.38487276434898376,
+            0.5012884140014648,
+            0.8119649291038513
+          ],
+          "token_norm_quantiles": [
+            1.3809990882873535,
+            1.8759794235229492,
+            2.472548007965088,
+            3.627368211746216,
+            6.158098220825195
+          ],
+          "largest_token_energy_fraction": 0.00447020074352622,
+          "cosine_similarity": 0.9668765664100647,
+          "mean_token_cosine": 0.9673433303833008,
+          "norm_ratio": 0.8962416052818298,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            1793,
+            257,
+            1571,
+            3431,
+            588
+          ],
+          "largest_channel_energy_fractions": [
+            0.271770715713501,
+            0.2410324513912201,
+            0.004220341797918081,
+            0.003714347491040826,
+            0.003667091950774193,
+            0.0034121605567634106,
+            0.0031173035968095064,
+            0.002960726385936141
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.31654632091522217,
+          "token_relative_error_mean": 0.3239544630050659,
+          "token_relative_error_quantiles": [
+            0.04192155599594116,
+            0.3326466679573059,
+            0.5575815439224243,
+            0.6739946603775024,
+            0.8139486908912659
+          ],
+          "token_norm_quantiles": [
+            0.8950626850128174,
+            1.5087802410125732,
+            2.3817412853240967,
+            3.575390338897705,
+            6.126036167144775
+          ],
+          "largest_token_energy_fraction": 0.006113216746598482,
+          "cosine_similarity": 0.9512946605682373,
+          "mean_token_cosine": 0.9272052645683289,
+          "norm_ratio": 0.9169695377349854,
+          "largest_channels": [
+            1512,
+            2298,
+            257,
+            1793,
+            3431,
+            3656,
+            3135,
+            310
+          ],
+          "largest_channel_energy_fractions": [
+            0.37226730585098267,
+            0.3323870897293091,
+            0.00428632739931345,
+            0.0038325993809849024,
+            0.003689720295369625,
+            0.0036803106777369976,
+            0.0034857781138271093,
+            0.00268053961917758
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.12626515328884125,
+          "token_relative_error_mean": 0.10396277159452438,
+          "token_relative_error_quantiles": [
+            0.04441239312291145,
+            0.08800011873245239,
+            0.16334903240203857,
+            0.3403185307979584,
+            0.8515748977661133
+          ],
+          "token_norm_quantiles": [
+            0.5351212620735168,
+            0.9858744740486145,
+            1.2046177387237549,
+            1.4962753057479858,
+            2.3234362602233887
+          ],
+          "largest_token_energy_fraction": 0.0026632035151124,
+          "cosine_similarity": 0.9942862391471863,
+          "mean_token_cosine": 0.9927217960357666,
+          "norm_ratio": 1.0001832246780396,
+          "largest_channels": [
+            1512,
+            2298,
+            310,
+            1793,
+            2944,
+            3431,
+            580,
+            3946
+          ],
+          "largest_channel_energy_fractions": [
+            0.3839333951473236,
+            0.32522496581077576,
+            0.01217018160969019,
+            0.007875701412558556,
+            0.007749167270958424,
+            0.00695562269538641,
+            0.005948410835117102,
+            0.005399891175329685
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.4933536946773529,
+          "token_relative_error_mean": 0.5210716724395752,
+          "token_relative_error_quantiles": [
+            0.059734415262937546,
+            0.5980229377746582,
+            0.8188832998275757,
+            0.8825327157974243,
+            0.9188068509101868
+          ],
+          "token_norm_quantiles": [
+            0.34630051255226135,
+            0.8856778144836426,
+            1.4741493463516235,
+            2.713239908218384,
+            5.48444128036499
+          ],
+          "largest_token_energy_fraction": 0.012481781654059887,
+          "cosine_similarity": 0.8745365738868713,
+          "mean_token_cosine": 0.803830623626709,
+          "norm_ratio": 0.7957962155342102,
+          "largest_channels": [
+            2298,
+            1512,
+            310,
+            3656,
+            257,
+            1571,
+            216,
+            588
+          ],
+          "largest_channel_energy_fractions": [
+            0.2227315753698349,
+            0.20524074137210846,
+            0.010256961919367313,
+            0.007549311965703964,
+            0.005865153856575489,
+            0.004561732988804579,
+            0.004381122067570686,
+            0.003998920321464539
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.0,
+        "local_error_on_changed_input_relative_to_clean_output": 0.2691747546195984,
+        "total_error_relative_to_clean_output": 0.2691747546195984,
+        "inherited_local_cosine": 0.0,
+        "decomposition_identity_residual": 0.0,
+        "active_transform_to_full_output_norm_ratio": 0.8506725430488586,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.25990793108940125,
+          "token_relative_error_mean": 0.2408345639705658,
+          "token_relative_error_quantiles": [
+            0.04087909311056137,
+            0.2609268128871918,
+            0.38173314929008484,
+            0.4674248993396759,
+            0.7064449191093445
+          ],
+          "token_norm_quantiles": [
+            1.3808238506317139,
+            1.873509407043457,
+            2.452008008956909,
+            3.4724650382995605,
+            6.152140140533447
+          ],
+          "largest_token_energy_fraction": 0.004571066237986088,
+          "cosine_similarity": 0.9693310260772705,
+          "mean_token_cosine": 0.9681419134140015,
+          "norm_ratio": 0.8997942209243774,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            1793,
+            257,
+            1571,
+            3431,
+            588
+          ],
+          "largest_channel_energy_fractions": [
+            0.2744610607624054,
+            0.24096450209617615,
+            0.004292743746191263,
+            0.003718907944858074,
+            0.0036866324953734875,
+            0.003482680069282651,
+            0.0031593595631420612,
+            0.003024380886927247
+          ]
+        },
+        "first_position_energy_fraction": 0.0238812118768692
+      },
+      "1": {
+        "hf_input": {
+          "relative_error": 0.269212931394577,
+          "token_relative_error_mean": 0.24282947182655334,
+          "token_relative_error_quantiles": [
+            0.04087909311056137,
+            0.2626895308494568,
+            0.3848779797554016,
+            0.5013045072555542,
+            0.8119613528251648
+          ],
+          "token_norm_quantiles": [
+            1.3808238506317139,
+            1.8760290145874023,
+            2.471938371658325,
+            3.628246545791626,
+            6.152140140533447
+          ],
+          "largest_token_energy_fraction": 0.004461903590708971,
+          "cosine_similarity": 0.9668829441070557,
+          "mean_token_cosine": 0.9673432111740112,
+          "norm_ratio": 0.8961558938026428,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            1793,
+            257,
+            1571,
+            3431,
+            588
+          ],
+          "largest_channel_energy_fractions": [
+            0.2717703580856323,
+            0.24101613461971283,
+            0.004220556002110243,
+            0.0037151353899389505,
+            0.0036671650595963,
+            0.0034122923389077187,
+            0.003116902895271778,
+            0.002960863057523966
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.1687992811203003,
+          "token_relative_error_mean": 0.49307018518447876,
+          "token_relative_error_quantiles": [
+            0.0047277831472456455,
+            0.544641375541687,
+            0.6916894912719727,
+            0.8055703043937683,
+            0.8519188761711121
+          ],
+          "token_norm_quantiles": [
+            2.0180275440216064,
+            2.683530330657959,
+            3.129037380218506,
+            915.8611450195312,
+            3196.822998046875
+          ],
+          "largest_token_energy_fraction": 0.07184861600399017,
+          "cosine_similarity": 0.986156702041626,
+          "mean_token_cosine": 0.8543286323547363,
+          "norm_ratio": 0.9563697576522827,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7359247207641602,
+            0.25610408186912537,
+            0.002785292686894536,
+            0.0008405185071751475,
+            0.0003794773365370929,
+            0.0003372762294020504,
+            0.000325932283885777,
+            0.0003229726862628013
+          ]
+        },
+        "custom_dense_vs_hf": 0.0004944991669617593,
+        "custom_compressed_vs_hf": 0.0003580027841962874,
+        "same_clean_input_full_block": {
+          "relative_error": 0.038307592272758484,
+          "token_relative_error_mean": 0.4074876308441162,
+          "token_relative_error_quantiles": [
+            0.0033809542655944824,
+            0.4049264192581177,
+            0.616818904876709,
+            0.7630393505096436,
+            0.8248234987258911
+          ],
+          "token_norm_quantiles": [
+            2.0178451538085938,
+            2.6835618019104004,
+            3.1289567947387695,
+            915.98876953125,
+            3196.60400390625
+          ],
+          "largest_token_energy_fraction": 0.0718151405453682,
+          "cosine_similarity": 0.9994610548019409,
+          "mean_token_cosine": 0.9009550213813782,
+          "norm_ratio": 0.9830899238586426,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7359699606895447,
+            0.2560594379901886,
+            0.002785317599773407,
+            0.0008404655964113772,
+            0.0003793900541495532,
+            0.0003372521314304322,
+            0.00032587043824605644,
+            0.00032293281401507556
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.03831196948885918,
+          "token_relative_error_mean": 0.575304388999939,
+          "token_relative_error_quantiles": [
+            0.0033811971079558134,
+            0.6169747114181519,
+            0.8018895387649536,
+            0.8765338063240051,
+            0.913364052772522
+          ],
+          "token_norm_quantiles": [
+            1.2289303541183472,
+            1.8756098747253418,
+            2.3517136573791504,
+            915.7265625,
+            3196.457275390625
+          ],
+          "largest_token_energy_fraction": 0.07182653248310089,
+          "cosine_similarity": 0.9994471073150635,
+          "mean_token_cosine": 0.7814118266105652,
+          "norm_ratio": 0.983091413974762,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7360243797302246,
+            0.2560047209262848,
+            0.002835912862792611,
+            0.0008732636924833059,
+            0.00037457229336723685,
+            0.0003348312748130411,
+            0.00032204753370024264,
+            0.00031928883981890976
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.37184450030326843,
+          "token_relative_error_mean": 0.3439106345176697,
+          "token_relative_error_quantiles": [
+            0.12863047420978546,
+            0.3198220431804657,
+            0.5258101224899292,
+            0.5943491458892822,
+            0.6405423283576965
+          ],
+          "token_norm_quantiles": [
+            0.8418175578117371,
+            1.1724278926849365,
+            1.4767444133758545,
+            2.794318437576294,
+            3.218071699142456
+          ],
+          "largest_token_energy_fraction": 0.0031359593849629164,
+          "cosine_similarity": 0.9292697906494141,
+          "mean_token_cosine": 0.9319372773170471,
+          "norm_ratio": 0.9197120666503906,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            1076,
+            339,
+            2158,
+            575,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.11611702293157578,
+            0.09163811802864075,
+            0.06218332052230835,
+            0.042716141790151596,
+            0.03516652062535286,
+            0.028897590935230255,
+            0.022528184577822685,
+            0.019950153306126595
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.0382731556892395,
+          "token_relative_error_mean": 0.7561268210411072,
+          "token_relative_error_quantiles": [
+            0.003369360463693738,
+            0.839443564414978,
+            0.967171847820282,
+            0.9844666123390198,
+            1.0276578664779663
+          ],
+          "token_norm_quantiles": [
+            0.7078757882118225,
+            1.3319098949432373,
+            1.7626304626464844,
+            915.3773193359375,
+            3196.58740234375
+          ],
+          "largest_token_energy_fraction": 0.07183472067117691,
+          "cosine_similarity": 0.9994391202926636,
+          "mean_token_cosine": 0.5718314051628113,
+          "norm_ratio": 0.9830945134162903,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7360250353813171,
+            0.2561056911945343,
+            0.002768418285995722,
+            0.0008375988691113889,
+            0.0003759014362003654,
+            0.0003368703764863312,
+            0.00032351890695281327,
+            0.00032048302819021046
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.1552405208349228,
+        "local_error_on_changed_input_relative_to_clean_output": 0.062752865254879,
+        "total_error_relative_to_clean_output": 0.16874900460243225,
+        "inherited_local_cosine": 0.022515518590807915,
+        "decomposition_identity_residual": 1.6334231189851778e-10,
+        "active_transform_to_full_output_norm_ratio": 0.9998748302459717,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.14612910151481628,
+          "token_relative_error_mean": 0.49508264660835266,
+          "token_relative_error_quantiles": [
+            0.0047277831472456455,
+            0.5464630126953125,
+            0.6921128630638123,
+            0.8055992722511292,
+            0.8519188761711121
+          ],
+          "token_norm_quantiles": [
+            2.0180275440216064,
+            2.680593967437744,
+            3.119734048843384,
+            3.5906500816345215,
+            3196.822998046875
+          ],
+          "largest_token_energy_fraction": 0.07921618968248367,
+          "cosine_similarity": 0.991054117679596,
+          "mean_token_cosine": 0.853181779384613,
+          "norm_ratio": 0.9323684573173523,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7363069653511047,
+            0.25558993220329285,
+            0.0028862308245152235,
+            0.0008814747561700642,
+            0.0003859314601868391,
+            0.0003649314458016306,
+            0.0003394672239664942,
+            0.0003209625429008156
+          ]
+        },
+        "first_position_energy_fraction": 0.09300589561462402
+      },
+      "2": {
+        "hf_input": {
+          "relative_error": 0.1687992811203003,
+          "token_relative_error_mean": 0.49307018518447876,
+          "token_relative_error_quantiles": [
+            0.0047277831472456455,
+            0.544641375541687,
+            0.6916894912719727,
+            0.8055703043937683,
+            0.8519188761711121
+          ],
+          "token_norm_quantiles": [
+            2.0180275440216064,
+            2.683530330657959,
+            3.129037380218506,
+            915.8611450195312,
+            3196.822998046875
+          ],
+          "largest_token_energy_fraction": 0.07184861600399017,
+          "cosine_similarity": 0.986156702041626,
+          "mean_token_cosine": 0.8543286323547363,
+          "norm_ratio": 0.9563697576522827,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7359247207641602,
+            0.25610408186912537,
+            0.002785292686894536,
+            0.0008405185071751475,
+            0.0003794773365370929,
+            0.0003372762294020504,
+            0.000325932283885777,
+            0.0003229726862628013
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.16860264539718628,
+          "token_relative_error_mean": 0.6530008912086487,
+          "token_relative_error_quantiles": [
+            0.004673381336033344,
+            0.696153998374939,
+            0.8706490397453308,
+            0.9185122847557068,
+            0.9394028186798096
+          ],
+          "token_norm_quantiles": [
+            2.7817015647888184,
+            3.690601348876953,
+            4.24465799331665,
+            921.1019897460938,
+            3201.50341796875
+          ],
+          "largest_token_energy_fraction": 0.0717657282948494,
+          "cosine_similarity": 0.986198365688324,
+          "mean_token_cosine": 0.734083890914917,
+          "norm_ratio": 0.9563497304916382,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7358194589614868,
+            0.2562768757343292,
+            0.0027928100898861885,
+            0.0008237366564571857,
+            0.0003723048430401832,
+            0.0003266578132752329,
+            0.0003172143187839538,
+            0.0003164495574310422
+          ]
+        },
+        "custom_dense_vs_hf": 0.0001450025592930615,
+        "custom_compressed_vs_hf": 0.00015711357991676778,
+        "same_clean_input_full_block": {
+          "relative_error": 0.006917979568243027,
+          "token_relative_error_mean": 0.4481089115142822,
+          "token_relative_error_quantiles": [
+            0.00020609739294741303,
+            0.4200326204299927,
+            0.6894563436508179,
+            0.7773804664611816,
+            0.8470461368560791
+          ],
+          "token_norm_quantiles": [
+            2.7818057537078857,
+            3.690608501434326,
+            4.244595527648926,
+            920.8692016601562,
+            3201.686767578125
+          ],
+          "largest_token_energy_fraction": 0.07178029417991638,
+          "cosine_similarity": 1.0000596046447754,
+          "mean_token_cosine": 0.8773754835128784,
+          "norm_ratio": 0.9999405145645142,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7358841300010681,
+            0.2562118172645569,
+            0.0027925376780331135,
+            0.0008239796734414995,
+            0.0003722295514307916,
+            0.0003267515858169645,
+            0.00031707072048448026,
+            0.0003164704830851406
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.8116613626480103,
+          "token_relative_error_mean": 0.8239533305168152,
+          "token_relative_error_quantiles": [
+            0.08135110884904861,
+            0.8837600946426392,
+            0.970971405506134,
+            0.9894692897796631,
+            1.0105020999908447
+          ],
+          "token_norm_quantiles": [
+            1.068383812904358,
+            1.8716082572937012,
+            2.9937965869903564,
+            6.345367431640625,
+            8.015618324279785
+          ],
+          "largest_token_energy_fraction": 0.0061897109262645245,
+          "cosine_similarity": 0.584735631942749,
+          "mean_token_cosine": 0.5057663321495056,
+          "norm_ratio": 0.596136212348938,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            3431,
+            2298,
+            3135,
+            2168,
+            2944
+          ],
+          "largest_channel_energy_fractions": [
+            0.05322680249810219,
+            0.022074300795793533,
+            0.01946382224559784,
+            0.005680124741047621,
+            0.005354694090783596,
+            0.0030031148344278336,
+            0.0029627953190356493,
+            0.002910451963543892
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.7314353585243225,
+          "token_relative_error_mean": 0.7514650821685791,
+          "token_relative_error_quantiles": [
+            0.1985834538936615,
+            0.7617452144622803,
+            0.8984525799751282,
+            0.9701897501945496,
+            1.0620092153549194
+          ],
+          "token_norm_quantiles": [
+            0.5472117066383362,
+            1.014790654182434,
+            1.5766983032226562,
+            2.5845212936401367,
+            4.389840126037598
+          ],
+          "largest_token_energy_fraction": 0.006597055587917566,
+          "cosine_similarity": 0.6884912848472595,
+          "mean_token_cosine": 0.6572458148002625,
+          "norm_ratio": 0.7792768478393555,
+          "largest_channels": [
+            1512,
+            3431,
+            2298,
+            1076,
+            339,
+            3135,
+            3209,
+            1404
+          ],
+          "largest_channel_energy_fractions": [
+            0.04879932105541229,
+            0.016253015026450157,
+            0.007037569303065538,
+            0.006466235034167767,
+            0.004523973912000656,
+            0.004101262893527746,
+            0.003173836274072528,
+            0.0029859670903533697
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.8375722765922546,
+          "token_relative_error_mean": 0.8474147319793701,
+          "token_relative_error_quantiles": [
+            0.03334657475352287,
+            0.9234423637390137,
+            0.9862396121025085,
+            0.9939590692520142,
+            1.0046899318695068
+          ],
+          "token_norm_quantiles": [
+            0.7423038482666016,
+            1.5415186882019043,
+            2.7163281440734863,
+            6.0251593589782715,
+            6.443971633911133
+          ],
+          "largest_token_energy_fraction": 0.0054604727774858475,
+          "cosine_similarity": 0.5478949546813965,
+          "mean_token_cosine": 0.44628772139549255,
+          "norm_ratio": 0.5130758285522461,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            2168,
+            575,
+            2944,
+            788
+          ],
+          "largest_channel_energy_fractions": [
+            0.0712418407201767,
+            0.028888529166579247,
+            0.010573821142315865,
+            0.004005450755357742,
+            0.003039053175598383,
+            0.0023999845143407583,
+            0.00225625978782773,
+            0.0014441657112911344
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.16863763332366943,
+        "local_error_on_changed_input_relative_to_clean_output": 0.003979710396379232,
+        "total_error_relative_to_clean_output": 0.16867586970329285,
+        "inherited_local_cosine": -0.0021931263618171215,
+        "decomposition_identity_residual": 3.7489458759587535e-10,
+        "active_transform_to_full_output_norm_ratio": 0.008525589480996132,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.14614306390285492,
+          "token_relative_error_mean": 0.656286895275116,
+          "token_relative_error_quantiles": [
+            0.004673381336033344,
+            0.6968157887458801,
+            0.8707655072212219,
+            0.9185595512390137,
+            0.9394028186798096
+          ],
+          "token_norm_quantiles": [
+            2.7817015647888184,
+            3.686101198196411,
+            4.224160194396973,
+            4.77131462097168,
+            3201.50341796875
+          ],
+          "largest_token_energy_fraction": 0.07918496429920197,
+          "cosine_similarity": 0.9910597801208496,
+          "mean_token_cosine": 0.731990396976471,
+          "norm_ratio": 0.932360053062439,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7361893653869629,
+            0.2557695508003235,
+            0.002892876975238323,
+            0.0008646405185572803,
+            0.0003785922017414123,
+            0.00035495427437126637,
+            0.00033028394682332873,
+            0.00031602272065356374
+          ]
+        },
+        "first_position_energy_fraction": 0.09369491785764694
+      },
+      "3": {
+        "hf_input": {
+          "relative_error": 0.16860264539718628,
+          "token_relative_error_mean": 0.6530008912086487,
+          "token_relative_error_quantiles": [
+            0.004673381336033344,
+            0.696153998374939,
+            0.8706490397453308,
+            0.9185122847557068,
+            0.9394028186798096
+          ],
+          "token_norm_quantiles": [
+            2.7817015647888184,
+            3.690601348876953,
+            4.24465799331665,
+            921.1019897460938,
+            3201.50341796875
+          ],
+          "largest_token_energy_fraction": 0.0717657282948494,
+          "cosine_similarity": 0.986198365688324,
+          "mean_token_cosine": 0.734083890914917,
+          "norm_ratio": 0.9563497304916382,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7358194589614868,
+            0.2562768757343292,
+            0.0027928100898861885,
+            0.0008237366564571857,
+            0.0003723048430401832,
+            0.0003266578132752329,
+            0.0003172143187839538,
+            0.0003164495574310422
+          ]
+        },
+        "hf_output": {
+          "relative_error": 0.16890357434749603,
+          "token_relative_error_mean": 0.7396578192710876,
+          "token_relative_error_quantiles": [
+            0.004744797013700008,
+            0.7830419540405273,
+            0.9111072421073914,
+            0.9493615627288818,
+            0.9891342520713806
+          ],
+          "token_norm_quantiles": [
+            3.8152663707733154,
+            5.056586265563965,
+            5.791107177734375,
+            921.1034545898438,
+            3201.321044921875
+          ],
+          "largest_token_energy_fraction": 0.07175040990114212,
+          "cosine_similarity": 0.9861573576927185,
+          "mean_token_cosine": 0.6468036770820618,
+          "norm_ratio": 0.9563010931015015,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7357462048530579,
+            0.25625136494636536,
+            0.0027660077903419733,
+            0.0008162854937836528,
+            0.0003707335563376546,
+            0.00032695705885998905,
+            0.00031722852145321667,
+            0.0003134023863822222
+          ]
+        },
+        "custom_dense_vs_hf": 9.681218944024295e-05,
+        "custom_compressed_vs_hf": 8.427668217336759e-05,
+        "same_clean_input_full_block": {
+          "relative_error": 0.009287063032388687,
+          "token_relative_error_mean": 0.4569149613380432,
+          "token_relative_error_quantiles": [
+            0.00033176413853652775,
+            0.4568917155265808,
+            0.602319598197937,
+            0.6880737543106079,
+            0.7535111308097839
+          ],
+          "token_norm_quantiles": [
+            3.8153231143951416,
+            5.056873321533203,
+            5.79103422164917,
+            921.2130126953125,
+            3201.634521484375
+          ],
+          "largest_token_energy_fraction": 0.07175368815660477,
+          "cosine_similarity": 1.0000700950622559,
+          "mean_token_cosine": 0.882590651512146,
+          "norm_ratio": 0.9999603629112244,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7357799410820007,
+            0.25621792674064636,
+            0.0027669023256748915,
+            0.000815822568256408,
+            0.0003705733106471598,
+            0.00032699256553314626,
+            0.0003172619908582419,
+            0.0003133669088128954
+          ]
+        },
+        "same_clean_input_active_transform": {
+          "relative_error": 0.8672192096710205,
+          "token_relative_error_mean": 0.8467905521392822,
+          "token_relative_error_quantiles": [
+            0.2895946204662323,
+            0.8907313942909241,
+            0.9698969721794128,
+            0.9931818842887878,
+            1.009158730506897
+          ],
+          "token_norm_quantiles": [
+            1.00381338596344,
+            2.7060840129852295,
+            3.5578486919403076,
+            4.338461399078369,
+            5.1830925941467285
+          ],
+          "largest_token_energy_fraction": 0.0016391654498875141,
+          "cosine_similarity": 0.49819648265838623,
+          "mean_token_cosine": 0.4832105040550232,
+          "norm_ratio": 0.5029793381690979,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            3209,
+            1076,
+            2789
+          ],
+          "largest_channel_energy_fractions": [
+            0.04715394228696823,
+            0.005848344881087542,
+            0.005693850107491016,
+            0.0023149263579398394,
+            0.0022602754179388285,
+            0.002252893289551139,
+            0.0021039547864347696,
+            0.0020642653107643127
+          ]
+        },
+        "same_clean_input_attention": {
+          "relative_error": 0.6824241876602173,
+          "token_relative_error_mean": 0.6898936629295349,
+          "token_relative_error_quantiles": [
+            0.3185654282569885,
+            0.6757432222366333,
+            0.8698739409446716,
+            0.9612208008766174,
+            1.0839757919311523
+          ],
+          "token_norm_quantiles": [
+            0.6595897674560547,
+            1.5922036170959473,
+            2.1690726280212402,
+            2.972689628601074,
+            5.136625289916992
+          ],
+          "largest_token_energy_fraction": 0.004466148559004068,
+          "cosine_similarity": 0.7320035099983215,
+          "mean_token_cosine": 0.7172561883926392,
+          "norm_ratio": 0.7077428698539734,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            339,
+            2789,
+            3135,
+            3209,
+            2393
+          ],
+          "largest_channel_energy_fractions": [
+            0.262350469827652,
+            0.020947294309735298,
+            0.018981611356139183,
+            0.006592398509383202,
+            0.005280067678540945,
+            0.004754048306494951,
+            0.0038587134331464767,
+            0.0034992943983525038
+          ]
+        },
+        "same_clean_input_mlp": {
+          "relative_error": 0.8939561247825623,
+          "token_relative_error_mean": 0.8605194091796875,
+          "token_relative_error_quantiles": [
+            0.27074944972991943,
+            0.9198354482650757,
+            0.9784796237945557,
+            0.9900936484336853,
+            1.001360535621643
+          ],
+          "token_norm_quantiles": [
+            0.6763412356376648,
+            2.310103178024292,
+            3.1878604888916016,
+            3.9385716915130615,
+            5.101184844970703
+          ],
+          "largest_token_energy_fraction": 0.002092217095196247,
+          "cosine_similarity": 0.44894105195999146,
+          "mean_token_cosine": 0.44765445590019226,
+          "norm_ratio": 0.42690742015838623,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            2350,
+            1571,
+            310,
+            1076,
+            94
+          ],
+          "largest_channel_energy_fractions": [
+            0.02631412073969841,
+            0.0027442998252809048,
+            0.0017497320659458637,
+            0.001548389089293778,
+            0.0012258975766599178,
+            0.0012010786449536681,
+            0.0010151599999517202,
+            0.0009814222576096654
+          ]
+        },
+        "inherited_error_relative_to_clean_output": 0.16901308298110962,
+        "local_error_on_changed_input_relative_to_clean_output": 0.006108706351369619,
+        "total_error_relative_to_clean_output": 0.16901670396327972,
+        "inherited_local_cosine": -0.017477095127105713,
+        "decomposition_identity_residual": 6.119602047327533e-10,
+        "active_transform_to_full_output_norm_ratio": 0.010710934177041054,
+        "hf_output_excluding_first_position": {
+          "relative_error": 0.1465371549129486,
+          "token_relative_error_mean": 0.7436261773109436,
+          "token_relative_error_quantiles": [
+            0.004744797013700008,
+            0.7845296263694763,
+            0.911255419254303,
+            0.949368953704834,
+            0.9891342520713806
+          ],
+          "token_norm_quantiles": [
+            3.8152663707733154,
+            5.05233097076416,
+            5.771033763885498,
+            6.460495471954346,
+            3201.321044921875
+          ],
+          "largest_token_energy_fraction": 0.07916727662086487,
+          "cosine_similarity": 0.9910136461257935,
+          "mean_token_cosine": 0.6440229415893555,
+          "norm_ratio": 0.9323046207427979,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7361088395118713,
+            0.25574159622192383,
+            0.0028649705927819014,
+            0.0008568252087570727,
+            0.00037664605770260096,
+            0.0003554662107490003,
+            0.00032680112053640187,
+            0.0003161172498948872
+          ]
+        },
+        "first_position_energy_fraction": 0.09368593245744705
+      }
+    }
+  },
+  "compatibility": {
+    "model_config": {
+      "model_type": "llama",
+      "hidden_size": 4096,
+      "intermediate_size": 11008,
+      "num_hidden_layers": 32,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 32,
+      "vocab_size": 32000,
+      "max_position_embeddings": 4096,
+      "rms_norm_eps": 1e-05,
+      "tie_word_embeddings": false,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "pad_token_id": 0
+    },
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_config_commit_hash": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "projection_layers": 32
+  },
+  "gpu": "NVIDIA A40",
+  "storage": {
+    "scope": "layers 0-3 only; suffix layers 4-31 are identical dense weights",
+    "dense_payload_definition": "seven projection tensors and two norm tensors per layer",
+    "compressed_payload_definition": "actual serialized compressed_layer_N.pt file size",
+    "all_dense_four_layer_payload_bytes": 1619066880,
+    "layers": {
+      "0": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 69815746,
+        "bytes_saved_when_compressed": 334950974
+      },
+      "1": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70035714,
+        "bytes_saved_when_compressed": 334731006
+      },
+      "2": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70008770,
+        "bytes_saved_when_compressed": 334757950
+      },
+      "3": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70098370,
+        "bytes_saved_when_compressed": 334668350
+      }
+    },
+    "whole_layer_allocations": {
+      "dense": {
+        "compressed_layers": [],
+        "dense_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1619066880,
+        "bytes_saved_vs_all_dense": 0
+      },
+      "layer0_only": {
+        "compressed_layers": [
+          0
+        ],
+        "dense_layers": [
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1284115906,
+        "bytes_saved_vs_all_dense": 334950974
+      },
+      "layer1_only": {
+        "compressed_layers": [
+          1
+        ],
+        "dense_layers": [
+          0,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1284335874,
+        "bytes_saved_vs_all_dense": 334731006
+      },
+      "layer2_only": {
+        "compressed_layers": [
+          2
+        ],
+        "dense_layers": [
+          0,
+          1,
+          3
+        ],
+        "four_layer_payload_bytes": 1284308930,
+        "bytes_saved_vs_all_dense": 334757950
+      },
+      "layer3_only": {
+        "compressed_layers": [
+          3
+        ],
+        "dense_layers": [
+          0,
+          1,
+          2
+        ],
+        "four_layer_payload_bytes": 1284398530,
+        "bytes_saved_vs_all_dense": 334668350
+      },
+      "prefix2": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "dense_layers": [
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 949384900,
+        "bytes_saved_vs_all_dense": 669681980
+      },
+      "prefix3": {
+        "compressed_layers": [
+          0,
+          1,
+          2
+        ],
+        "dense_layers": [
+          3
+        ],
+        "four_layer_payload_bytes": 614626950,
+        "bytes_saved_vs_all_dense": 1004439930
+      },
+      "prefix4": {
+        "compressed_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [],
+        "four_layer_payload_bytes": 279958600,
+        "bytes_saved_vs_all_dense": 1339108280
+      },
+      "prefix4_layer0_dense": {
+        "compressed_layers": [
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [
+          0
+        ],
+        "four_layer_payload_bytes": 614909574,
+        "bytes_saved_vs_all_dense": 1004157306
+      },
+      "prefix4_layer3_dense": {
+        "compressed_layers": [
+          0,
+          1,
+          2
+        ],
+        "dense_layers": [
+          3
+        ],
+        "four_layer_payload_bytes": 614626950,
+        "bytes_saved_vs_all_dense": 1004439930
+      },
+      "prefix4_boundaries_dense": {
+        "compressed_layers": [
+          1,
+          2
+        ],
+        "dense_layers": [
+          0,
+          3
+        ],
+        "four_layer_payload_bytes": 949577924,
+        "bytes_saved_vs_all_dense": 669488956
+      },
+      "prefix4_fp32_decode_then_cast": {
+        "compressed_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [],
+        "four_layer_payload_bytes": 279958600,
+        "bytes_saved_vs_all_dense": 1339108280
+      }
+    }
+  },
+  "elapsed_seconds": 250.62628329198924,
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+  "saved_input_parity": {
+    "0": {
+      "relative_error": 0.0,
+      "token_relative_error_mean": 0.0,
+      "token_relative_error_quantiles": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "token_norm_quantiles": [
+        0.20006313920021057,
+        0.8505880832672119,
+        1.0958079099655151,
+        1.1899462938308716,
+        1.2343217134475708
+      ],
+      "largest_token_energy_fraction": 0.0020605071913450956,
+      "cosine_similarity": 1.0000500679016113,
+      "mean_token_cosine": 1.0000020265579224,
+      "norm_ratio": 0.9999969005584717,
+      "largest_channels": [
+        3964,
+        1411,
+        4030,
+        2459,
+        1571,
+        4051,
+        1307,
+        2403
+      ],
+      "largest_channel_energy_fractions": [
+        0.004893839824944735,
+        0.004479205701500177,
+        0.004364923574030399,
+        0.002387191168963909,
+        0.0023552884813398123,
+        0.002127481624484062,
+        0.0020888305734843016,
+        0.0016538301715627313
+      ]
+    },
+    "1": {
+      "relative_error": 0.0004015307640656829,
+      "token_relative_error_mean": 0.00038382894126698375,
+      "token_relative_error_quantiles": [
+        0.00016960855282377452,
+        0.0003679688088595867,
+        0.0004936389159411192,
+        0.0006822491995990276,
+        0.0011333792936056852
+      ],
+      "token_norm_quantiles": [
+        1.3577431440353394,
+        1.8779916763305664,
+        2.4444925785064697,
+        3.460137128829956,
+        4.409307479858398
+      ],
+      "largest_token_energy_fraction": 0.0046504284255206585,
+      "cosine_similarity": 1.000436544418335,
+      "mean_token_cosine": 1.0,
+      "norm_ratio": 0.9999261498451233,
+      "largest_channels": [
+        1512,
+        2298,
+        3656,
+        257,
+        1571,
+        3431,
+        588,
+        1793
+      ],
+      "largest_channel_energy_fractions": [
+        0.2811087667942047,
+        0.23778508603572845,
+        0.004190312698483467,
+        0.00401971023529768,
+        0.003952770493924618,
+        0.0038462025113403797,
+        0.003188107628375292,
+        0.0029342935886234045
+      ]
+    },
+    "2": {
+      "relative_error": 0.00035744893830269575,
+      "token_relative_error_mean": 0.0006478942232206464,
+      "token_relative_error_quantiles": [
+        0.00017058839148376137,
+        0.000616758014075458,
+        0.0008419881341978908,
+        0.0011551377829164267,
+        0.0021678658667951822
+      ],
+      "token_norm_quantiles": [
+        2.049370288848877,
+        2.7130658626556396,
+        3.198068857192993,
+        851.3223266601562,
+        3131.36572265625
+      ],
+      "largest_token_energy_fraction": 0.22005625069141388,
+      "cosine_similarity": 1.0000576972961426,
+      "mean_token_cosine": 0.9999998211860657,
+      "norm_ratio": 1.0000169277191162,
+      "largest_channels": [
+        2533,
+        1415,
+        1512,
+        2298,
+        3431,
+        339,
+        2168,
+        3135
+      ],
+      "largest_channel_energy_fractions": [
+        0.7357978224754333,
+        0.2561713457107544,
+        0.002750905230641365,
+        0.0008286462398245931,
+        0.0003801419516094029,
+        0.0003297424118500203,
+        0.00032380546326749027,
+        0.000323792512062937
+      ]
+    },
+    "3": {
+      "relative_error": 0.00037738855462521315,
+      "token_relative_error_mean": 0.0009041472803801298,
+      "token_relative_error_quantiles": [
+        0.00011743541836040094,
+        0.0008582948939874768,
+        0.0011897176736965775,
+        0.0016349891666322947,
+        0.0021378786768764257
+      ],
+      "token_norm_quantiles": [
+        2.8386290073394775,
+        3.7091593742370605,
+        4.229652404785156,
+        856.298095703125,
+        3136.113525390625
+      ],
+      "largest_token_energy_fraction": 0.21975712478160858,
+      "cosine_similarity": 1.0000824928283691,
+      "mean_token_cosine": 0.9999995827674866,
+      "norm_ratio": 1.0000487565994263,
+      "largest_channels": [
+        2533,
+        1415,
+        1512,
+        2298,
+        3431,
+        339,
+        3135,
+        2168
+      ],
+      "largest_channel_energy_fractions": [
+        0.7357242107391357,
+        0.25626304745674133,
+        0.002758373273536563,
+        0.0008102514548227191,
+        0.00037373261875472963,
+        0.00032405374804511666,
+        0.0003146548697259277,
+        0.00031431307434104383
+      ]
+    }
+  },
+  "peak_cuda_allocated_bytes": 13300762112
+}
