@@ -58,6 +58,14 @@ from nox.schmidt_budget import (
     schmidt_payload_bytes,
     split_total_rank,
 )
+from nox.portable_quant import (
+    ActivationRMSCollector,
+    artifact_filename,
+    effective_weight,
+    encode_target,
+    inject_portable_package,
+    load_portable_model,
+)
 
 __all__ = [
     "nox_4step_compiler",
@@ -98,6 +106,12 @@ __all__ = [
     "plan_uniform_schmidt_budget",
     "schmidt_payload_bytes",
     "split_total_rank",
+    "ActivationRMSCollector",
+    "artifact_filename",
+    "effective_weight",
+    "encode_target",
+    "inject_portable_package",
+    "load_portable_model",
     "CalibrationStatistics",
     "CalibrationStatisticsAccumulator",
     "InputCovariance",
