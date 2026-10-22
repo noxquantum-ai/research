@@ -140,6 +140,8 @@ def _quantized_als(
         unfolding, left.T @ right,
     )}]
     for sweep in range(1, sweeps + 1):
+        previous_left, previous_right = left, right
+        previous_error = history[-1]["relative_unfolding_error"]
         gram_right = right @ right.T
         ridge_right = ridge_ratio * gram_right.diagonal().mean().clamp_min(1e-12)
         rhs_left = unfolding @ right.T
@@ -161,9 +163,15 @@ def _quantized_als(
             left @ unfolding,
         )
         right = _quantize_dequantize(right, bits, group_size)
-        history.append({"sweep": sweep, "relative_unfolding_error": _relative_frobenius(
-            unfolding, left.T @ right,
-        )})
+        error = _relative_frobenius(unfolding, left.T @ right)
+        accepted = error <= previous_error
+        if not accepted:
+            left, right, error = previous_left, previous_right, previous_error
+        history.append({
+            "sweep": sweep,
+            "relative_unfolding_error": error,
+            "accepted": accepted,
+        })
     return left, right, history
 
 
