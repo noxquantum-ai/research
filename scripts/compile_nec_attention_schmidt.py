@@ -53,6 +53,8 @@ def main() -> None:
         "--qkv-rank", type=int, default=None,
         help="Schmidt correction rank for Q/K/V; defaults to --rank.",
     )
+    parser.add_argument("--qk-rank", type=int, default=None)
+    parser.add_argument("--v-rank", type=int, default=None)
     parser.add_argument("--ridge-ratio", type=float, default=0.02)
     parser.add_argument("--drift-compensation", type=float, default=1.0)
     parser.add_argument(
@@ -70,7 +72,9 @@ def main() -> None:
     if args.calibration_tokens % args.sequence_length:
         raise ValueError("calibration tokens must be divisible by sequence length")
     qkv_rank = args.rank if args.qkv_rank is None else args.qkv_rank
-    if args.capture_batch_windows <= 0 or args.rank <= 0 or qkv_rank <= 0:
+    qk_rank = qkv_rank if args.qk_rank is None else args.qk_rank
+    v_rank = qkv_rank if args.v_rank is None else args.v_rank
+    if min(args.capture_batch_windows, args.rank, qk_rank, v_rank) <= 0:
         raise ValueError("batch window count and rank must be positive")
     args.output.mkdir(parents=True, exist_ok=True)
     device = torch.device(args.device)
@@ -148,11 +152,12 @@ def main() -> None:
         for projection_offset, (name, target) in enumerate((
             ("q_proj", dense_q), ("k_proj", dense_k), ("v_proj", dense_v),
         )):
+            projection_rank = v_rank if name == "v_proj" else qk_rank
             artifact, output = compile_schmidt_correction(
                 source_artifacts[name],
                 compressed_norm,
                 target,
-                rank=qkv_rank,
+                rank=projection_rank,
                 ridge_ratio=args.ridge_ratio,
                 seed=10_000 + 3 * index + projection_offset,
             )
@@ -207,7 +212,8 @@ def main() -> None:
         record = {
             "layer": index,
             "rank": corrected_o["rank"],
-            "qkv_rank": qkv_rank,
+            "qk_rank": qk_rank,
+            "v_rank": v_rank,
             "qkv_fit_error_after": {
                 name: qkv_artifacts[name]["relative_output_error_after"]
                 for name in ("q_proj", "k_proj", "v_proj")
@@ -239,6 +245,8 @@ def main() -> None:
         },
         "schmidt_rank": args.rank,
         "qkv_schmidt_rank": qkv_rank,
+        "qk_schmidt_rank": qk_rank,
+        "v_schmidt_rank": v_rank,
         "ridge_ratio": args.ridge_ratio,
         "drift_compensation": args.drift_compensation,
         "teacher_target": args.teacher_target,
