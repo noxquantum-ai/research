@@ -47,6 +47,8 @@ Each invocation runs exactly one stage and then stops:
   layer-fp64         Optional all-seven FP64 streaming diagnostic
   layer-compare      Compare completed layer variants
   layer0-dev-ppl     Matched dense and one-layer NEC PPL on raw WikiText-2 validation
+  layer0-3-reference Extend the verified layer-0 artifact to layers 0-3 (same compiler settings)
+  layer0-3-dev-ppl   Matched dense and four-layer NEC PPL on raw WikiText-2 validation
   layer0-pack-audit  Pack round-trip and held-out single-block output check
   status             Print saved status without running computation
 
@@ -365,7 +367,7 @@ PY
 }
 
 layer_common=(
-  --start-layer 0 --end-layer 0
+  --start-layer 0
   --n-calib 4096 --n-validation 1024
   --seq-len 128 --calibration-sampling uniform --validation-sampling uniform
   --calibration-activation-mode dense --construction-mode independent
@@ -399,7 +401,7 @@ layer_stage() {
       --calibration-windows-per-chunk "$WINDOWS_PER_CHUNK" \
       --statistics-dtype "$dtype" \
       "${resume_argument[@]}" \
-      "${layer_common[@]}"
+      "${layer_common[@]}" --end-layer 0
 }
 
 case "$STAGE" in
@@ -550,6 +552,59 @@ case "$STAGE" in
         --max-eval-tokens 0 \
         --offload-folder "$eval_dir/nec-offload"
     run_logged layer0-dev-ppl-compare "$eval_dir/comparison" \
+      "$VENV_DIR/bin/python" benchmarks/compare_ppl_results.py \
+        --dense "$eval_dir/dense.json" \
+        --nec "$eval_dir/nec.json" \
+        --output "$eval_dir/comparison/report.json" \
+        --block-tokens 512 --bootstrap-repetitions 5000 --seed 20261021
+    ;;
+  layer0-3-reference)
+    layer_dir="$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg"
+    if [[ ! -f "$layer_dir/model_manifest.json" || ! -f "$layer_dir/compressed_layer_0.pt" ]]; then
+      echo "ERROR: layer0-3-reference requires the completed layer-0 reference artifact." >&2
+      exit 2
+    fi
+    run_logged layer0-3-prefix-reference "$layer_dir" \
+      "$VENV_DIR/bin/python" scripts/compile_high_fidelity.py \
+        --output "$layer_dir" \
+        --calibration-backend full_matrix \
+        --calibration-windows-per-chunk "$WINDOWS_PER_CHUNK" \
+        --statistics-dtype float64 \
+        --resume \
+        "${layer_common[@]}" --end-layer 3
+    ;;
+  layer0-3-dev-ppl)
+    layer_dir="$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg"
+    eval_dir="$layer_dir/evaluation-dev-prefix4"
+    if [[ ! -f "$layer_dir/model_manifest.json" || ! -f "$layer_dir/compressed_layer_3.pt" ]]; then
+      echo "ERROR: layer0-3-dev-ppl requires completed NEC artifacts for layers 0-3." >&2
+      exit 2
+    fi
+    export NEC_EVAL_GPU_MEMORY_GIB="${NEC_EVAL_GPU_MEMORY_GIB:-32}"
+    export NEC_EVAL_CPU_MEMORY_GIB="${NEC_EVAL_CPU_MEMORY_GIB:-48}"
+    run_ppl_eval_or_reuse layer0-3-dense-dev-ppl "$eval_dir/dense" "$eval_dir/dense.json" dense "" \
+      "$VENV_DIR/bin/python" benchmarks/evaluate_high_fidelity_nec.py \
+        --variant dense \
+        --output "$eval_dir/dense.json" \
+        --dataset-split validation \
+        --context-length 2048 --stride 512 --batch-size 1 \
+        --max-eval-tokens 0 \
+        --offload-folder "$eval_dir/dense-offload"
+    run_ppl_eval_or_reuse layer0-3-nec-dev-ppl "$eval_dir/nec" "$eval_dir/nec.json" high_fidelity_nec "$layer_dir" \
+      "$VENV_DIR/bin/python" benchmarks/evaluate_high_fidelity_nec.py \
+        --variant high_fidelity_nec \
+        --checkpoint-dir "$layer_dir" \
+        --output "$eval_dir/nec.json" \
+        --dataset-split validation \
+        --allow-partial-prefix \
+        --expected-calibration-tokens 4096 \
+        --expected-heldout-tokens 1024 \
+        --expected-quantization-schedule post_sweep \
+        --expected-cg-threshold 4096 --expected-cg-iterations 48 \
+        --context-length 2048 --stride 512 --batch-size 1 \
+        --max-eval-tokens 0 \
+        --offload-folder "$eval_dir/nec-offload"
+    run_logged layer0-3-dev-ppl-compare "$eval_dir/comparison" \
       "$VENV_DIR/bin/python" benchmarks/compare_ppl_results.py \
         --dense "$eval_dir/dense.json" \
         --nec "$eval_dir/nec.json" \
