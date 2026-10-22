@@ -16,7 +16,11 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
     summarize_mmlu_harness,
 )
 from runpod_execution.nec_high_fidelity.gpu_qualification import compare_mmlu_smokes
-from benchmarks.evaluate_high_fidelity_nec import evaluation_memory_budget, save_top1_predictions
+from benchmarks.evaluate_high_fidelity_nec import (
+    evaluation_memory_budget,
+    reset_cuda_peak_memory_stats,
+    save_top1_predictions,
+)
 from benchmarks.qualification_heartbeat import read_progress
 from runpod_execution.nec_high_fidelity.runpod_driver import (
     compile_command,
@@ -226,6 +230,17 @@ class ProductionEvaluationTests(unittest.TestCase):
         with patch.dict(os.environ, {"NEC_EVAL_GPU_MEMORY_GIB": "0"}, clear=True):
             with self.assertRaisesRegex(ValueError, "positive integer"):
                 evaluation_memory_budget(1)
+
+    def test_reset_cuda_peak_stats_uses_explicit_cuda_devices(self):
+        with (
+            patch("torch.cuda.device_count", return_value=2),
+            patch("torch.cuda.reset_peak_memory_stats") as reset,
+        ):
+            reset_cuda_peak_memory_stats()
+        self.assertEqual(
+            [call.args[0] for call in reset.call_args_list],
+            [torch.device("cuda", 0), torch.device("cuda", 1)],
+        )
 
     def test_runpod_memory_caps_adapt_to_hardware_and_allow_explicit_override(self):
         gib = 1024**3

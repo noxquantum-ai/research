@@ -190,6 +190,12 @@ def evaluation_memory_budget(gpu_count: int) -> dict[int | str, str]:
     }
 
 
+def reset_cuda_peak_memory_stats() -> None:
+    """Reset allocator peaks using explicit devices (PyTorch 2.11 rejects int IDs here)."""
+    for index in range(torch.cuda.device_count()):
+        torch.cuda.reset_peak_memory_stats(torch.device("cuda", index))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--variant", choices=MODEL_VARIANTS, required=True)
@@ -267,8 +273,7 @@ def main() -> None:
             audit_temp.write_text(json.dumps(audit, indent=2) + "\n")
             audit_temp.replace(audit_path)
 
-    for index in range(torch.cuda.device_count()):
-        torch.cuda.reset_peak_memory_stats(index)
+    reset_cuda_peak_memory_stats()
     started = time.monotonic()
     model, tokenizer, injected, compatibility, reconstruction_diagnostics = load_model(
         args.checkpoint_dir, offload_folder=args.offload_folder, variant=args.variant,
@@ -458,7 +463,7 @@ def main() -> None:
             "platform": platform.platform(),
             "package_versions": versions,
             "cuda_peak_memory_bytes": {
-                str(index): int(torch.cuda.max_memory_allocated(index))
+                str(index): int(torch.cuda.max_memory_allocated(torch.device("cuda", index)))
                 for index in range(torch.cuda.device_count())
             },
             "hf_device_map": getattr(model, "hf_device_map", None),
