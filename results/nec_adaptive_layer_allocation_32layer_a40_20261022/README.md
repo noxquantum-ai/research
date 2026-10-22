@@ -9,8 +9,9 @@ remain present during PPL, teacher-KL, and next-token-accuracy evaluation.
 
 ## Staged compile and quality checkpoints
 
-The compiler is resumed to inclusive end-layer 7, 15, 23, and 31. At each
-stage, the full 32-layer model is evaluated with the compiled prefix replaced
+The compiler keeps the same full-range 0–31 run identity at every stage and
+uses a clean stop after layers 7, 15, 23, and 31. At each stage, the full
+32-layer model is evaluated with the compiled prefix replaced
 by NEC and the uncompiled suffix left dense. These are cumulative diagnostics,
 not final adaptive selections. Each milestone reports student and teacher PPL,
 teacher KL, next-token accuracy, dense top-1 agreement, and storage preflight.

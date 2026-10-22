@@ -176,6 +176,10 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--start-layer", type=int, default=15)
     parser.add_argument("--end-layer", type=int, default=15)
+    parser.add_argument(
+        "--stop-after-layer", type=int,
+        help="Exit cleanly after writing this layer while retaining the full --end-layer run identity",
+    )
     parser.add_argument("--n-calib", type=int, default=256)
     parser.add_argument("--n-validation", type=int, default=128)
     parser.add_argument("--seq-len", type=int, default=128)
@@ -290,6 +294,10 @@ def main():
     validate_llama2_config(config)
     if not 0 <= args.start_layer <= args.end_layer < config.num_hidden_layers:
         raise ValueError("Invalid layer interval")
+    if args.stop_after_layer is not None and not (
+        args.start_layer <= args.stop_after_layer <= args.end_layer
+    ):
+        raise ValueError("--stop-after-layer must fall within the requested layer range")
     if args.seq_len < 2 or any(n < args.seq_len or n % args.seq_len for n in (args.n_calib, args.n_validation)):
         raise ValueError("Calibration/validation counts must be positive multiples of seq-len")
     if args.calibration_windows_per_chunk <= 0:
@@ -941,6 +949,12 @@ def main():
         gc.collect()
         torch.cuda.empty_cache()
         print(f"layer={index} elapsed={time.monotonic() - started:.2f}s", flush=True)
+        if args.stop_after_layer == index:
+            print(
+                f"STOPPED_CLEANLY after layer={index}; checkpoint and manifest are complete",
+                flush=True,
+            )
+            return
     print(f"COMPLETE: {args.output}", flush=True)
 
 

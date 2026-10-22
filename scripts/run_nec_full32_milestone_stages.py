@@ -18,11 +18,12 @@ def contiguous_checkpoint_count(checkpoint_dir: Path) -> int:
     return count
 
 
-def compile_args(checkpoint_dir: Path, end_layer: int) -> list[str]:
+def compile_args(checkpoint_dir: Path, stop_after_layer: int) -> list[str]:
     return [
         sys.executable, "-u", "scripts/compile_high_fidelity.py",
         "--output", str(checkpoint_dir),
-        "--start-layer", "0", "--end-layer", str(end_layer),
+        "--start-layer", "0", "--end-layer", "31",
+        "--stop-after-layer", str(stop_after_layer),
         "--n-calib", "4096", "--n-validation", "1024", "--seq-len", "128",
         "--calibration-sampling", "uniform", "--validation-sampling", "uniform",
         "--calibration-backend", "full_matrix", "--calibration-windows-per-chunk", "4",
@@ -42,7 +43,7 @@ def compile_args(checkpoint_dir: Path, end_layer: int) -> list[str]:
 
 def run_compile(checkpoint_dir: Path, log_path: Path, milestone: int) -> None:
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    command = compile_args(checkpoint_dir, end_layer=milestone - 1)
+    command = compile_args(checkpoint_dir, stop_after_layer=milestone - 1)
     with log_path.open("a", encoding="utf-8") as log:
         log.write(f"\n=== compile stage through milestone {milestone} ===\n")
         log.flush()
