@@ -52,6 +52,13 @@ def main() -> None:
     parser.add_argument("--rank", type=int, default=512)
     parser.add_argument("--ridge-ratio", type=float, default=0.02)
     parser.add_argument("--drift-compensation", type=float, default=1.0)
+    parser.add_argument(
+        "--teacher-target",
+        choices=("same_input", "clean_trajectory"),
+        default="same_input",
+        help=("Evaluate the dense attention teacher on the compressed-prefix input, or "
+              "target the separately captured clean trajectory."),
+    )
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
 
@@ -115,12 +122,18 @@ def main() -> None:
         source_artifacts = source_checkpoint["compressed_artifacts"]
         dense_hidden = dense_inputs[index].to(device=device, dtype=torch.float32)
         norm1_weight = layer.input_layernorm.weight.detach().float()
-        dense_norm = rms_norm(dense_hidden, norm1_weight, eps)
         compressed_norm = rms_norm(compressed_hidden, norm1_weight, eps)
 
-        dense_q = layer.self_attn.q_proj.weight.detach().float() @ dense_norm
-        dense_k = layer.self_attn.k_proj.weight.detach().float() @ dense_norm
-        dense_v = layer.self_attn.v_proj.weight.detach().float() @ dense_norm
+        if args.teacher_target == "same_input":
+            teacher_hidden = compressed_hidden
+            teacher_norm = compressed_norm
+        else:
+            teacher_hidden = dense_hidden
+            teacher_norm = rms_norm(dense_hidden, norm1_weight, eps)
+
+        dense_q = layer.self_attn.q_proj.weight.detach().float() @ teacher_norm
+        dense_k = layer.self_attn.k_proj.weight.detach().float() @ teacher_norm
+        dense_v = layer.self_attn.v_proj.weight.detach().float() @ teacher_norm
         dense_context = scaled_dot_product_attention_2d(
             dense_q, dense_k, dense_v, n_heads, n_kv_heads, args.sequence_length,
         )
@@ -140,7 +153,7 @@ def main() -> None:
             n_heads, n_kv_heads, args.sequence_length,
         )
         attention_target = dense_attention + args.drift_compensation * (
-            dense_hidden - compressed_hidden
+            teacher_hidden - compressed_hidden
         )
         corrected_o, compressed_attention = compile_schmidt_correction(
             source_artifacts["o_proj"],
@@ -192,7 +205,7 @@ def main() -> None:
         }
         layer_records.append(record)
         print("LAYER " + json.dumps(record), flush=True)
-        del dense_hidden, dense_norm, compressed_norm, reconstructed
+        del dense_hidden, teacher_norm, compressed_norm, reconstructed
         torch.cuda.empty_cache() if device.type == "cuda" else None
 
     manifest = {
@@ -211,6 +224,7 @@ def main() -> None:
         "schmidt_rank": args.rank,
         "ridge_ratio": args.ridge_ratio,
         "drift_compensation": args.drift_compensation,
+        "teacher_target": args.teacher_target,
         "layers": layer_records,
         "artifact_bytes": sum(path.stat().st_size for path in args.output.glob("compressed_layer_*.pt")),
         "seconds": time.monotonic() - started,
