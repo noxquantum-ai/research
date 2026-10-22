@@ -11,8 +11,10 @@ The new path is an adaptive binary Schmidt compiler:
 
 1. Discover repeated blocks and matrix operators from the loaded module graph.
    Do not encode Llama projection names into the codec.
-2. Treat every matrix as an operator with an adaptive Schmidt bond.  Pack both
-   factor signs at one bit and store explicit magnitude coordinates.
+2. Treat every matrix as a sum of operators with adaptive Schmidt bonds.  Pack
+   factor signs at one bit and store explicit magnitude coordinates.  Less
+   aggressive frontier points spend bytes on independently canonicalized
+   residual paths instead of padding a single saturated path.
 3. Allocate bond dimensions under an actual whole-package byte constraint.
    Operator spectra and held-out functional loss determine how rank moves
    between modules after the uniform preflight.
@@ -66,13 +68,22 @@ of dependencies, model licenses, datasets, and relevant patents.
 
 ## Acceptance gates
 
-The Llama-2-7B research target remains at least 10x actual serialized
-whole-model compression with PPL at most 10.  A run must also report teacher
-KL, next-token accuracy, dense top-1 agreement, and public task results.  The
-same compiler interface must operate on other architectures; quality targets
-are evaluated per model against its dense baseline.
+The immediate objective is quality-constrained compression, not a fixed 10x
+pass condition.  NEC produces a measured frontier at approximately 2x, 3x,
+4x, 5x, 6x, 8x, and 10x, then selects the most compressed package that passes
+the quality gates.  Ten times remains a long-term ambition.
+
+For Llama-2-7B, PPL at most 10 remains the permissive outer limit inherited
+from the earlier experiments.  A credible "maintained accuracy" result should
+also stay substantially closer to the dense PPL, preserve at least 90% of the
+dense score on each reported public task, and report teacher KL, next-token
+accuracy, and dense top-1 agreement.  Results that only satisfy the permissive
+PPL ceiling are labeled degraded rather than accuracy preserving.  The same
+compiler interface must operate on other architectures; numerical quality
+gates are evaluated relative to each model's dense baseline.
 
 The run is infeasible if unchanged bytes plus the minimum factor payload
 exceed the package budget.  The compiler reports this before GPU optimization.
 If storage is feasible but quality fails, it reports a representation-quality
-failure and does not relax the ratio or PPL target silently.
+failure at that frontier point.  It may select a less aggressive measured
+point only when that point independently passes the stated quality gates.

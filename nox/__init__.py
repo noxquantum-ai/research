@@ -53,8 +53,10 @@ from nox.model_adapter import (
 from nox.schmidt_budget import (
     SchmidtModelPlan,
     SchmidtTargetPlan,
+    multi_path_schmidt_payload_bytes,
     plan_uniform_schmidt_budget,
     schmidt_payload_bytes,
+    split_total_rank,
 )
 
 __all__ = [
@@ -92,8 +94,10 @@ __all__ = [
     "resolve_module",
     "SchmidtModelPlan",
     "SchmidtTargetPlan",
+    "multi_path_schmidt_payload_bytes",
     "plan_uniform_schmidt_budget",
     "schmidt_payload_bytes",
+    "split_total_rank",
     "CalibrationStatistics",
     "CalibrationStatisticsAccumulator",
     "InputCovariance",

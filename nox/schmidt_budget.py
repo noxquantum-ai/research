@@ -17,7 +17,8 @@ from nox.model_adapter import ModelInventory
 class SchmidtTargetPlan:
     name: str
     shape: tuple[int, int]
-    rank: int
+    total_rank: int
+    path_ranks: tuple[int, ...]
     dense_bytes: int
     packed_sign_bytes: int
     scale_bytes: int
@@ -28,6 +29,7 @@ class SchmidtTargetPlan:
     def to_dict(self) -> dict:
         value = asdict(self)
         value["shape"] = list(self.shape)
+        value["path_ranks"] = list(self.path_ranks)
         return value
 
 
@@ -76,23 +78,69 @@ def schmidt_payload_bytes(
     return sign_bytes, scale_bytes
 
 
-def _rank_for_budget(out_features: int, in_features: int, budget: int, scale_bits: int) -> int:
-    fixed_scale_bytes = _ceil_div(scale_bits * (out_features + in_features), 8)
-    if budget <= fixed_scale_bytes:
-        return 0
-    # Find the largest byte-feasible rank.  Binary search handles per-factor
-    # byte padding exactly and is cheap relative to model loading.
-    low, high = 0, min(out_features, in_features)
+def split_total_rank(total_rank: int, maximum_path_rank: int) -> tuple[int, ...]:
+    """Split a total bond budget into independently canonicalized paths."""
+
+    if total_rank < 0 or maximum_path_rank <= 0:
+        raise ValueError("invalid total or per-path rank")
+    full_paths, remainder = divmod(total_rank, maximum_path_rank)
+    return (maximum_path_rank,) * full_paths + ((remainder,) if remainder else ())
+
+
+def multi_path_schmidt_payload_bytes(
+    out_features: int,
+    in_features: int,
+    path_ranks: tuple[int, ...] | list[int],
+    *,
+    scale_bits: int = 16,
+) -> tuple[int, int]:
+    """Return exact payload bytes for a sum of binary Schmidt paths."""
+
+    sign_bytes = 0
+    scale_bytes = 0
+    maximum_rank = min(out_features, in_features)
+    if not path_ranks:
+        raise ValueError("at least one path is required")
+    for rank in path_ranks:
+        if not 0 < rank <= maximum_rank:
+            raise ValueError("path rank exceeds the matrix rank bound")
+        signs, scales = schmidt_payload_bytes(
+            out_features, in_features, rank, scale_bits=scale_bits,
+        )
+        sign_bytes += signs
+        scale_bytes += scales
+    return sign_bytes, scale_bytes
+
+
+def _rank_for_budget(
+    out_features: int,
+    in_features: int,
+    budget: int,
+    scale_bits: int,
+    max_paths: int,
+) -> tuple[int, tuple[int, ...]]:
+    maximum_path_rank = min(out_features, in_features)
+    if max_paths <= 0:
+        raise ValueError("max_paths must be positive")
+    smallest_signs, smallest_scales = schmidt_payload_bytes(
+        out_features, in_features, 1, scale_bits=scale_bits,
+    )
+    if budget < smallest_signs + smallest_scales:
+        return 0, ()
+    # Find the largest byte-feasible total rank.  Each full-rank path is an
+    # independent residual operator, so total rank may exceed matrix rank.
+    low, high = 0, maximum_path_rank * max_paths
     while low < high:
         mid = (low + high + 1) // 2
-        signs, scales = schmidt_payload_bytes(
-            out_features, in_features, mid, scale_bits=scale_bits,
+        paths = split_total_rank(mid, maximum_path_rank)
+        signs, scales = multi_path_schmidt_payload_bytes(
+            out_features, in_features, paths, scale_bits=scale_bits,
         )
         if signs + scales <= budget:
             low = mid
         else:
             high = mid - 1
-    return low
+    return low, split_total_rank(low, maximum_path_rank)
 
 
 def plan_uniform_schmidt_budget(
@@ -101,6 +149,7 @@ def plan_uniform_schmidt_budget(
     target_ratio: float,
     scale_bits: int = 16,
     minimum_rank: int = 8,
+    max_paths: int = 8,
     metadata_reserve_bytes: int = 1 << 20,
 ) -> SchmidtModelPlan:
     """Create a first-pass rank plan under a whole-model byte constraint.
@@ -146,8 +195,10 @@ def plan_uniform_schmidt_budget(
     for target in unique_targets:
         share = factor_budget * target.weight_bytes // dense_target_bytes
         out_features, in_features = target.shape
-        rank = _rank_for_budget(out_features, in_features, share, scale_bits)
-        if rank < minimum_rank:
+        total_rank, path_ranks = _rank_for_budget(
+            out_features, in_features, share, scale_bits, max_paths,
+        )
+        if total_rank < minimum_rank:
             return SchmidtModelPlan(
                 requested_ratio=target_ratio,
                 achieved_payload_ratio=dense_bytes / max(payload_total, 1),
@@ -156,17 +207,20 @@ def plan_uniform_schmidt_budget(
                 untargeted_bytes=inventory.untargeted_parameter_bytes,
                 target_plans=tuple(plans),
                 feasible=False,
-                infeasibility_reason=f"{target.name} receives rank {rank}, below minimum {minimum_rank}",
+                infeasibility_reason=(
+                    f"{target.name} receives total rank {total_rank}, below minimum {minimum_rank}"
+                ),
             )
-        sign_bytes, scale_bytes = schmidt_payload_bytes(
-            out_features, in_features, rank, scale_bits=scale_bits,
+        sign_bytes, scale_bytes = multi_path_schmidt_payload_bytes(
+            out_features, in_features, path_ranks, scale_bits=scale_bits,
         )
         payload = sign_bytes + scale_bytes + target.bias_bytes
         payload_total += sign_bytes + scale_bytes
         plans.append(SchmidtTargetPlan(
             name=target.name,
             shape=target.shape,
-            rank=rank,
+            total_rank=total_rank,
+            path_ranks=path_ranks,
             dense_bytes=target.weight_bytes + target.bias_bytes,
             packed_sign_bytes=sign_bytes,
             scale_bytes=scale_bytes,

@@ -26,6 +26,7 @@ def main() -> None:
     parser.add_argument("--target-ratio", type=float, action="append", default=[])
     parser.add_argument("--scale-bits", type=int, choices=(16, 32), default=16)
     parser.add_argument("--minimum-rank", type=int, default=8)
+    parser.add_argument("--max-paths", type=int, default=8)
     parser.add_argument("--metadata-reserve-mib", type=float, default=1.0)
     parser.add_argument("--trust-remote-code", action="store_true")
     parser.add_argument("--output", type=Path)
@@ -46,13 +47,14 @@ def main() -> None:
     model.to(dtype=torch.float16)
     inventory = inventory_model(model)
 
-    ratios = args.target_ratio or [8.0, 10.0, 12.0]
+    ratios = args.target_ratio or [2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0]
     plans = [
         plan_uniform_schmidt_budget(
             inventory,
             target_ratio=ratio,
             scale_bits=args.scale_bits,
             minimum_rank=args.minimum_rank,
+            max_paths=args.max_paths,
             metadata_reserve_bytes=round(args.metadata_reserve_mib * 1024 * 1024),
         )
         for ratio in ratios
