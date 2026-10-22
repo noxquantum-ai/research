@@ -1,0 +1,293 @@
+{
+  "status": "COMPLETE_SAMPLE_ONLY",
+  "task": "mmlu",
+  "shots": 5,
+  "questions": 57,
+  "subjects": 57,
+  "batch_size": 32,
+  "per_subject": {
+    "mmlu_abstract_algebra": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_anatomy": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_astronomy": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_college_biology": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_college_chemistry": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_college_computer_science": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_college_mathematics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_college_physics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_computer_security": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_conceptual_physics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_electrical_engineering": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_elementary_mathematics": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_high_school_biology": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_chemistry": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_computer_science": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_high_school_mathematics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_physics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_statistics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_machine_learning": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_business_ethics": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_clinical_knowledge": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_college_medicine": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_global_facts": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_human_aging": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_management": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_marketing": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_medical_genetics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_miscellaneous": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_nutrition": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_professional_accounting": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_professional_medicine": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_virology": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_econometrics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_geography": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_government_and_politics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_macroeconomics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_microeconomics": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_psychology": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_human_sexuality": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_professional_psychology": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_public_relations": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_security_studies": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_sociology": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_us_foreign_policy": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_formal_logic": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_european_history": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_high_school_us_history": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_high_school_world_history": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_international_law": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_jurisprudence": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_logical_fallacies": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_moral_disputes": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_moral_scenarios": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_philosophy": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_prehistory": {
+      "accuracy": 0.0,
+      "count": 1
+    },
+    "mmlu_professional_law": {
+      "accuracy": 1.0,
+      "count": 1
+    },
+    "mmlu_world_religions": {
+      "accuracy": 0.0,
+      "count": 1
+    }
+  },
+  "warning": "Diagnostic sample only (one example per subject), not the full MMLU score and not comparable to the published score.",
+  "split": "test",
+  "sampling": "First test example from each of the 57 MMLU subjects; 5-shot prompt.",
+  "correct": 14,
+  "accuracy": 0.24561403508771928,
+  "accuracy_percent": 24.56140350877193,
+  "model": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "allocation": {
+    "NEC_layers": [
+      0,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "FP16_dense_layers": [
+      1,
+      2,
+      3
+    ],
+    "INT8_dense_layers": [
+      31
+    ]
+  },
+  "benchmark_harness": {
+    "name": "EleutherAI/lm-evaluation-harness",
+    "version": "0.4.13"
+  },
+  "dataset_revision": "c30699e8356da336a370243923dbaf21066bb9fe",
+  "published_llama2_7b_full_mmlu_5shot_reference_percent": 45.3,
+  "published_reference_url": "https://arxiv.org/abs/2307.09288"
+}
