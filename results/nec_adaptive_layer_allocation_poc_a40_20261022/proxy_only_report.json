@@ -1,0 +1,386 @@
+{
+  "status": "COMPLETE",
+  "scope": "fixed-count NEC layer allocation predicted from single-layer end-to-end logit probes",
+  "method": {
+    "name": "Fisher quadratic interaction proxy with conditional beam and swap search",
+    "proxy_objective": "second-order dense-teacher KL and NLL Taylor expansion in logit space",
+    "uses_prior_multi_layer_rankings": false,
+    "multi_layer_full_model_evaluations_during_selection": 0,
+    "selection_model_evaluation_count": 5,
+    "selection_model_evaluations": [
+      "dense reference",
+      "layer_0_only",
+      "layer_1_only",
+      "layer_2_only",
+      "layer_3_only"
+    ],
+    "heldout_model_evaluation_count": 2,
+    "proxy_allocations_scored": 6,
+    "proxy_search_strategy": "exact_over_fisher_proxy",
+    "proxy_optimal_within_search": true,
+    "max_ppl_constraint_applied_to": "selection-sample proxy estimate only; held-out PPL is the independent check"
+  },
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source_commit": "e933d195ff90cfff2fc539c9f2c61183125f8481",
+  "torch": "2.11.0+cu128",
+  "gpu": "NVIDIA A40",
+  "model_compatibility": {
+    "model_config": {
+      "model_type": "llama",
+      "hidden_size": 4096,
+      "intermediate_size": 11008,
+      "num_hidden_layers": 32,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 32,
+      "vocab_size": 32000,
+      "max_position_embeddings": 4096,
+      "rms_norm_eps": 1e-05,
+      "tie_word_embeddings": false,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "pad_token_id": 0
+    },
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_config_commit_hash": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "projection_layers": 32
+  },
+  "model_layer_count": 32,
+  "candidate_layers": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "eligible_candidate_layers": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "protected_layers": [],
+  "requested_compressed_count": 2,
+  "resulting_dense_layer_count": 30,
+  "max_ppl": 10.0,
+  "selected_allocation": {
+    "predicted_mean_nll": 1.9948959358848386,
+    "predicted_perplexity": 7.351437967196584,
+    "predicted_kl_nats_per_token": 0.20364373564939658,
+    "compressed_layers": [
+      0,
+      1
+    ],
+    "predicted_quality_feasible": true
+  },
+  "storage": {
+    "scope": "candidate layers only; all other model layers remain dense",
+    "candidate_dense_bytes": 1619066880,
+    "allocated_candidate_bytes": 949384900,
+    "bytes_saved_vs_dense_candidates": 669681980,
+    "layers": {
+      "0": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 69815746,
+        "selected_as_compressed": true,
+        "allocated_bytes": 69815746
+      },
+      "1": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 70035714,
+        "selected_as_compressed": true,
+        "allocated_bytes": 70035714
+      },
+      "2": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 70008770,
+        "selected_as_compressed": false,
+        "allocated_bytes": 404766720
+      },
+      "3": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 70098370,
+        "selected_as_compressed": false,
+        "allocated_bytes": 404766720
+      }
+    }
+  },
+  "independent_sensitivity_baseline": {
+    "compressed_layers": [
+      0,
+      1
+    ],
+    "selection_rule": "choose the individually lowest measured singleton KL layers",
+    "warning": "baseline ignores interactions and is not the allocator's objective"
+  },
+  "fisher_interaction_proxy": {
+    "layer_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "single_layer_nll_gradient": [
+      -0.005867816205847194,
+      -0.016597566582172683,
+      -0.026876047705311525,
+      -0.028779075726152025
+    ],
+    "pairwise_fisher_gram": [
+      [
+        0.053472308399079974,
+        0.05667390331722738,
+        0.05650774298351052,
+        0.049110270274230705
+      ],
+      [
+        0.05667390331722738,
+        0.24046735626525845,
+        0.22396752499744707,
+        0.1754522952693273
+      ],
+      [
+        0.05650774298351052,
+        0.22396752499744707,
+        0.35924622422341207,
+        0.24135896412477179
+      ],
+      [
+        0.049110270274230705,
+        0.1754522952693273,
+        0.24135896412477179,
+        0.26791505374828006
+      ]
+    ],
+    "scored_tokens": 4095
+  },
+  "single_layer_probe_metrics": {
+    "0": {
+      "perplexity": 6.300190206179167,
+      "mean_nll": 1.8405798243987448,
+      "mean_kl_nats_per_token": 0.03273004177202664,
+      "next_token_accuracy": 0.5865689865689866,
+      "dense_top1_agreement": 0.9333333333333333,
+      "scored_tokens": 4095
+    },
+    "1": {
+      "perplexity": 7.072620845327345,
+      "mean_nll": 1.9562311106969341,
+      "mean_kl_nats_per_token": 0.15911102308228972,
+      "next_token_accuracy": 0.5655677655677656,
+      "dense_top1_agreement": 0.8525030525030525,
+      "scored_tokens": 4095
+    },
+    "2": {
+      "perplexity": 7.627161698734766,
+      "mean_nll": 2.0317157837879383,
+      "mean_kl_nats_per_token": 0.24487417171078674,
+      "next_token_accuracy": 0.5540903540903541,
+      "dense_top1_agreement": 0.8236874236874236,
+      "scored_tokens": 4095
+    },
+    "3": {
+      "perplexity": 7.011214196156867,
+      "mean_nll": 1.9475108951997175,
+      "mean_kl_nats_per_token": 0.16257232899413068,
+      "next_token_accuracy": 0.5663003663003663,
+      "dense_top1_agreement": 0.843956043956044,
+      "scored_tokens": 4095
+    }
+  },
+  "proxy_ranked_allocations": [
+    {
+      "predicted_mean_nll": 1.9948959358848386,
+      "predicted_perplexity": 7.351437967196584,
+      "predicted_kl_nats_per_token": 0.20364373564939658,
+      "compressed_layers": [
+        0,
+        1
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 1.9888746424393733,
+      "predicted_perplexity": 7.307305801647345,
+      "predicted_kl_nats_per_token": 0.20980395134791072,
+      "compressed_layers": [
+        0,
+        3
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.04384072840706,
+      "predicted_perplexity": 7.720203535622328,
+      "predicted_kl_nats_per_token": 0.26286700929475654,
+      "compressed_layers": [
+        0,
+        2
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.1979844409912337,
+      "predicted_perplexity": 9.006841371820848,
+      "predicted_kl_nats_per_token": 0.42964350027609655,
+      "compressed_layers": [
+        1,
+        3
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.2940682839777597,
+      "predicted_perplexity": 9.915193562578853,
+      "predicted_kl_nats_per_token": 0.5238243152417823,
+      "compressed_layers": [
+        1,
+        2
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.3130020627026164,
+      "predicted_perplexity": 10.104714152257332,
+      "predicted_kl_nats_per_token": 0.5549396031106179,
+      "compressed_layers": [
+        2,
+        3
+      ],
+      "predicted_quality_feasible": false
+    }
+  ],
+  "selection_data": {
+    "split": "train",
+    "split_metadata": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "token_ids_sha256": "71e5c6002051bc3c509b8440750e651bf12edf81f5e144575458ab9b8d11c1ab",
+    "split_token_count": 2874559,
+    "scored_tokens": 4095,
+    "token_start": 4096,
+    "token_end_exclusive": 8192,
+    "checkpoint_calibration_disjointness": {
+      "calibration_split": "train",
+      "selection_split": "train",
+      "calibration_sequence_length": 128,
+      "calibration_window_count": 32,
+      "overlap_count": 0,
+      "selection_token_start": 4096,
+      "selection_token_end_exclusive": 8192
+    }
+  },
+  "heldout_data": {
+    "split": "test",
+    "split_metadata": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "test",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+      "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+      "source_bytes": 732610,
+      "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+      "text_bytes": 1296370,
+      "text_join": "double_newline",
+      "rows": 4358,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "token_ids_sha256": "74eef0b288393509a8f902f2833b3f10587c451524d119074bb8a0ce52cdf773",
+    "split_token_count": 341469,
+    "token_start": 0,
+    "input_token_count": 4096,
+    "is_disjoint_from_selection_split": true,
+    "metrics": {
+      "perplexity": 8.120410943819914,
+      "mean_nll": 2.094380761737819,
+      "teacher_kl_nats_per_token": 0.5075804869763504,
+      "next_token_accuracy": 0.5582417582417583,
+      "dense_top1_agreement": 0.7501831501831502,
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "context": 2048,
+      "stride": 512,
+      "seconds": 10.506408415996702
+    },
+    "ppl_constraint_passed": true
+  },
+  "checkpoint_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "checkpoint_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+    "compressed_layer_1.pt": "95762275f29132a7114e447352f0c869c595f0c584a05c2547c6839d1ca0597f",
+    "compressed_layer_2.pt": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+    "compressed_layer_3.pt": "c05f05a73f8365451508b573d496d30cbae9ff00c750a3144a96393a9c3beb88"
+  },
+  "script_sha256": "f76ab0e9d6c689ae48174486b41cbe943216007d6189aa7fa37a42f1368c0cd1",
+  "allocator_module_sha256": "28f02221b0e548b8feb88f481e4c7528761729bcbaf807c97d1b5c6334e6fbdd",
+  "selection_runtime": {
+    "dense_probe_seconds": 7.2869542370026466,
+    "singleton_probe_seconds": {
+      "0": 7.099602372996742,
+      "1": 8.504687111999374,
+      "2": 8.196033554006135,
+      "3": 6.803656492003938
+    },
+    "selection_probe_wall_seconds": 110.68833162100054
+  },
+  "protocol": {
+    "context": 2048,
+    "stride": 512,
+    "logits_dtype": "model output dtype, stored as FP16",
+    "proxy_distribution_dtype": "FP32",
+    "proxy_chunk_tokens": 32
+  },
+  "warning": "The Fisher proxy models pairwise interactions between single-layer logit deltas but omits higher-order hidden-state interactions. This result is a proof of concept and does not establish 32-layer quality.",
+  "elapsed_seconds": 122.79326803400181
+}

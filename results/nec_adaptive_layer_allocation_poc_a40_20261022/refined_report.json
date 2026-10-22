@@ -1,0 +1,494 @@
+{
+  "status": "COMPLETE",
+  "scope": "fixed-count NEC layer allocation predicted from single-layer end-to-end logit probes",
+  "method": {
+    "name": "Fisher quadratic interaction proxy with conditional beam, swap search, and exact shortlist refinement",
+    "proxy_objective": "second-order dense-teacher KL and NLL Taylor expansion in logit space",
+    "uses_prior_multi_layer_rankings": false,
+    "multi_layer_full_model_evaluations_during_proxy_search": 0,
+    "multi_layer_full_model_evaluations_during_selection": 2,
+    "selection_model_evaluation_count": 5,
+    "selection_model_evaluations": [
+      "dense reference",
+      "layer_0_only",
+      "layer_1_only",
+      "layer_2_only",
+      "layer_3_only"
+    ],
+    "exact_refinement_model_evaluation_count": 3,
+    "exact_refinement_candidate_count": 2,
+    "total_possible_allocations": 6,
+    "refinement_is_strict_shortlist": true,
+    "exact_refinement_evaluations": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        3
+      ]
+    ],
+    "heldout_model_evaluation_count": 2,
+    "proxy_allocations_scored": 6,
+    "proxy_search_strategy": "exact_over_fisher_proxy",
+    "proxy_optimal_within_search": true,
+    "max_ppl_constraint_applied_to": "proxy and exact-refinement selection samples; held-out PPL is the independent check",
+    "total_model_configuration_runs_before_heldout": 8
+  },
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source_commit": "d49bd141193369bd93c2a128b2048e796699395d",
+  "torch": "2.11.0+cu128",
+  "gpu": "NVIDIA A40",
+  "model_compatibility": {
+    "model_config": {
+      "model_type": "llama",
+      "hidden_size": 4096,
+      "intermediate_size": 11008,
+      "num_hidden_layers": 32,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 32,
+      "vocab_size": 32000,
+      "max_position_embeddings": 4096,
+      "rms_norm_eps": 1e-05,
+      "tie_word_embeddings": false,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "pad_token_id": 0
+    },
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_config_commit_hash": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "projection_layers": 32
+  },
+  "model_layer_count": 32,
+  "candidate_layers": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "eligible_candidate_layers": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "protected_layers": [],
+  "requested_compressed_count": 2,
+  "resulting_dense_layer_count": 30,
+  "max_ppl": 10.0,
+  "selected_allocation": {
+    "compressed_layers": [
+      0,
+      3
+    ],
+    "proxy_estimate": {
+      "predicted_mean_nll": 2.1431621725636196,
+      "predicted_perplexity": 8.526356856552768,
+      "predicted_kl_nats_per_token": 0.37107693651771423,
+      "compressed_layers": [
+        0,
+        3
+      ],
+      "predicted_quality_feasible": true
+    },
+    "exact_refinement_metrics": {
+      "perplexity": 6.8937525452893835,
+      "mean_nll": 1.9306155732365624,
+      "mean_kl_nats_per_token": 0.2606961482331262,
+      "next_token_accuracy": 0.5797313797313798,
+      "dense_top1_agreement": 0.819047619047619,
+      "scored_tokens": 4095
+    },
+    "exact_refinement_quality_feasible": true
+  },
+  "storage": {
+    "scope": "candidate layers only; all other model layers remain dense",
+    "candidate_dense_bytes": 1619066880,
+    "allocated_candidate_bytes": 949447556,
+    "bytes_saved_vs_dense_candidates": 669619324,
+    "layers": {
+      "0": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 69815746,
+        "selected_as_compressed": true,
+        "allocated_bytes": 69815746
+      },
+      "1": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 70035714,
+        "selected_as_compressed": false,
+        "allocated_bytes": 404766720
+      },
+      "2": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 70008770,
+        "selected_as_compressed": false,
+        "allocated_bytes": 404766720
+      },
+      "3": {
+        "dense_projection_and_norm_bytes": 404766720,
+        "serialized_checkpoint_bytes": 70098370,
+        "selected_as_compressed": true,
+        "allocated_bytes": 70098370
+      }
+    }
+  },
+  "independent_sensitivity_baseline": {
+    "compressed_layers": [
+      0,
+      1
+    ],
+    "selection_rule": "choose the individually lowest measured singleton KL layers",
+    "warning": "baseline ignores interactions and is not the allocator's objective"
+  },
+  "fisher_interaction_proxy": {
+    "layer_order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "single_layer_nll_gradient": [
+      -0.0168042382250885,
+      -0.04093492958656119,
+      -0.04481325466285951,
+      -0.030671990277345327
+    ],
+    "pairwise_fisher_gram": [
+      [
+        0.11268735461009627,
+        0.11504423588083375,
+        0.11325179008494576,
+        0.10320045830465022
+      ],
+      [
+        0.11504423588083375,
+        0.3641902591943475,
+        0.3574743322192924,
+        0.2854795039422948
+      ],
+      [
+        0.11325179008494576,
+        0.3574743322192924,
+        0.6297137586426996,
+        0.4097153144933644
+      ],
+      [
+        0.10320045830465022,
+        0.2854795039422948,
+        0.4097153144933644,
+        0.4230656018160317
+      ]
+    ],
+    "scored_tokens": 1023
+  },
+  "single_layer_probe_metrics": {
+    "0": {
+      "perplexity": 6.549899712755378,
+      "mean_nll": 1.8794497385002322,
+      "mean_kl_nats_per_token": 0.07669248810059608,
+      "next_token_accuracy": 0.6080156402737048,
+      "dense_top1_agreement": 0.9002932551319648,
+      "scored_tokens": 1023
+    },
+    "1": {
+      "perplexity": 7.496389516361581,
+      "mean_nll": 2.0144215068146787,
+      "mean_kl_nats_per_token": 0.23579489508585738,
+      "next_token_accuracy": 0.5786901270772239,
+      "dense_top1_agreement": 0.823069403714565,
+      "scored_tokens": 1023
+    },
+    "2": {
+      "perplexity": 9.093040122407807,
+      "mean_nll": 2.207509299184036,
+      "mean_kl_nats_per_token": 0.4327610218959944,
+      "next_token_accuracy": 0.5532746823069403,
+      "dense_top1_agreement": 0.7781036168132942,
+      "scored_tokens": 1023
+    },
+    "3": {
+      "perplexity": 7.8459905102184235,
+      "mean_nll": 2.060002638280948,
+      "mean_kl_nats_per_token": 0.2711131112811664,
+      "next_token_accuracy": 0.5650048875855328,
+      "dense_top1_agreement": 0.8074291300097751,
+      "scored_tokens": 1023
+    }
+  },
+  "proxy_ranked_allocations": [
+    {
+      "predicted_mean_nll": 2.1153053395197454,
+      "predicted_perplexity": 8.292117290723526,
+      "predicted_kl_nats_per_token": 0.35348304278305565,
+      "compressed_layers": [
+        0,
+        1
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.1431621725636196,
+      "predicted_perplexity": 8.526356856552768,
+      "predicted_kl_nats_per_token": 0.37107693651771423,
+      "compressed_layers": [
+        0,
+        3
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.2423963183717355,
+      "predicted_perplexity": 9.41586769119354,
+      "predicted_kl_nats_per_token": 0.48445234671134374,
+      "compressed_layers": [
+        0,
+        2
+      ],
+      "predicted_quality_feasible": true
+    },
+    {
+      "predicted_mean_nll": 2.4270619791319175,
+      "predicted_perplexity": 11.325558424181144,
+      "predicted_kl_nats_per_token": 0.6791074344474844,
+      "compressed_layers": [
+        1,
+        3
+      ],
+      "predicted_quality_feasible": false
+    },
+    {
+      "predicted_mean_nll": 2.5882396214367347,
+      "predicted_perplexity": 13.306326800930439,
+      "predicted_kl_nats_per_token": 0.854426341137816,
+      "compressed_layers": [
+        1,
+        2
+      ],
+      "predicted_quality_feasible": false
+    },
+    {
+      "predicted_mean_nll": 2.6801812143308648,
+      "predicted_perplexity": 14.587736563294737,
+      "predicted_kl_nats_per_token": 0.93610499472273,
+      "compressed_layers": [
+        2,
+        3
+      ],
+      "predicted_quality_feasible": false
+    }
+  ],
+  "exact_refinement": {
+    "split": "train",
+    "split_metadata": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "token_ids_sha256": "75c46a39a601df1becdc577c9df75e3820d5dd5507dd2c15506b089fab17268c",
+    "split_token_count": 2874559,
+    "token_start": 8192,
+    "token_end_exclusive": 12288,
+    "scored_tokens": 4095,
+    "checkpoint_calibration_disjointness": {
+      "calibration_split": "train",
+      "selection_split": "train",
+      "calibration_sequence_length": 128,
+      "calibration_window_count": 32,
+      "overlap_count": 0,
+      "selection_token_start": 8192,
+      "selection_token_end_exclusive": 12288
+    },
+    "measured_candidates": [
+      {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "metrics": {
+          "perplexity": 8.58732652439237,
+          "mean_nll": 2.150287456400306,
+          "mean_kl_nats_per_token": 0.4899792108367719,
+          "next_token_accuracy": 0.550915750915751,
+          "dense_top1_agreement": 0.7499389499389499,
+          "scored_tokens": 4095
+        },
+        "quality_feasible": true,
+        "selected_after_refinement": false
+      },
+      {
+        "compressed_layers": [
+          0,
+          3
+        ],
+        "metrics": {
+          "perplexity": 6.8937525452893835,
+          "mean_nll": 1.9306155732365624,
+          "mean_kl_nats_per_token": 0.2606961482331262,
+          "next_token_accuracy": 0.5797313797313798,
+          "dense_top1_agreement": 0.819047619047619,
+          "scored_tokens": 4095
+        },
+        "quality_feasible": true,
+        "selected_after_refinement": true
+      }
+    ],
+    "selected_layers": [
+      0,
+      3
+    ]
+  },
+  "selection_data": {
+    "split": "train",
+    "split_metadata": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "train",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/train-00000-of-00001.parquet",
+      "source_sha256": "e83889baabc497075506f91975be5fac0d45c5290b6b20582c8cd1e853d0c9f7",
+      "source_bytes": 6357543,
+      "text_sha256": "aee724fa58bfbdeb3fc6803297fb6bab27b203d7c40b39ddef9b9770e5d52fe5",
+      "text_bytes": 10988279,
+      "text_join": "double_newline",
+      "rows": 36718,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "token_ids_sha256": "16241af5e1b9c7f8aea31ae816e78eb9e030e8d60583649b95667ca2ed102de4",
+    "split_token_count": 2874559,
+    "scored_tokens": 1023,
+    "token_start": 4096,
+    "token_end_exclusive": 5120,
+    "checkpoint_calibration_disjointness": {
+      "calibration_split": "train",
+      "selection_split": "train",
+      "calibration_sequence_length": 128,
+      "calibration_window_count": 32,
+      "overlap_count": 0,
+      "selection_token_start": 4096,
+      "selection_token_end_exclusive": 5120
+    }
+  },
+  "heldout_data": {
+    "split": "test",
+    "split_metadata": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "test",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+      "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+      "source_bytes": 732610,
+      "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+      "text_bytes": 1296370,
+      "text_join": "double_newline",
+      "rows": 4358,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "token_ids_sha256": "74eef0b288393509a8f902f2833b3f10587c451524d119074bb8a0ce52cdf773",
+    "split_token_count": 341469,
+    "token_start": 0,
+    "input_token_count": 4096,
+    "is_disjoint_from_selection_splits": true,
+    "metrics": {
+      "perplexity": 6.318436348460294,
+      "mean_nll": 1.8434717643287586,
+      "teacher_kl_nats_per_token": 0.25921728973243485,
+      "next_token_accuracy": 0.5948717948717949,
+      "dense_top1_agreement": 0.8105006105006105,
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "context": 2048,
+      "stride": 512,
+      "seconds": 9.230570485000499
+    },
+    "ppl_constraint_passed": true
+  },
+  "checkpoint_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "checkpoint_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+    "compressed_layer_1.pt": "95762275f29132a7114e447352f0c869c595f0c584a05c2547c6839d1ca0597f",
+    "compressed_layer_2.pt": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+    "compressed_layer_3.pt": "c05f05a73f8365451508b573d496d30cbae9ff00c750a3144a96393a9c3beb88"
+  },
+  "script_sha256": "f4015be2dd5eb4e7becdd4800961d966e60999e17926b9ade12f1dcbeadeb5d0",
+  "allocator_module_sha256": "28f02221b0e548b8feb88f481e4c7528761729bcbaf807c97d1b5c6334e6fbdd",
+  "selection_runtime": {
+    "setup_seconds": 52.15341967198765,
+    "dense_probe_seconds": 1.2121508410200477,
+    "singleton_probe_seconds": {
+      "0": 1.3295982119743712,
+      "1": 1.1994049859931692,
+      "2": 1.1946190090093296,
+      "3": 1.007438036001986
+    },
+    "selection_probe_wall_seconds": 7.134775280981557,
+    "refinement_dense_seconds": 4.473244986002101,
+    "refinement_candidate_seconds": {
+      "0_1": 5.25544598599663,
+      "0_3": 5.006881959008751
+    },
+    "refinement_wall_seconds": 14.735768392012687
+  },
+  "protocol": {
+    "context": 2048,
+    "stride": 512,
+    "logits_dtype": "model output dtype, stored as FP16",
+    "proxy_distribution_dtype": "FP32",
+    "proxy_chunk_tokens": 32
+  },
+  "warning": "The Fisher proxy models pairwise interactions between single-layer logit deltas but omits higher-order hidden-state interactions. This result is a proof of concept and does not establish 32-layer quality.",
+  "elapsed_seconds": 94.82881605500006
+}

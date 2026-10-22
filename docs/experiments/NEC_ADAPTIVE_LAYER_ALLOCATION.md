@@ -9,13 +9,14 @@ not rank layers independently. For an exact dense-layer count `K`, it chooses
 the request is infeasible unless the available candidates can satisfy that
 count. Boundary protection is an optional constraint, not a default.
 
-The primary selection objective is dense-teacher KL on selection data, with a
-PPL limit used as a feasibility constraint. If no predicted candidate meets
-the PPL limit, the allocator reports that fact and returns the lowest-PPL
-candidate for inspection. On a held-out split, the exact measured PPL, KL,
-next-token accuracy, checkpoint bytes, and dense top-1 agreement determine
-whether the allocation passed. The selection proxy is never reported as a
-measured model result.
+The proxy ranks allocations by estimated teacher KL, using predicted PPL as a
+feasibility constraint. The bounded exact-refinement stage then selects among
+the shortlisted candidates by measured PPL under the requested limit, with KL
+as a tie-breaker. If none meets the limit, it returns the lowest-PPL
+shortlisted candidate and marks it infeasible. On a separate held-out split,
+the exact measured PPL, KL, next-token accuracy, checkpoint bytes, and dense
+top-1 agreement determine whether the allocation passed. Proxy estimates are
+never reported as measured model results.
 
 For `--max-ppl P --optimize-storage`, the deployment objective is the maximum
 actual checkpoint storage saved subject to the independently measured quality
@@ -32,9 +33,9 @@ On a selection sample, the prototype measures the dense model's logits
 delta_l(x) = z_{ {l} }(x) - z_0(x)
 ```
 
-It does not forward any multi-layer allocation during selection. Given dense
-probabilities `p = softmax(z_0)`, it builds the empirical Fisher interaction
-matrix:
+It does not forward any multi-layer allocation during proxy search. Given
+dense probabilities `p = softmax(z_0)`, it builds the empirical Fisher
+interaction matrix:
 
 ```text
 F_ij = E_x[ delta_i^T (diag(p) - p p^T) delta_j ]
@@ -67,31 +68,56 @@ should be revised or discarded.
 
 ## Four-layer proof of concept
 
-The first run uses the saved checkpoints for layers 0–3. It requests two
+The prototype uses the saved checkpoints for layers 0–3. It requests two
 compressed candidates (`--compress-count 2`), which means 30 dense layers in
 the full 32-layer model. The four-layer pair ranking already published from
-the 4,095-token validation slice is an answer key for analysis only. The
-search program does not read that report or its scores.
+the 4,095-token validation slice is an answer key for retrospective analysis
+only. The search program does not read that report or its scores.
 
-The checkpoints were calibrated on 4,096 WikiText-2 train tokens sampled at
-saved token offsets. The default search sample uses WikiText-2 train tokens
-4,096–8,192 and checks that this range does not overlap the recorded
-calibration windows. The final check uses WikiText-2 test, which is a separate
-dataset split. The initial prototype defaults to 4,096 held-out input tokens;
-`--heldout-tokens 0` requests the complete split.
+The checkpoints were calibrated on WikiText-2 train tokens sampled at saved
+token offsets. The proxy sample uses train tokens 4,096–5,120 and the exact
+refinement sample uses 8,192–12,288; both ranges are checked against the
+recorded calibration windows and each other. The final check uses WikiText-2
+test, which is a separate dataset split. The default is 4,096 held-out input
+tokens; `--heldout-tokens 0` requests the complete split.
+
+The proxy-only run selected layers 0 and 1. That missed the known validation
+winner, layers 0 and 3, and scored PPL 8.12 on the held-out test slice. The
+proxy's first two candidates were layers 0+1 and 0+3, with nearly tied
+estimated KL. The follow-up measured just those two combinations on the
+separate refinement slice, out of six possible pairs. Measured PPLs were 8.59
+for 0+1 and 6.89 for 0+3, so refinement selected 0+3. Its held-out test PPL
+was 6.32, teacher KL was 0.259 nats/token, and dense top-1 agreement was
+81.1%. On the prior 4,095-token validation answer key, 0+3 was rank 1 at PPL
+5.079; the refined choice therefore had zero regret against that local answer
+key. The proxy-only 0+1 choice was rank 4 at PPL 7.497, a 2.418 PPL regret.
+Both held-out test scores use the same token slice.
+
+The refined choice saves 669,619,324 serialized weight bytes across the four
+candidate layers (41.4% of that region); the remaining 28 model layers stay
+dense. The run used five configurations for the 1,023-token singleton probe,
+three for refinement (dense reference plus two shortlisted pairs), then dense
+and selected-student passes for held-out evaluation. It did not run the other
+four mixed pairs. Total elapsed wall time was about 95 seconds, including
+model loading; the measured proxy/search and refinement stages took about 22
+seconds. These timings are specific to the A40 and this implementation.
+
+The reports and raw logs are archived in
+[`results/nec_adaptive_layer_allocation_poc_a40_20261022/`](../../results/nec_adaptive_layer_allocation_poc_a40_20261022/).
 
 The run records:
 
 - the selected pair and its rank against the previously measured 4,095-token
-  validation answer key (reported after selection, never fed to the search);
+  validation answer key (calculated after selection, never fed to the search);
 - proxy rank and predicted KL/PPL for each considered mask;
 - dense plus singleton model-evaluation counts and GPU time;
 - exact held-out PPL, teacher KL, next-token accuracy, and dense top-1 agreement;
 - hashes for checkpoint artifacts, dataset source, and token IDs.
 
 This is a proof of concept, not evidence that the proxy generalizes to 32
-layers. A successful four-layer result means only that the interaction proxy
-recovered a known local allocation without evaluating all six pair models.
+layers. A successful four-layer result means only that the proxy shortlist plus
+exact refinement recovered a known local allocation without evaluating all
+six pair models. The proxy alone did not recover it.
 The next research gate is to freeze the proxy, then test on a larger candidate
 set with an exhaustive or high-budget oracle used only for retrospective
 ranking accuracy and quality regret.
