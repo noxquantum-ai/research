@@ -1,0 +1,424 @@
+{
+  "status": "COMPLETE",
+  "scope": "saved four-layer checkpoint diagnostic; no fitting",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source_commit": "86b246463b0d64e7230aa150286ae15bdf8b7921",
+  "diagnostic_script_sha256": "b0708997c469507e602fabb38b055c2dfc0a1c7970afa0829cb7806c1f6054c1",
+  "torch": "2.11.0+cu128",
+  "checkpoint_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "checkpoint_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+    "compressed_layer_1.pt": "95762275f29132a7114e447352f0c869c595f0c584a05c2547c6839d1ca0597f",
+    "compressed_layer_2.pt": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+    "compressed_layer_3.pt": "c05f05a73f8365451508b573d496d30cbae9ff00c750a3144a96393a9c3beb88"
+  },
+  "ppl_protocol": {
+    "split": "validation",
+    "context": 2048,
+    "stride": 512,
+    "max_eval_tokens": 0,
+    "batch_size": 1,
+    "selected_variants": [
+      "dense",
+      "prefix4_boundaries_dense"
+    ],
+    "kl_variants": [
+      "prefix4_boundaries_dense"
+    ],
+    "activation_traces_enabled": false
+  },
+  "decoding": {
+    "0.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036335110780783,
+      "finite": true
+    },
+    "0.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003897432761732489,
+      "finite": true
+    },
+    "0.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00040901059401221573,
+      "finite": true
+    },
+    "0.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004266783071216196,
+      "finite": true
+    },
+    "0.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00031435623532161117,
+      "finite": true
+    },
+    "0.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003172524448018521,
+      "finite": true
+    },
+    "0.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004279068671166897,
+      "finite": true
+    },
+    "1.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003979170578531921,
+      "finite": true
+    },
+    "1.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00039495990495197475,
+      "finite": true
+    },
+    "1.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.000414279435062781,
+      "finite": true
+    },
+    "1.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004293163074180484,
+      "finite": true
+    },
+    "1.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003021369338966906,
+      "finite": true
+    },
+    "1.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00031143613159656525,
+      "finite": true
+    },
+    "1.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00040276983054354787,
+      "finite": true
+    },
+    "2.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003626254328992218,
+      "finite": true
+    },
+    "2.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036256754538044333,
+      "finite": true
+    },
+    "2.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00037916042492724955,
+      "finite": true
+    },
+    "2.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003933655971195549,
+      "finite": true
+    },
+    "2.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002993143571075052,
+      "finite": true
+    },
+    "2.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00030365900602191687,
+      "finite": true
+    },
+    "2.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003923012991435826,
+      "finite": true
+    },
+    "3.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00035155206569470465,
+      "finite": true
+    },
+    "3.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003555781440809369,
+      "finite": true
+    },
+    "3.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036542193265631795,
+      "finite": true
+    },
+    "3.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00037717947270721197,
+      "finite": true
+    },
+    "3.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002967393957078457,
+      "finite": true
+    },
+    "3.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002976525283884257,
+      "finite": true
+    },
+    "3.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003890476655215025,
+      "finite": true
+    }
+  },
+  "ppl": {
+    "dense": {
+      "perplexity": 4.94691054459028,
+      "scored_tokens": 299963,
+      "seconds": 445.15602592698997,
+      "mean_nll": 1.5987632493228852,
+      "next_token_accuracy": 0.6230635111663771,
+      "dense_top1_agreement": 1.0,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 2915.835693359375,
+        "independent_formula_sum": 2915.835693359375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003015835693359375
+      },
+      "selected": {},
+      "storage": {
+        "compressed_layers": [],
+        "dense_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1619066880,
+        "bytes_saved_vs_all_dense": 0
+      }
+    },
+    "prefix4_boundaries_dense": {
+      "perplexity": 9.565702768644325,
+      "scored_tokens": 299963,
+      "seconds": 450.4145685429976,
+      "mean_nll": 2.258184073130413,
+      "next_token_accuracy": 0.5311921803689121,
+      "dense_top1_agreement": 0.7048102617263794,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4224.57470703125,
+        "independent_formula_sum": 4224.5751953125,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.0043245751953125
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1,
+          2
+        ],
+        "dense_layers": [
+          0,
+          3
+        ],
+        "four_layer_payload_bytes": 949577924,
+        "bytes_saved_vs_all_dense": 669488956
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.6747103333473206,
+        "token_kl_quantiles_nats": [
+          6.299147571553476e-06,
+          0.33947375416755676,
+          1.6486560106277466,
+          5.196490287780762,
+          16.373106002807617
+        ],
+        "scored_tokens": 299963,
+        "input_tokens": 299964,
+        "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    }
+  },
+  "teacher_student_kl": {
+    "prefix4_boundaries_dense": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.6747103333473206,
+      "token_kl_quantiles_nats": [
+        6.299147571553476e-06,
+        0.33947375416755676,
+        1.6486560106277466,
+        5.196490287780762,
+        16.373106002807617
+      ],
+      "scored_tokens": 299963,
+      "input_tokens": 299964,
+      "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    }
+  },
+  "traces": {},
+  "compatibility": {
+    "model_config": {
+      "model_type": "llama",
+      "hidden_size": 4096,
+      "intermediate_size": 11008,
+      "num_hidden_layers": 32,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 32,
+      "vocab_size": 32000,
+      "max_position_embeddings": 4096,
+      "rms_norm_eps": 1e-05,
+      "tie_word_embeddings": false,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "pad_token_id": 0
+    },
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_config_commit_hash": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "projection_layers": 32
+  },
+  "gpu": "NVIDIA A40",
+  "storage": {
+    "scope": "layers 0-3 only; suffix layers 4-31 are identical dense weights",
+    "dense_payload_definition": "seven projection tensors and two norm tensors per layer",
+    "compressed_payload_definition": "actual serialized compressed_layer_N.pt file size",
+    "all_dense_four_layer_payload_bytes": 1619066880,
+    "layers": {
+      "0": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 69815746,
+        "bytes_saved_when_compressed": 334950974
+      },
+      "1": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70035714,
+        "bytes_saved_when_compressed": 334731006
+      },
+      "2": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70008770,
+        "bytes_saved_when_compressed": 334757950
+      },
+      "3": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70098370,
+        "bytes_saved_when_compressed": 334668350
+      }
+    },
+    "whole_layer_allocations": {
+      "dense": {
+        "compressed_layers": [],
+        "dense_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1619066880,
+        "bytes_saved_vs_all_dense": 0
+      },
+      "prefix4_boundaries_dense": {
+        "compressed_layers": [
+          1,
+          2
+        ],
+        "dense_layers": [
+          0,
+          3
+        ],
+        "four_layer_payload_bytes": 949577924,
+        "bytes_saved_vs_all_dense": 669488956
+      }
+    }
+  },
+  "elapsed_seconds": 2158.2345237109985,
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+  "peak_cuda_allocated_bytes": 11100242432
+}
