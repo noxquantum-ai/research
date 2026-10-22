@@ -1,0 +1,1486 @@
+{
+  "status": "COMPLETE",
+  "scope": "saved four-layer checkpoint diagnostic; no fitting",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source_commit": "86b246463b0d64e7230aa150286ae15bdf8b7921",
+  "diagnostic_script_sha256": "b0708997c469507e602fabb38b055c2dfc0a1c7970afa0829cb7806c1f6054c1",
+  "torch": "2.11.0+cu128",
+  "checkpoint_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "checkpoint_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+    "compressed_layer_1.pt": "95762275f29132a7114e447352f0c869c595f0c584a05c2547c6839d1ca0597f",
+    "compressed_layer_2.pt": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+    "compressed_layer_3.pt": "c05f05a73f8365451508b573d496d30cbae9ff00c750a3144a96393a9c3beb88"
+  },
+  "ppl_protocol": {
+    "split": "validation",
+    "context": 2048,
+    "stride": 512,
+    "max_eval_tokens": 4096,
+    "batch_size": 1,
+    "selected_variants": [
+      "dense",
+      "prefix4",
+      "pair_compress_01",
+      "pair_compress_02",
+      "pair_compress_03",
+      "pair_compress_12",
+      "pair_compress_13",
+      "pair_compress_23",
+      "triple_compress_012",
+      "triple_compress_013",
+      "triple_compress_023",
+      "triple_compress_123"
+    ],
+    "kl_variants": [
+      "pair_compress_01",
+      "pair_compress_02",
+      "pair_compress_03",
+      "pair_compress_12",
+      "pair_compress_13",
+      "pair_compress_23",
+      "prefix4",
+      "triple_compress_012",
+      "triple_compress_013",
+      "triple_compress_023",
+      "triple_compress_123"
+    ],
+    "activation_traces_enabled": false
+  },
+  "decoding": {
+    "0.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036335110780783,
+      "finite": true
+    },
+    "0.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003897432761732489,
+      "finite": true
+    },
+    "0.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00040901059401221573,
+      "finite": true
+    },
+    "0.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004266783071216196,
+      "finite": true
+    },
+    "0.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00031435623532161117,
+      "finite": true
+    },
+    "0.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003172524448018521,
+      "finite": true
+    },
+    "0.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004279068671166897,
+      "finite": true
+    },
+    "1.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003979170578531921,
+      "finite": true
+    },
+    "1.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00039495990495197475,
+      "finite": true
+    },
+    "1.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.000414279435062781,
+      "finite": true
+    },
+    "1.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0004293163074180484,
+      "finite": true
+    },
+    "1.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003021369338966906,
+      "finite": true
+    },
+    "1.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00031143613159656525,
+      "finite": true
+    },
+    "1.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00040276983054354787,
+      "finite": true
+    },
+    "2.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003626254328992218,
+      "finite": true
+    },
+    "2.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036256754538044333,
+      "finite": true
+    },
+    "2.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00037916042492724955,
+      "finite": true
+    },
+    "2.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003933655971195549,
+      "finite": true
+    },
+    "2.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002993143571075052,
+      "finite": true
+    },
+    "2.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00030365900602191687,
+      "finite": true
+    },
+    "2.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003923012991435826,
+      "finite": true
+    },
+    "3.q_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00035155206569470465,
+      "finite": true
+    },
+    "3.k_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003555781440809369,
+      "finite": true
+    },
+    "3.v_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00036542193265631795,
+      "finite": true
+    },
+    "3.o_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.00037717947270721197,
+      "finite": true
+    },
+    "3.gate_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002967393957078457,
+      "finite": true
+    },
+    "3.up_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0002976525283884257,
+      "finite": true
+    },
+    "3.down_proj": {
+      "installed_weights_equal_fp16_decode": true,
+      "fp16_vs_fp32_decode_relative_error": 0.0003890476655215025,
+      "finite": true
+    }
+  },
+  "ppl": {
+    "dense": {
+      "perplexity": 4.0828722858587865,
+      "scored_tokens": 4095,
+      "seconds": 5.663248610013397,
+      "mean_nll": 1.4068007323622558,
+      "next_token_accuracy": 0.6637362637362637,
+      "dense_top1_agreement": 1.0,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 2915.835693359375,
+        "independent_formula_sum": 2915.835693359375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003015835693359375
+      },
+      "selected": {},
+      "storage": {
+        "compressed_layers": [],
+        "dense_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1619066880,
+        "bytes_saved_vs_all_dense": 0
+      }
+    },
+    "prefix4": {
+      "perplexity": 233.4994659711836,
+      "scored_tokens": 4095,
+      "seconds": 5.119649758999003,
+      "mean_nll": 5.4531797900450245,
+      "next_token_accuracy": 0.2402930402930403,
+      "dense_top1_agreement": 0.2844932973384857,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 10902.125,
+        "independent_formula_sum": 10902.125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.011002125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [],
+        "four_layer_payload_bytes": 279958600,
+        "bytes_saved_vs_all_dense": 1339108280
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 4.068836212158203,
+        "token_kl_quantiles_nats": [
+          0.00040543096838518977,
+          3.458684206008911,
+          8.598029136657715,
+          11.772364616394043,
+          14.60124683380127
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "pair_compress_01": {
+      "perplexity": 7.4972205529604485,
+      "scored_tokens": 4095,
+      "seconds": 4.890615566982888,
+      "mean_nll": 2.0145323589171245,
+      "next_token_accuracy": 0.5687423687423687,
+      "dense_top1_agreement": 0.7284493446350098,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4120.77490234375,
+        "independent_formula_sum": 4120.77490234375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00422077490234375
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "dense_layers": [
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 949384900,
+        "bytes_saved_vs_all_dense": 669681980
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.6145761609077454,
+        "token_kl_quantiles_nats": [
+          3.4248307201778516e-05,
+          0.29096925258636475,
+          1.5128225088119507,
+          4.880080223083496,
+          13.042488098144531
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "pair_compress_02": {
+      "perplexity": 5.907718544990517,
+      "scored_tokens": 4095,
+      "seconds": 4.995070800010581,
+      "mean_nll": 1.7762597238915598,
+      "next_token_accuracy": 0.6092796092796092,
+      "dense_top1_agreement": 0.7907204031944275,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 3644.841552734375,
+        "independent_formula_sum": 3644.841552734375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003744841552734375
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          2
+        ],
+        "dense_layers": [
+          1,
+          3
+        ],
+        "four_layer_payload_bytes": 949357956,
+        "bytes_saved_vs_all_dense": 669708924
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.39156201481819153,
+        "token_kl_quantiles_nats": [
+          2.103888436977286e-05,
+          0.16385070979595184,
+          0.9562280774116516,
+          3.573566198348999,
+          9.180948257446289
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "pair_compress_03": {
+      "perplexity": 5.078640670594285,
+      "scored_tokens": 4095,
+      "seconds": 5.115670703002252,
+      "mean_nll": 1.6250436412545788,
+      "next_token_accuracy": 0.6322344322344322,
+      "dense_top1_agreement": 0.8310134410858154,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 3360.5654296875,
+        "independent_formula_sum": 3360.565673828125,
+        "absolute_difference": 0.000244140625,
+        "absolute_relative_tolerance": 0.003460565673828125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          3
+        ],
+        "dense_layers": [
+          1,
+          2
+        ],
+        "four_layer_payload_bytes": 949447556,
+        "bytes_saved_vs_all_dense": 669619324
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.24396909773349762,
+        "token_kl_quantiles_nats": [
+          3.379888948984444e-05,
+          0.11481303721666336,
+          0.5673503875732422,
+          2.0566985607147217,
+          9.155069351196289
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "pair_compress_12": {
+      "perplexity": 7.543081998535648,
+      "scored_tokens": 4095,
+      "seconds": 5.324896753008943,
+      "mean_nll": 2.020630851624504,
+      "next_token_accuracy": 0.5706959706959707,
+      "dense_top1_agreement": 0.7294261455535889,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4224.57470703125,
+        "independent_formula_sum": 4224.5751953125,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.0043245751953125
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1,
+          2
+        ],
+        "dense_layers": [
+          0,
+          3
+        ],
+        "four_layer_payload_bytes": 949577924,
+        "bytes_saved_vs_all_dense": 669488956
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.6302202939987183,
+        "token_kl_quantiles_nats": [
+          2.526024036342278e-05,
+          0.29053252935409546,
+          1.569819688796997,
+          4.941465377807617,
+          9.314241409301758
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "pair_compress_13": {
+      "perplexity": 7.016176310537659,
+      "scored_tokens": 4095,
+      "seconds": 4.758111525996355,
+      "mean_nll": 1.9482183845343024,
+      "next_token_accuracy": 0.5772893772893772,
+      "dense_top1_agreement": 0.7362637519836426,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4017.92431640625,
+        "independent_formula_sum": 4017.9248046875,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.0041179248046875
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1,
+          3
+        ],
+        "dense_layers": [
+          0,
+          2
+        ],
+        "four_layer_payload_bytes": 949667524,
+        "bytes_saved_vs_all_dense": 669399356
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.5621340274810791,
+        "token_kl_quantiles_nats": [
+          2.408444015600253e-05,
+          0.2602214217185974,
+          1.3934824466705322,
+          4.548275470733643,
+          9.257983207702637
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "pair_compress_23": {
+      "perplexity": 7.805181742685278,
+      "scored_tokens": 4095,
+      "seconds": 4.843673653987935,
+      "mean_nll": 2.054787839114011,
+      "next_token_accuracy": 0.5684981684981685,
+      "dense_top1_agreement": 0.7291819453239441,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4181.9736328125,
+        "independent_formula_sum": 4181.9736328125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.0042819736328125
+      },
+      "selected": {
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          2,
+          3
+        ],
+        "dense_layers": [
+          0,
+          1
+        ],
+        "four_layer_payload_bytes": 949640580,
+        "bytes_saved_vs_all_dense": 669426300
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 0.6616547107696533,
+        "token_kl_quantiles_nats": [
+          4.979196091881022e-05,
+          0.309721976518631,
+          1.659266471862793,
+          5.201889991760254,
+          9.876585006713867
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "triple_compress_012": {
+      "perplexity": 30.38364165326039,
+      "scored_tokens": 4095,
+      "seconds": 4.733822008012794,
+      "mean_nll": 3.4139043600713523,
+      "next_token_accuracy": 0.39584859584859583,
+      "dense_top1_agreement": 0.48547008633613586,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 6365.23828125,
+        "independent_formula_sum": 6365.23828125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00646523828125
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          2
+        ],
+        "dense_layers": [
+          3
+        ],
+        "four_layer_payload_bytes": 614626950,
+        "bytes_saved_vs_all_dense": 1004439930
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 2.0369880199432373,
+        "token_kl_quantiles_nats": [
+          7.866294617997482e-05,
+          1.3252663612365723,
+          5.138641834259033,
+          9.307440757751465,
+          14.642186164855957
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "triple_compress_013": {
+      "perplexity": 25.147168526705283,
+      "scored_tokens": 4095,
+      "seconds": 4.724741266021738,
+      "mean_nll": 3.2247453067765566,
+      "next_token_accuracy": 0.42905982905982903,
+      "dense_top1_agreement": 0.5208791494369507,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 6237.5810546875,
+        "independent_formula_sum": 6237.5810546875,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.0063375810546875
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          1,
+          3
+        ],
+        "dense_layers": [
+          2
+        ],
+        "four_layer_payload_bytes": 614716550,
+        "bytes_saved_vs_all_dense": 1004350330
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 1.8248289823532104,
+        "token_kl_quantiles_nats": [
+          5.0395548896631226e-05,
+          1.1849877834320068,
+          4.590306758880615,
+          8.549565315246582,
+          12.67837905883789
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "triple_compress_023": {
+      "perplexity": 23.09316626157523,
+      "scored_tokens": 4095,
+      "seconds": 5.291688804019941,
+      "mean_nll": 3.1395367409283423,
+      "next_token_accuracy": 0.432967032967033,
+      "dense_top1_agreement": 0.5206349492073059,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 6481.666015625,
+        "independent_formula_sum": 6481.666015625,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.006581666015625
+      },
+      "selected": {
+        "0": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          0,
+          2,
+          3
+        ],
+        "dense_layers": [
+          1
+        ],
+        "four_layer_payload_bytes": 614689606,
+        "bytes_saved_vs_all_dense": 1004377274
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 1.730359673500061,
+        "token_kl_quantiles_nats": [
+          9.95982118183747e-05,
+          1.1151407957077026,
+          4.309837341308594,
+          8.162796020507812,
+          11.989606857299805
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    },
+    "triple_compress_123": {
+      "perplexity": 44.867362592715644,
+      "scored_tokens": 4095,
+      "seconds": 4.815141077997396,
+      "mean_nll": 3.803710639403999,
+      "next_token_accuracy": 0.3658119658119658,
+      "dense_top1_agreement": 0.43394383788108826,
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 7897.1123046875,
+        "independent_formula_sum": 7897.11279296875,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.007997112792968749
+      },
+      "selected": {
+        "1": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "2": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "3": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ]
+      },
+      "storage": {
+        "compressed_layers": [
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [
+          0
+        ],
+        "four_layer_payload_bytes": 614909574,
+        "bytes_saved_vs_all_dense": 1004157306
+      },
+      "teacher_student_kl": {
+        "direction": "KL(dense teacher || student)",
+        "reduction": "mean over non-duplicated causal next-token targets",
+        "mean_nats_per_token": 2.408583879470825,
+        "token_kl_quantiles_nats": [
+          0.0002526136813685298,
+          1.7504245042800903,
+          5.600157260894775,
+          9.168534278869629,
+          13.023794174194336
+        ],
+        "scored_tokens": 4095,
+        "input_tokens": 4096,
+        "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+        "context": 2048,
+        "stride": 512,
+        "teacher_logits_dtype": "model output dtype, accumulated in float32",
+        "distribution_computation_dtype": "float32"
+      }
+    }
+  },
+  "teacher_student_kl": {
+    "prefix4": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 4.068836212158203,
+      "token_kl_quantiles_nats": [
+        0.00040543096838518977,
+        3.458684206008911,
+        8.598029136657715,
+        11.772364616394043,
+        14.60124683380127
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "pair_compress_01": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.6145761609077454,
+      "token_kl_quantiles_nats": [
+        3.4248307201778516e-05,
+        0.29096925258636475,
+        1.5128225088119507,
+        4.880080223083496,
+        13.042488098144531
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "pair_compress_02": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.39156201481819153,
+      "token_kl_quantiles_nats": [
+        2.103888436977286e-05,
+        0.16385070979595184,
+        0.9562280774116516,
+        3.573566198348999,
+        9.180948257446289
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "pair_compress_03": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.24396909773349762,
+      "token_kl_quantiles_nats": [
+        3.379888948984444e-05,
+        0.11481303721666336,
+        0.5673503875732422,
+        2.0566985607147217,
+        9.155069351196289
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "pair_compress_12": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.6302202939987183,
+      "token_kl_quantiles_nats": [
+        2.526024036342278e-05,
+        0.29053252935409546,
+        1.569819688796997,
+        4.941465377807617,
+        9.314241409301758
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "pair_compress_13": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.5621340274810791,
+      "token_kl_quantiles_nats": [
+        2.408444015600253e-05,
+        0.2602214217185974,
+        1.3934824466705322,
+        4.548275470733643,
+        9.257983207702637
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "pair_compress_23": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 0.6616547107696533,
+      "token_kl_quantiles_nats": [
+        4.979196091881022e-05,
+        0.309721976518631,
+        1.659266471862793,
+        5.201889991760254,
+        9.876585006713867
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "triple_compress_012": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 2.0369880199432373,
+      "token_kl_quantiles_nats": [
+        7.866294617997482e-05,
+        1.3252663612365723,
+        5.138641834259033,
+        9.307440757751465,
+        14.642186164855957
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "triple_compress_013": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 1.8248289823532104,
+      "token_kl_quantiles_nats": [
+        5.0395548896631226e-05,
+        1.1849877834320068,
+        4.590306758880615,
+        8.549565315246582,
+        12.67837905883789
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "triple_compress_023": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 1.730359673500061,
+      "token_kl_quantiles_nats": [
+        9.95982118183747e-05,
+        1.1151407957077026,
+        4.309837341308594,
+        8.162796020507812,
+        11.989606857299805
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    },
+    "triple_compress_123": {
+      "direction": "KL(dense teacher || student)",
+      "reduction": "mean over non-duplicated causal next-token targets",
+      "mean_nats_per_token": 2.408583879470825,
+      "token_kl_quantiles_nats": [
+        0.0002526136813685298,
+        1.7504245042800903,
+        5.600157260894775,
+        9.168534278869629,
+        13.023794174194336
+      ],
+      "scored_tokens": 4095,
+      "input_tokens": 4096,
+      "token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+      "context": 2048,
+      "stride": 512,
+      "teacher_logits_dtype": "model output dtype, accumulated in float32",
+      "distribution_computation_dtype": "float32"
+    }
+  },
+  "traces": {},
+  "compatibility": {
+    "model_config": {
+      "model_type": "llama",
+      "hidden_size": 4096,
+      "intermediate_size": 11008,
+      "num_hidden_layers": 32,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 32,
+      "vocab_size": 32000,
+      "max_position_embeddings": 4096,
+      "rms_norm_eps": 1e-05,
+      "tie_word_embeddings": false,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "pad_token_id": 0
+    },
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_config_commit_hash": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "projection_layers": 32
+  },
+  "gpu": "NVIDIA A40",
+  "storage": {
+    "scope": "layers 0-3 only; suffix layers 4-31 are identical dense weights",
+    "dense_payload_definition": "seven projection tensors and two norm tensors per layer",
+    "compressed_payload_definition": "actual serialized compressed_layer_N.pt file size",
+    "all_dense_four_layer_payload_bytes": 1619066880,
+    "layers": {
+      "0": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 69815746,
+        "bytes_saved_when_compressed": 334950974
+      },
+      "1": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70035714,
+        "bytes_saved_when_compressed": 334731006
+      },
+      "2": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70008770,
+        "bytes_saved_when_compressed": 334757950
+      },
+      "3": {
+        "dense_projection_and_norm_tensor_bytes": 404766720,
+        "serialized_compressed_checkpoint_bytes": 70098370,
+        "bytes_saved_when_compressed": 334668350
+      }
+    },
+    "whole_layer_allocations": {
+      "dense": {
+        "compressed_layers": [],
+        "dense_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 1619066880,
+        "bytes_saved_vs_all_dense": 0
+      },
+      "prefix4": {
+        "compressed_layers": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [],
+        "four_layer_payload_bytes": 279958600,
+        "bytes_saved_vs_all_dense": 1339108280
+      },
+      "pair_compress_01": {
+        "compressed_layers": [
+          0,
+          1
+        ],
+        "dense_layers": [
+          2,
+          3
+        ],
+        "four_layer_payload_bytes": 949384900,
+        "bytes_saved_vs_all_dense": 669681980
+      },
+      "pair_compress_02": {
+        "compressed_layers": [
+          0,
+          2
+        ],
+        "dense_layers": [
+          1,
+          3
+        ],
+        "four_layer_payload_bytes": 949357956,
+        "bytes_saved_vs_all_dense": 669708924
+      },
+      "pair_compress_03": {
+        "compressed_layers": [
+          0,
+          3
+        ],
+        "dense_layers": [
+          1,
+          2
+        ],
+        "four_layer_payload_bytes": 949447556,
+        "bytes_saved_vs_all_dense": 669619324
+      },
+      "pair_compress_12": {
+        "compressed_layers": [
+          1,
+          2
+        ],
+        "dense_layers": [
+          0,
+          3
+        ],
+        "four_layer_payload_bytes": 949577924,
+        "bytes_saved_vs_all_dense": 669488956
+      },
+      "pair_compress_13": {
+        "compressed_layers": [
+          1,
+          3
+        ],
+        "dense_layers": [
+          0,
+          2
+        ],
+        "four_layer_payload_bytes": 949667524,
+        "bytes_saved_vs_all_dense": 669399356
+      },
+      "pair_compress_23": {
+        "compressed_layers": [
+          2,
+          3
+        ],
+        "dense_layers": [
+          0,
+          1
+        ],
+        "four_layer_payload_bytes": 949640580,
+        "bytes_saved_vs_all_dense": 669426300
+      },
+      "triple_compress_012": {
+        "compressed_layers": [
+          0,
+          1,
+          2
+        ],
+        "dense_layers": [
+          3
+        ],
+        "four_layer_payload_bytes": 614626950,
+        "bytes_saved_vs_all_dense": 1004439930
+      },
+      "triple_compress_013": {
+        "compressed_layers": [
+          0,
+          1,
+          3
+        ],
+        "dense_layers": [
+          2
+        ],
+        "four_layer_payload_bytes": 614716550,
+        "bytes_saved_vs_all_dense": 1004350330
+      },
+      "triple_compress_023": {
+        "compressed_layers": [
+          0,
+          2,
+          3
+        ],
+        "dense_layers": [
+          1
+        ],
+        "four_layer_payload_bytes": 614689606,
+        "bytes_saved_vs_all_dense": 1004377274
+      },
+      "triple_compress_123": {
+        "compressed_layers": [
+          1,
+          2,
+          3
+        ],
+        "dense_layers": [
+          0
+        ],
+        "four_layer_payload_bytes": 614909574,
+        "bytes_saved_vs_all_dense": 1004157306
+      }
+    }
+  },
+  "elapsed_seconds": 263.2710044879932,
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+  "peak_cuda_allocated_bytes": 11100242432
+}
