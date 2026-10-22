@@ -47,11 +47,13 @@ dense teacher pass and one selected-student pass on 4,095 tokens. Total wall
 time was 94.8 seconds on an NVIDIA A40, including 52.2 seconds to load the
 model. Proxy probes took 7.1 seconds; exact refinement took 14.7 seconds.
 
-The two compressed checkpoints save 669,619,324 serialized weight bytes
-against the four candidate layers' dense projection and norm tensors (41.4%
-of that region). The other 28 layers remain dense. This is storage savings for
-the four-layer candidate region, not a claim of whole-model 41.4% compression
-or an inference speedup.
+After counting the two `.pt` checkpoint files against the four candidate
+layers' dense projection and norm tensors, the candidate-region estimate is
+669,619,324 bytes smaller (41.4% of that region). The other 28 layers remain
+dense. This is candidate-region accounting only: the run did not materialize
+or byte-count a complete deployable mixed-model package, so it did not measure
+a whole-model compression ratio or an inference speedup. The approximately
+10x whole-model ratio remains the long-term goal; 3x is insufficient.
 
 ## Interpretation
 

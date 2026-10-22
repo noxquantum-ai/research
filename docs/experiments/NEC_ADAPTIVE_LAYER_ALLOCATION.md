@@ -1,5 +1,52 @@
 # NEC adaptive layer allocation: first prototype
 
+## Current objective and experiment scope
+
+The deployment objective is to maximize the **measured whole-model serialized
+compression ratio**, subject to an independently evaluated quality limit
+(currently PPL `<= 10`, with KL reported as a complementary metric). The
+long-term target remains approximately **10x**. A 3x ratio is an insufficient
+result, not a target or a successful operating point. The 25% maximum dense
+weight fraction is a ceiling only; the allocator must not try to use up that
+allowance. It may retain fewer dense weights when quality permits.
+
+The ratio denominator is the serialized dense model snapshot. The numerator
+must be the byte sum of the **complete deployable mixed-model package**:
+dense weights that remain, serialized NEC artifacts, model/config/tokenizer
+metadata, rewritten weight index and shard structures, and any required
+loader/runtime files or auxiliary parameters. Coefficient counts, candidate
+region savings, and simulated low-bit storage are not whole-model compression
+measurements. A result may claim a ratio only after the complete package is
+materialized and measured.
+
+The 16-layer experiment is a **16-candidate allocation and quality study**,
+following the same structure as the four-candidate proof of concept. It is
+not a claim that the entire 32-layer model has been compressed. The remaining
+model layers stay dense for that study. We will report the resulting whole-
+model ratio as a separate storage fact, even though this candidate scope
+cannot meet the 3x or 10x deployment target. That does not cancel or invalidate
+the 16-layer allocation experiment: its purpose is to test layer selection,
+quality loss, and search efficiency at a larger candidate count.
+
+Before any expensive compile or GPU evaluation, run
+[`scripts/preflight_nec_compression_targets.py`](../../scripts/preflight_nec_compression_targets.py)
+to check storage-only lower bounds. It compares a dense model snapshot with
+the tensors left dense and the actual serialized checkpoint files available.
+When candidate checkpoints are missing, it shows estimates based on the
+observed artifact sizes. Its output is a feasibility preflight, not a measured
+deployable ratio: generated safetensors headers/index, package loader/runtime
+files, and other format overhead are omitted. A target that fails even this
+lower-bound check is infeasible for that allocation scope. A target that
+passes still requires building and measuring the real package.
+
+The current search prototype has a fixed compressed-layer count and selects
+for quality; it does not yet optimize complete-package bytes jointly with
+per-layer artifact size. Until variable-count search and package measurement
+are implemented, report its allocation result as a research result rather
+than claiming it meets the deployment objective. If no measured allocation
+meets both quality and compression constraints, state that it is infeasible;
+do not relax the compression target silently.
+
 ## Decision problem
 
 For compiled candidate layers `C`, let `S` be the subset whose dense operators
@@ -18,9 +65,9 @@ the exact measured PPL, KL, next-token accuracy, checkpoint bytes, and dense
 top-1 agreement determine whether the allocation passed. Proxy estimates are
 never reported as measured model results.
 
-For `--max-ppl P --optimize-storage`, the deployment objective is the maximum
-actual checkpoint storage saved subject to the independently measured quality
-constraint. That variable-count mode is deliberately separate from this first
+The planned `--max-ppl P --optimize-storage` mode must maximize the measured
+whole-model ratio subject to independently measured quality and the maximum
+dense-weight ceiling. This variable-count mode is separate from the current
 fixed-count prototype; it must search a measured Pareto frontier and cannot
 infer that adding a compressed layer always worsens quality.
 
@@ -93,14 +140,18 @@ was 6.32, teacher KL was 0.259 nats/token, and dense top-1 agreement was
 key. The proxy-only 0+1 choice was rank 4 at PPL 7.497, a 2.418 PPL regret.
 Both held-out test scores use the same token slice.
 
-The refined choice saves 669,619,324 serialized weight bytes across the four
-candidate layers (41.4% of that region); the remaining 28 model layers stay
-dense. The run used five configurations for the 1,023-token singleton probe,
-three for refinement (dense reference plus two shortlisted pairs), then dense
-and selected-student passes for held-out evaluation. It did not run the other
-four mixed pairs. Total elapsed wall time was about 95 seconds, including
-model loading; the measured proxy/search and refinement stages took about 22
-seconds. These timings are specific to the A40 and this implementation.
+After subtracting the two checkpoint files from the four candidate layers'
+dense projection and norm payload, the candidate-region estimate is
+669,619,324 bytes smaller (41.4% of that region); the remaining
+28 model layers stay dense. This is a candidate-region accounting result, not
+a byte count of a complete deployable model package and not a whole-model
+compression ratio. The run used five configurations for the 1,023-token
+singleton probe, three for refinement (dense reference plus two shortlisted
+pairs), then dense and selected-student passes for held-out evaluation. It did
+not run the other four mixed pairs. Total elapsed wall time was about 95
+seconds, including model loading; the measured proxy/search and refinement
+stages took about 22 seconds. These timings are specific to the A40 and this
+implementation.
 
 The reports and raw logs are archived in
 [`results/nec_adaptive_layer_allocation_poc_a40_20261022/`](../../results/nec_adaptive_layer_allocation_poc_a40_20261022/).
@@ -130,6 +181,16 @@ checkpoint set cannot leave exactly `K` model layers dense. For example, four
 saved checkpoints cannot satisfy `--keep-dense-layers 8` on a 32-layer model;
 all four candidates together still leave 28 layers dense. This prevents a
 requested allocation from silently being treated as a smaller experiment.
+
+For a 16-candidate study, report the full measured quality/storage frontier
+for the tested compression counts: selected candidate IDs, candidate
+checkpoints actually used, PPL, teacher KL, token count/split, dense-layer
+count, and candidate-region bytes. Also report the complete-model serialized
+ratio only if a deployable mixed-model package was materialized and measured;
+otherwise show the preflight lower bound with that label. Do not describe
+failure to reach 3x or 10x in this restricted study as success, and do not
+cancel the allocation study because its candidate scope cannot reach those
+deployment targets.
 
 The prototype is in [`scripts/search_nec_layer_allocation.py`](../../scripts/search_nec_layer_allocation.py),
 with the Fisher interaction and conditional search in

@@ -213,10 +213,20 @@ def storage_summary(checkpoint_dir, dense, layers, selected):
             "allocated_bytes": allocated_bytes,
         }
     return {
-        "scope": "candidate layers only; all other model layers remain dense",
+        "scope": (
+            "candidate layer tensors only; all other model layers remain dense; "
+            "this is not a serialized deployable whole-model bundle measurement"
+        ),
         "candidate_dense_bytes": dense_total,
         "allocated_candidate_bytes": allocated_total,
         "bytes_saved_vs_dense_candidates": dense_total - allocated_total,
+        "whole_model_deployable_bytes_measured": False,
+        "whole_model_compression_ratio_measured": None,
+        "whole_model_ratio_note": (
+            "Requires materializing and byte-counting the complete mixed-model "
+            "package, including dense weights, NEC checkpoints, index/metadata, "
+            "and required loader/runtime files."
+        ),
         "layers": per_layer,
     }
 
