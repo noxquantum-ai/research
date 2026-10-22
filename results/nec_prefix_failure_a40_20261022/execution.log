@@ -1,0 +1,112 @@
+PHASE=load_dense_model
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/291 [00:00<?, ?it/s]Loading weights:   2%|▏         | 5/291 [00:00<00:06, 45.74it/s]Loading weights:   6%|▌         | 17/291 [00:00<00:03, 84.74it/s]Loading weights:   9%|▉         | 26/291 [00:00<00:03, 82.78it/s]Loading weights:  12%|█▏        | 35/291 [00:00<00:03, 77.07it/s]Loading weights:  15%|█▍        | 43/291 [00:00<00:03, 73.79it/s]Loading weights:  18%|█▊        | 51/291 [00:00<00:03, 69.73it/s]Loading weights:  20%|██        | 59/291 [00:00<00:03, 71.84it/s]Loading weights:  23%|██▎       | 67/291 [00:00<00:03, 73.96it/s]Loading weights:  26%|██▌       | 76/291 [00:01<00:02, 72.82it/s]Loading weights:  29%|██▉       | 84/291 [00:01<00:02, 74.70it/s]Loading weights:  32%|███▏      | 92/291 [00:01<00:02, 70.19it/s]Loading weights:  34%|███▍      | 100/291 [00:01<00:02, 69.65it/s]Loading weights:  37%|███▋      | 108/291 [00:01<00:02, 69.27it/s]Loading weights:  40%|███▉      | 115/291 [00:01<00:02, 67.99it/s]Loading weights:  42%|████▏     | 123/291 [00:01<00:02, 66.08it/s]Loading weights:  45%|████▌     | 132/291 [00:01<00:02, 67.63it/s]Loading weights:  48%|████▊     | 141/291 [00:01<00:02, 68.94it/s]Loading weights:  51%|█████     | 149/291 [00:02<00:01, 71.73it/s]Loading weights:  54%|█████▍    | 158/291 [00:02<00:01, 71.60it/s]Loading weights:  57%|█████▋    | 167/291 [00:02<00:01, 71.68it/s]Loading weights:  60%|██████    | 176/291 [00:02<00:01, 72.22it/s]Loading weights:  63%|██████▎   | 184/291 [00:02<00:01, 73.68it/s]Loading weights:  66%|██████▌   | 192/291 [00:02<00:01, 74.64it/s]Loading weights:  69%|██████▊   | 200/291 [00:02<00:01, 70.94it/s]Loading weights:  71%|███████▏  | 208/291 [00:02<00:01, 70.24it/s]Loading weights:  74%|███████▍  | 216/291 [00:03<00:01, 70.11it/s]Loading weights:  77%|███████▋  | 224/291 [00:03<00:00, 69.42it/s]Loading weights:  79%|███████▉  | 231/291 [00:03<00:00, 66.71it/s]Loading weights:  82%|████████▏ | 240/291 [00:03<00:00, 68.02it/s]Loading weights:  85%|████████▌ | 248/291 [00:03<00:00, 71.00it/s]Loading weights:  88%|████████▊ | 257/291 [00:03<00:00, 70.82it/s]Loading weights:  91%|█████████▏| 266/291 [00:03<00:00, 70.79it/s]Loading weights:  94%|█████████▍| 274/291 [00:03<00:00, 72.93it/s]Loading weights:  97%|█████████▋| 282/291 [00:03<00:00, 74.33it/s]Loading weights: 100%|█████████▉| 290/291 [00:04<00:00, 69.99it/s]Loading weights: 100%|██████████| 291/291 [00:04<00:00, 71.34it/s]
+[10:42:11] Found 4 compressed layer checkpoints in '/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg'. Injecting weights...
+[10:42:12]   Layer 00: Reconstructed and injected (68120.4 KB artifact)
+[10:42:12]   Layer 01: Reconstructed and injected (68335.2 KB artifact)
+[10:42:12]   Layer 02: Reconstructed and injected (68309.0 KB artifact)
+[10:42:12]   Layer 03: Reconstructed and injected (68396.4 KB artifact)
+PHASE=ppl variant=dense
+[10:42:20] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:20] Evaluation progress: windows=1/5 scored_tokens=2047 nll=2915.8357 elapsed_s=0.5
+[10:42:20] Evaluation progress: windows=2/5 scored_tokens=2559 nll=3626.7888 elapsed_s=0.8
+[10:42:21] Evaluation progress: windows=3/5 scored_tokens=3071 nll=4232.5237 elapsed_s=1.2
+[10:42:21] Evaluation progress: windows=4/5 scored_tokens=3583 nll=5041.7407 elapsed_s=1.5
+[10:42:21] Evaluation progress: windows=5/5 scored_tokens=4095 nll=5760.8490 elapsed_s=1.9
+RESULT dense {"perplexity": 4.0828722858587865, "scored_tokens": 4095, "seconds": 2.6375815350038465, "mean_nll": 1.4068007323622558, "next_token_accuracy": 0.6637362637362637, "dense_top1_agreement": 1.0, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 2915.835693359375, "independent_formula_sum": 2915.835693359375, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.003015835693359375}, "selected": {}}
+PHASE=ppl variant=layer0_only
+[10:42:22] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:23] Evaluation progress: windows=1/5 scored_tokens=2047 nll=2971.7451 elapsed_s=0.3
+[10:42:23] Evaluation progress: windows=2/5 scored_tokens=2559 nll=3686.5837 elapsed_s=0.7
+[10:42:23] Evaluation progress: windows=3/5 scored_tokens=3071 nll=4298.8901 elapsed_s=1.0
+[10:42:24] Evaluation progress: windows=4/5 scored_tokens=3583 nll=5111.6506 elapsed_s=1.4
+[10:42:24] Evaluation progress: windows=5/5 scored_tokens=4095 nll=5836.1942 elapsed_s=1.7
+RESULT layer0_only {"perplexity": 4.158689652696289, "scored_tokens": 4095, "seconds": 2.5071311950159725, "mean_nll": 1.4252000373216194, "next_token_accuracy": 0.6615384615384615, "dense_top1_agreement": 0.9479853510856628, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 2971.745361328125, "independent_formula_sum": 2971.745361328125, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.003071745361328125}, "selected": {"0": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=layer1_only
+[10:42:25] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:25] Evaluation progress: windows=1/5 scored_tokens=2047 nll=3163.6919 elapsed_s=0.3
+[10:42:26] Evaluation progress: windows=2/5 scored_tokens=2559 nll=3936.1566 elapsed_s=0.7
+[10:42:26] Evaluation progress: windows=3/5 scored_tokens=3071 nll=4571.5984 elapsed_s=1.0
+[10:42:26] Evaluation progress: windows=4/5 scored_tokens=3583 nll=5441.1467 elapsed_s=1.4
+[10:42:27] Evaluation progress: windows=5/5 scored_tokens=4095 nll=6208.6974 elapsed_s=1.7
+RESULT layer1_only {"perplexity": 4.554726263810077, "scored_tokens": 4095, "seconds": 2.5042630480020307, "mean_nll": 1.5161654331454135, "next_token_accuracy": 0.6476190476190476, "dense_top1_agreement": 0.8769230842590332, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 3163.69189453125, "independent_formula_sum": 3163.69189453125, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.00326369189453125}, "selected": {"1": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=layer2_only
+[10:42:28] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:28] Evaluation progress: windows=1/5 scored_tokens=2047 nll=3343.4995 elapsed_s=0.3
+[10:42:29] Evaluation progress: windows=2/5 scored_tokens=2559 nll=4180.7625 elapsed_s=0.7
+[10:42:29] Evaluation progress: windows=3/5 scored_tokens=3071 nll=4882.4674 elapsed_s=1.0
+[10:42:29] Evaluation progress: windows=4/5 scored_tokens=3583 nll=5802.0814 elapsed_s=1.4
+[10:42:30] Evaluation progress: windows=5/5 scored_tokens=4095 nll=6597.9501 elapsed_s=1.7
+RESULT layer2_only {"perplexity": 5.008923486763371, "scored_tokens": 4095, "seconds": 2.513714612025069, "mean_nll": 1.6112210191067613, "next_token_accuracy": 0.6315018315018315, "dense_top1_agreement": 0.848840057849884, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 3343.49951171875, "independent_formula_sum": 3343.49951171875, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.00344349951171875}, "selected": {"2": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=layer3_only
+[10:42:31] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:31] Evaluation progress: windows=1/5 scored_tokens=2047 nll=3104.5151 elapsed_s=0.3
+[10:42:31] Evaluation progress: windows=2/5 scored_tokens=2559 nll=3873.3499 elapsed_s=0.7
+[10:42:32] Evaluation progress: windows=3/5 scored_tokens=3071 nll=4540.2122 elapsed_s=1.0
+[10:42:32] Evaluation progress: windows=4/5 scored_tokens=3583 nll=5392.8031 elapsed_s=1.4
+[10:42:32] Evaluation progress: windows=5/5 scored_tokens=4095 nll=6156.7131 elapsed_s=1.7
+RESULT layer3_only {"perplexity": 4.497271304491331, "scored_tokens": 4095, "seconds": 2.5097650390234776, "mean_nll": 1.5034708360758164, "next_token_accuracy": 0.645909645909646, "dense_top1_agreement": 0.8822954893112183, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 3104.51513671875, "independent_formula_sum": 3104.51513671875, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.00320451513671875}, "selected": {"3": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=prefix2
+[10:42:34] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:34] Evaluation progress: windows=1/5 scored_tokens=2047 nll=4120.7749 elapsed_s=0.3
+[10:42:34] Evaluation progress: windows=2/5 scored_tokens=2559 nll=5243.5229 elapsed_s=0.7
+[10:42:35] Evaluation progress: windows=3/5 scored_tokens=3071 nll=6159.7087 elapsed_s=1.0
+[10:42:35] Evaluation progress: windows=4/5 scored_tokens=3583 nll=7316.1509 elapsed_s=1.4
+[10:42:35] Evaluation progress: windows=5/5 scored_tokens=4095 nll=8249.5100 elapsed_s=1.7
+RESULT prefix2 {"perplexity": 7.4972205529604485, "scored_tokens": 4095, "seconds": 2.5106450019811746, "mean_nll": 2.0145323589171245, "next_token_accuracy": 0.5687423687423687, "dense_top1_agreement": 0.7284493446350098, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 4120.77490234375, "independent_formula_sum": 4120.77490234375, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.00422077490234375}, "selected": {"0": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "1": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=prefix3
+[10:42:36] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:37] Evaluation progress: windows=1/5 scored_tokens=2047 nll=6365.2383 elapsed_s=0.3
+[10:42:37] Evaluation progress: windows=2/5 scored_tokens=2559 nll=8395.8647 elapsed_s=0.7
+[10:42:37] Evaluation progress: windows=3/5 scored_tokens=3071 nll=10047.6577 elapsed_s=1.0
+[10:42:38] Evaluation progress: windows=4/5 scored_tokens=3583 nll=12323.3137 elapsed_s=1.4
+[10:42:38] Evaluation progress: windows=5/5 scored_tokens=4095 nll=13979.9384 elapsed_s=1.7
+RESULT prefix3 {"perplexity": 30.38364165326039, "scored_tokens": 4095, "seconds": 2.517937893018825, "mean_nll": 3.4139043600713523, "next_token_accuracy": 0.39584859584859583, "dense_top1_agreement": 0.48547008633613586, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 6365.23828125, "independent_formula_sum": 6365.23828125, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.00646523828125}, "selected": {"0": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "1": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "2": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=prefix4
+[10:42:39] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:39] Evaluation progress: windows=1/5 scored_tokens=2047 nll=10902.1250 elapsed_s=0.3
+[10:42:40] Evaluation progress: windows=2/5 scored_tokens=2559 nll=13775.5715 elapsed_s=0.7
+[10:42:40] Evaluation progress: windows=3/5 scored_tokens=3071 nll=16411.6938 elapsed_s=1.0
+[10:42:40] Evaluation progress: windows=4/5 scored_tokens=3583 nll=19496.1467 elapsed_s=1.4
+[10:42:41] Evaluation progress: windows=5/5 scored_tokens=4095 nll=22330.7712 elapsed_s=1.7
+RESULT prefix4 {"perplexity": 233.4994659711836, "scored_tokens": 4095, "seconds": 2.5218210669991095, "mean_nll": 5.4531797900450245, "next_token_accuracy": 0.2402930402930403, "dense_top1_agreement": 0.2844932973384857, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 10902.125, "independent_formula_sum": 10902.125, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.011002125}, "selected": {"0": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "1": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "2": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "3": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=prefix4_attention_only
+[10:42:42] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:42] Evaluation progress: windows=1/5 scored_tokens=2047 nll=3273.1138 elapsed_s=0.3
+[10:42:42] Evaluation progress: windows=2/5 scored_tokens=2559 nll=4093.8422 elapsed_s=0.7
+[10:42:43] Evaluation progress: windows=3/5 scored_tokens=3071 nll=4781.8444 elapsed_s=1.0
+[10:42:43] Evaluation progress: windows=4/5 scored_tokens=3583 nll=5685.5123 elapsed_s=1.4
+[10:42:43] Evaluation progress: windows=5/5 scored_tokens=4095 nll=6470.6174 elapsed_s=1.7
+RESULT prefix4_attention_only {"perplexity": 4.855569307322505, "scored_tokens": 4095, "seconds": 2.5017832969897427, "mean_nll": 1.5801263569329975, "next_token_accuracy": 0.6393162393162393, "dense_top1_agreement": 0.8612942695617676, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 3273.11376953125, "independent_formula_sum": 3273.11376953125, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.0033731137695312496}, "selected": {"0": ["q_proj", "k_proj", "v_proj", "o_proj"], "1": ["q_proj", "k_proj", "v_proj", "o_proj"], "2": ["q_proj", "k_proj", "v_proj", "o_proj"], "3": ["q_proj", "k_proj", "v_proj", "o_proj"]}}
+PHASE=ppl variant=prefix4_mlp_only
+[10:42:44] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:45] Evaluation progress: windows=1/5 scored_tokens=2047 nll=9486.6816 elapsed_s=0.3
+[10:42:45] Evaluation progress: windows=2/5 scored_tokens=2559 nll=11875.3542 elapsed_s=0.7
+[10:42:45] Evaluation progress: windows=3/5 scored_tokens=3071 nll=14079.7354 elapsed_s=1.0
+[10:42:46] Evaluation progress: windows=4/5 scored_tokens=3583 nll=16757.7073 elapsed_s=1.4
+[10:42:46] Evaluation progress: windows=5/5 scored_tokens=4095 nll=19113.8540 elapsed_s=1.7
+RESULT prefix4_mlp_only {"perplexity": 106.44280678021387, "scored_tokens": 4095, "seconds": 2.531874334003078, "mean_nll": 4.6676078153617215, "next_token_accuracy": 0.2862026862026862, "dense_top1_agreement": 0.3384615480899811, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 9486.681640625, "independent_formula_sum": 9486.681640625, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.009586681640624999}, "selected": {"0": ["gate_proj", "up_proj", "down_proj"], "1": ["gate_proj", "up_proj", "down_proj"], "2": ["gate_proj", "up_proj", "down_proj"], "3": ["gate_proj", "up_proj", "down_proj"]}}
+PHASE=ppl variant=prefix4_fp32_decode_then_cast
+[10:42:47] Computing Perplexity over 4096 tokens (seq_len=2048, stride=512, batch_size=1)...
+[10:42:48] Evaluation progress: windows=1/5 scored_tokens=2047 nll=10905.8691 elapsed_s=0.3
+[10:42:48] Evaluation progress: windows=2/5 scored_tokens=2559 nll=13779.6807 elapsed_s=0.7
+[10:42:48] Evaluation progress: windows=3/5 scored_tokens=3071 nll=16415.2363 elapsed_s=1.0
+[10:42:49] Evaluation progress: windows=4/5 scored_tokens=3583 nll=19499.8350 elapsed_s=1.4
+[10:42:49] Evaluation progress: windows=5/5 scored_tokens=4095 nll=22335.1938 elapsed_s=1.7
+RESULT prefix4_fp32_decode_then_cast {"perplexity": 233.7517820440153, "scored_tokens": 4095, "seconds": 2.5295438220200595, "mean_nll": 5.4542597918574485, "next_token_accuracy": 0.2402930402930403, "dense_top1_agreement": 0.2844932973384857, "nll_formula_crosscheck": {"passed": true, "method": "sum(logsumexp(logits)-target_logit) over first window scored labels", "scored_tokens": 2047, "cross_entropy_sum": 10905.869140625, "independent_formula_sum": 10905.869140625, "absolute_difference": 0.0, "absolute_relative_tolerance": 0.011005869140625}, "selected": {"0": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "1": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "2": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"], "3": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]}}
+PHASE=trace name=saved_validation_128
+TRACE layer=0 context=128 same=0.257682 active=0.306173 cascade=0.257703 token_mean=0.23438
+TRACE layer=1 context=128 same=0.0300607 active=0.0300647 cascade=0.151258 token_mean=0.485091
+TRACE layer=2 context=128 same=0.00868415 active=0.824908 cascade=0.15118 token_mean=0.655398
+TRACE layer=3 context=128 same=0.0119216 active=0.886173 cascade=0.151807 token_mean=0.748185
+PHASE=trace name=first2048_long
+TRACE layer=0 context=2048 same=0.275555 active=0.339003 cascade=0.275615 token_mean=0.249482
+TRACE layer=1 context=2048 same=0.0989873 active=0.0990727 cascade=0.474972 token_mean=0.538512
+TRACE layer=2 context=2048 same=0.0320752 active=0.873972 cascade=0.474811 token_mean=0.691195
+TRACE layer=3 context=2048 same=0.0431912 active=0.865392 cascade=0.476517 token_mean=0.761626
+PHASE=trace name=first2048_reset128
+TRACE layer=0 context=128 same=0.269175 active=0.316426 cascade=0.269213 token_mean=0.242829
+TRACE layer=1 context=128 same=0.0383414 active=0.0383462 cascade=0.168799 token_mean=0.49307
+TRACE layer=2 context=128 same=0.00691984 active=0.811655 cascade=0.168603 token_mean=0.653001
+TRACE layer=3 context=128 same=0.00928918 active=0.867261 cascade=0.168904 token_mean=0.739658
+COMPLETE report=/workspace/runs/nec-prefix-failure-a40_20261022/report.json elapsed=81.3s

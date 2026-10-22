@@ -1,0 +1,4414 @@
+{
+  "status": "COMPLETE",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "source_commit": "cd1583e33620fc64c8be5011191f55c54689a99f",
+  "script_sha256": "65f6acc4b4953a4a3329cb4ac2b4f263ac7f512c4b14c87f50802e6f969b2f07",
+  "helper_sha256": "c5027d3089f7411f9498166fbc2288d2bc858a1ba91ead7058305ba426ba4607",
+  "checkpoint_manifest_sha256": "0dad321bb929c6653b57996069957c32da716f426d6dc6b64408bec0c5b6325f",
+  "checkpoint_sha256": {
+    "compressed_layer_0.pt": "d9ca8e0b8264b806ce7677044e2d4df49c0232dde2f1fcacd3f6c8fb76ee0b09",
+    "compressed_layer_1.pt": "95762275f29132a7114e447352f0c869c595f0c584a05c2547c6839d1ca0597f",
+    "compressed_layer_2.pt": "2ccb7a01428ad0675a799ba7a77f7dc80873016dcc556c331b386e2da04387d7",
+    "compressed_layer_3.pt": "c05f05a73f8365451508b573d496d30cbae9ff00c750a3144a96393a9c3beb88"
+  },
+  "scope": "diagnostic saved-weight interventions, no fitting",
+  "protocol": {
+    "split": "validation",
+    "max_eval_tokens": 4096,
+    "context": 2048,
+    "stride": 512
+  },
+  "ppl": {
+    "dense": {
+      "perplexity": 4.0828722858587865,
+      "mean_nll": 1.4068007323622558,
+      "next_token_accuracy": 0.6637362637362637,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 2915.835693359375,
+        "independent_formula_sum": 2915.835693359375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003015835693359375
+      }
+    },
+    "gate": {
+      "perplexity": 10.05420949783056,
+      "mean_nll": 2.3079914023151327,
+      "next_token_accuracy": 0.5326007326007326,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "gate_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4976.0234375,
+        "independent_formula_sum": 4976.0234375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.0050760234375000005
+      }
+    },
+    "up": {
+      "perplexity": 7.249078370091307,
+      "mean_nll": 1.9808743394192614,
+      "next_token_accuracy": 0.5738705738705738,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "up_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 4159.74462890625,
+        "independent_formula_sum": 4159.74462890625,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00425974462890625
+      }
+    },
+    "down": {
+      "perplexity": 12.267618699572006,
+      "mean_nll": 2.506963164873321,
+      "next_token_accuracy": 0.513064713064713,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "down_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 5216.41796875,
+        "independent_formula_sum": 5216.41796875,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.00531641796875
+      }
+    },
+    "gate_up": {
+      "perplexity": 69.79333279979308,
+      "mean_nll": 4.245538486578526,
+      "next_token_accuracy": 0.3189255189255189,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "gate_proj",
+        "up_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 8646.015625,
+        "independent_formula_sum": 8646.015625,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.008746015624999999
+      }
+    },
+    "gate_down": {
+      "perplexity": 31.707236518877302,
+      "mean_nll": 3.456544936183608,
+      "next_token_accuracy": 0.4117216117216117,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "gate_proj",
+        "down_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 7188.08056640625,
+        "independent_formula_sum": 7188.0810546875,
+        "absolute_difference": 0.00048828125,
+        "absolute_relative_tolerance": 0.0072880810546875
+      }
+    },
+    "up_down": {
+      "perplexity": 46.28224779877201,
+      "mean_nll": 3.8347584706959705,
+      "next_token_accuracy": 0.36800976800976803,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "up_proj",
+        "down_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 7922.6611328125,
+        "independent_formula_sum": 7922.6611328125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.0080226611328125
+      }
+    },
+    "mlp": {
+      "perplexity": 106.44280678021387,
+      "mean_nll": 4.6676078153617215,
+      "next_token_accuracy": 0.2862026862026862,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 9486.681640625,
+        "independent_formula_sum": 9486.681640625,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.009586681640624999
+      }
+    },
+    "full_nec": {
+      "perplexity": 233.4994659711836,
+      "mean_nll": 5.4531797900450245,
+      "next_token_accuracy": 0.2402930402930403,
+      "scored_tokens": 4095,
+      "compressed_projections_each_layer": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 10902.125,
+        "independent_formula_sum": 10902.125,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.011002125
+      }
+    }
+  },
+  "decomposition": {
+    "saved_validation_128": {
+      "0": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.00040155183523893356,
+          "token_relative_error_mean": 0.00038383936043828726,
+          "token_relative_error_quantiles": [
+            0.00016960460925474763,
+            0.00036797538632526994,
+            0.0004936572513543069,
+            0.0006821462884545326,
+            0.0011336981551721692
+          ],
+          "token_norm_quantiles": [
+            1.3579567670822144,
+            1.8780097961425781,
+            2.444472074508667,
+            3.4596543312072754,
+            4.410693168640137
+          ],
+          "largest_token_energy_fraction": 0.004653621930629015,
+          "cosine_similarity": 1.000436544418335,
+          "mean_token_cosine": 1.0,
+          "norm_ratio": 1.0000739097595215,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            3431,
+            588,
+            1793
+          ],
+          "largest_channel_energy_fractions": [
+            0.2811086177825928,
+            0.23777876794338226,
+            0.004190858453512192,
+            0.00401943689212203,
+            0.003952853847295046,
+            0.0038454376626759768,
+            0.003188038244843483,
+            0.002934806514531374
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 0.0003974839928559959,
+          "token_relative_error_mean": 0.0003787563764490187,
+          "token_relative_error_quantiles": [
+            0.00016033982683438808,
+            0.0003598928451538086,
+            0.0005008351290598512,
+            0.0006871934747323394,
+            0.001053762505762279
+          ],
+          "token_norm_quantiles": [
+            1.2878884077072144,
+            1.6765094995498657,
+            2.3245961666107178,
+            3.2194712162017822,
+            4.115725994110107
+          ],
+          "largest_token_energy_fraction": 0.00502503477036953,
+          "cosine_similarity": 1.0005000829696655,
+          "mean_token_cosine": 0.9999999403953552,
+          "norm_ratio": 1.0001020431518555,
+          "largest_channels": [
+            1512,
+            2298,
+            3431,
+            1571,
+            3656,
+            257,
+            1793,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.32338735461235046,
+            0.28040042519569397,
+            0.004633771721273661,
+            0.004049068316817284,
+            0.0038810838013887405,
+            0.0036397604271769524,
+            0.003407207317650318,
+            0.002996922004967928
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.10003864020109177,
+          "token_relative_error_mean": 0.0896800234913826,
+          "token_relative_error_quantiles": [
+            0.05221131071448326,
+            0.08271743357181549,
+            0.11412319540977478,
+            0.20855078101158142,
+            0.47849470376968384
+          ],
+          "token_norm_quantiles": [
+            1.9345473051071167,
+            2.843437433242798,
+            3.405705690383911,
+            4.373772144317627,
+            5.461342811584473
+          ],
+          "largest_token_energy_fraction": 0.003503324231132865,
+          "cosine_similarity": 0.9952738881111145,
+          "mean_token_cosine": 0.9953703880310059,
+          "norm_ratio": 0.9983140826225281,
+          "largest_channels": [
+            1512,
+            1415,
+            1411,
+            2235,
+            2944,
+            310,
+            2158,
+            2543
+          ],
+          "largest_channel_energy_fractions": [
+            0.09587346017360687,
+            0.04751439392566681,
+            0.02080666832625866,
+            0.020397471264004707,
+            0.016088737174868584,
+            0.01592927612364292,
+            0.009092830121517181,
+            0.008708749897778034
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.42586997151374817,
+            "token_relative_error_mean": 0.3854113817214966,
+            "token_relative_error_quantiles": [
+              0.07722314447164536,
+              0.438029021024704,
+              0.5973086357116699,
+              0.6536211371421814,
+              0.7186887860298157
+            ],
+            "token_norm_quantiles": [
+              5.647631645202637,
+              7.989826202392578,
+              9.722760200500488,
+              12.590187072753906,
+              16.057430267333984
+            ],
+            "largest_token_energy_fraction": 0.003716845763847232,
+            "cosine_similarity": 0.9057491421699524,
+            "mean_token_cosine": 0.9024612903594971,
+            "norm_ratio": 0.8934116959571838,
+            "largest_channels": [
+              7936,
+              912,
+              7377,
+              9351,
+              7642,
+              7374,
+              1957,
+              5389
+            ],
+            "largest_channel_energy_fractions": [
+              0.03052687831223011,
+              0.022863343358039856,
+              0.016368882730603218,
+              0.010297136381268501,
+              0.009735614992678165,
+              0.007270715199410915,
+              0.007220305502414703,
+              0.007068941835314035
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.5104665756225586,
+            "token_relative_error_mean": 0.45828449726104736,
+            "token_relative_error_quantiles": [
+              0.09739795327186584,
+              0.532363772392273,
+              0.6920428276062012,
+              0.7510665655136108,
+              0.7927443385124207
+            ],
+            "token_norm_quantiles": [
+              4.271643161773682,
+              6.5425214767456055,
+              8.01729679107666,
+              10.311471939086914,
+              13.293848037719727
+            ],
+            "largest_token_energy_fraction": 0.0037929287645965815,
+            "cosine_similarity": 0.8607959747314453,
+            "mean_token_cosine": 0.8578103184700012,
+            "norm_ratio": 0.8464940786361694,
+            "largest_channels": [
+              7027,
+              10693,
+              3131,
+              8901,
+              9184,
+              7391,
+              10654,
+              7377
+            ],
+            "largest_channel_energy_fractions": [
+              0.003714372171089053,
+              0.0027087486814707518,
+              0.002674541901797056,
+              0.0024712425656616688,
+              0.0021663864608854055,
+              0.0021137932781130075,
+              0.0019979174248874187,
+              0.001988816075026989
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.6063625812530518,
+            "token_relative_error_mean": 0.5539758801460266,
+            "token_relative_error_quantiles": [
+              0.08946023136377335,
+              0.697540283203125,
+              0.8700618743896484,
+              0.9208753705024719,
+              0.9373321533203125
+            ],
+            "token_norm_quantiles": [
+              0.1944696009159088,
+              0.4543575942516327,
+              0.635768473148346,
+              1.2989192008972168,
+              2.690784454345703
+            ],
+            "largest_token_energy_fraction": 0.025478992611169815,
+            "cosine_similarity": 0.7994768619537354,
+            "mean_token_cosine": 0.7552686929702759,
+            "norm_ratio": 0.7366755604743958,
+            "largest_channels": [
+              7374,
+              7391,
+              7642,
+              9243,
+              7377,
+              9351,
+              623,
+              5432
+            ],
+            "largest_channel_energy_fractions": [
+              0.04467642307281494,
+              0.03391031175851822,
+              0.02821994200348854,
+              0.02569342404603958,
+              0.02353360876441002,
+              0.014332029968500137,
+              0.01187544222921133,
+              0.011466305702924728
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.49623534083366394,
+            "token_relative_error_mean": 0.5215597748756409,
+            "token_relative_error_quantiles": [
+              0.06931295990943909,
+              0.6219350695610046,
+              0.8218879103660583,
+              0.8840327262878418,
+              0.9292168021202087
+            ],
+            "token_norm_quantiles": [
+              0.3351946473121643,
+              0.8425318002700806,
+              1.4127804040908813,
+              2.6089813709259033,
+              3.8548011779785156
+            ],
+            "largest_token_energy_fraction": 0.013840141706168652,
+            "cosine_similarity": 0.8722962141036987,
+            "mean_token_cosine": 0.8033326268196106,
+            "norm_ratio": 0.791874885559082,
+            "largest_channels": [
+              2298,
+              1512,
+              310,
+              3656,
+              257,
+              1571,
+              4071,
+              216
+            ],
+            "largest_channel_energy_fractions": [
+              0.21856355667114258,
+              0.205264613032341,
+              0.011281853541731834,
+              0.008373739197850227,
+              0.006701063364744186,
+              0.005526904948055744,
+              0.005341625772416592,
+              0.004924893379211426
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.4822434186935425,
+          "down_error_on_dense_product_relative": 0.42240720987319946,
+          "down_error_on_changed_product_cross_term_relative": 0.3904673457145691,
+          "down_error_on_actual_product_relative": 0.18097034096717834,
+          "product_down_error_cosine": -0.10926276445388794,
+          "output_decomposition_residual": 1.1787044513766887e-06,
+          "product_decomposition_residual": 4.202950520948434e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.42125359177589417,
+            "token_relative_error_mean": 0.3801405727863312,
+            "token_relative_error_quantiles": [
+              0.07918545603752136,
+              0.4364373981952667,
+              0.5966049432754517,
+              0.6579189896583557,
+              0.7112990021705627
+            ],
+            "token_norm_quantiles": [
+              5.645882606506348,
+              7.931328773498535,
+              9.67928695678711,
+              12.680533409118652,
+              15.950490951538086
+            ],
+            "largest_token_energy_fraction": 0.003719100495800376,
+            "cosine_similarity": 0.9078823924064636,
+            "mean_token_cosine": 0.9040440320968628,
+            "norm_ratio": 0.8977319002151489,
+            "largest_channels": [
+              7936,
+              912,
+              7377,
+              9351,
+              7642,
+              7374,
+              1957,
+              5389
+            ],
+            "largest_channel_energy_fractions": [
+              0.031373780220746994,
+              0.022950483486056328,
+              0.01672922447323799,
+              0.010400112718343735,
+              0.009647429920732975,
+              0.007300109602510929,
+              0.007284821476787329,
+              0.007129970472306013
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.5057623386383057,
+            "token_relative_error_mean": 0.452714741230011,
+            "token_relative_error_quantiles": [
+              0.09943433105945587,
+              0.5231875777244568,
+              0.6936466693878174,
+              0.7520052790641785,
+              0.7911296486854553
+            ],
+            "token_norm_quantiles": [
+              4.183281898498535,
+              6.50727653503418,
+              7.950146198272705,
+              10.28740119934082,
+              13.203009605407715
+            ],
+            "largest_token_energy_fraction": 0.003800486447289586,
+            "cosine_similarity": 0.8635334968566895,
+            "mean_token_cosine": 0.8596591353416443,
+            "norm_ratio": 0.8517463803291321,
+            "largest_channels": [
+              7027,
+              10693,
+              3131,
+              8901,
+              9184,
+              7391,
+              7377,
+              10654
+            ],
+            "largest_channel_energy_fractions": [
+              0.003907852340489626,
+              0.0027227643877267838,
+              0.002708273008465767,
+              0.002506435615941882,
+              0.0022131772711873055,
+              0.0020935905631631613,
+              0.002027214504778385,
+              0.0019962871447205544
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.5972176790237427,
+            "token_relative_error_mean": 0.5470636487007141,
+            "token_relative_error_quantiles": [
+              0.07862188667058945,
+              0.6866722702980042,
+              0.8691062331199646,
+              0.9197093844413757,
+              0.9353612661361694
+            ],
+            "token_norm_quantiles": [
+              0.18836450576782227,
+              0.44625091552734375,
+              0.6306555271148682,
+              1.2919440269470215,
+              2.1932737827301025
+            ],
+            "largest_token_energy_fraction": 0.017624512314796448,
+            "cosine_similarity": 0.8056858777999878,
+            "mean_token_cosine": 0.75873863697052,
+            "norm_ratio": 0.7524754405021667,
+            "largest_channels": [
+              7391,
+              7374,
+              9243,
+              7642,
+              7377,
+              9351,
+              5432,
+              623
+            ],
+            "largest_channel_energy_fractions": [
+              0.034137699753046036,
+              0.033494237810373306,
+              0.028285430744290352,
+              0.027342140674591064,
+              0.024522481486201286,
+              0.014988826587796211,
+              0.01291437353938818,
+              0.010665914043784142
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.4887741804122925,
+            "token_relative_error_mean": 0.5172770619392395,
+            "token_relative_error_quantiles": [
+              0.06742175668478012,
+              0.6121582388877869,
+              0.819968044757843,
+              0.8838438391685486,
+              0.929114818572998
+            ],
+            "token_norm_quantiles": [
+              0.33063146471977234,
+              0.8373014330863953,
+              1.393439769744873,
+              2.485893726348877,
+              3.7179930210113525
+            ],
+            "largest_token_energy_fraction": 0.013279899954795837,
+            "cosine_similarity": 0.875771701335907,
+            "mean_token_cosine": 0.8055543899536133,
+            "norm_ratio": 0.8038077354431152,
+            "largest_channels": [
+              2298,
+              1512,
+              310,
+              3656,
+              257,
+              1571,
+              4071,
+              588
+            ],
+            "largest_channel_energy_fractions": [
+              0.22012920677661896,
+              0.20711681246757507,
+              0.011025943793356419,
+              0.008536907844245434,
+              0.0067829894833266735,
+              0.00560937961563468,
+              0.005420588422566652,
+              0.004700684919953346
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.4744480550289154,
+          "down_error_on_dense_product_relative": 0.4185325503349304,
+          "down_error_on_changed_product_cross_term_relative": 0.3862711191177368,
+          "down_error_on_actual_product_relative": 0.183750182390213,
+          "product_down_error_cosine": -0.11458082497119904,
+          "output_decomposition_residual": 1.1772719972213963e-06,
+          "product_decomposition_residual": 4.279043963606455e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.4991687834262848,
+          "token_relative_error_mean": 0.5233360528945923,
+          "token_relative_error_quantiles": [
+            0.06931395083665848,
+            0.6238242387771606,
+            0.8219690322875977,
+            0.8844648003578186,
+            0.9305014610290527
+          ],
+          "token_norm_quantiles": [
+            0.3351946473121643,
+            0.8425318002700806,
+            1.4127804040908813,
+            2.6089813709259033,
+            3.8548011779785156
+          ],
+          "largest_token_energy_fraction": 0.013840141706168652,
+          "cosine_similarity": 0.8704959750175476,
+          "mean_token_cosine": 0.8024271726608276,
+          "norm_ratio": 0.7914623022079468,
+          "largest_channels": [
+            2298,
+            1512,
+            310,
+            3656,
+            257,
+            1571,
+            4071,
+            216
+          ],
+          "largest_channel_energy_fractions": [
+            0.21856355667114258,
+            0.205264613032341,
+            0.011281853541731834,
+            0.008373739197850227,
+            0.006701063364744186,
+            0.005526904948055744,
+            0.005341625772416592,
+            0.004924893379211426
+          ]
+        }
+      },
+      "1": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.0003331447660457343,
+          "token_relative_error_mean": 0.00047030270798131824,
+          "token_relative_error_quantiles": [
+            0.00016034298459999263,
+            0.00045621185563504696,
+            0.0005697430460713804,
+            0.0007547551649622619,
+            0.001249135471880436
+          ],
+          "token_norm_quantiles": [
+            2.049140453338623,
+            2.713156223297119,
+            3.1981141567230225,
+            850.886962890625,
+            3131.75048828125
+          ],
+          "largest_token_energy_fraction": 0.2201046198606491,
+          "cosine_similarity": 1.0000578165054321,
+          "mean_token_cosine": 0.9999999403953552,
+          "norm_ratio": 0.9999836087226868,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7357267141342163,
+            0.25623977184295654,
+            0.002752161817625165,
+            0.0008287762757390738,
+            0.00038025155663490295,
+            0.00032973906490951777,
+            0.00032397371251136065,
+            0.0003239264478906989
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 0.0004155461792834103,
+          "token_relative_error_mean": 0.0004642299609258771,
+          "token_relative_error_quantiles": [
+            0.00020048489386681467,
+            0.0004440858610905707,
+            0.0005673202103935182,
+            0.000750622886698693,
+            0.008432085625827312
+          ],
+          "token_norm_quantiles": [
+            1.4277111291885376,
+            2.0097508430480957,
+            2.482631206512451,
+            966.007080078125,
+            3061.850830078125
+          ],
+          "largest_token_energy_fraction": 0.2170964628458023,
+          "cosine_similarity": 1.00003981590271,
+          "mean_token_cosine": 1.0,
+          "norm_ratio": 0.9997997283935547,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7354856729507446,
+            0.2567264139652252,
+            0.0026580095291137695,
+            0.0007950096623972058,
+            0.00037478789454326034,
+            0.0003382959694135934,
+            0.00032806475064717233,
+            0.00030979508301243186
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.4795059859752655,
+          "token_relative_error_mean": 0.4525863528251648,
+          "token_relative_error_quantiles": [
+            0.12354139983654022,
+            0.46046310663223267,
+            0.5980099439620972,
+            0.714055597782135,
+            0.9572252035140991
+          ],
+          "token_norm_quantiles": [
+            2.8500585556030273,
+            4.6532416343688965,
+            5.242390155792236,
+            6.068047523498535,
+            6.958372116088867
+          ],
+          "largest_token_energy_fraction": 0.0023030410520732403,
+          "cosine_similarity": 0.8800860047340393,
+          "mean_token_cosine": 0.8854309916496277,
+          "norm_ratio": 0.9442319869995117,
+          "largest_channels": [
+            2298,
+            2158,
+            3135,
+            3893,
+            3431,
+            580,
+            310,
+            3209
+          ],
+          "largest_channel_energy_fractions": [
+            0.024054639041423798,
+            0.00987019669264555,
+            0.006226330995559692,
+            0.005165306851267815,
+            0.004415249451994896,
+            0.003944602329283953,
+            0.0035098332446068525,
+            0.003207069355994463
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.47770485281944275,
+            "token_relative_error_mean": 0.4566391706466675,
+            "token_relative_error_quantiles": [
+              0.047679755836725235,
+              0.495319664478302,
+              0.6570813655853271,
+              0.7202337384223938,
+              0.7470109462738037
+            ],
+            "token_norm_quantiles": [
+              10.438398361206055,
+              14.430339813232422,
+              18.089372634887695,
+              36.92560958862305,
+              58.70863723754883
+            ],
+            "largest_token_energy_fraction": 0.013602619990706444,
+            "cosine_similarity": 0.8797114491462708,
+            "mean_token_cosine": 0.8712944984436035,
+            "norm_ratio": 0.8608760237693787,
+            "largest_channels": [
+              7890,
+              10411,
+              5843,
+              1134,
+              3407,
+              6954,
+              8395,
+              9848
+            ],
+            "largest_channel_energy_fractions": [
+              0.14012864232063293,
+              0.057206206023693085,
+              0.016573777422308922,
+              0.015672331675887108,
+              0.008187378756701946,
+              0.004853652790188789,
+              0.003679741872474551,
+              0.002672542817890644
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.6312325596809387,
+            "token_relative_error_mean": 0.5944169163703918,
+            "token_relative_error_quantiles": [
+              0.05907199904322624,
+              0.6734007000923157,
+              0.8023219108581543,
+              0.8372932076454163,
+              0.8485013842582703
+            ],
+            "token_norm_quantiles": [
+              6.57682991027832,
+              10.430498123168945,
+              13.052742004394531,
+              25.686111450195312,
+              41.85097885131836
+            ],
+            "largest_token_energy_fraction": 0.014048207551240921,
+            "cosine_similarity": 0.7764635682106018,
+            "mean_token_cosine": 0.7679391503334045,
+            "norm_ratio": 0.760738730430603,
+            "largest_channels": [
+              7890,
+              10411,
+              8731,
+              1192,
+              2549,
+              5805,
+              7085,
+              6947
+            ],
+            "largest_channel_energy_fractions": [
+              0.08425505459308624,
+              0.004958377219736576,
+              0.003422986250370741,
+              0.0018981627654284239,
+              0.0017247373471036553,
+              0.0015214943559840322,
+              0.0013479373883455992,
+              0.0010556901106610894
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.008959334343671799,
+            "token_relative_error_mean": 0.6778432130813599,
+            "token_relative_error_quantiles": [
+              0.0017905908171087503,
+              0.7997183799743652,
+              0.9355399012565613,
+              0.9596813917160034,
+              0.9666240811347961
+            ],
+            "token_norm_quantiles": [
+              0.44724830985069275,
+              0.9500740766525269,
+              1.3222923278808594,
+              358.8282775878906,
+              1657.1182861328125
+            ],
+            "largest_token_energy_fraction": 0.2327263504266739,
+            "cosine_similarity": 0.9999707937240601,
+            "mean_token_cosine": 0.6485608816146851,
+            "norm_ratio": 1.0008245706558228,
+            "largest_channels": [
+              7890,
+              10411,
+              1192,
+              1134,
+              8731,
+              5843,
+              2713,
+              9534
+            ],
+            "largest_channel_energy_fractions": [
+              0.9882716536521912,
+              0.010853540152311325,
+              0.0004231897182762623,
+              0.00015824373986106366,
+              6.535818829433993e-05,
+              6.130169640528038e-05,
+              2.5291561541962437e-05,
+              8.375260222237557e-06
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.008141768164932728,
+            "token_relative_error_mean": 0.7523407936096191,
+            "token_relative_error_quantiles": [
+              0.0015781326219439507,
+              0.8348945379257202,
+              0.9593597054481506,
+              0.9770515561103821,
+              0.9858985543251038
+            ],
+            "token_norm_quantiles": [
+              0.7305951118469238,
+              1.3253830671310425,
+              1.7448906898498535,
+              850.791015625,
+              3131.36865234375
+            ],
+            "largest_token_energy_fraction": 0.22013625502586365,
+            "cosine_similarity": 0.9999913573265076,
+            "mean_token_cosine": 0.5836465954780579,
+            "norm_ratio": 1.0012187957763672,
+            "largest_channels": [
+              2533,
+              1415,
+              1512,
+              2298,
+              3431,
+              339,
+              2168,
+              3135
+            ],
+            "largest_channel_energy_fractions": [
+              0.735885739326477,
+              0.2562319338321686,
+              0.00272676395252347,
+              0.0008245018543675542,
+              0.00037486193468794227,
+              0.00032605978776700795,
+              0.0003238663193769753,
+              0.00032057033968158066
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.007792709395289421,
+          "down_error_on_dense_product_relative": 0.005535609554499388,
+          "down_error_on_changed_product_cross_term_relative": 0.005031595006585121,
+          "down_error_on_actual_product_relative": 0.0020959973335266113,
+          "product_down_error_cosine": 0.03662330284714699,
+          "output_decomposition_residual": 2.048809847110533e-06,
+          "product_decomposition_residual": 2.7150241166395972e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.3909265995025635,
+            "token_relative_error_mean": 0.38711118698120117,
+            "token_relative_error_quantiles": [
+              0.04668925330042839,
+              0.42225176095962524,
+              0.5677038431167603,
+              0.6311112642288208,
+              0.6896227598190308
+            ],
+            "token_norm_quantiles": [
+              10.888144493103027,
+              14.732725143432617,
+              16.890562057495117,
+              38.2928352355957,
+              57.87458419799805
+            ],
+            "largest_token_energy_fraction": 0.01310873031616211,
+            "cosine_similarity": 0.921572208404541,
+            "mean_token_cosine": 0.907848060131073,
+            "norm_ratio": 0.9192442893981934,
+            "largest_channels": [
+              7890,
+              10411,
+              1134,
+              5843,
+              3407,
+              6954,
+              8395,
+              1192
+            ],
+            "largest_channel_energy_fractions": [
+              0.1904575377702713,
+              0.08314371854066849,
+              0.023973139002919197,
+              0.021463152021169662,
+              0.011237901635468006,
+              0.006994408555328846,
+              0.0034940310288220644,
+              0.0029128934256732464
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.5740664005279541,
+            "token_relative_error_mean": 0.5576386451721191,
+            "token_relative_error_quantiles": [
+              0.05799577012658119,
+              0.6333275437355042,
+              0.7771553993225098,
+              0.8180684447288513,
+              0.8361947536468506
+            ],
+            "token_norm_quantiles": [
+              6.272058010101318,
+              9.638975143432617,
+              11.121156692504883,
+              26.6402645111084,
+              41.41364288330078
+            ],
+            "largest_token_energy_fraction": 0.015970882028341293,
+            "cosine_similarity": 0.8197382092475891,
+            "mean_token_cosine": 0.7936679720878601,
+            "norm_ratio": 0.8235202431678772,
+            "largest_channels": [
+              7890,
+              10411,
+              8731,
+              2549,
+              1192,
+              5805,
+              6947,
+              3407
+            ],
+            "largest_channel_energy_fractions": [
+              0.12429150193929672,
+              0.007610051427036524,
+              0.004056896083056927,
+              0.0029987995512783527,
+              0.0023223701864480972,
+              0.0018751956522464752,
+              0.0015588718233630061,
+              0.0013004537904635072
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.007600575219839811,
+            "token_relative_error_mean": 0.6173955202102661,
+            "token_relative_error_quantiles": [
+              0.0012630518758669496,
+              0.7096800804138184,
+              0.8806533217430115,
+              0.925580620765686,
+              0.9460643529891968
+            ],
+            "token_norm_quantiles": [
+              0.4317309558391571,
+              0.7646433115005493,
+              0.9845976829528809,
+              412.2175598144531,
+              1617.76611328125
+            ],
+            "largest_token_energy_fraction": 0.23564988374710083,
+            "cosine_similarity": 0.9999804496765137,
+            "mean_token_cosine": 0.7218881249427795,
+            "norm_ratio": 0.999786913394928,
+            "largest_channels": [
+              7890,
+              10411,
+              1192,
+              1134,
+              8731,
+              5843,
+              2713,
+              9534
+            ],
+            "largest_channel_energy_fractions": [
+              0.9826947450637817,
+              0.016293002292513847,
+              0.0005406409618444741,
+              0.00013849034439772367,
+              0.00011121208808617666,
+              8.035259088501334e-05,
+              3.048724465770647e-05,
+              8.213574801629875e-06
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.00829740334302187,
+            "token_relative_error_mean": 0.7161870002746582,
+            "token_relative_error_quantiles": [
+              0.0010323823662474751,
+              0.7831795811653137,
+              0.9176172614097595,
+              0.9465380907058716,
+              0.9695316553115845
+            ],
+            "token_norm_quantiles": [
+              0.6842584609985352,
+              1.0470870733261108,
+              1.312984824180603,
+              968.447265625,
+              3061.996337890625
+            ],
+            "largest_token_energy_fraction": 0.21672064065933228,
+            "cosine_similarity": 0.9999889135360718,
+            "mean_token_cosine": 0.6411101818084717,
+            "norm_ratio": 0.9987189769744873,
+            "largest_channels": [
+              2533,
+              1415,
+              1512,
+              2298,
+              3431,
+              1076,
+              339,
+              3135
+            ],
+            "largest_channel_energy_fractions": [
+              0.7354401350021362,
+              0.2568468451499939,
+              0.0026376228779554367,
+              0.0007930404390208423,
+              0.00037005930789746344,
+              0.00034036446595564485,
+              0.00032517191721126437,
+              0.000305731751723215
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.008015604689717293,
+          "down_error_on_dense_product_relative": 0.0038820249028503895,
+          "down_error_on_changed_product_cross_term_relative": 0.003262785729020834,
+          "down_error_on_actual_product_relative": 0.0020946816075593233,
+          "product_down_error_cosine": 0.0073626390658319,
+          "output_decomposition_residual": 1.6958407513811835e-06,
+          "product_decomposition_residual": 4.846657120083364e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.15115615725517273,
+          "token_relative_error_mean": 0.7748850584030151,
+          "token_relative_error_quantiles": [
+            0.012060006149113178,
+            0.8599003553390503,
+            0.9657378196716309,
+            0.9864223599433899,
+            7.237873077392578
+          ],
+          "token_norm_quantiles": [
+            0.7305951118469238,
+            1.3253830671310425,
+            1.7448906898498535,
+            850.791015625,
+            3131.36865234375
+          ],
+          "largest_token_energy_fraction": 0.22013625502586365,
+          "cosine_similarity": 0.9885408878326416,
+          "mean_token_cosine": 0.5595743060112,
+          "norm_ratio": 0.984258234500885,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.735885739326477,
+            0.2562319338321686,
+            0.00272676395252347,
+            0.0008245018543675542,
+            0.00037486193468794227,
+            0.00032605978776700795,
+            0.0003238663193769753,
+            0.00032057033968158066
+          ]
+        }
+      },
+      "2": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.00014182564336806536,
+          "token_relative_error_mean": 0.0005965646123513579,
+          "token_relative_error_quantiles": [
+            7.77074383222498e-05,
+            0.0005638584261760116,
+            0.0008038865053094923,
+            0.0011208652285858989,
+            0.0015460714930668473
+          ],
+          "token_norm_quantiles": [
+            2.8387532234191895,
+            3.7090513706207275,
+            4.2298054695129395,
+            856.0364990234375,
+            3136.467041015625
+          ],
+          "largest_token_energy_fraction": 0.2197909951210022,
+          "cosine_similarity": 1.0000826120376587,
+          "mean_token_cosine": 0.9999998807907104,
+          "norm_ratio": 0.9999610781669617,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            3135,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7355896830558777,
+            0.25639551877975464,
+            0.002759774914011359,
+            0.0008101454586721957,
+            0.00037389094359241426,
+            0.00032420133356936276,
+            0.00031477364245802164,
+            0.00031428979127667844
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 0.00017749455582816154,
+          "token_relative_error_mean": 0.0004231163184158504,
+          "token_relative_error_quantiles": [
+            6.278308137552813e-05,
+            0.0003937255823984742,
+            0.0005622811731882393,
+            0.0008487492450512946,
+            0.0015453374944627285
+          ],
+          "token_norm_quantiles": [
+            1.5117977857589722,
+            2.106050968170166,
+            2.839285373687744,
+            970.6945190429688,
+            3066.532470703125
+          ],
+          "largest_token_energy_fraction": 0.2168232649564743,
+          "cosine_similarity": 1.0000437498092651,
+          "mean_token_cosine": 0.9999998807907104,
+          "norm_ratio": 1.000063419342041,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7355388402938843,
+            0.2568216025829315,
+            0.0026586931198835373,
+            0.0007716416148468852,
+            0.00036393420305103064,
+            0.0003401700814720243,
+            0.0003210531431250274,
+            0.0002983137092087418
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.7813553810119629,
+          "token_relative_error_mean": 0.7529791593551636,
+          "token_relative_error_quantiles": [
+            0.0015319273807108402,
+            0.779747486114502,
+            0.9128121733665466,
+            1.0400551557540894,
+            1.2294853925704956
+          ],
+          "token_norm_quantiles": [
+            3.444303035736084,
+            6.556954383850098,
+            7.559925556182861,
+            7.96995735168457,
+            8.193833351135254
+          ],
+          "largest_token_energy_fraction": 0.0015628223773092031,
+          "cosine_similarity": 0.6623684167861938,
+          "mean_token_cosine": 0.6678944230079651,
+          "norm_ratio": 0.8837445378303528,
+          "largest_channels": [
+            2533,
+            1415,
+            2158,
+            580,
+            3893,
+            3656,
+            2298,
+            2789
+          ],
+          "largest_channel_energy_fractions": [
+            0.009182511828839779,
+            0.004681171849370003,
+            0.002529783407226205,
+            0.0021210683044046164,
+            0.0014838194474577904,
+            0.0013158360961824656,
+            0.0012584415962919593,
+            0.001184231135994196
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.6370635628700256,
+            "token_relative_error_mean": 0.5951910614967346,
+            "token_relative_error_quantiles": [
+              0.1875522881746292,
+              0.6488236784934998,
+              0.7477858662605286,
+              0.7860841751098633,
+              0.7985016703605652
+            ],
+            "token_norm_quantiles": [
+              6.60373067855835,
+              16.698225021362305,
+              22.47335433959961,
+              27.061752319335938,
+              29.428089141845703
+            ],
+            "largest_token_energy_fraction": 0.0026797987520694733,
+            "cosine_similarity": 0.7721939086914062,
+            "mean_token_cosine": 0.7855578064918518,
+            "norm_ratio": 0.7404559254646301,
+            "largest_channels": [
+              1661,
+              328,
+              7634,
+              6091,
+              4584,
+              2031,
+              875,
+              8910
+            ],
+            "largest_channel_energy_fractions": [
+              0.015889909118413925,
+              0.002544458955526352,
+              0.0018686377443373203,
+              0.001467325259000063,
+              0.001363406889140606,
+              0.0011077438248321414,
+              0.0009902488673105836,
+              0.0009896780829876661
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7283322215080261,
+            "token_relative_error_mean": 0.6777487993240356,
+            "token_relative_error_quantiles": [
+              0.19381338357925415,
+              0.7475525140762329,
+              0.8419502973556519,
+              0.865641176700592,
+              0.8754329681396484
+            ],
+            "token_norm_quantiles": [
+              6.088497161865234,
+              13.784733772277832,
+              17.5239315032959,
+              20.492238998413086,
+              21.247331619262695
+            ],
+            "largest_token_energy_fraction": 0.002179935807362199,
+            "cosine_similarity": 0.6859775185585022,
+            "mean_token_cosine": 0.7029791474342346,
+            "norm_ratio": 0.6712564826011658,
+            "largest_channels": [
+              1856,
+              1661,
+              4288,
+              6665,
+              4873,
+              7479,
+              9817,
+              10188
+            ],
+            "largest_channel_energy_fractions": [
+              0.0018640079069882631,
+              0.0010258584516122937,
+              0.0007712959195487201,
+              0.0006293346523307264,
+              0.0005152306403033435,
+              0.00048344829701818526,
+              0.0004807287477888167,
+              0.00047564663691446185
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.8020296692848206,
+            "token_relative_error_mean": 0.7767797112464905,
+            "token_relative_error_quantiles": [
+              0.03149920701980591,
+              0.8593510985374451,
+              0.9469826221466064,
+              0.9645186066627502,
+              0.9685270190238953
+            ],
+            "token_norm_quantiles": [
+              0.4086219370365143,
+              1.2243940830230713,
+              2.0564496517181396,
+              4.336694717407227,
+              4.650078296661377
+            ],
+            "largest_token_energy_fraction": 0.00958658754825592,
+            "cosine_similarity": 0.6004757881164551,
+            "mean_token_cosine": 0.5702090859413147,
+            "norm_ratio": 0.5507767796516418,
+            "largest_channels": [
+              1661,
+              8609,
+              1992,
+              10818,
+              968,
+              950,
+              2214,
+              930
+            ],
+            "largest_channel_energy_fractions": [
+              0.11107243597507477,
+              0.009077358059585094,
+              0.0027763228863477707,
+              0.0027363128028810024,
+              0.0027139883022755384,
+              0.0022000952158123255,
+              0.0021989233791828156,
+              0.0019920016638934612
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.841731071472168,
+            "token_relative_error_mean": 0.8453050851821899,
+            "token_relative_error_quantiles": [
+              0.03501250222325325,
+              0.9182058572769165,
+              0.9818594455718994,
+              0.9903594255447388,
+              0.9965888857841492
+            ],
+            "token_norm_quantiles": [
+              0.603583574295044,
+              1.521215558052063,
+              2.5662169456481934,
+              6.0151824951171875,
+              6.4383063316345215
+            ],
+            "largest_token_energy_fraction": 0.011584226973354816,
+            "cosine_similarity": 0.5417134761810303,
+            "mean_token_cosine": 0.4600750505924225,
+            "norm_ratio": 0.4993794560432434,
+            "largest_channels": [
+              2533,
+              1415,
+              1512,
+              2298,
+              2168,
+              575,
+              2944,
+              2350
+            ],
+            "largest_channel_energy_fractions": [
+              0.06007063016295433,
+              0.02435765601694584,
+              0.012440587393939495,
+              0.004000465851277113,
+              0.0026350021362304688,
+              0.002054963493719697,
+              0.001963868737220764,
+              0.0016963945236057043
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.7845690846443176,
+          "down_error_on_dense_product_relative": 0.7997559905052185,
+          "down_error_on_changed_product_cross_term_relative": 0.7364799976348877,
+          "down_error_on_actual_product_relative": 0.29494747519493103,
+          "product_down_error_cosine": 0.012914104387164116,
+          "output_decomposition_residual": 1.802135329853627e-06,
+          "product_decomposition_residual": 4.8904382765613263e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.620003879070282,
+            "token_relative_error_mean": 0.5980168581008911,
+            "token_relative_error_quantiles": [
+              0.20969825983047485,
+              0.6679604053497314,
+              0.7616243958473206,
+              0.8109581470489502,
+              0.8425231575965881
+            ],
+            "token_norm_quantiles": [
+              6.602702617645264,
+              14.01964282989502,
+              15.871356010437012,
+              18.576513290405273,
+              21.385587692260742
+            ],
+            "largest_token_energy_fraction": 0.0022350118961185217,
+            "cosine_similarity": 0.7859020233154297,
+            "mean_token_cosine": 0.7784764170646667,
+            "norm_ratio": 0.8154931664466858,
+            "largest_channels": [
+              1661,
+              328,
+              9905,
+              7634,
+              6091,
+              2031,
+              1582,
+              8910
+            ],
+            "largest_channel_energy_fractions": [
+              0.023349622264504433,
+              0.008187818340957165,
+              0.0029070291202515364,
+              0.0026313457638025284,
+              0.002606005407869816,
+              0.002572193741798401,
+              0.0024236722383648157,
+              0.0022058654576539993
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7046588659286499,
+            "token_relative_error_mean": 0.675711452960968,
+            "token_relative_error_quantiles": [
+              0.22521677613258362,
+              0.7610005140304565,
+              0.8596749305725098,
+              0.8816558718681335,
+              0.8917523622512817
+            ],
+            "token_norm_quantiles": [
+              6.089534759521484,
+              11.535520553588867,
+              13.153878211975098,
+              14.599273681640625,
+              17.1523494720459
+            ],
+            "largest_token_energy_fraction": 0.002134398091584444,
+            "cosine_similarity": 0.7106929421424866,
+            "mean_token_cosine": 0.6958857774734497,
+            "norm_ratio": 0.7374269962310791,
+            "largest_channels": [
+              10595,
+              1661,
+              9905,
+              2736,
+              1856,
+              5270,
+              9361,
+              10188
+            ],
+            "largest_channel_energy_fractions": [
+              0.004390292800962925,
+              0.003713226644322276,
+              0.0024032536894083023,
+              0.0012817340902984142,
+              0.0012578165624290705,
+              0.0011529353214427829,
+              0.0011444399133324623,
+              0.0010005934163928032
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.6621205806732178,
+            "token_relative_error_mean": 0.7470346689224243,
+            "token_relative_error_quantiles": [
+              0.03211561590433121,
+              0.8369766473770142,
+              0.9094395637512207,
+              0.9304178953170776,
+              0.9424191117286682
+            ],
+            "token_norm_quantiles": [
+              0.4524862468242645,
+              0.8287191390991211,
+              1.0559487342834473,
+              4.319456577301025,
+              4.625332832336426
+            ],
+            "largest_token_energy_fraction": 0.021328462287783623,
+            "cosine_similarity": 0.7513421773910522,
+            "mean_token_cosine": 0.6148300170898438,
+            "norm_ratio": 0.7436056733131409,
+            "largest_channels": [
+              1661,
+              9905,
+              8609,
+              2148,
+              1856,
+              5270,
+              7124,
+              4584
+            ],
+            "largest_channel_energy_fractions": [
+              0.2654043436050415,
+              0.020402750000357628,
+              0.007867935113608837,
+              0.007165275979787111,
+              0.006760390009731054,
+              0.004764118231832981,
+              0.0033854148350656033,
+              0.002671204274520278
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.6975501775741577,
+            "token_relative_error_mean": 0.830676257610321,
+            "token_relative_error_quantiles": [
+              0.03551629185676575,
+              0.9010566473007202,
+              0.9486538767814636,
+              0.9768232703208923,
+              1.017926573753357
+            ],
+            "token_norm_quantiles": [
+              0.6460022926330566,
+              1.01121187210083,
+              1.285516381263733,
+              5.991967678070068,
+              6.405177116394043
+            ],
+            "largest_token_energy_fraction": 0.025521595031023026,
+            "cosine_similarity": 0.7169429063796997,
+            "mean_token_cosine": 0.5034582018852234,
+            "norm_ratio": 0.7043557167053223,
+            "largest_channels": [
+              2533,
+              1415,
+              1512,
+              2168,
+              2944,
+              575,
+              2298,
+              1076
+            ],
+            "largest_channel_energy_fractions": [
+              0.1486307680606842,
+              0.06202000379562378,
+              0.018259946256875992,
+              0.006161426194012165,
+              0.005007332190871239,
+              0.004245997406542301,
+              0.003461955115199089,
+              0.0026492471806705
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.6123664975166321,
+          "down_error_on_dense_product_relative": 0.6575395464897156,
+          "down_error_on_changed_product_cross_term_relative": 0.5702347159385681,
+          "down_error_on_actual_product_relative": 0.35245072841644287,
+          "product_down_error_cosine": -0.02934066578745842,
+          "output_decomposition_residual": 1.6924278725127806e-06,
+          "product_decomposition_residual": 4.747708004515516e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.8736475110054016,
+          "token_relative_error_mean": 0.8912631273269653,
+          "token_relative_error_quantiles": [
+            0.03356741741299629,
+            0.9643267393112183,
+            0.9980100989341736,
+            1.0142124891281128,
+            1.2349132299423218
+          ],
+          "token_norm_quantiles": [
+            0.603583574295044,
+            1.521215558052063,
+            2.5662169456481934,
+            6.0151824951171875,
+            6.4383063316345215
+          ],
+          "largest_token_energy_fraction": 0.011584226973354816,
+          "cosine_similarity": 0.4869522452354431,
+          "mean_token_cosine": 0.3554551601409912,
+          "norm_ratio": 0.47209295630455017,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            2168,
+            575,
+            2944,
+            2350
+          ],
+          "largest_channel_energy_fractions": [
+            0.06007063016295433,
+            0.02435765601694584,
+            0.012440587393939495,
+            0.004000465851277113,
+            0.0026350021362304688,
+            0.002054963493719697,
+            0.001963868737220764,
+            0.0016963945236057043
+          ]
+        }
+      },
+      "3": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.00011301041377009824,
+          "token_relative_error_mean": 0.0006026000482961535,
+          "token_relative_error_quantiles": [
+            8.628374052932486e-05,
+            0.000580871885176748,
+            0.0007857483578845859,
+            0.0011126936879009008,
+            0.0014289960963651538
+          ],
+          "token_norm_quantiles": [
+            3.7875349521636963,
+            5.074351787567139,
+            5.8139801025390625,
+            856.0377807617188,
+            3136.2822265625
+          ],
+          "largest_token_energy_fraction": 0.2197248339653015,
+          "cosine_similarity": 1.0001254081726074,
+          "mean_token_cosine": 0.9999998211860657,
+          "norm_ratio": 1.0000603199005127,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            339,
+            2168,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7354550957679749,
+            0.2563486099243164,
+            0.002729714149609208,
+            0.0008014895720407367,
+            0.0003745287540368736,
+            0.000324669003020972,
+            0.0003150372358504683,
+            0.0003123616916127503
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 8.648129005450755e-05,
+          "token_relative_error_mean": 0.0003820172278210521,
+          "token_relative_error_quantiles": [
+            4.827633165405132e-05,
+            0.0003658621571958065,
+            0.00046983605716377497,
+            0.0006843445007689297,
+            0.0008227067883126438
+          ],
+          "token_norm_quantiles": [
+            1.8245238065719604,
+            2.4606003761291504,
+            3.8081202507019043,
+            970.7089233398438,
+            3066.338134765625
+          ],
+          "largest_token_energy_fraction": 0.2167990505695343,
+          "cosine_similarity": 1.0000555515289307,
+          "mean_token_cosine": 1.0,
+          "norm_ratio": 1.0000591278076172,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7355497479438782,
+            0.25682544708251953,
+            0.0026166453026235104,
+            0.0007620974211022258,
+            0.0003599438350647688,
+            0.0003406984033063054,
+            0.0003213166492059827,
+            0.00029389141127467155
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.9688032269477844,
+          "token_relative_error_mean": 0.9394477009773254,
+          "token_relative_error_quantiles": [
+            0.0038064925465732813,
+            0.9885768294334412,
+            1.0946285724639893,
+            1.2137672901153564,
+            1.2830803394317627
+          ],
+          "token_norm_quantiles": [
+            4.49000883102417,
+            8.266016006469727,
+            9.934972763061523,
+            10.499046325683594,
+            10.617799758911133
+          ],
+          "largest_token_energy_fraction": 0.0015760085079818964,
+          "cosine_similarity": 0.49976271390914917,
+          "mean_token_cosine": 0.5100298523902893,
+          "norm_ratio": 0.9335249066352844,
+          "largest_channels": [
+            3431,
+            2298,
+            2158,
+            1571,
+            1415,
+            580,
+            3656,
+            3209
+          ],
+          "largest_channel_energy_fractions": [
+            0.004196091555058956,
+            0.002831872785463929,
+            0.0022198862861841917,
+            0.0021729806903749704,
+            0.0020968473982065916,
+            0.0019779279828071594,
+            0.001854191767051816,
+            0.0017649315996095538
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.6480263471603394,
+            "token_relative_error_mean": 0.6173439025878906,
+            "token_relative_error_quantiles": [
+              0.2168744057416916,
+              0.6454691886901855,
+              0.767625629901886,
+              0.8437772393226624,
+              0.8700750470161438
+            ],
+            "token_norm_quantiles": [
+              7.294953346252441,
+              21.390928268432617,
+              25.691532135009766,
+              28.6107177734375,
+              29.816606521606445
+            ],
+            "largest_token_energy_fraction": 0.00180911086499691,
+            "cosine_similarity": 0.7623775601387024,
+            "mean_token_cosine": 0.7698842287063599,
+            "norm_ratio": 0.7439529299736023,
+            "largest_channels": [
+              3842,
+              3933,
+              1370,
+              4388,
+              4917,
+              2054,
+              3598,
+              2931
+            ],
+            "largest_channel_energy_fractions": [
+              0.005094232503324747,
+              0.002619057195261121,
+              0.0020967319142073393,
+              0.0017896026838570833,
+              0.001339003792963922,
+              0.0012555646244436502,
+              0.0011673613917082548,
+              0.001108910539187491
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7532864212989807,
+            "token_relative_error_mean": 0.7174170017242432,
+            "token_relative_error_quantiles": [
+              0.22702261805534363,
+              0.7698101997375488,
+              0.8604836463928223,
+              0.8945177793502808,
+              0.9032142162322998
+            ],
+            "token_norm_quantiles": [
+              6.8489885330200195,
+              16.987701416015625,
+              20.760852813720703,
+              22.318605422973633,
+              23.199769973754883
+            ],
+            "largest_token_energy_fraction": 0.0017664841143414378,
+            "cosine_similarity": 0.6582055687904358,
+            "mean_token_cosine": 0.668251633644104,
+            "norm_ratio": 0.6559695601463318,
+            "largest_channels": [
+              9654,
+              7214,
+              3165,
+              7725,
+              6086,
+              3933,
+              10826,
+              6379
+            ],
+            "largest_channel_energy_fractions": [
+              0.000629731104709208,
+              0.0005707013770006597,
+              0.0005174052785150707,
+              0.00048231796245090663,
+              0.0004666477325372398,
+              0.0004631732008419931,
+              0.0004593577468767762,
+              0.0004567211144603789
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.858536422252655,
+            "token_relative_error_mean": 0.8125101327896118,
+            "token_relative_error_quantiles": [
+              0.23581117391586304,
+              0.8725138902664185,
+              0.9542896151542664,
+              0.9745028018951416,
+              0.9814273715019226
+            ],
+            "token_norm_quantiles": [
+              0.3982754647731781,
+              1.9208519458770752,
+              2.609065055847168,
+              3.0302255153656006,
+              3.5669198036193848
+            ],
+            "largest_token_energy_fraction": 0.003066658740863204,
+            "cosine_similarity": 0.5145823359489441,
+            "mean_token_cosine": 0.5286192297935486,
+            "norm_ratio": 0.48007452487945557,
+            "largest_channels": [
+              3757,
+              6834,
+              10460,
+              9739,
+              5921,
+              10714,
+              6853,
+              10793
+            ],
+            "largest_channel_energy_fractions": [
+              0.0061392830684781075,
+              0.005980485584586859,
+              0.0041411262936890125,
+              0.003564709797501564,
+              0.003439651569351554,
+              0.0026595748495310545,
+              0.0025355760008096695,
+              0.002438407624140382
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.8932148218154907,
+            "token_relative_error_mean": 0.8588804006576538,
+            "token_relative_error_quantiles": [
+              0.26005464792251587,
+              0.9108229875564575,
+              0.9753062129020691,
+              0.987196147441864,
+              1.0111409425735474
+            ],
+            "token_norm_quantiles": [
+              0.6767817735671997,
+              2.357868194580078,
+              3.1741397380828857,
+              3.7459213733673096,
+              4.307267189025879
+            ],
+            "largest_token_energy_fraction": 0.0029633634258061647,
+            "cosine_similarity": 0.45262783765792847,
+            "mean_token_cosine": 0.4583924114704132,
+            "norm_ratio": 0.4013746678829193,
+            "largest_channels": [
+              1512,
+              2298,
+              2350,
+              3656,
+              1571,
+              94,
+              1076,
+              2459
+            ],
+            "largest_channel_energy_fractions": [
+              0.03162979334592819,
+              0.0031909483950585127,
+              0.0017597879050299525,
+              0.0016309925122186542,
+              0.0010517481714487076,
+              0.0009455494000576437,
+              0.0009415410459041595,
+              0.0009054153342731297
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.8522494435310364,
+          "down_error_on_dense_product_relative": 0.8413643836975098,
+          "down_error_on_changed_product_cross_term_relative": 0.7925019860267639,
+          "down_error_on_actual_product_relative": 0.318278044462204,
+          "product_down_error_cosine": -0.054908640682697296,
+          "output_decomposition_residual": 1.8425018879497657e-06,
+          "product_decomposition_residual": 5.0581007826622226e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.6836630702018738,
+            "token_relative_error_mean": 0.6716018915176392,
+            "token_relative_error_quantiles": [
+              0.24849210679531097,
+              0.7450010776519775,
+              0.8234661817550659,
+              0.853147029876709,
+              0.8691576719284058
+            ],
+            "token_norm_quantiles": [
+              7.296337127685547,
+              17.709625244140625,
+              20.046293258666992,
+              23.05727767944336,
+              25.44965171813965
+            ],
+            "largest_token_energy_fraction": 0.001960092457011342,
+            "cosine_similarity": 0.7327733635902405,
+            "mean_token_cosine": 0.7147877812385559,
+            "norm_ratio": 0.7891077399253845,
+            "largest_channels": [
+              3842,
+              3933,
+              7965,
+              716,
+              1370,
+              3982,
+              4917,
+              2710
+            ],
+            "largest_channel_energy_fractions": [
+              0.011574460193514824,
+              0.008102614432573318,
+              0.00504892086610198,
+              0.004990819841623306,
+              0.004802572075277567,
+              0.0032176694367080927,
+              0.002929694950580597,
+              0.0028130819555372
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7432700991630554,
+            "token_relative_error_mean": 0.7283443212509155,
+            "token_relative_error_quantiles": [
+              0.2707270383834839,
+              0.8153553009033203,
+              0.876471996307373,
+              0.8928185105323792,
+              0.9049283266067505
+            ],
+            "token_norm_quantiles": [
+              6.850897312164307,
+              14.72135066986084,
+              16.396596908569336,
+              19.374210357666016,
+              20.80472183227539
+            ],
+            "largest_token_energy_fraction": 0.0019313168013468385,
+            "cosine_similarity": 0.6711857318878174,
+            "mean_token_cosine": 0.6478890776634216,
+            "norm_ratio": 0.7169050574302673,
+            "largest_channels": [
+              10526,
+              5339,
+              3598,
+              158,
+              6212,
+              179,
+              115,
+              8374
+            ],
+            "largest_channel_energy_fractions": [
+              0.0055734626948833466,
+              0.004444614052772522,
+              0.003404126036912203,
+              0.002617449266836047,
+              0.002238335320726037,
+              0.0022028356324881315,
+              0.0016644417773932219,
+              0.001528463908471167
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.8029621839523315,
+            "token_relative_error_mean": 0.8018996715545654,
+            "token_relative_error_quantiles": [
+              0.2918602526187897,
+              0.8855324983596802,
+              0.9393348693847656,
+              0.9606418609619141,
+              0.9957073330879211
+            ],
+            "token_norm_quantiles": [
+              0.3989556133747101,
+              1.4402563571929932,
+              1.8350480794906616,
+              2.4161031246185303,
+              2.928347587585449
+            ],
+            "largest_token_energy_fraction": 0.00373964780010283,
+            "cosine_similarity": 0.5975013375282288,
+            "mean_token_cosine": 0.5431891679763794,
+            "norm_ratio": 0.6168851852416992,
+            "largest_channels": [
+              5339,
+              6212,
+              2710,
+              6834,
+              158,
+              179,
+              3757,
+              4416
+            ],
+            "largest_channel_energy_fractions": [
+              0.0584014467895031,
+              0.02245396003127098,
+              0.016112379729747772,
+              0.015634413808584213,
+              0.010932800360023975,
+              0.009944168850779533,
+              0.009118916466832161,
+              0.008357479237020016
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.8681188821792603,
+            "token_relative_error_mean": 0.8840973377227783,
+            "token_relative_error_quantiles": [
+              0.3487240970134735,
+              0.9533535242080688,
+              0.9956250190734863,
+              1.0260180234909058,
+              1.0463799238204956
+            ],
+            "token_norm_quantiles": [
+              0.6777511239051819,
+              1.6325030326843262,
+              2.1793289184570312,
+              2.789085626602173,
+              3.505220413208008
+            ],
+            "largest_token_energy_fraction": 0.003993138670921326,
+            "cosine_similarity": 0.49892520904541016,
+            "mean_token_cosine": 0.39810293912887573,
+            "norm_ratio": 0.5482261776924133,
+            "largest_channels": [
+              1512,
+              3656,
+              2298,
+              2944,
+              1571,
+              3852,
+              3999,
+              3209
+            ],
+            "largest_channel_energy_fractions": [
+              0.011315559968352318,
+              0.0034584093373268843,
+              0.002177600050345063,
+              0.0018471740186214447,
+              0.0017926373984664679,
+              0.0014961784472689033,
+              0.001463390770368278,
+              0.001371066435240209
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.7975624799728394,
+          "down_error_on_dense_product_relative": 0.8073943853378296,
+          "down_error_on_changed_product_cross_term_relative": 0.7344978451728821,
+          "down_error_on_actual_product_relative": 0.3904765546321869,
+          "product_down_error_cosine": -0.05610524117946625,
+          "output_decomposition_residual": 1.8547563058746164e-06,
+          "product_decomposition_residual": 5.121308888078602e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.9593942761421204,
+          "token_relative_error_mean": 0.936095654964447,
+          "token_relative_error_quantiles": [
+            0.2813069224357605,
+            0.9919619560241699,
+            1.0238834619522095,
+            1.0530591011047363,
+            1.1153934001922607
+          ],
+          "token_norm_quantiles": [
+            0.6767817735671997,
+            2.357868194580078,
+            3.1741397380828857,
+            3.7459213733673096,
+            4.307267189025879
+          ],
+          "largest_token_energy_fraction": 0.0029633634258061647,
+          "cosine_similarity": 0.2957318127155304,
+          "mean_token_cosine": 0.25766822695732117,
+          "norm_ratio": 0.38433727622032166,
+          "largest_channels": [
+            1512,
+            2298,
+            2350,
+            3656,
+            1571,
+            94,
+            1076,
+            2459
+          ],
+          "largest_channel_energy_fractions": [
+            0.03162979334592819,
+            0.0031909483950585127,
+            0.0017597879050299525,
+            0.0016309925122186542,
+            0.0010517481714487076,
+            0.0009455494000576437,
+            0.0009415410459041595,
+            0.0009054153342731297
+          ]
+        }
+      }
+    },
+    "first2048_long": {
+      "0": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.00042870506877079606,
+          "token_relative_error_mean": 0.00041872652946040034,
+          "token_relative_error_quantiles": [
+            0.0001695308310445398,
+            0.0003981594927608967,
+            0.0005531059578061104,
+            0.0007646310841664672,
+            0.0010171940084546804
+          ],
+          "token_norm_quantiles": [
+            1.2953572273254395,
+            1.767196536064148,
+            2.0937891006469727,
+            2.3670296669006348,
+            5.626703262329102
+          ],
+          "largest_token_energy_fraction": 0.00467724958434701,
+          "cosine_similarity": 1.0011461973190308,
+          "mean_token_cosine": 0.9999999403953552,
+          "norm_ratio": 1.0001336336135864,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            3656,
+            257,
+            2393,
+            1571
+          ],
+          "largest_channel_energy_fractions": [
+            0.2701409161090851,
+            0.18800665438175201,
+            0.008665633387863636,
+            0.006242578383535147,
+            0.005011905450373888,
+            0.0050061484798789024,
+            0.0045531135983765125,
+            0.004256889224052429
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 0.00043564228690229356,
+          "token_relative_error_mean": 0.0004253924416843802,
+          "token_relative_error_quantiles": [
+            0.00015756706125102937,
+            0.0004068323178216815,
+            0.0005800870130769908,
+            0.0007361793541349471,
+            0.0010683858999982476
+          ],
+          "token_norm_quantiles": [
+            1.2299761772155762,
+            1.550812005996704,
+            1.932721734046936,
+            2.348971128463745,
+            3.170607328414917
+          ],
+          "largest_token_energy_fraction": 0.00186922587454319,
+          "cosine_similarity": 1.0012991428375244,
+          "mean_token_cosine": 0.9999999403953552,
+          "norm_ratio": 0.999985933303833,
+          "largest_channels": [
+            1512,
+            2298,
+            2944,
+            1793,
+            2393,
+            257,
+            1571,
+            3656
+          ],
+          "largest_channel_energy_fractions": [
+            0.3216273784637451,
+            0.22668136656284332,
+            0.009032339788973331,
+            0.0068720486015081406,
+            0.005454191006720066,
+            0.005021493881940842,
+            0.004359923303127289,
+            0.004285422153770924
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.09517829865217209,
+          "token_relative_error_mean": 0.08101779967546463,
+          "token_relative_error_quantiles": [
+            0.04674859344959259,
+            0.07111971825361252,
+            0.10290488600730896,
+            0.262872576713562,
+            0.7020660042762756
+          ],
+          "token_norm_quantiles": [
+            1.93646240234375,
+            2.735417366027832,
+            3.3100290298461914,
+            3.5097579956054688,
+            4.453550815582275
+          ],
+          "largest_token_energy_fraction": 0.00127291155513376,
+          "cosine_similarity": 0.9962158203125,
+          "mean_token_cosine": 0.9958369731903076,
+          "norm_ratio": 0.9965531229972839,
+          "largest_channels": [
+            1512,
+            2944,
+            1415,
+            310,
+            2393,
+            4030,
+            3893,
+            1744
+          ],
+          "largest_channel_energy_fractions": [
+            0.108690544962883,
+            0.02836800180375576,
+            0.019406037405133247,
+            0.018184896558523178,
+            0.010527807287871838,
+            0.005744186230003834,
+            0.0055501749739050865,
+            0.005546187981963158
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.4384177029132843,
+            "token_relative_error_mean": 0.3982468247413635,
+            "token_relative_error_quantiles": [
+              0.1308336853981018,
+              0.42690449953079224,
+              0.6040992736816406,
+              0.6776624321937561,
+              0.7136967778205872
+            ],
+            "token_norm_quantiles": [
+              5.999736785888672,
+              8.113271713256836,
+              9.338461875915527,
+              10.629496574401855,
+              13.514631271362305
+            ],
+            "largest_token_energy_fraction": 0.0013300183927640319,
+            "cosine_similarity": 0.9012927412986755,
+            "mean_token_cosine": 0.899608850479126,
+            "norm_ratio": 0.901315450668335,
+            "largest_channels": [
+              7936,
+              7377,
+              7027,
+              1957,
+              5076,
+              5389,
+              1079,
+              9710
+            ],
+            "largest_channel_energy_fractions": [
+              0.03694329410791397,
+              0.01690199412405491,
+              0.014654668048024178,
+              0.014094033278524876,
+              0.008329300209879875,
+              0.007931137457489967,
+              0.0073875379748642445,
+              0.004849637858569622
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.5241435766220093,
+            "token_relative_error_mean": 0.4745767414569855,
+            "token_relative_error_quantiles": [
+              0.15725770592689514,
+              0.5198721885681152,
+              0.7024631500244141,
+              0.754016637802124,
+              0.783991813659668
+            ],
+            "token_norm_quantiles": [
+              4.513809680938721,
+              6.591483116149902,
+              7.951805114746094,
+              8.892440795898438,
+              11.068857192993164
+            ],
+            "largest_token_energy_fraction": 0.00132636574562639,
+            "cosine_similarity": 0.8540117144584656,
+            "mean_token_cosine": 0.8535856008529663,
+            "norm_ratio": 0.8547148704528809,
+            "largest_channels": [
+              9243,
+              6100,
+              7377,
+              9184,
+              10559,
+              8252,
+              10693,
+              9979
+            ],
+            "largest_channel_energy_fractions": [
+              0.006287656724452972,
+              0.0030129672959446907,
+              0.00193729717284441,
+              0.001755715231411159,
+              0.0017522851703688502,
+              0.0017455944325774908,
+              0.0014252332039177418,
+              0.0013731709914281964
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.6889580488204956,
+            "token_relative_error_mean": 0.5895692110061646,
+            "token_relative_error_quantiles": [
+              0.1116042211651802,
+              0.7289682626724243,
+              0.8769189715385437,
+              0.9221263527870178,
+              0.94257652759552
+            ],
+            "token_norm_quantiles": [
+              0.21106871962547302,
+              0.4248446524143219,
+              0.5643041133880615,
+              0.753104567527771,
+              3.1309478282928467
+            ],
+            "largest_token_energy_fraction": 0.023364704102277756,
+            "cosine_similarity": 0.7294673919677734,
+            "mean_token_cosine": 0.7352697253227234,
+            "norm_ratio": 0.6909209489822388,
+            "largest_channels": [
+              7377,
+              9243,
+              7027,
+              9710,
+              5389,
+              7391,
+              7988,
+              3421
+            ],
+            "largest_channel_energy_fractions": [
+              0.0296113770455122,
+              0.023644432425498962,
+              0.015774905681610107,
+              0.012796306051313877,
+              0.012684209272265434,
+              0.01202438399195671,
+              0.011681130155920982,
+              0.010125372558832169
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.5841318368911743,
+            "token_relative_error_mean": 0.5606327056884766,
+            "token_relative_error_quantiles": [
+              0.08106693625450134,
+              0.6639255881309509,
+              0.8225201964378357,
+              0.8915212750434875,
+              0.9199209809303284
+            ],
+            "token_norm_quantiles": [
+              0.3742757737636566,
+              0.7833113670349121,
+              1.0723309516906738,
+              1.3739877939224243,
+              4.747471332550049
+            ],
+            "largest_token_energy_fraction": 0.01551844272762537,
+            "cosine_similarity": 0.8160728812217712,
+            "mean_token_cosine": 0.7850215435028076,
+            "norm_ratio": 0.7411816716194153,
+            "largest_channels": [
+              1512,
+              2298,
+              3656,
+              257,
+              1571,
+              4071,
+              2944,
+              216
+            ],
+            "largest_channel_energy_fractions": [
+              0.1715937703847885,
+              0.15036001801490784,
+              0.011718147434294224,
+              0.007856646552681923,
+              0.007706830743700266,
+              0.00615524360910058,
+              0.005978186149150133,
+              0.005717224907130003
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.5665045976638794,
+          "down_error_on_dense_product_relative": 0.4993624687194824,
+          "down_error_on_changed_product_cross_term_relative": 0.4645773768424988,
+          "down_error_on_actual_product_relative": 0.22187697887420654,
+          "product_down_error_cosine": -0.11550964415073395,
+          "output_decomposition_residual": 6.964044700907834e-07,
+          "product_decomposition_residual": 4.5416999938652225e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.4353562295436859,
+            "token_relative_error_mean": 0.3936149775981903,
+            "token_relative_error_quantiles": [
+              0.1281495988368988,
+              0.42511099576950073,
+              0.6023722290992737,
+              0.675146222114563,
+              0.7138286828994751
+            ],
+            "token_norm_quantiles": [
+              5.959270000457764,
+              8.062389373779297,
+              9.300069808959961,
+              10.59360408782959,
+              12.738752365112305
+            ],
+            "largest_token_energy_fraction": 0.0011957492679357529,
+            "cosine_similarity": 0.9027749300003052,
+            "mean_token_cosine": 0.9011914730072021,
+            "norm_ratio": 0.9056251645088196,
+            "largest_channels": [
+              7936,
+              7377,
+              7027,
+              1957,
+              5076,
+              5389,
+              1079,
+              912
+            ],
+            "largest_channel_energy_fractions": [
+              0.03793575242161751,
+              0.01728176698088646,
+              0.0147813456133008,
+              0.014241456054151058,
+              0.00849921815097332,
+              0.007922537624835968,
+              0.007623010315001011,
+              0.0049143387004733086
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.5211790204048157,
+            "token_relative_error_mean": 0.4697352945804596,
+            "token_relative_error_quantiles": [
+              0.15072590112686157,
+              0.5177758932113647,
+              0.7010629773139954,
+              0.7541054487228394,
+              0.7849184274673462
+            ],
+            "token_norm_quantiles": [
+              4.501251220703125,
+              6.536151885986328,
+              7.936162948608398,
+              8.90613842010498,
+              11.072853088378906
+            ],
+            "largest_token_energy_fraction": 0.0013453604187816381,
+            "cosine_similarity": 0.8558490872383118,
+            "mean_token_cosine": 0.855344831943512,
+            "norm_ratio": 0.8598943948745728,
+            "largest_channels": [
+              9243,
+              6100,
+              7377,
+              8252,
+              9184,
+              10559,
+              10693,
+              7177
+            ],
+            "largest_channel_energy_fractions": [
+              0.006332531571388245,
+              0.00318197812885046,
+              0.0019859359599649906,
+              0.0018187122186645865,
+              0.00180883111897856,
+              0.001642234972678125,
+              0.0014057146618142724,
+              0.001362455077469349
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.6807623505592346,
+            "token_relative_error_mean": 0.5846295952796936,
+            "token_relative_error_quantiles": [
+              0.0906963050365448,
+              0.7264046669006348,
+              0.877503514289856,
+              0.9212188124656677,
+              0.9453002214431763
+            ],
+            "token_norm_quantiles": [
+              0.21167166531085968,
+              0.4196350574493408,
+              0.5590380430221558,
+              0.7493363618850708,
+              1.7147910594940186
+            ],
+            "largest_token_energy_fraction": 0.007289163768291473,
+            "cosine_similarity": 0.7369784712791443,
+            "mean_token_cosine": 0.737302303314209,
+            "norm_ratio": 0.7034141421318054,
+            "largest_channels": [
+              7377,
+              9243,
+              7027,
+              9710,
+              5389,
+              7391,
+              3421,
+              7177
+            ],
+            "largest_channel_energy_fractions": [
+              0.031007040292024612,
+              0.02167983166873455,
+              0.017405962571501732,
+              0.013212369754910469,
+              0.01296489592641592,
+              0.011719984002411366,
+              0.010263658128678799,
+              0.00936281681060791
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.576444149017334,
+            "token_relative_error_mean": 0.5565961003303528,
+            "token_relative_error_quantiles": [
+              0.07578231394290924,
+              0.6605554223060608,
+              0.8201451301574707,
+              0.8896711468696594,
+              0.920006513595581
+            ],
+            "token_norm_quantiles": [
+              0.36883702874183655,
+              0.7789590954780579,
+              1.0630676746368408,
+              1.3448580503463745,
+              2.985136032104492
+            ],
+            "largest_token_energy_fraction": 0.006322074681520462,
+            "cosine_similarity": 0.8210413455963135,
+            "mean_token_cosine": 0.7873104214668274,
+            "norm_ratio": 0.7517482042312622,
+            "largest_channels": [
+              1512,
+              2298,
+              3656,
+              257,
+              1571,
+              4071,
+              2944,
+              2459
+            ],
+            "largest_channel_energy_fractions": [
+              0.17157189548015594,
+              0.14914685487747192,
+              0.012072985991835594,
+              0.007947040721774101,
+              0.007898176088929176,
+              0.006334040779620409,
+              0.005995114799588919,
+              0.005756473168730736
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.5594751238822937,
+          "down_error_on_dense_product_relative": 0.4949442148208618,
+          "down_error_on_changed_product_cross_term_relative": 0.4607482850551605,
+          "down_error_on_actual_product_relative": 0.22480128705501556,
+          "product_down_error_cosine": -0.12467949092388153,
+          "output_decomposition_residual": 6.997616424087028e-07,
+          "product_decomposition_residual": 4.472044778935924e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.585021436214447,
+          "token_relative_error_mean": 0.5617644190788269,
+          "token_relative_error_quantiles": [
+            0.09406567364931107,
+            0.6670387983322144,
+            0.8225417137145996,
+            0.889738142490387,
+            0.9203165173530579
+          ],
+          "token_norm_quantiles": [
+            0.3742757737636566,
+            0.7833113670349121,
+            1.0723309516906738,
+            1.3739877939224243,
+            4.747471332550049
+          ],
+          "largest_token_energy_fraction": 0.01551844272762537,
+          "cosine_similarity": 0.8154315948486328,
+          "mean_token_cosine": 0.7843917608261108,
+          "norm_ratio": 0.7405595779418945,
+          "largest_channels": [
+            1512,
+            2298,
+            3656,
+            257,
+            1571,
+            4071,
+            2944,
+            216
+          ],
+          "largest_channel_energy_fractions": [
+            0.1715937703847885,
+            0.15036001801490784,
+            0.011718147434294224,
+            0.007856646552681923,
+            0.007706830743700266,
+            0.00615524360910058,
+            0.005978186149150133,
+            0.005717224907130003
+          ]
+        }
+      },
+      "1": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.00031021484755910933,
+          "token_relative_error_mean": 0.000552585581317544,
+          "token_relative_error_quantiles": [
+            0.00019930698908865452,
+            0.0005275385919958353,
+            0.0007050856947898865,
+            0.0009803085122257471,
+            0.001712906057946384
+          ],
+          "token_norm_quantiles": [
+            2.0195677280426025,
+            2.6372811794281006,
+            3.0531492233276367,
+            3.34591007232666,
+            2312.946533203125
+          ],
+          "largest_token_energy_fraction": 0.834809422492981,
+          "cosine_similarity": 1.0004240274429321,
+          "mean_token_cosine": 0.9999997615814209,
+          "norm_ratio": 0.9997973442077637,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            339,
+            2168
+          ],
+          "largest_channel_energy_fractions": [
+            0.7335800528526306,
+            0.256417840719223,
+            0.0029923669062554836,
+            0.000933449191506952,
+            0.0004062448861077428,
+            0.00033291056752204895,
+            0.0003327855374664068,
+            0.00031652156030759215
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 0.00016757533012423664,
+          "token_relative_error_mean": 0.0005654911510646343,
+          "token_relative_error_quantiles": [
+            0.00011530271149240434,
+            0.000528960837982595,
+            0.000766444078180939,
+            0.0010810726089403033,
+            0.0018559633754193783
+          ],
+          "token_norm_quantiles": [
+            1.4487955570220947,
+            1.945542335510254,
+            2.3589866161346436,
+            2.5438570976257324,
+            1345.37744140625
+          ],
+          "largest_token_energy_fraction": 0.9451606273651123,
+          "cosine_similarity": 1.0005090236663818,
+          "mean_token_cosine": 0.9999997615814209,
+          "norm_ratio": 1.0002706050872803,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            2393,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7323471307754517,
+            0.2557484805583954,
+            0.0031654711347073317,
+            0.0010838211746886373,
+            0.0005345269455574453,
+            0.0004636989033315331,
+            0.0004575974598992616,
+            0.0003558245371095836
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.5517276525497437,
+          "token_relative_error_mean": 0.5341740846633911,
+          "token_relative_error_quantiles": [
+            0.2592602074146271,
+            0.5445765256881714,
+            0.6648561954498291,
+            0.756790041923523,
+            1.0524123907089233
+          ],
+          "token_norm_quantiles": [
+            2.9111104011535645,
+            4.712896347045898,
+            5.327467918395996,
+            5.674628734588623,
+            6.767654895782471
+          ],
+          "largest_token_energy_fraction": 0.0010852549457922578,
+          "cosine_similarity": 0.8450317978858948,
+          "mean_token_cosine": 0.8488046526908875,
+          "norm_ratio": 0.9770646691322327,
+          "largest_channels": [
+            2298,
+            3209,
+            2158,
+            3135,
+            3893,
+            1404,
+            580,
+            3431
+          ],
+          "largest_channel_energy_fractions": [
+            0.02337680570781231,
+            0.006683580577373505,
+            0.006199910771101713,
+            0.00422585429623723,
+            0.0038037376943975687,
+            0.0037886148784309626,
+            0.0028084658551961184,
+            0.002428955864161253
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.49898359179496765,
+            "token_relative_error_mean": 0.4564973711967468,
+            "token_relative_error_quantiles": [
+              0.11851124465465546,
+              0.4891112148761749,
+              0.6505799293518066,
+              0.7090676426887512,
+              0.7396602034568787
+            ],
+            "token_norm_quantiles": [
+              11.386419296264648,
+              14.806425094604492,
+              18.768123626708984,
+              21.162885665893555,
+              50.33383560180664
+            ],
+            "largest_token_energy_fraction": 0.00505214836448431,
+            "cosine_similarity": 0.8696309328079224,
+            "mean_token_cosine": 0.873217761516571,
+            "norm_ratio": 0.845395028591156,
+            "largest_channels": [
+              7890,
+              10411,
+              1134,
+              5843,
+              3407,
+              2069,
+              8395,
+              895
+            ],
+            "largest_channel_energy_fractions": [
+              0.11321625858545303,
+              0.05449441820383072,
+              0.018118852749466896,
+              0.010301223024725914,
+              0.00938099529594183,
+              0.003975161351263523,
+              0.0029474408365786076,
+              0.0020369584672152996
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.6636531949043274,
+            "token_relative_error_mean": 0.604351818561554,
+            "token_relative_error_quantiles": [
+              0.14508844912052155,
+              0.6676967740058899,
+              0.8038880228996277,
+              0.8351393342018127,
+              0.8504652976989746
+            ],
+            "token_norm_quantiles": [
+              7.105303764343262,
+              10.692103385925293,
+              13.513096809387207,
+              14.835722923278809,
+              36.976070404052734
+            ],
+            "largest_token_energy_fraction": 0.005677696317434311,
+            "cosine_similarity": 0.7502448558807373,
+            "mean_token_cosine": 0.7648868560791016,
+            "norm_ratio": 0.7267554998397827,
+            "largest_channels": [
+              7890,
+              895,
+              7085,
+              3407,
+              1192,
+              1942,
+              3132,
+              4600
+            ],
+            "largest_channel_energy_fractions": [
+              0.029985735192894936,
+              0.0010543091921135783,
+              0.000985392602160573,
+              0.0009755091741681099,
+              0.000945516861975193,
+              0.0008385941036976874,
+              0.000837617670185864,
+              0.0008298219181597233
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.0291693564504385,
+            "token_relative_error_mean": 0.6931012868881226,
+            "token_relative_error_quantiles": [
+              0.008350539021193981,
+              0.7825202345848083,
+              0.9366887211799622,
+              0.9589306712150574,
+              0.9738515615463257
+            ],
+            "token_norm_quantiles": [
+              0.4565157890319824,
+              0.9503720998764038,
+              1.3263273239135742,
+              1.781578779220581,
+              1220.7593994140625
+            ],
+            "largest_token_energy_fraction": 0.8829019665718079,
+            "cosine_similarity": 0.9996939301490784,
+            "mean_token_cosine": 0.6480969786643982,
+            "norm_ratio": 0.9973201155662537,
+            "largest_channels": [
+              7890,
+              10411,
+              1192,
+              2713,
+              1134,
+              8731,
+              5805,
+              5843
+            ],
+            "largest_channel_energy_fractions": [
+              0.9877156615257263,
+              0.010190451517701149,
+              0.0003422110457904637,
+              0.00017492251936346292,
+              0.00010498282063053921,
+              8.826168050291017e-05,
+              8.415291085839272e-05,
+              4.612671546055935e-05
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.021986160427331924,
+            "token_relative_error_mean": 0.7722648978233337,
+            "token_relative_error_quantiles": [
+              0.005361264571547508,
+              0.8427375555038452,
+              0.964911937713623,
+              0.9833162426948547,
+              0.9898449182510376
+            ],
+            "token_norm_quantiles": [
+              0.7079532742500305,
+              1.3047151565551758,
+              1.7295812368392944,
+              2.410917043685913,
+              2311.827880859375
+            ],
+            "largest_token_energy_fraction": 0.8364227414131165,
+            "cosine_similarity": 0.999891459941864,
+            "mean_token_cosine": 0.5695425271987915,
+            "norm_ratio": 0.9942371845245361,
+            "largest_channels": [
+              2533,
+              1415,
+              1512,
+              2298,
+              3431,
+              2168,
+              339,
+              3135
+            ],
+            "largest_channel_energy_fractions": [
+              0.7348592877388,
+              0.25683990120887756,
+              0.0027966760098934174,
+              0.0008128623594529927,
+              0.000362728867912665,
+              0.00031764895538799465,
+              0.00031125626992434263,
+              0.00030032964423298836
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.020342033356428146,
+          "down_error_on_dense_product_relative": 0.020267201587557793,
+          "down_error_on_changed_product_cross_term_relative": 0.018457544967532158,
+          "down_error_on_actual_product_relative": 0.007525996770709753,
+          "product_down_error_cosine": 0.043430671095848083,
+          "output_decomposition_residual": 3.6081758025829913e-07,
+          "product_decomposition_residual": 1.3922871744398435e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.3860597014427185,
+            "token_relative_error_mean": 0.3649884760379791,
+            "token_relative_error_quantiles": [
+              0.151603564620018,
+              0.38361626863479614,
+              0.5094771981239319,
+              0.5983010530471802,
+              0.6758622527122498
+            ],
+            "token_norm_quantiles": [
+              12.518073081970215,
+              17.310230255126953,
+              19.328754425048828,
+              20.4998779296875,
+              38.90432357788086
+            ],
+            "largest_token_energy_fraction": 0.0024512242525815964,
+            "cosine_similarity": 0.92570960521698,
+            "mean_token_cosine": 0.9222780466079712,
+            "norm_ratio": 0.9180040955543518,
+            "largest_channels": [
+              7890,
+              10411,
+              1134,
+              5843,
+              3407,
+              1192,
+              199,
+              6954
+            ],
+            "largest_channel_energy_fractions": [
+              0.1984105110168457,
+              0.1009371280670166,
+              0.030434854328632355,
+              0.022999439388513565,
+              0.010286854580044746,
+              0.002590790158137679,
+              0.002218437846750021,
+              0.0020860799122601748
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.5920127034187317,
+            "token_relative_error_mean": 0.5501651167869568,
+            "token_relative_error_quantiles": [
+              0.2139442414045334,
+              0.5913686156272888,
+              0.750015139579773,
+              0.8070816993713379,
+              0.8334017992019653
+            ],
+            "token_norm_quantiles": [
+              7.4791741371154785,
+              10.741315841674805,
+              12.001303672790527,
+              12.844327926635742,
+              30.191234588623047
+            ],
+            "largest_token_energy_fraction": 0.003930134233087301,
+            "cosine_similarity": 0.8081064224243164,
+            "mean_token_cosine": 0.8101320862770081,
+            "norm_ratio": 0.8036839365959167,
+            "largest_channels": [
+              7890,
+              10411,
+              7721,
+              2549,
+              2115,
+              7550,
+              8285,
+              5994
+            ],
+            "largest_channel_energy_fractions": [
+              0.09437550604343414,
+              0.005082941148430109,
+              0.002465224824845791,
+              0.0022408750373870134,
+              0.0015696138143539429,
+              0.0014885598793625832,
+              0.001406452851369977,
+              0.0013834394048899412
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.03681838512420654,
+            "token_relative_error_mean": 0.6389244794845581,
+            "token_relative_error_quantiles": [
+              0.007246208377182484,
+              0.7085045576095581,
+              0.870158851146698,
+              0.9155826568603516,
+              0.9476110935211182
+            ],
+            "token_norm_quantiles": [
+              0.4649380147457123,
+              0.84040367603302,
+              1.0283607244491577,
+              1.3282520771026611,
+              712.7471313476562
+            ],
+            "largest_token_energy_fraction": 0.9653793573379517,
+            "cosine_similarity": 0.9995640516281128,
+            "mean_token_cosine": 0.7215121388435364,
+            "norm_ratio": 1.0006557703018188,
+            "largest_channels": [
+              7890,
+              10411,
+              1192,
+              2713,
+              5843,
+              1134,
+              8868,
+              5805
+            ],
+            "largest_channel_energy_fractions": [
+              0.9916383028030396,
+              0.004746062681078911,
+              0.0003357914974913001,
+              0.00016606107237748802,
+              0.000101525365607813,
+              8.393957250518724e-05,
+              7.336827547987923e-05,
+              3.631178697105497e-05
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.029216423630714417,
+            "token_relative_error_mean": 0.757155179977417,
+            "token_relative_error_quantiles": [
+              0.00562062906101346,
+              0.8290165066719055,
+              0.9329838156700134,
+              0.9546255469322205,
+              0.9722180366516113
+            ],
+            "token_norm_quantiles": [
+              0.6996626257896423,
+              1.118085503578186,
+              1.3413710594177246,
+              1.8174784183502197,
+              1340.0562744140625
+            ],
+            "largest_token_energy_fraction": 0.9471625685691833,
+            "cosine_similarity": 0.9998215436935425,
+            "mean_token_cosine": 0.6021398901939392,
+            "norm_ratio": 1.0030062198638916,
+            "largest_channels": [
+              2533,
+              1415,
+              1512,
+              2298,
+              3431,
+              3135,
+              2168,
+              339
+            ],
+            "largest_channel_energy_fractions": [
+              0.7340389490127563,
+              0.25688520073890686,
+              0.002940954640507698,
+              0.000833854719530791,
+              0.00038562528789043427,
+              0.00032997524249367416,
+              0.00032963865669444203,
+              0.00029991433257237077
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.02456621266901493,
+          "down_error_on_dense_product_relative": 0.02822267636656761,
+          "down_error_on_changed_product_cross_term_relative": 0.02352949045598507,
+          "down_error_on_actual_product_relative": 0.01511111669242382,
+          "product_down_error_cosine": 0.029788706451654434,
+          "output_decomposition_residual": 2.228339326393325e-07,
+          "product_decomposition_residual": 3.996185427013188e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.474901020526886,
+          "token_relative_error_mean": 0.800376296043396,
+          "token_relative_error_quantiles": [
+            0.26922371983528137,
+            0.88469398021698,
+            0.9784122705459595,
+            0.9919843077659607,
+            1.0019466876983643
+          ],
+          "token_norm_quantiles": [
+            0.7079532742500305,
+            1.3047151565551758,
+            1.7295812368392944,
+            2.410917043685913,
+            2311.827880859375
+          ],
+          "largest_token_energy_fraction": 0.8364227414131165,
+          "cosine_similarity": 0.9820817112922668,
+          "mean_token_cosine": 0.5170401334762573,
+          "norm_ratio": 0.5463265776634216,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2168,
+            339,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7348592877388,
+            0.25683990120887756,
+            0.0027966760098934174,
+            0.0008128623594529927,
+            0.000362728867912665,
+            0.00031764895538799465,
+            0.00031125626992434263,
+            0.00030032964423298836
+          ]
+        }
+      },
+      "2": {
+        "custom_dense_vs_hf": {
+          "relative_error": 0.0002532548096496612,
+          "token_relative_error_mean": 0.0007602809346280992,
+          "token_relative_error_quantiles": [
+            0.0002404756669420749,
+            0.0007016099989414215,
+            0.001091632409952581,
+            0.0016686272574588656,
+            0.002345428103581071
+          ],
+          "token_norm_quantiles": [
+            2.750354051589966,
+            3.6298022270202637,
+            4.164583206176758,
+            4.628395080566406,
+            2317.82666015625
+          ],
+          "largest_token_energy_fraction": 0.8323822021484375,
+          "cosine_similarity": 1.0007765293121338,
+          "mean_token_cosine": 0.9999996423721313,
+          "norm_ratio": 0.9999858736991882,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7320549488067627,
+            0.2560918629169464,
+            0.0031238202936947346,
+            0.0009477854473516345,
+            0.0004305342154111713,
+            0.0003572290006559342,
+            0.0003439181309659034,
+            0.0003426083130761981
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 0.00025140956859104335,
+          "token_relative_error_mean": 0.000861508131492883,
+          "token_relative_error_quantiles": [
+            0.00023993178911041468,
+            0.000747612735722214,
+            0.0014544458827003837,
+            0.0024018229451030493,
+            0.0038349847309291363
+          ],
+          "token_norm_quantiles": [
+            1.5859407186508179,
+            2.2678675651550293,
+            2.936567783355713,
+            3.4872782230377197,
+            1349.985595703125
+          ],
+          "largest_token_energy_fraction": 0.9423632025718689,
+          "cosine_similarity": 1.0007332563400269,
+          "mean_token_cosine": 0.9999995231628418,
+          "norm_ratio": 0.9999788999557495,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            3135,
+            2393,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.731087863445282,
+            0.2554500102996826,
+            0.0033535745460540056,
+            0.001094845007173717,
+            0.0005776583566330373,
+            0.0005074134678579867,
+            0.00048809024156071246,
+            0.00036687537794932723
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 0.8526705503463745,
+          "token_relative_error_mean": 0.8284292817115784,
+          "token_relative_error_quantiles": [
+            0.005222704727202654,
+            0.8524469137191772,
+            1.0045117139816284,
+            1.0866061449050903,
+            1.1841211318969727
+          ],
+          "token_norm_quantiles": [
+            3.78741717338562,
+            6.41334342956543,
+            7.5333147048950195,
+            7.997944355010986,
+            8.163368225097656
+          ],
+          "largest_token_energy_fraction": 0.0007997980574145913,
+          "cosine_similarity": 0.6032553315162659,
+          "mean_token_cosine": 0.6114554405212402,
+          "norm_ratio": 0.9038183093070984,
+          "largest_channels": [
+            1404,
+            3209,
+            580,
+            2298,
+            3656,
+            3893,
+            2789,
+            1571
+          ],
+          "largest_channel_energy_fractions": [
+            0.0018133119447156787,
+            0.0016975170001387596,
+            0.0015596180455759168,
+            0.0014560379786416888,
+            0.0014339586487039924,
+            0.0013655497459694743,
+            0.0012959660962224007,
+            0.0012783537385985255
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.6338318586349487,
+            "token_relative_error_mean": 0.5920708179473877,
+            "token_relative_error_quantiles": [
+              0.20213328301906586,
+              0.6390082836151123,
+              0.7382954359054565,
+              0.7811779975891113,
+              0.8049091100692749
+            ],
+            "token_norm_quantiles": [
+              6.607258319854736,
+              16.415233612060547,
+              23.226821899414062,
+              27.011451721191406,
+              29.800569534301758
+            ],
+            "largest_token_energy_fraction": 0.001381473965011537,
+            "cosine_similarity": 0.7764732837677002,
+            "mean_token_cosine": 0.7908807396888733,
+            "norm_ratio": 0.7380064129829407,
+            "largest_channels": [
+              1661,
+              6091,
+              4584,
+              7634,
+              2031,
+              7672,
+              328,
+              9169
+            ],
+            "largest_channel_energy_fractions": [
+              0.012968478724360466,
+              0.0018369307508692145,
+              0.0018232398433610797,
+              0.001669561956077814,
+              0.0012140771141275764,
+              0.0010527133708819747,
+              0.0009649167186580598,
+              0.0008738893084228039
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7263613343238831,
+            "token_relative_error_mean": 0.6789084672927856,
+            "token_relative_error_quantiles": [
+              0.2258838564157486,
+              0.7422770261764526,
+              0.838696300983429,
+              0.861772894859314,
+              0.8774604201316833
+            ],
+            "token_norm_quantiles": [
+              6.091926574707031,
+              13.471712112426758,
+              17.90958595275879,
+              20.223648071289062,
+              21.489641189575195
+            ],
+            "largest_token_energy_fraction": 0.001134925871156156,
+            "cosine_similarity": 0.6892953515052795,
+            "mean_token_cosine": 0.7063300609588623,
+            "norm_ratio": 0.6707472801208496,
+            "largest_channels": [
+              1856,
+              4288,
+              1074,
+              9953,
+              9817,
+              3830,
+              1661,
+              7479
+            ],
+            "largest_channel_energy_fractions": [
+              0.001294099260121584,
+              0.0007485161768272519,
+              0.0007060578209348023,
+              0.0006006985786370933,
+              0.0005314306472428143,
+              0.0005193626275286078,
+              0.0005083660362288356,
+              0.0004923322703689337
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.8494099974632263,
+            "token_relative_error_mean": 0.7859876751899719,
+            "token_relative_error_quantiles": [
+              0.02901611663401127,
+              0.8542253971099854,
+              0.9431924223899841,
+              0.9623826742172241,
+              0.9715086221694946
+            ],
+            "token_norm_quantiles": [
+              0.5506029725074768,
+              1.1999356746673584,
+              2.0802056789398193,
+              2.6426374912261963,
+              4.654085636138916
+            ],
+            "largest_token_energy_fraction": 0.00537177873775363,
+            "cosine_similarity": 0.5332971811294556,
+            "mean_token_cosine": 0.5713306665420532,
+            "norm_ratio": 0.4680502712726593,
+            "largest_channels": [
+              8609,
+              1661,
+              9452,
+              165,
+              3193,
+              1236,
+              6269,
+              10876
+            ],
+            "largest_channel_energy_fractions": [
+              0.014046890661120415,
+              0.012415958568453789,
+              0.003304004203528166,
+              0.002390420762822032,
+              0.0022877934388816357,
+              0.0022547438275069,
+              0.0018166900845244527,
+              0.0017525162547826767
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.9003375768661499,
+            "token_relative_error_mean": 0.8496876358985901,
+            "token_relative_error_quantiles": [
+              0.03336930647492409,
+              0.9102197289466858,
+              0.9803911447525024,
+              0.9888843894004822,
+              0.996231198310852
+            ],
+            "token_norm_quantiles": [
+              0.7213596105575562,
+              1.500889778137207,
+              2.5784850120544434,
+              3.2929670810699463,
+              6.443971633911133
+            ],
+            "largest_token_energy_fraction": 0.0066225104965269566,
+            "cosine_similarity": 0.440365731716156,
+            "mean_token_cosine": 0.46901625394821167,
+            "norm_ratio": 0.3743721544742584,
+            "largest_channels": [
+              1512,
+              2533,
+              2298,
+              1415,
+              2927,
+              2350,
+              3656,
+              257
+            ],
+            "largest_channel_energy_fractions": [
+              0.012973271310329437,
+              0.006387827452272177,
+              0.004508156795054674,
+              0.002490244572982192,
+              0.0011468088487163186,
+              0.0011412003077566624,
+              0.0010830333922058344,
+              0.0010242365533486009
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.8392767310142517,
+          "down_error_on_dense_product_relative": 0.8538743853569031,
+          "down_error_on_changed_product_cross_term_relative": 0.7869536280632019,
+          "down_error_on_actual_product_relative": 0.3075020909309387,
+          "product_down_error_cosine": 0.0227454025298357,
+          "output_decomposition_residual": 1.11167787508748e-06,
+          "product_decomposition_residual": 4.9636007304343366e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.5961770415306091,
+            "token_relative_error_mean": 0.5792930722236633,
+            "token_relative_error_quantiles": [
+              0.21177412569522858,
+              0.6219772100448608,
+              0.717686653137207,
+              0.7796011567115784,
+              0.8100239038467407
+            ],
+            "token_norm_quantiles": [
+              6.605156421661377,
+              15.210601806640625,
+              18.31330680847168,
+              20.427858352661133,
+              22.67533302307129
+            ],
+            "largest_token_energy_fraction": 0.0010387554066255689,
+            "cosine_similarity": 0.8048259615898132,
+            "mean_token_cosine": 0.80086749792099,
+            "norm_ratio": 0.7924312353134155,
+            "largest_channels": [
+              1661,
+              7634,
+              4584,
+              7479,
+              8910,
+              2031,
+              6091,
+              6591
+            ],
+            "largest_channel_energy_fractions": [
+              0.018645649775862694,
+              0.0053945267572999,
+              0.0029106554575264454,
+              0.0027885136660188437,
+              0.0026657863054424524,
+              0.0025728095788508654,
+              0.0024227683898061514,
+              0.0022760219871997833
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.701346755027771,
+            "token_relative_error_mean": 0.6791168451309204,
+            "token_relative_error_quantiles": [
+              0.2409447431564331,
+              0.7508456707000732,
+              0.8293478488922119,
+              0.8642061948776245,
+              0.8886350989341736
+            ],
+            "token_norm_quantiles": [
+              6.091965675354004,
+              12.008878707885742,
+              13.953482627868652,
+              15.253222465515137,
+              17.04070281982422
+            ],
+            "largest_token_energy_fraction": 0.0009596779709681869,
+            "cosine_similarity": 0.7147758603096008,
+            "mean_token_cosine": 0.7061911821365356,
+            "norm_ratio": 0.7179124355316162,
+            "largest_channels": [
+              10733,
+              4652,
+              1661,
+              4288,
+              4107,
+              10163,
+              1856,
+              7385
+            ],
+            "largest_channel_energy_fractions": [
+              0.0029999245889484882,
+              0.002810773439705372,
+              0.0022065029479563236,
+              0.0020329465623944998,
+              0.001853738445788622,
+              0.0017442279495298862,
+              0.0017042753752321005,
+              0.0015155441360548139
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.7775984406471252,
+            "token_relative_error_mean": 0.7622085809707642,
+            "token_relative_error_quantiles": [
+              0.02954384684562683,
+              0.8262246251106262,
+              0.8939611315727234,
+              0.9263437986373901,
+              0.9481058120727539
+            ],
+            "token_norm_quantiles": [
+              0.48255231976509094,
+              0.9790052175521851,
+              1.3107521533966064,
+              1.7462698221206665,
+              4.627923011779785
+            ],
+            "largest_token_energy_fraction": 0.00964730978012085,
+            "cosine_similarity": 0.6334986686706543,
+            "mean_token_cosine": 0.6173784732818604,
+            "norm_ratio": 0.5814459323883057,
+            "largest_channels": [
+              1661,
+              10163,
+              10733,
+              4652,
+              4107,
+              5976,
+              4584,
+              1951
+            ],
+            "largest_channel_energy_fractions": [
+              0.03305373340845108,
+              0.016785264015197754,
+              0.015436912886798382,
+              0.010036804713308811,
+              0.007822415791451931,
+              0.007144513539969921,
+              0.0069998386316001415,
+              0.006879014894366264
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.853675365447998,
+            "token_relative_error_mean": 0.8508800268173218,
+            "token_relative_error_quantiles": [
+              0.03372638672590256,
+              0.9098484516143799,
+              0.9509367346763611,
+              0.9675787091255188,
+              0.9802474975585938
+            ],
+            "token_norm_quantiles": [
+              0.624201774597168,
+              1.1927536725997925,
+              1.5989757776260376,
+              2.061966896057129,
+              6.4071125984191895
+            ],
+            "largest_token_energy_fraction": 0.01239410974085331,
+            "cosine_similarity": 0.5222936272621155,
+            "mean_token_cosine": 0.48578929901123047,
+            "norm_ratio": 0.4879400432109833,
+            "largest_channels": [
+              1512,
+              2533,
+              1415,
+              2298,
+              2944,
+              2168,
+              1571,
+              257
+            ],
+            "largest_channel_energy_fractions": [
+              0.02293284423649311,
+              0.02111179381608963,
+              0.009502260945737362,
+              0.003591036656871438,
+              0.002261433284729719,
+              0.002145348582416773,
+              0.0013643939746543765,
+              0.0011902814731001854
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.7435803413391113,
+          "down_error_on_dense_product_relative": 0.7903834581375122,
+          "down_error_on_changed_product_cross_term_relative": 0.6743429899215698,
+          "down_error_on_actual_product_relative": 0.3820360004901886,
+          "product_down_error_cosine": 0.05264987424015999,
+          "output_decomposition_residual": 1.0609510354697704e-06,
+          "product_decomposition_residual": 4.802724618002685e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.938880980014801,
+          "token_relative_error_mean": 0.9054059982299805,
+          "token_relative_error_quantiles": [
+            0.033068615943193436,
+            0.9736467599868774,
+            1.002498745918274,
+            1.0237973928451538,
+            1.058883786201477
+          ],
+          "token_norm_quantiles": [
+            0.7213596105575562,
+            1.500889778137207,
+            2.5784850120544434,
+            3.2929670810699463,
+            6.443971633911133
+          ],
+          "largest_token_energy_fraction": 0.0066225104965269566,
+          "cosine_similarity": 0.34458494186401367,
+          "mean_token_cosine": 0.3385029137134552,
+          "norm_ratio": 0.35464316606521606,
+          "largest_channels": [
+            1512,
+            2533,
+            2298,
+            1415,
+            2927,
+            2350,
+            3656,
+            257
+          ],
+          "largest_channel_energy_fractions": [
+            0.012973271310329437,
+            0.006387827452272177,
+            0.004508156795054674,
+            0.002490244572982192,
+            0.0011468088487163186,
+            0.0011412003077566624,
+            0.0010830333922058344,
+            0.0010242365533486009
+          ]
+        }
+      },
+      "3": {
+        "custom_dense_vs_hf": {
+          "relative_error": 9.766778384801e-05,
+          "token_relative_error_mean": 0.0007531180744990706,
+          "token_relative_error_quantiles": [
+            5.4842552344780415e-05,
+            0.0007009869441390038,
+            0.001033211825415492,
+            0.0015904667088761926,
+            0.0029006199911236763
+          ],
+          "token_norm_quantiles": [
+            3.7623331546783447,
+            4.982910633087158,
+            5.717255115509033,
+            6.226866722106934,
+            2317.8310546875
+          ],
+          "largest_token_energy_fraction": 0.8292567133903503,
+          "cosine_similarity": 1.0013787746429443,
+          "mean_token_cosine": 0.9999995827674866,
+          "norm_ratio": 1.0003489255905151,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            1076,
+            2393,
+            3135
+          ],
+          "largest_channel_energy_fractions": [
+            0.7293049693107605,
+            0.2551301121711731,
+            0.003557785414159298,
+            0.0010370264062657952,
+            0.000486738164909184,
+            0.00041413886356167495,
+            0.00039440381806343794,
+            0.0003780459228437394
+          ]
+        },
+        "custom_compressed_vs_hf": {
+          "relative_error": 8.905476715881377e-05,
+          "token_relative_error_mean": 0.0005405893316492438,
+          "token_relative_error_quantiles": [
+            4.514455213211477e-05,
+            0.00048218754818663,
+            0.0007756846607662737,
+            0.0014088398311287165,
+            0.0026470040902495384
+          ],
+          "token_norm_quantiles": [
+            1.8865087032318115,
+            2.656010150909424,
+            3.794325590133667,
+            4.627264976501465,
+            1349.9886474609375
+          ],
+          "largest_token_energy_fraction": 0.9396218061447144,
+          "cosine_similarity": 1.0011082887649536,
+          "mean_token_cosine": 0.9999997615814209,
+          "norm_ratio": 1.0003520250320435,
+          "largest_channels": [
+            2533,
+            1415,
+            1512,
+            2298,
+            3431,
+            2393,
+            3135,
+            339
+          ],
+          "largest_channel_energy_fractions": [
+            0.7289574146270752,
+            0.25470632314682007,
+            0.0035175210796296597,
+            0.0011485766153782606,
+            0.0006631162250414491,
+            0.0005687957163900137,
+            0.0005639695446006954,
+            0.0004168962186668068
+          ]
+        },
+        "normalized_mlp_input_disagreement": {
+          "relative_error": 1.0050441026687622,
+          "token_relative_error_mean": 0.9859845042228699,
+          "token_relative_error_quantiles": [
+            0.010846507735550404,
+            1.030343770980835,
+            1.1446735858917236,
+            1.21990168094635,
+            1.4958491325378418
+          ],
+          "token_norm_quantiles": [
+            4.494344234466553,
+            8.046697616577148,
+            9.817530632019043,
+            10.476044654846191,
+            10.69233512878418
+          ],
+          "largest_token_energy_fraction": 0.0008318065665662289,
+          "cosine_similarity": 0.47270312905311584,
+          "mean_token_cosine": 0.47961926460266113,
+          "norm_ratio": 0.9555231332778931,
+          "largest_channels": [
+            2298,
+            3209,
+            2393,
+            3431,
+            1571,
+            257,
+            3656,
+            363
+          ],
+          "largest_channel_energy_fractions": [
+            0.0034216544590890408,
+            0.003029598854482174,
+            0.0029194054659456015,
+            0.00241902656853199,
+            0.0022979744244366884,
+            0.0019302685977891088,
+            0.0019044025102630258,
+            0.0016468690009787679
+          ]
+        },
+        "dense_context": {
+          "gate_output": {
+            "relative_error": 0.626549243927002,
+            "token_relative_error_mean": 0.6004525423049927,
+            "token_relative_error_quantiles": [
+              0.2566704750061035,
+              0.6220823526382446,
+              0.7428451180458069,
+              0.8269189596176147,
+              0.8554522395133972
+            ],
+            "token_norm_quantiles": [
+              7.288855075836182,
+              21.38828468322754,
+              25.769163131713867,
+              28.183589935302734,
+              30.88866424560547
+            ],
+            "largest_token_energy_fraction": 0.0009607232641428709,
+            "cosine_similarity": 0.7819815278053284,
+            "mean_token_cosine": 0.7868472337722778,
+            "norm_ratio": 0.7428233027458191,
+            "largest_channels": [
+              3842,
+              10100,
+              1370,
+              4388,
+              7965,
+              2931,
+              4917,
+              2054
+            ],
+            "largest_channel_energy_fractions": [
+              0.004909278359264135,
+              0.0028389072977006435,
+              0.002757498063147068,
+              0.002271464327350259,
+              0.0020249192602932453,
+              0.0016363669419661164,
+              0.00160791736561805,
+              0.0015006228350102901
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7479474544525146,
+            "token_relative_error_mean": 0.7170435190200806,
+            "token_relative_error_quantiles": [
+              0.27138763666152954,
+              0.7625502347946167,
+              0.8552302122116089,
+              0.8863546252250671,
+              0.9038068652153015
+            ],
+            "token_norm_quantiles": [
+              6.85961389541626,
+              16.336292266845703,
+              20.452922821044922,
+              22.333940505981445,
+              23.69179916381836
+            ],
+            "largest_token_energy_fraction": 0.0009663964156061411,
+            "cosine_similarity": 0.6652735471725464,
+            "mean_token_cosine": 0.6728129982948303,
+            "norm_ratio": 0.6582536697387695,
+            "largest_channels": [
+              6086,
+              7725,
+              3165,
+              3687,
+              7214,
+              1370,
+              2310,
+              6568
+            ],
+            "largest_channel_energy_fractions": [
+              0.0007433699211105704,
+              0.0007358752773143351,
+              0.0006423172890208662,
+              0.0006063496111892164,
+              0.0006052613025531173,
+              0.0005862352554686368,
+              0.0005700142355635762,
+              0.0005693922284990549
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.8551281690597534,
+            "token_relative_error_mean": 0.8160008192062378,
+            "token_relative_error_quantiles": [
+              0.2892748713493347,
+              0.8658289909362793,
+              0.9530937075614929,
+              0.9702817797660828,
+              0.9761183261871338
+            ],
+            "token_norm_quantiles": [
+              0.4007489085197449,
+              1.8288443088531494,
+              2.606250762939453,
+              3.122037887573242,
+              4.423037528991699
+            ],
+            "largest_token_energy_fraction": 0.0024604015052318573,
+            "cosine_similarity": 0.5221238732337952,
+            "mean_token_cosine": 0.5365025401115417,
+            "norm_ratio": 0.47393617033958435,
+            "largest_channels": [
+              6356,
+              1974,
+              3757,
+              9546,
+              6834,
+              10793,
+              8522,
+              5055
+            ],
+            "largest_channel_energy_fractions": [
+              0.007164642680436373,
+              0.007082969415932894,
+              0.0069011179730296135,
+              0.0035185045562684536,
+              0.003097884589806199,
+              0.0029278930742293596,
+              0.0029250343795865774,
+              0.002805874915793538
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.8896781802177429,
+            "token_relative_error_mean": 0.858551561832428,
+            "token_relative_error_quantiles": [
+              0.3167487680912018,
+              0.902347207069397,
+              0.9708662033081055,
+              0.9850502610206604,
+              0.992138683795929
+            ],
+            "token_norm_quantiles": [
+              0.679757833480835,
+              2.2638609409332275,
+              3.1636805534362793,
+              3.880723476409912,
+              5.2209882736206055
+            ],
+            "largest_token_energy_fraction": 0.0022569596767425537,
+            "cosine_similarity": 0.46183252334594727,
+            "mean_token_cosine": 0.4712379276752472,
+            "norm_ratio": 0.3942514657974243,
+            "largest_channels": [
+              1512,
+              2298,
+              2350,
+              3656,
+              1076,
+              1571,
+              310,
+              94
+            ],
+            "largest_channel_energy_fractions": [
+              0.035642869770526886,
+              0.0030302139930427074,
+              0.0018690554425120354,
+              0.0017124713631346822,
+              0.0012851019855588675,
+              0.0012712066527456045,
+              0.001076127402484417,
+              0.0009909715736284852
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.8440493941307068,
+          "down_error_on_dense_product_relative": 0.832955002784729,
+          "down_error_on_changed_product_cross_term_relative": 0.7796005606651306,
+          "down_error_on_actual_product_relative": 0.31445831060409546,
+          "product_down_error_cosine": -0.03722304850816727,
+          "output_decomposition_residual": 1.1124544698759564e-06,
+          "product_decomposition_residual": 5.0313349930775075e-08
+        },
+        "compressed_context": {
+          "gate_output": {
+            "relative_error": 0.6456878185272217,
+            "token_relative_error_mean": 0.6414801478385925,
+            "token_relative_error_quantiles": [
+              0.24052105844020844,
+              0.6983497142791748,
+              0.7851414680480957,
+              0.8242220282554626,
+              0.8399494886398315
+            ],
+            "token_norm_quantiles": [
+              7.304701805114746,
+              18.453527450561523,
+              21.81648063659668,
+              23.699108123779297,
+              27.00965118408203
+            ],
+            "largest_token_energy_fraction": 0.0009894579416140914,
+            "cosine_similarity": 0.7661927938461304,
+            "mean_token_cosine": 0.747443675994873,
+            "norm_ratio": 0.7911218404769897,
+            "largest_channels": [
+              3842,
+              2710,
+              716,
+              4917,
+              7965,
+              9627,
+              7623,
+              3982
+            ],
+            "largest_channel_energy_fractions": [
+              0.010325349867343903,
+              0.0032108561135828495,
+              0.003134251106530428,
+              0.0029531591571867466,
+              0.0027457510586827993,
+              0.0026113735511898994,
+              0.0026099912356585264,
+              0.0023865182884037495
+            ]
+          },
+          "up_output": {
+            "relative_error": 0.7337429523468018,
+            "token_relative_error_mean": 0.725027322769165,
+            "token_relative_error_quantiles": [
+              0.2666451632976532,
+              0.7989702224731445,
+              0.8569414615631104,
+              0.8790951371192932,
+              0.8892278075218201
+            ],
+            "token_norm_quantiles": [
+              6.860287666320801,
+              14.859603881835938,
+              16.891206741333008,
+              19.044334411621094,
+              21.361364364624023
+            ],
+            "largest_token_energy_fraction": 0.0009850189089775085,
+            "cosine_similarity": 0.6820502877235413,
+            "mean_token_cosine": 0.6596053242683411,
+            "norm_ratio": 0.714820384979248,
+            "largest_channels": [
+              10526,
+              8703,
+              3598,
+              9550,
+              158,
+              8676,
+              8374,
+              5339
+            ],
+            "largest_channel_energy_fractions": [
+              0.0027737515047192574,
+              0.002213146537542343,
+              0.002212229883298278,
+              0.0018418733961880207,
+              0.001750368857756257,
+              0.0015984555939212441,
+              0.0013555434998124838,
+              0.0013149039587005973
+            ]
+          },
+          "swiglu_product": {
+            "relative_error": 0.7798658013343811,
+            "token_relative_error_mean": 0.7890434861183167,
+            "token_relative_error_quantiles": [
+              0.31463029980659485,
+              0.8503217101097107,
+              0.9115653038024902,
+              0.9341385960578918,
+              0.9596443772315979
+            ],
+            "token_norm_quantiles": [
+              0.39277493953704834,
+              1.4200239181518555,
+              1.8983150720596313,
+              2.4183361530303955,
+              2.730130195617676
+            ],
+            "largest_token_energy_fraction": 0.0015578260645270348,
+            "cosine_similarity": 0.6289193630218506,
+            "mean_token_cosine": 0.5812861323356628,
+            "norm_ratio": 0.6218651533126831,
+            "largest_channels": [
+              2710,
+              5339,
+              3757,
+              5921,
+              6834,
+              158,
+              8676,
+              115
+            ],
+            "largest_channel_energy_fractions": [
+              0.020732952281832695,
+              0.012495730072259903,
+              0.011977147310972214,
+              0.008372249081730843,
+              0.008365524001419544,
+              0.00716452905908227,
+              0.005492976401001215,
+              0.005306555889546871
+            ]
+          },
+          "mlp_output": {
+            "relative_error": 0.8571358323097229,
+            "token_relative_error_mean": 0.8775694966316223,
+            "token_relative_error_quantiles": [
+              0.3873629570007324,
+              0.9319634437561035,
+              0.9744012355804443,
+              1.005074381828308,
+              1.0310457944869995
+            ],
+            "token_norm_quantiles": [
+              0.6678400039672852,
+              1.6323113441467285,
+              2.2768242359161377,
+              2.819422721862793,
+              3.185676336288452
+            ],
+            "largest_token_energy_fraction": 0.001550917630083859,
+            "cosine_similarity": 0.5159819722175598,
+            "mean_token_cosine": 0.43179425597190857,
+            "norm_ratio": 0.5384686589241028,
+            "largest_channels": [
+              1512,
+              3656,
+              1571,
+              2298,
+              2168,
+              339,
+              2608,
+              3135
+            ],
+            "largest_channel_energy_fractions": [
+              0.021124020218849182,
+              0.0030383800622075796,
+              0.0016591779422014952,
+              0.001556826289743185,
+              0.00140313187148422,
+              0.0013834707206115127,
+              0.0013086695689707994,
+              0.0013004601933062077
+            ]
+          },
+          "product_error_through_dense_down_relative": 0.7651830315589905,
+          "down_error_on_dense_product_relative": 0.811391294002533,
+          "down_error_on_changed_product_cross_term_relative": 0.7155076861381531,
+          "down_error_on_actual_product_relative": 0.4039209187030792,
+          "product_down_error_cosine": -0.02260906994342804,
+          "output_decomposition_residual": 1.0947591135845869e-06,
+          "product_decomposition_residual": 4.9664691914586e-08
+        },
+        "actual_cascade_mlp_error": {
+          "relative_error": 0.9666354060173035,
+          "token_relative_error_mean": 0.9467246532440186,
+          "token_relative_error_quantiles": [
+            0.33741751313209534,
+            0.995344877243042,
+            1.031808614730835,
+            1.0817997455596924,
+            1.1743887662887573
+          ],
+          "token_norm_quantiles": [
+            0.679757833480835,
+            2.2638609409332275,
+            3.1636805534362793,
+            3.880723476409912,
+            5.2209882736206055
+          ],
+          "largest_token_energy_fraction": 0.0022569596767425537,
+          "cosine_similarity": 0.2811075747013092,
+          "mean_token_cosine": 0.24949698150157928,
+          "norm_ratio": 0.39635804295539856,
+          "largest_channels": [
+            1512,
+            2298,
+            2350,
+            3656,
+            1076,
+            1571,
+            310,
+            94
+          ],
+          "largest_channel_energy_fractions": [
+            0.035642869770526886,
+            0.0030302139930427074,
+            0.0018690554425120354,
+            0.0017124713631346822,
+            0.0012851019855588675,
+            0.0012712066527456045,
+            0.001076127402484417,
+            0.0009909715736284852
+          ]
+        }
+      }
+    }
+  },
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "ppl_reused_from": {
+    "path": "/workspace/runs/nec-prefix-mlp-interactions-a40_20261022/report.json",
+    "sha256": "fa346e43937276d11c7ddc39630a5c2f2d8eeecc8d48de6849fa25a40a250066"
+  },
+  "elapsed_seconds": 64.87378284899751,
+  "peak_cuda_allocated_bytes": 17988003328
+}
