@@ -15,6 +15,7 @@ import hashlib
 import io
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
@@ -755,7 +756,8 @@ def main():
         revision=MODEL_REVISION,
         local_files_only=True,
     ))
-    source_model_info = inspect_dense_model(model_index.parent)
+    source_snapshot = model_index.parent
+    source_model_info = inspect_dense_model(source_snapshot)
 
     dense = {
         layer: {
@@ -797,7 +799,9 @@ def main():
     singleton_seconds = {}
     singleton_metrics = {}
     int8_payload_paths = {}
-    int8_candidate_dir = args.output / ".int8_candidates"
+    int8_candidate_dir = Path(os.environ.get(
+        "NEC_INT8_CANDIDATE_DIR", str(args.output / ".int8_candidates"),
+    ))
     int8_artifact_bytes = {}
     int8_singleton_logits = {}
     int8_singleton_metrics = {}
