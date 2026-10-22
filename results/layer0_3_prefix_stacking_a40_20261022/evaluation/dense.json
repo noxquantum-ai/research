@@ -1,0 +1,7288 @@
+{
+  "status": "COMPLETE",
+  "evaluation": "dense_wikitext2_raw",
+  "model_variant": "dense",
+  "compressed_layers": [],
+  "partial_prefix": false,
+  "dataset_split": "validation",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "model_tokenizer_compatibility": {
+    "model_config": {
+      "model_type": "llama",
+      "hidden_size": 4096,
+      "intermediate_size": 11008,
+      "num_hidden_layers": 32,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 32,
+      "vocab_size": 32000,
+      "max_position_embeddings": 4096,
+      "rms_norm_eps": 1e-05,
+      "tie_word_embeddings": false,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "pad_token_id": 0
+    },
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "model_config_commit_hash": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "projection_layers": 32
+  },
+  "source_commit": "cd1583e33620fc64c8be5011191f55c54689a99f",
+  "checkpoint_dir": null,
+  "checkpoint_audit": null,
+  "checkpoint_manifest_sha256": null,
+  "independent_numerical_coefficients": 6738415616,
+  "structural_parameter_reduction": 0.0,
+  "parameter_compression_ratio": 1.0,
+  "serialized_layer_checkpoint_bytes": null,
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "protocol_identity": {
+    "model_id": "NousResearch/Llama-2-7b-hf",
+    "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "dtype": "float16",
+    "attention_implementation": "sdpa",
+    "dataset": {
+      "dataset": "wikitext-2-raw-v1",
+      "dataset_repo": "Salesforce/wikitext",
+      "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "split": "validation",
+      "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+      "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+      "source_bytes": 657209,
+      "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+      "text_bytes": 1151766,
+      "text_join": "double_newline",
+      "rows": 3760,
+      "literal_unk_count": 0,
+      "fallback": false
+    },
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "context_length": 2048,
+    "stride": 512,
+    "primary_input_tokens": 0,
+    "primary_evaluation_scope": "full_split",
+    "full_test": false,
+    "inference_batch_size": 1,
+    "text_policy": "raw WikiText-2 text joined with two newlines; no instruction/chat template",
+    "causal_shift": "logits[:, :-1] predict labels[:, 1:]",
+    "overlap_masking": "each corpus target after the first is scored exactly once",
+    "loss": "sum float32 shifted cross entropy divided by exact scored-token count",
+    "use_cache": false
+  },
+  "protocol_fingerprint": "45fb5838992d9cbe7b4c60301d9007d80cb4d7477644164f0283de8d5957dd82",
+  "protocol": {
+    "context_length": 2048,
+    "stride": 512,
+    "requested_max_input_tokens": 0,
+    "dataset_split": "validation",
+    "input_tokens": 299964,
+    "scored_tokens": 299963,
+    "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+    "maximum_absolute_logit": 42.53125,
+    "bos_token_id": 1,
+    "tokenizer": {
+      "class": "LlamaTokenizer",
+      "name_or_path": "NousResearch/Llama-2-7b-hf",
+      "vocab_size": 32000,
+      "length": 32000,
+      "is_fast": true,
+      "special_token_ids": {
+        "bos": 1,
+        "eos": 2,
+        "unk": 0,
+        "pad": 0
+      },
+      "probe_text": "NEC tokenizer compatibility probe.",
+      "probe_token_ids": [
+        1,
+        405,
+        11206,
+        5993,
+        3950,
+        24521,
+        410,
+        915,
+        29889
+      ],
+      "probe_token_ids_sha256": "7ce0c75b2b4dd194518542d7110b11e06ef0e1596bda83ac04f5cc73c42a64ba",
+      "add_bos_token": false,
+      "add_eos_token": false,
+      "chat_template_present": false,
+      "special_tokens_map": {
+        "bos_token": "<s>",
+        "eos_token": "</s>",
+        "unk_token": "<unk>",
+        "pad_token": "<unk>"
+      },
+      "pinned_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d"
+    },
+    "text_policy": "raw WikiText-2 text joined with two newlines; no instruction/chat template",
+    "use_cache": false,
+    "window_count": 583,
+    "inference_batch_size": 1,
+    "forward_passes": 583,
+    "window_specification": [
+      {
+        "begin": 0,
+        "end": 2048,
+        "target_length": 2048,
+        "scored_tokens": 2047
+      },
+      {
+        "begin": 512,
+        "end": 2560,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 1024,
+        "end": 3072,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 1536,
+        "end": 3584,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 2048,
+        "end": 4096,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 2560,
+        "end": 4608,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 3072,
+        "end": 5120,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 3584,
+        "end": 5632,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 4096,
+        "end": 6144,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 4608,
+        "end": 6656,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 5120,
+        "end": 7168,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 5632,
+        "end": 7680,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 6144,
+        "end": 8192,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 6656,
+        "end": 8704,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 7168,
+        "end": 9216,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 7680,
+        "end": 9728,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 8192,
+        "end": 10240,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 8704,
+        "end": 10752,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 9216,
+        "end": 11264,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 9728,
+        "end": 11776,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 10240,
+        "end": 12288,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 10752,
+        "end": 12800,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 11264,
+        "end": 13312,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 11776,
+        "end": 13824,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 12288,
+        "end": 14336,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 12800,
+        "end": 14848,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 13312,
+        "end": 15360,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 13824,
+        "end": 15872,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 14336,
+        "end": 16384,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 14848,
+        "end": 16896,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 15360,
+        "end": 17408,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 15872,
+        "end": 17920,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 16384,
+        "end": 18432,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 16896,
+        "end": 18944,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 17408,
+        "end": 19456,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 17920,
+        "end": 19968,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 18432,
+        "end": 20480,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 18944,
+        "end": 20992,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 19456,
+        "end": 21504,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 19968,
+        "end": 22016,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 20480,
+        "end": 22528,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 20992,
+        "end": 23040,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 21504,
+        "end": 23552,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 22016,
+        "end": 24064,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 22528,
+        "end": 24576,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 23040,
+        "end": 25088,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 23552,
+        "end": 25600,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 24064,
+        "end": 26112,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 24576,
+        "end": 26624,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 25088,
+        "end": 27136,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 25600,
+        "end": 27648,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 26112,
+        "end": 28160,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 26624,
+        "end": 28672,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 27136,
+        "end": 29184,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 27648,
+        "end": 29696,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 28160,
+        "end": 30208,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 28672,
+        "end": 30720,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 29184,
+        "end": 31232,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 29696,
+        "end": 31744,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 30208,
+        "end": 32256,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 30720,
+        "end": 32768,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 31232,
+        "end": 33280,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 31744,
+        "end": 33792,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 32256,
+        "end": 34304,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 32768,
+        "end": 34816,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 33280,
+        "end": 35328,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 33792,
+        "end": 35840,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 34304,
+        "end": 36352,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 34816,
+        "end": 36864,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 35328,
+        "end": 37376,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 35840,
+        "end": 37888,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 36352,
+        "end": 38400,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 36864,
+        "end": 38912,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 37376,
+        "end": 39424,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 37888,
+        "end": 39936,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 38400,
+        "end": 40448,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 38912,
+        "end": 40960,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 39424,
+        "end": 41472,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 39936,
+        "end": 41984,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 40448,
+        "end": 42496,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 40960,
+        "end": 43008,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 41472,
+        "end": 43520,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 41984,
+        "end": 44032,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 42496,
+        "end": 44544,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 43008,
+        "end": 45056,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 43520,
+        "end": 45568,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 44032,
+        "end": 46080,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 44544,
+        "end": 46592,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 45056,
+        "end": 47104,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 45568,
+        "end": 47616,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 46080,
+        "end": 48128,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 46592,
+        "end": 48640,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 47104,
+        "end": 49152,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 47616,
+        "end": 49664,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 48128,
+        "end": 50176,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 48640,
+        "end": 50688,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 49152,
+        "end": 51200,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 49664,
+        "end": 51712,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 50176,
+        "end": 52224,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 50688,
+        "end": 52736,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 51200,
+        "end": 53248,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 51712,
+        "end": 53760,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 52224,
+        "end": 54272,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 52736,
+        "end": 54784,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 53248,
+        "end": 55296,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 53760,
+        "end": 55808,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 54272,
+        "end": 56320,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 54784,
+        "end": 56832,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 55296,
+        "end": 57344,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 55808,
+        "end": 57856,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 56320,
+        "end": 58368,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 56832,
+        "end": 58880,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 57344,
+        "end": 59392,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 57856,
+        "end": 59904,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 58368,
+        "end": 60416,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 58880,
+        "end": 60928,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 59392,
+        "end": 61440,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 59904,
+        "end": 61952,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 60416,
+        "end": 62464,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 60928,
+        "end": 62976,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 61440,
+        "end": 63488,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 61952,
+        "end": 64000,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 62464,
+        "end": 64512,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 62976,
+        "end": 65024,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 63488,
+        "end": 65536,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 64000,
+        "end": 66048,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 64512,
+        "end": 66560,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 65024,
+        "end": 67072,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 65536,
+        "end": 67584,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 66048,
+        "end": 68096,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 66560,
+        "end": 68608,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 67072,
+        "end": 69120,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 67584,
+        "end": 69632,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 68096,
+        "end": 70144,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 68608,
+        "end": 70656,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 69120,
+        "end": 71168,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 69632,
+        "end": 71680,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 70144,
+        "end": 72192,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 70656,
+        "end": 72704,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 71168,
+        "end": 73216,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 71680,
+        "end": 73728,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 72192,
+        "end": 74240,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 72704,
+        "end": 74752,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 73216,
+        "end": 75264,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 73728,
+        "end": 75776,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 74240,
+        "end": 76288,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 74752,
+        "end": 76800,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 75264,
+        "end": 77312,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 75776,
+        "end": 77824,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 76288,
+        "end": 78336,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 76800,
+        "end": 78848,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 77312,
+        "end": 79360,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 77824,
+        "end": 79872,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 78336,
+        "end": 80384,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 78848,
+        "end": 80896,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 79360,
+        "end": 81408,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 79872,
+        "end": 81920,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 80384,
+        "end": 82432,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 80896,
+        "end": 82944,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 81408,
+        "end": 83456,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 81920,
+        "end": 83968,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 82432,
+        "end": 84480,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 82944,
+        "end": 84992,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 83456,
+        "end": 85504,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 83968,
+        "end": 86016,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 84480,
+        "end": 86528,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 84992,
+        "end": 87040,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 85504,
+        "end": 87552,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 86016,
+        "end": 88064,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 86528,
+        "end": 88576,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 87040,
+        "end": 89088,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 87552,
+        "end": 89600,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 88064,
+        "end": 90112,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 88576,
+        "end": 90624,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 89088,
+        "end": 91136,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 89600,
+        "end": 91648,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 90112,
+        "end": 92160,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 90624,
+        "end": 92672,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 91136,
+        "end": 93184,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 91648,
+        "end": 93696,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 92160,
+        "end": 94208,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 92672,
+        "end": 94720,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 93184,
+        "end": 95232,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 93696,
+        "end": 95744,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 94208,
+        "end": 96256,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 94720,
+        "end": 96768,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 95232,
+        "end": 97280,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 95744,
+        "end": 97792,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 96256,
+        "end": 98304,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 96768,
+        "end": 98816,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 97280,
+        "end": 99328,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 97792,
+        "end": 99840,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 98304,
+        "end": 100352,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 98816,
+        "end": 100864,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 99328,
+        "end": 101376,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 99840,
+        "end": 101888,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 100352,
+        "end": 102400,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 100864,
+        "end": 102912,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 101376,
+        "end": 103424,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 101888,
+        "end": 103936,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 102400,
+        "end": 104448,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 102912,
+        "end": 104960,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 103424,
+        "end": 105472,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 103936,
+        "end": 105984,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 104448,
+        "end": 106496,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 104960,
+        "end": 107008,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 105472,
+        "end": 107520,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 105984,
+        "end": 108032,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 106496,
+        "end": 108544,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 107008,
+        "end": 109056,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 107520,
+        "end": 109568,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 108032,
+        "end": 110080,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 108544,
+        "end": 110592,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 109056,
+        "end": 111104,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 109568,
+        "end": 111616,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 110080,
+        "end": 112128,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 110592,
+        "end": 112640,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 111104,
+        "end": 113152,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 111616,
+        "end": 113664,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 112128,
+        "end": 114176,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 112640,
+        "end": 114688,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 113152,
+        "end": 115200,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 113664,
+        "end": 115712,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 114176,
+        "end": 116224,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 114688,
+        "end": 116736,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 115200,
+        "end": 117248,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 115712,
+        "end": 117760,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 116224,
+        "end": 118272,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 116736,
+        "end": 118784,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 117248,
+        "end": 119296,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 117760,
+        "end": 119808,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 118272,
+        "end": 120320,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 118784,
+        "end": 120832,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 119296,
+        "end": 121344,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 119808,
+        "end": 121856,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 120320,
+        "end": 122368,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 120832,
+        "end": 122880,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 121344,
+        "end": 123392,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 121856,
+        "end": 123904,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 122368,
+        "end": 124416,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 122880,
+        "end": 124928,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 123392,
+        "end": 125440,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 123904,
+        "end": 125952,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 124416,
+        "end": 126464,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 124928,
+        "end": 126976,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 125440,
+        "end": 127488,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 125952,
+        "end": 128000,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 126464,
+        "end": 128512,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 126976,
+        "end": 129024,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 127488,
+        "end": 129536,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 128000,
+        "end": 130048,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 128512,
+        "end": 130560,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 129024,
+        "end": 131072,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 129536,
+        "end": 131584,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 130048,
+        "end": 132096,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 130560,
+        "end": 132608,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 131072,
+        "end": 133120,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 131584,
+        "end": 133632,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 132096,
+        "end": 134144,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 132608,
+        "end": 134656,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 133120,
+        "end": 135168,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 133632,
+        "end": 135680,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 134144,
+        "end": 136192,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 134656,
+        "end": 136704,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 135168,
+        "end": 137216,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 135680,
+        "end": 137728,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 136192,
+        "end": 138240,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 136704,
+        "end": 138752,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 137216,
+        "end": 139264,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 137728,
+        "end": 139776,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 138240,
+        "end": 140288,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 138752,
+        "end": 140800,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 139264,
+        "end": 141312,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 139776,
+        "end": 141824,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 140288,
+        "end": 142336,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 140800,
+        "end": 142848,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 141312,
+        "end": 143360,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 141824,
+        "end": 143872,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 142336,
+        "end": 144384,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 142848,
+        "end": 144896,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 143360,
+        "end": 145408,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 143872,
+        "end": 145920,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 144384,
+        "end": 146432,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 144896,
+        "end": 146944,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 145408,
+        "end": 147456,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 145920,
+        "end": 147968,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 146432,
+        "end": 148480,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 146944,
+        "end": 148992,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 147456,
+        "end": 149504,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 147968,
+        "end": 150016,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 148480,
+        "end": 150528,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 148992,
+        "end": 151040,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 149504,
+        "end": 151552,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 150016,
+        "end": 152064,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 150528,
+        "end": 152576,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 151040,
+        "end": 153088,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 151552,
+        "end": 153600,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 152064,
+        "end": 154112,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 152576,
+        "end": 154624,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 153088,
+        "end": 155136,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 153600,
+        "end": 155648,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 154112,
+        "end": 156160,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 154624,
+        "end": 156672,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 155136,
+        "end": 157184,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 155648,
+        "end": 157696,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 156160,
+        "end": 158208,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 156672,
+        "end": 158720,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 157184,
+        "end": 159232,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 157696,
+        "end": 159744,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 158208,
+        "end": 160256,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 158720,
+        "end": 160768,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 159232,
+        "end": 161280,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 159744,
+        "end": 161792,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 160256,
+        "end": 162304,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 160768,
+        "end": 162816,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 161280,
+        "end": 163328,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 161792,
+        "end": 163840,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 162304,
+        "end": 164352,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 162816,
+        "end": 164864,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 163328,
+        "end": 165376,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 163840,
+        "end": 165888,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 164352,
+        "end": 166400,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 164864,
+        "end": 166912,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 165376,
+        "end": 167424,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 165888,
+        "end": 167936,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 166400,
+        "end": 168448,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 166912,
+        "end": 168960,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 167424,
+        "end": 169472,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 167936,
+        "end": 169984,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 168448,
+        "end": 170496,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 168960,
+        "end": 171008,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 169472,
+        "end": 171520,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 169984,
+        "end": 172032,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 170496,
+        "end": 172544,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 171008,
+        "end": 173056,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 171520,
+        "end": 173568,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 172032,
+        "end": 174080,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 172544,
+        "end": 174592,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 173056,
+        "end": 175104,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 173568,
+        "end": 175616,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 174080,
+        "end": 176128,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 174592,
+        "end": 176640,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 175104,
+        "end": 177152,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 175616,
+        "end": 177664,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 176128,
+        "end": 178176,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 176640,
+        "end": 178688,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 177152,
+        "end": 179200,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 177664,
+        "end": 179712,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 178176,
+        "end": 180224,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 178688,
+        "end": 180736,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 179200,
+        "end": 181248,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 179712,
+        "end": 181760,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 180224,
+        "end": 182272,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 180736,
+        "end": 182784,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 181248,
+        "end": 183296,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 181760,
+        "end": 183808,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 182272,
+        "end": 184320,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 182784,
+        "end": 184832,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 183296,
+        "end": 185344,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 183808,
+        "end": 185856,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 184320,
+        "end": 186368,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 184832,
+        "end": 186880,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 185344,
+        "end": 187392,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 185856,
+        "end": 187904,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 186368,
+        "end": 188416,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 186880,
+        "end": 188928,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 187392,
+        "end": 189440,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 187904,
+        "end": 189952,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 188416,
+        "end": 190464,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 188928,
+        "end": 190976,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 189440,
+        "end": 191488,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 189952,
+        "end": 192000,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 190464,
+        "end": 192512,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 190976,
+        "end": 193024,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 191488,
+        "end": 193536,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 192000,
+        "end": 194048,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 192512,
+        "end": 194560,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 193024,
+        "end": 195072,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 193536,
+        "end": 195584,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 194048,
+        "end": 196096,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 194560,
+        "end": 196608,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 195072,
+        "end": 197120,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 195584,
+        "end": 197632,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 196096,
+        "end": 198144,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 196608,
+        "end": 198656,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 197120,
+        "end": 199168,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 197632,
+        "end": 199680,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 198144,
+        "end": 200192,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 198656,
+        "end": 200704,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 199168,
+        "end": 201216,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 199680,
+        "end": 201728,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 200192,
+        "end": 202240,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 200704,
+        "end": 202752,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 201216,
+        "end": 203264,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 201728,
+        "end": 203776,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 202240,
+        "end": 204288,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 202752,
+        "end": 204800,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 203264,
+        "end": 205312,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 203776,
+        "end": 205824,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 204288,
+        "end": 206336,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 204800,
+        "end": 206848,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 205312,
+        "end": 207360,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 205824,
+        "end": 207872,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 206336,
+        "end": 208384,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 206848,
+        "end": 208896,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 207360,
+        "end": 209408,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 207872,
+        "end": 209920,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 208384,
+        "end": 210432,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 208896,
+        "end": 210944,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 209408,
+        "end": 211456,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 209920,
+        "end": 211968,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 210432,
+        "end": 212480,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 210944,
+        "end": 212992,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 211456,
+        "end": 213504,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 211968,
+        "end": 214016,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 212480,
+        "end": 214528,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 212992,
+        "end": 215040,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 213504,
+        "end": 215552,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 214016,
+        "end": 216064,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 214528,
+        "end": 216576,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 215040,
+        "end": 217088,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 215552,
+        "end": 217600,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 216064,
+        "end": 218112,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 216576,
+        "end": 218624,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 217088,
+        "end": 219136,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 217600,
+        "end": 219648,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 218112,
+        "end": 220160,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 218624,
+        "end": 220672,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 219136,
+        "end": 221184,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 219648,
+        "end": 221696,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 220160,
+        "end": 222208,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 220672,
+        "end": 222720,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 221184,
+        "end": 223232,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 221696,
+        "end": 223744,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 222208,
+        "end": 224256,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 222720,
+        "end": 224768,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 223232,
+        "end": 225280,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 223744,
+        "end": 225792,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 224256,
+        "end": 226304,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 224768,
+        "end": 226816,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 225280,
+        "end": 227328,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 225792,
+        "end": 227840,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 226304,
+        "end": 228352,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 226816,
+        "end": 228864,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 227328,
+        "end": 229376,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 227840,
+        "end": 229888,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 228352,
+        "end": 230400,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 228864,
+        "end": 230912,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 229376,
+        "end": 231424,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 229888,
+        "end": 231936,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 230400,
+        "end": 232448,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 230912,
+        "end": 232960,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 231424,
+        "end": 233472,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 231936,
+        "end": 233984,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 232448,
+        "end": 234496,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 232960,
+        "end": 235008,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 233472,
+        "end": 235520,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 233984,
+        "end": 236032,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 234496,
+        "end": 236544,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 235008,
+        "end": 237056,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 235520,
+        "end": 237568,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 236032,
+        "end": 238080,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 236544,
+        "end": 238592,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 237056,
+        "end": 239104,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 237568,
+        "end": 239616,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 238080,
+        "end": 240128,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 238592,
+        "end": 240640,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 239104,
+        "end": 241152,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 239616,
+        "end": 241664,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 240128,
+        "end": 242176,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 240640,
+        "end": 242688,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 241152,
+        "end": 243200,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 241664,
+        "end": 243712,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 242176,
+        "end": 244224,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 242688,
+        "end": 244736,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 243200,
+        "end": 245248,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 243712,
+        "end": 245760,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 244224,
+        "end": 246272,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 244736,
+        "end": 246784,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 245248,
+        "end": 247296,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 245760,
+        "end": 247808,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 246272,
+        "end": 248320,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 246784,
+        "end": 248832,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 247296,
+        "end": 249344,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 247808,
+        "end": 249856,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 248320,
+        "end": 250368,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 248832,
+        "end": 250880,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 249344,
+        "end": 251392,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 249856,
+        "end": 251904,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 250368,
+        "end": 252416,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 250880,
+        "end": 252928,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 251392,
+        "end": 253440,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 251904,
+        "end": 253952,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 252416,
+        "end": 254464,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 252928,
+        "end": 254976,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 253440,
+        "end": 255488,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 253952,
+        "end": 256000,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 254464,
+        "end": 256512,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 254976,
+        "end": 257024,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 255488,
+        "end": 257536,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 256000,
+        "end": 258048,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 256512,
+        "end": 258560,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 257024,
+        "end": 259072,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 257536,
+        "end": 259584,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 258048,
+        "end": 260096,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 258560,
+        "end": 260608,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 259072,
+        "end": 261120,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 259584,
+        "end": 261632,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 260096,
+        "end": 262144,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 260608,
+        "end": 262656,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 261120,
+        "end": 263168,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 261632,
+        "end": 263680,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 262144,
+        "end": 264192,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 262656,
+        "end": 264704,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 263168,
+        "end": 265216,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 263680,
+        "end": 265728,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 264192,
+        "end": 266240,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 264704,
+        "end": 266752,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 265216,
+        "end": 267264,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 265728,
+        "end": 267776,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 266240,
+        "end": 268288,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 266752,
+        "end": 268800,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 267264,
+        "end": 269312,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 267776,
+        "end": 269824,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 268288,
+        "end": 270336,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 268800,
+        "end": 270848,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 269312,
+        "end": 271360,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 269824,
+        "end": 271872,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 270336,
+        "end": 272384,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 270848,
+        "end": 272896,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 271360,
+        "end": 273408,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 271872,
+        "end": 273920,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 272384,
+        "end": 274432,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 272896,
+        "end": 274944,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 273408,
+        "end": 275456,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 273920,
+        "end": 275968,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 274432,
+        "end": 276480,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 274944,
+        "end": 276992,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 275456,
+        "end": 277504,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 275968,
+        "end": 278016,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 276480,
+        "end": 278528,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 276992,
+        "end": 279040,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 277504,
+        "end": 279552,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 278016,
+        "end": 280064,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 278528,
+        "end": 280576,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 279040,
+        "end": 281088,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 279552,
+        "end": 281600,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 280064,
+        "end": 282112,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 280576,
+        "end": 282624,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 281088,
+        "end": 283136,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 281600,
+        "end": 283648,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 282112,
+        "end": 284160,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 282624,
+        "end": 284672,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 283136,
+        "end": 285184,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 283648,
+        "end": 285696,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 284160,
+        "end": 286208,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 284672,
+        "end": 286720,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 285184,
+        "end": 287232,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 285696,
+        "end": 287744,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 286208,
+        "end": 288256,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 286720,
+        "end": 288768,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 287232,
+        "end": 289280,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 287744,
+        "end": 289792,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 288256,
+        "end": 290304,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 288768,
+        "end": 290816,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 289280,
+        "end": 291328,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 289792,
+        "end": 291840,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 290304,
+        "end": 292352,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 290816,
+        "end": 292864,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 291328,
+        "end": 293376,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 291840,
+        "end": 293888,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 292352,
+        "end": 294400,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 292864,
+        "end": 294912,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 293376,
+        "end": 295424,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 293888,
+        "end": 295936,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 294400,
+        "end": 296448,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 294912,
+        "end": 296960,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 295424,
+        "end": 297472,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 295936,
+        "end": 297984,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 296448,
+        "end": 298496,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 296960,
+        "end": 299008,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 297472,
+        "end": 299520,
+        "target_length": 512,
+        "scored_tokens": 512
+      },
+      {
+        "begin": 297984,
+        "end": 299964,
+        "target_length": 444,
+        "scored_tokens": 444
+      }
+    ],
+    "text_join": "double_newline",
+    "causal_shift": "logits[:, :-1] predict labels[:, 1:]",
+    "overlap_masking": "each corpus target after the first is scored exactly once",
+    "aggregation": "sum shifted cross entropy over scored labels, divided by the exact label count",
+    "nll_formula_crosscheck": {
+      "passed": true,
+      "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+      "scored_tokens": 2047,
+      "cross_entropy_sum": 2915.835693359375,
+      "independent_formula_sum": 2915.835693359375,
+      "absolute_difference": 0.0,
+      "absolute_relative_tolerance": 0.003015835693359375
+    },
+    "full_test_evaluated": false,
+    "full_test": null
+  },
+  "metrics": {
+    "perplexity": 4.94691054459028,
+    "mean_nll": 1.5987632493228852,
+    "next_token_accuracy": 0.6230635111663771,
+    "primary": {
+      "perplexity": 4.94691054459028,
+      "mean_nll": 1.5987632493228852,
+      "next_token_accuracy": 0.6230635111663771,
+      "maximum_absolute_logit": 42.53125,
+      "input_tokens": 299964,
+      "scored_tokens": 299963,
+      "token_ids_sha256": "be82d08cb9eb67dd4e9fb0c5110091f4af26a9b9f84b136a36dec3c91553945c",
+      "bos_token_id": 1,
+      "window_count": 583,
+      "inference_batch_size": 1,
+      "forward_passes": 583,
+      "window_specification": [
+        {
+          "begin": 0,
+          "end": 2048,
+          "target_length": 2048,
+          "scored_tokens": 2047
+        },
+        {
+          "begin": 512,
+          "end": 2560,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 1024,
+          "end": 3072,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 1536,
+          "end": 3584,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 2048,
+          "end": 4096,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 2560,
+          "end": 4608,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 3072,
+          "end": 5120,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 3584,
+          "end": 5632,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 4096,
+          "end": 6144,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 4608,
+          "end": 6656,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 5120,
+          "end": 7168,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 5632,
+          "end": 7680,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 6144,
+          "end": 8192,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 6656,
+          "end": 8704,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 7168,
+          "end": 9216,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 7680,
+          "end": 9728,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 8192,
+          "end": 10240,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 8704,
+          "end": 10752,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 9216,
+          "end": 11264,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 9728,
+          "end": 11776,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 10240,
+          "end": 12288,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 10752,
+          "end": 12800,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 11264,
+          "end": 13312,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 11776,
+          "end": 13824,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 12288,
+          "end": 14336,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 12800,
+          "end": 14848,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 13312,
+          "end": 15360,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 13824,
+          "end": 15872,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 14336,
+          "end": 16384,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 14848,
+          "end": 16896,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 15360,
+          "end": 17408,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 15872,
+          "end": 17920,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 16384,
+          "end": 18432,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 16896,
+          "end": 18944,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 17408,
+          "end": 19456,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 17920,
+          "end": 19968,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 18432,
+          "end": 20480,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 18944,
+          "end": 20992,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 19456,
+          "end": 21504,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 19968,
+          "end": 22016,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 20480,
+          "end": 22528,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 20992,
+          "end": 23040,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 21504,
+          "end": 23552,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 22016,
+          "end": 24064,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 22528,
+          "end": 24576,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 23040,
+          "end": 25088,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 23552,
+          "end": 25600,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 24064,
+          "end": 26112,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 24576,
+          "end": 26624,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 25088,
+          "end": 27136,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 25600,
+          "end": 27648,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 26112,
+          "end": 28160,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 26624,
+          "end": 28672,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 27136,
+          "end": 29184,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 27648,
+          "end": 29696,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 28160,
+          "end": 30208,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 28672,
+          "end": 30720,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 29184,
+          "end": 31232,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 29696,
+          "end": 31744,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 30208,
+          "end": 32256,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 30720,
+          "end": 32768,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 31232,
+          "end": 33280,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 31744,
+          "end": 33792,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 32256,
+          "end": 34304,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 32768,
+          "end": 34816,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 33280,
+          "end": 35328,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 33792,
+          "end": 35840,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 34304,
+          "end": 36352,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 34816,
+          "end": 36864,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 35328,
+          "end": 37376,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 35840,
+          "end": 37888,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 36352,
+          "end": 38400,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 36864,
+          "end": 38912,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 37376,
+          "end": 39424,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 37888,
+          "end": 39936,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 38400,
+          "end": 40448,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 38912,
+          "end": 40960,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 39424,
+          "end": 41472,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 39936,
+          "end": 41984,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 40448,
+          "end": 42496,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 40960,
+          "end": 43008,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 41472,
+          "end": 43520,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 41984,
+          "end": 44032,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 42496,
+          "end": 44544,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 43008,
+          "end": 45056,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 43520,
+          "end": 45568,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 44032,
+          "end": 46080,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 44544,
+          "end": 46592,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 45056,
+          "end": 47104,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 45568,
+          "end": 47616,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 46080,
+          "end": 48128,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 46592,
+          "end": 48640,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 47104,
+          "end": 49152,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 47616,
+          "end": 49664,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 48128,
+          "end": 50176,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 48640,
+          "end": 50688,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 49152,
+          "end": 51200,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 49664,
+          "end": 51712,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 50176,
+          "end": 52224,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 50688,
+          "end": 52736,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 51200,
+          "end": 53248,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 51712,
+          "end": 53760,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 52224,
+          "end": 54272,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 52736,
+          "end": 54784,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 53248,
+          "end": 55296,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 53760,
+          "end": 55808,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 54272,
+          "end": 56320,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 54784,
+          "end": 56832,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 55296,
+          "end": 57344,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 55808,
+          "end": 57856,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 56320,
+          "end": 58368,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 56832,
+          "end": 58880,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 57344,
+          "end": 59392,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 57856,
+          "end": 59904,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 58368,
+          "end": 60416,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 58880,
+          "end": 60928,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 59392,
+          "end": 61440,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 59904,
+          "end": 61952,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 60416,
+          "end": 62464,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 60928,
+          "end": 62976,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 61440,
+          "end": 63488,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 61952,
+          "end": 64000,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 62464,
+          "end": 64512,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 62976,
+          "end": 65024,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 63488,
+          "end": 65536,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 64000,
+          "end": 66048,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 64512,
+          "end": 66560,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 65024,
+          "end": 67072,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 65536,
+          "end": 67584,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 66048,
+          "end": 68096,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 66560,
+          "end": 68608,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 67072,
+          "end": 69120,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 67584,
+          "end": 69632,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 68096,
+          "end": 70144,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 68608,
+          "end": 70656,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 69120,
+          "end": 71168,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 69632,
+          "end": 71680,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 70144,
+          "end": 72192,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 70656,
+          "end": 72704,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 71168,
+          "end": 73216,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 71680,
+          "end": 73728,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 72192,
+          "end": 74240,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 72704,
+          "end": 74752,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 73216,
+          "end": 75264,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 73728,
+          "end": 75776,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 74240,
+          "end": 76288,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 74752,
+          "end": 76800,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 75264,
+          "end": 77312,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 75776,
+          "end": 77824,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 76288,
+          "end": 78336,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 76800,
+          "end": 78848,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 77312,
+          "end": 79360,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 77824,
+          "end": 79872,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 78336,
+          "end": 80384,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 78848,
+          "end": 80896,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 79360,
+          "end": 81408,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 79872,
+          "end": 81920,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 80384,
+          "end": 82432,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 80896,
+          "end": 82944,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 81408,
+          "end": 83456,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 81920,
+          "end": 83968,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 82432,
+          "end": 84480,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 82944,
+          "end": 84992,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 83456,
+          "end": 85504,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 83968,
+          "end": 86016,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 84480,
+          "end": 86528,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 84992,
+          "end": 87040,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 85504,
+          "end": 87552,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 86016,
+          "end": 88064,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 86528,
+          "end": 88576,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 87040,
+          "end": 89088,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 87552,
+          "end": 89600,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 88064,
+          "end": 90112,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 88576,
+          "end": 90624,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 89088,
+          "end": 91136,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 89600,
+          "end": 91648,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 90112,
+          "end": 92160,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 90624,
+          "end": 92672,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 91136,
+          "end": 93184,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 91648,
+          "end": 93696,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 92160,
+          "end": 94208,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 92672,
+          "end": 94720,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 93184,
+          "end": 95232,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 93696,
+          "end": 95744,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 94208,
+          "end": 96256,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 94720,
+          "end": 96768,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 95232,
+          "end": 97280,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 95744,
+          "end": 97792,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 96256,
+          "end": 98304,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 96768,
+          "end": 98816,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 97280,
+          "end": 99328,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 97792,
+          "end": 99840,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 98304,
+          "end": 100352,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 98816,
+          "end": 100864,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 99328,
+          "end": 101376,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 99840,
+          "end": 101888,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 100352,
+          "end": 102400,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 100864,
+          "end": 102912,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 101376,
+          "end": 103424,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 101888,
+          "end": 103936,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 102400,
+          "end": 104448,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 102912,
+          "end": 104960,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 103424,
+          "end": 105472,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 103936,
+          "end": 105984,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 104448,
+          "end": 106496,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 104960,
+          "end": 107008,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 105472,
+          "end": 107520,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 105984,
+          "end": 108032,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 106496,
+          "end": 108544,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 107008,
+          "end": 109056,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 107520,
+          "end": 109568,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 108032,
+          "end": 110080,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 108544,
+          "end": 110592,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 109056,
+          "end": 111104,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 109568,
+          "end": 111616,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 110080,
+          "end": 112128,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 110592,
+          "end": 112640,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 111104,
+          "end": 113152,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 111616,
+          "end": 113664,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 112128,
+          "end": 114176,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 112640,
+          "end": 114688,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 113152,
+          "end": 115200,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 113664,
+          "end": 115712,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 114176,
+          "end": 116224,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 114688,
+          "end": 116736,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 115200,
+          "end": 117248,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 115712,
+          "end": 117760,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 116224,
+          "end": 118272,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 116736,
+          "end": 118784,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 117248,
+          "end": 119296,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 117760,
+          "end": 119808,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 118272,
+          "end": 120320,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 118784,
+          "end": 120832,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 119296,
+          "end": 121344,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 119808,
+          "end": 121856,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 120320,
+          "end": 122368,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 120832,
+          "end": 122880,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 121344,
+          "end": 123392,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 121856,
+          "end": 123904,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 122368,
+          "end": 124416,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 122880,
+          "end": 124928,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 123392,
+          "end": 125440,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 123904,
+          "end": 125952,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 124416,
+          "end": 126464,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 124928,
+          "end": 126976,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 125440,
+          "end": 127488,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 125952,
+          "end": 128000,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 126464,
+          "end": 128512,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 126976,
+          "end": 129024,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 127488,
+          "end": 129536,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 128000,
+          "end": 130048,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 128512,
+          "end": 130560,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 129024,
+          "end": 131072,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 129536,
+          "end": 131584,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 130048,
+          "end": 132096,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 130560,
+          "end": 132608,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 131072,
+          "end": 133120,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 131584,
+          "end": 133632,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 132096,
+          "end": 134144,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 132608,
+          "end": 134656,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 133120,
+          "end": 135168,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 133632,
+          "end": 135680,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 134144,
+          "end": 136192,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 134656,
+          "end": 136704,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 135168,
+          "end": 137216,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 135680,
+          "end": 137728,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 136192,
+          "end": 138240,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 136704,
+          "end": 138752,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 137216,
+          "end": 139264,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 137728,
+          "end": 139776,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 138240,
+          "end": 140288,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 138752,
+          "end": 140800,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 139264,
+          "end": 141312,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 139776,
+          "end": 141824,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 140288,
+          "end": 142336,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 140800,
+          "end": 142848,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 141312,
+          "end": 143360,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 141824,
+          "end": 143872,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 142336,
+          "end": 144384,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 142848,
+          "end": 144896,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 143360,
+          "end": 145408,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 143872,
+          "end": 145920,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 144384,
+          "end": 146432,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 144896,
+          "end": 146944,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 145408,
+          "end": 147456,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 145920,
+          "end": 147968,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 146432,
+          "end": 148480,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 146944,
+          "end": 148992,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 147456,
+          "end": 149504,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 147968,
+          "end": 150016,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 148480,
+          "end": 150528,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 148992,
+          "end": 151040,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 149504,
+          "end": 151552,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 150016,
+          "end": 152064,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 150528,
+          "end": 152576,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 151040,
+          "end": 153088,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 151552,
+          "end": 153600,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 152064,
+          "end": 154112,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 152576,
+          "end": 154624,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 153088,
+          "end": 155136,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 153600,
+          "end": 155648,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 154112,
+          "end": 156160,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 154624,
+          "end": 156672,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 155136,
+          "end": 157184,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 155648,
+          "end": 157696,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 156160,
+          "end": 158208,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 156672,
+          "end": 158720,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 157184,
+          "end": 159232,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 157696,
+          "end": 159744,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 158208,
+          "end": 160256,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 158720,
+          "end": 160768,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 159232,
+          "end": 161280,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 159744,
+          "end": 161792,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 160256,
+          "end": 162304,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 160768,
+          "end": 162816,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 161280,
+          "end": 163328,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 161792,
+          "end": 163840,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 162304,
+          "end": 164352,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 162816,
+          "end": 164864,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 163328,
+          "end": 165376,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 163840,
+          "end": 165888,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 164352,
+          "end": 166400,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 164864,
+          "end": 166912,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 165376,
+          "end": 167424,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 165888,
+          "end": 167936,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 166400,
+          "end": 168448,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 166912,
+          "end": 168960,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 167424,
+          "end": 169472,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 167936,
+          "end": 169984,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 168448,
+          "end": 170496,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 168960,
+          "end": 171008,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 169472,
+          "end": 171520,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 169984,
+          "end": 172032,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 170496,
+          "end": 172544,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 171008,
+          "end": 173056,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 171520,
+          "end": 173568,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 172032,
+          "end": 174080,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 172544,
+          "end": 174592,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 173056,
+          "end": 175104,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 173568,
+          "end": 175616,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 174080,
+          "end": 176128,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 174592,
+          "end": 176640,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 175104,
+          "end": 177152,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 175616,
+          "end": 177664,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 176128,
+          "end": 178176,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 176640,
+          "end": 178688,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 177152,
+          "end": 179200,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 177664,
+          "end": 179712,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 178176,
+          "end": 180224,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 178688,
+          "end": 180736,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 179200,
+          "end": 181248,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 179712,
+          "end": 181760,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 180224,
+          "end": 182272,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 180736,
+          "end": 182784,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 181248,
+          "end": 183296,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 181760,
+          "end": 183808,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 182272,
+          "end": 184320,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 182784,
+          "end": 184832,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 183296,
+          "end": 185344,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 183808,
+          "end": 185856,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 184320,
+          "end": 186368,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 184832,
+          "end": 186880,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 185344,
+          "end": 187392,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 185856,
+          "end": 187904,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 186368,
+          "end": 188416,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 186880,
+          "end": 188928,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 187392,
+          "end": 189440,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 187904,
+          "end": 189952,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 188416,
+          "end": 190464,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 188928,
+          "end": 190976,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 189440,
+          "end": 191488,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 189952,
+          "end": 192000,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 190464,
+          "end": 192512,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 190976,
+          "end": 193024,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 191488,
+          "end": 193536,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 192000,
+          "end": 194048,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 192512,
+          "end": 194560,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 193024,
+          "end": 195072,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 193536,
+          "end": 195584,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 194048,
+          "end": 196096,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 194560,
+          "end": 196608,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 195072,
+          "end": 197120,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 195584,
+          "end": 197632,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 196096,
+          "end": 198144,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 196608,
+          "end": 198656,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 197120,
+          "end": 199168,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 197632,
+          "end": 199680,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 198144,
+          "end": 200192,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 198656,
+          "end": 200704,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 199168,
+          "end": 201216,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 199680,
+          "end": 201728,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 200192,
+          "end": 202240,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 200704,
+          "end": 202752,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 201216,
+          "end": 203264,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 201728,
+          "end": 203776,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 202240,
+          "end": 204288,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 202752,
+          "end": 204800,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 203264,
+          "end": 205312,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 203776,
+          "end": 205824,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 204288,
+          "end": 206336,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 204800,
+          "end": 206848,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 205312,
+          "end": 207360,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 205824,
+          "end": 207872,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 206336,
+          "end": 208384,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 206848,
+          "end": 208896,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 207360,
+          "end": 209408,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 207872,
+          "end": 209920,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 208384,
+          "end": 210432,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 208896,
+          "end": 210944,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 209408,
+          "end": 211456,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 209920,
+          "end": 211968,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 210432,
+          "end": 212480,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 210944,
+          "end": 212992,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 211456,
+          "end": 213504,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 211968,
+          "end": 214016,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 212480,
+          "end": 214528,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 212992,
+          "end": 215040,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 213504,
+          "end": 215552,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 214016,
+          "end": 216064,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 214528,
+          "end": 216576,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 215040,
+          "end": 217088,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 215552,
+          "end": 217600,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 216064,
+          "end": 218112,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 216576,
+          "end": 218624,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 217088,
+          "end": 219136,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 217600,
+          "end": 219648,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 218112,
+          "end": 220160,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 218624,
+          "end": 220672,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 219136,
+          "end": 221184,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 219648,
+          "end": 221696,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 220160,
+          "end": 222208,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 220672,
+          "end": 222720,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 221184,
+          "end": 223232,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 221696,
+          "end": 223744,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 222208,
+          "end": 224256,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 222720,
+          "end": 224768,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 223232,
+          "end": 225280,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 223744,
+          "end": 225792,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 224256,
+          "end": 226304,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 224768,
+          "end": 226816,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 225280,
+          "end": 227328,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 225792,
+          "end": 227840,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 226304,
+          "end": 228352,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 226816,
+          "end": 228864,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 227328,
+          "end": 229376,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 227840,
+          "end": 229888,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 228352,
+          "end": 230400,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 228864,
+          "end": 230912,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 229376,
+          "end": 231424,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 229888,
+          "end": 231936,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 230400,
+          "end": 232448,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 230912,
+          "end": 232960,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 231424,
+          "end": 233472,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 231936,
+          "end": 233984,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 232448,
+          "end": 234496,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 232960,
+          "end": 235008,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 233472,
+          "end": 235520,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 233984,
+          "end": 236032,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 234496,
+          "end": 236544,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 235008,
+          "end": 237056,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 235520,
+          "end": 237568,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 236032,
+          "end": 238080,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 236544,
+          "end": 238592,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 237056,
+          "end": 239104,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 237568,
+          "end": 239616,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 238080,
+          "end": 240128,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 238592,
+          "end": 240640,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 239104,
+          "end": 241152,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 239616,
+          "end": 241664,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 240128,
+          "end": 242176,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 240640,
+          "end": 242688,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 241152,
+          "end": 243200,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 241664,
+          "end": 243712,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 242176,
+          "end": 244224,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 242688,
+          "end": 244736,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 243200,
+          "end": 245248,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 243712,
+          "end": 245760,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 244224,
+          "end": 246272,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 244736,
+          "end": 246784,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 245248,
+          "end": 247296,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 245760,
+          "end": 247808,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 246272,
+          "end": 248320,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 246784,
+          "end": 248832,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 247296,
+          "end": 249344,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 247808,
+          "end": 249856,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 248320,
+          "end": 250368,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 248832,
+          "end": 250880,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 249344,
+          "end": 251392,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 249856,
+          "end": 251904,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 250368,
+          "end": 252416,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 250880,
+          "end": 252928,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 251392,
+          "end": 253440,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 251904,
+          "end": 253952,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 252416,
+          "end": 254464,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 252928,
+          "end": 254976,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 253440,
+          "end": 255488,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 253952,
+          "end": 256000,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 254464,
+          "end": 256512,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 254976,
+          "end": 257024,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 255488,
+          "end": 257536,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 256000,
+          "end": 258048,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 256512,
+          "end": 258560,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 257024,
+          "end": 259072,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 257536,
+          "end": 259584,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 258048,
+          "end": 260096,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 258560,
+          "end": 260608,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 259072,
+          "end": 261120,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 259584,
+          "end": 261632,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 260096,
+          "end": 262144,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 260608,
+          "end": 262656,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 261120,
+          "end": 263168,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 261632,
+          "end": 263680,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 262144,
+          "end": 264192,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 262656,
+          "end": 264704,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 263168,
+          "end": 265216,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 263680,
+          "end": 265728,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 264192,
+          "end": 266240,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 264704,
+          "end": 266752,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 265216,
+          "end": 267264,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 265728,
+          "end": 267776,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 266240,
+          "end": 268288,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 266752,
+          "end": 268800,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 267264,
+          "end": 269312,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 267776,
+          "end": 269824,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 268288,
+          "end": 270336,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 268800,
+          "end": 270848,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 269312,
+          "end": 271360,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 269824,
+          "end": 271872,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 270336,
+          "end": 272384,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 270848,
+          "end": 272896,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 271360,
+          "end": 273408,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 271872,
+          "end": 273920,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 272384,
+          "end": 274432,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 272896,
+          "end": 274944,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 273408,
+          "end": 275456,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 273920,
+          "end": 275968,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 274432,
+          "end": 276480,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 274944,
+          "end": 276992,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 275456,
+          "end": 277504,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 275968,
+          "end": 278016,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 276480,
+          "end": 278528,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 276992,
+          "end": 279040,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 277504,
+          "end": 279552,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 278016,
+          "end": 280064,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 278528,
+          "end": 280576,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 279040,
+          "end": 281088,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 279552,
+          "end": 281600,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 280064,
+          "end": 282112,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 280576,
+          "end": 282624,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 281088,
+          "end": 283136,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 281600,
+          "end": 283648,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 282112,
+          "end": 284160,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 282624,
+          "end": 284672,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 283136,
+          "end": 285184,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 283648,
+          "end": 285696,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 284160,
+          "end": 286208,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 284672,
+          "end": 286720,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 285184,
+          "end": 287232,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 285696,
+          "end": 287744,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 286208,
+          "end": 288256,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 286720,
+          "end": 288768,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 287232,
+          "end": 289280,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 287744,
+          "end": 289792,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 288256,
+          "end": 290304,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 288768,
+          "end": 290816,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 289280,
+          "end": 291328,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 289792,
+          "end": 291840,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 290304,
+          "end": 292352,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 290816,
+          "end": 292864,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 291328,
+          "end": 293376,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 291840,
+          "end": 293888,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 292352,
+          "end": 294400,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 292864,
+          "end": 294912,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 293376,
+          "end": 295424,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 293888,
+          "end": 295936,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 294400,
+          "end": 296448,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 294912,
+          "end": 296960,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 295424,
+          "end": 297472,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 295936,
+          "end": 297984,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 296448,
+          "end": 298496,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 296960,
+          "end": 299008,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 297472,
+          "end": 299520,
+          "target_length": 512,
+          "scored_tokens": 512
+        },
+        {
+          "begin": 297984,
+          "end": 299964,
+          "target_length": 444,
+          "scored_tokens": 444
+        }
+      ],
+      "nll_formula_crosscheck": {
+        "passed": true,
+        "method": "sum(logsumexp(logits)-target_logit) over first window scored labels",
+        "scored_tokens": 2047,
+        "cross_entropy_sum": 2915.835693359375,
+        "independent_formula_sum": 2915.835693359375,
+        "absolute_difference": 0.0,
+        "absolute_relative_tolerance": 0.003015835693359375
+      },
+      "top1_prediction_sidecar": {
+        "path": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg/evaluation-dev-prefix4/dense.primary_full.top1.i32",
+        "sha256": "62bf7ec4a245a88d39c9e81843cb8ffb1250dae89e556920f62e6ac2cab1b36b",
+        "dtype": "int32_little_endian",
+        "count": 299963,
+        "bytes": 1199852
+      },
+      "token_nll_sidecar": {
+        "path": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg/evaluation-dev-prefix4/dense.primary_full.token_nll.npy",
+        "sha256": "ab4cb71828575eb32c8abd13ee385cbabbaf3ac9ac7911f5eacf42fa005eb332",
+        "dtype": "float32_little_endian_npy",
+        "count": 299963,
+        "bytes": 1199980
+      }
+    },
+    "full_test": null
+  },
+  "runtime": {
+    "seconds": 234.03575116599677,
+    "python": "3.13.15 (main, Sep 29 2026, 15:01:28) [Clang 22.1.3 ]",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.39",
+    "package_versions": {
+      "torch": "2.11.0+cu128",
+      "transformers": "5.16.1",
+      "accelerate": "1.14.0",
+      "safetensors": "0.8.0",
+      "huggingface_hub": "1.29.0"
+    },
+    "cuda_peak_memory_bytes": {
+      "0": 14599479808
+    },
+    "hf_device_map": null
+  },
+  "projection_reconstruction_audit": [],
+  "precision_audit": null,
+  "dense_model_evaluated": true
+}

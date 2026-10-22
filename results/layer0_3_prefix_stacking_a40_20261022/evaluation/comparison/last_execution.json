@@ -1,0 +1,16 @@
+{
+  "automatic_timeout": false,
+  "billing_warning": "Stopping this process does not stop RunPod billing; terminate the pod manually.",
+  "command_exit_code": 0,
+  "configured_timeout_seconds": null,
+  "elapsed_wall_seconds": 2.0,
+  "estimated_gpu_cost_usd": 0.00032777777777777775,
+  "estimated_total_invocation_gpu_cost_usd": 0.08079722222222223,
+  "finished_at_utc": "2026-10-22T10:22:30.705952+00:00",
+  "gpu_hourly_usd": 0.59,
+  "heartbeat_log": "/workspace/runs/nec-streaming-qualification/logs/layer0-3-dev-ppl-compare.heartbeat.jsonl",
+  "main_log": "/workspace/runs/nec-streaming-qualification/logs/layer0-3-dev-ppl-compare.log",
+  "stage": "layer0-3-dev-ppl-compare",
+  "status": "PASS",
+  "total_invocation_elapsed_wall_seconds": 493.0
+}

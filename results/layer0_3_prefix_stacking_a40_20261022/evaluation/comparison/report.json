@@ -1,0 +1,58 @@
+{
+  "compressed_layers": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "fallback": false,
+    "literal_unk_count": 0,
+    "rows": 3760,
+    "source_bytes": 657209,
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "split": "validation",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e"
+  },
+  "dense": {
+    "mean_nll": 1.5987632504012173,
+    "next_token_accuracy": 0.6230635111663771,
+    "perplexity": 4.94691054459028
+  },
+  "dense_result_sha256": "d1291ee9c65ca50be8de7cbae565828d7a88e699cc76fc76693cbe8ae3fc0d11",
+  "model_id": "NousResearch/Llama-2-7b-hf",
+  "model_revision": "8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+  "nec": {
+    "mean_nll": 5.684326102325708,
+    "next_token_accuracy": 0.21374636205131967,
+    "perplexity": 294.21950461578194
+  },
+  "nec_result_sha256": "d4c63a234b41d99891929b626dfc48f372c52214ccf0931c6e70a27064492a7f",
+  "paired": {
+    "bootstrap": {
+      "block_tokens": 512,
+      "blocks": 586,
+      "interval": "percentile 95%; contiguous NLL-difference blocks",
+      "repetitions": 5000,
+      "seed": 20261021
+    },
+    "mean_nll_delta_95pct_block_bootstrap_ci": [
+      4.049485608976772,
+      4.12093126435075
+    ],
+    "mean_nll_delta_nec_minus_dense": 4.085562851924493,
+    "next_token_accuracy_delta": -0.40931714911505745,
+    "perplexity_ratio_nec_over_dense": 59.475404177740415,
+    "scored_tokens": 299963,
+    "top1_agreement_with_dense": 0.25935532048952703
+  },
+  "protocol_fingerprint": "45fb5838992d9cbe7b4c60301d9007d80cb4d7477644164f0283de8d5957dd82",
+  "source_commit": "cd1583e33620fc64c8be5011191f55c54689a99f",
+  "status": "COMPLETE"
+}
