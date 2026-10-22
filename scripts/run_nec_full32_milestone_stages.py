@@ -95,6 +95,36 @@ def run_milestone_evaluation(
         print(f"MILESTONE {milestone}: quality report written to {output / 'report.json'}", flush=True)
 
 
+def run_final_allocation(checkpoint_dir: Path, milestone_dir: Path, log_dir: Path) -> None:
+    output = milestone_dir.parent / "final_allocation"
+    report = output / "report.json"
+    if report.is_file():
+        print(f"FINAL ALLOCATION already recorded at {report}", flush=True)
+        return
+    if output.exists():
+        raise FileExistsError(
+            f"Final allocation output exists without a report; inspect {output} before retrying"
+        )
+    log_path = log_dir / "nec-full32-adaptive-allocation.log"
+    command = [
+        sys.executable, "-u", "scripts/search_nec_layer_allocation.py",
+        "--checkpoint-dir", str(checkpoint_dir),
+        "--output", str(output),
+        "--optimize-storage", "--max-dense-layers", "4", "--max-ppl", "10",
+        "--heldout-split", "test", "--heldout-start-token", "0",
+        "--heldout-tokens", "0",
+    ]
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    print("RUNNING final mixed NEC/INT8/FP16 allocation with full test split", flush=True)
+    with log_path.open("w", encoding="utf-8") as log:
+        result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    if result.returncode:
+        raise RuntimeError(
+            f"Final adaptive allocation failed with code {result.returncode}; inspect {log_path}"
+        )
+    print(f"FINAL ALLOCATION report written to {report}", flush=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
@@ -122,7 +152,8 @@ def main() -> None:
             args.checkpoint_dir, args.output_dir, milestone, args.log_dir,
         )
 
-    print("COMPLETE: 8, 16, 24, and 32 candidate checkpoints evaluated", flush=True)
+    run_final_allocation(args.checkpoint_dir, args.output_dir, args.log_dir)
+    print("COMPLETE: 8, 16, 24, and 32 candidate checkpoints evaluated; final allocation selected", flush=True)
 
 
 if __name__ == "__main__":

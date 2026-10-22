@@ -16,8 +16,8 @@ by NEC and the uncompiled suffix left dense. These are cumulative diagnostics,
 not final adaptive selections. Each milestone reports student and teacher PPL,
 teacher KL, next-token accuracy, dense top-1 agreement, and storage preflight.
 
-The staging runner stops cleanly at each end-layer so it does not signal the
-compiler while a checkpoint may be written:
+The staging runner exits from inside the compiler after the milestone
+checkpoint and manifest have been written:
 
 ```bash
 python scripts/run_nec_full32_milestone_stages.py \
@@ -26,13 +26,17 @@ python scripts/run_nec_full32_milestone_stages.py \
   --log-dir /workspace/runs/nec-streaming-qualification/logs
 ```
 
-The allocator runs after all 32 checkpoints are available:
+After the final 32-candidate checkpoint, the staged runner automatically runs
+the allocator below. The separate wait-and-run helper is also available when
+the compile runner was already active before that final-allocation hook was
+added.
 
 ```bash
 python scripts/search_nec_layer_allocation.py \
   --checkpoint-dir /workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg \
   --output /workspace/runs/nec-adaptive-layer-allocation-32layer_a40_20261022/final_allocation \
-  --optimize-storage --max-dense-layers 4 --max-ppl 10
+  --optimize-storage --max-dense-layers 4 --max-ppl 10 \
+  --heldout-split test --heldout-start-token 0 --heldout-tokens 0
 ```
 
 It profiles one-layer NEC and INT8 substitutions, builds separate and combined
