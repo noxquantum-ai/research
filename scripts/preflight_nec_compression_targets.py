@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""CPU-only storage feasibility preflight for NEC layer allocations.
+"""CPU-only storage feasibility preflight for a scoped NEC layer experiment.
 
-This computes optimistic whole-model lower bounds from the serialized dense
-model and available NEC checkpoint files. It does not build a deployable mixed
-model bundle, and its estimates must not be reported as measured compression.
+This combines exact source tensor-payload sizes with available serialized NEC
+checkpoint sizes. It does not build a deployable mixed-model bundle, and its
+scoped estimates must not be reported as measured package compression.
 """
 from __future__ import annotations
 
@@ -136,20 +136,6 @@ def layer_compressible_payload(tensor_payload: dict[str, int], layer: int) -> in
     )
 
 
-def projection_lower_bound(
-    *, baseline_bytes: int, metadata_bytes: int, weight_payload_bytes: int,
-    dense_payload_bytes: int, checkpoint_bytes: int,
-) -> dict:
-    # Output safetensors headers/index, shard padding, runtime/loader files and
-    # packaging overhead are intentionally excluded, making this a lower bound.
-    lower_bound_bytes = metadata_bytes + dense_payload_bytes + checkpoint_bytes
-    return {
-        "projected_bundle_lower_bound_bytes": lower_bound_bytes,
-        "whole_model_ratio_upper_bound": baseline_bytes / lower_bound_bytes,
-        "dense_weight_payload_fraction": dense_payload_bytes / weight_payload_bytes,
-    }
-
-
 def checkpoint_scenarios(checkpoint_dir: Path, candidate_layers: tuple[int, ...]) -> dict:
     observed = {}
     for layer in candidate_layers:
@@ -185,10 +171,14 @@ def main() -> None:
         "--candidate-layers", required=True,
         help="Comma-separated IDs/ranges, e.g. '0-15' or '0-3,8-11'",
     )
+    parser.add_argument(
+        "--scope-layers",
+        help="Layer-weight scope used for this experiment; defaults to candidate layers",
+    )
     parser.add_argument("--max-dense-weight-fraction", type=float, default=0.25)
     parser.add_argument(
         "--compression-targets", type=float, nargs="+", default=(3.0, 10.0),
-        help="Whole-model ratio targets to assess; default: 3x 10x",
+        help="Scoped layer-storage ratios to assess; default: 3x 10x",
     )
     parser.add_argument("--output-json", type=Path)
     args = parser.parse_args()
@@ -198,12 +188,19 @@ def main() -> None:
     if any(target <= 1 for target in args.compression_targets):
         parser.error("Compression-ratio targets must be greater than 1")
     candidate_layers = parse_layers(args.candidate_layers)
+    scope_layers = parse_layers(args.scope_layers or args.candidate_layers)
     model = inspect_dense_model(args.model_dir)
     if model["total_layers"] is None:
         raise ValueError("Could not infer transformer layer count from model config")
     outside_range = [layer for layer in candidate_layers if layer >= model["total_layers"]]
     if outside_range:
         raise ValueError(f"Candidate IDs outside model range: {outside_range}")
+    outside_scope = sorted(set(candidate_layers) - set(scope_layers))
+    if outside_scope:
+        raise ValueError(f"Candidate layers must be inside the experiment scope: {outside_scope}")
+    invalid_scope = [layer for layer in scope_layers if layer >= model["total_layers"]]
+    if invalid_scope:
+        raise ValueError(f"Scope layer IDs outside model range: {invalid_scope}")
 
     per_layer_payload = {
         layer: layer_compressible_payload(model["tensor_payload_bytes"], layer)
@@ -226,126 +223,109 @@ def main() -> None:
     incomplete_layers = {layer: missing for layer, missing in incomplete_layers.items() if missing}
     if incomplete_layers:
         raise ValueError(f"Missing expected NEC tensors in candidate layers: {incomplete_layers}")
+    scope_layer_payload = {
+        layer: sum(
+            size for name, size in model["tensor_payload_bytes"].items()
+            if name.startswith(f"model.layers.{layer}.")
+        )
+        for layer in scope_layers
+    }
+    empty_scope = [layer for layer, size in scope_layer_payload.items() if size == 0]
+    if empty_scope:
+        raise ValueError(f"No model tensors found in scope layers {empty_scope}")
+    scope_weight_payload = sum(scope_layer_payload.values())
     candidate_dense_payload = sum(per_layer_payload.values())
-    dense_after_candidate_compression = model["weight_payload_bytes"] - candidate_dense_payload
     candidate_artifacts = checkpoint_scenarios(args.checkpoint_dir, candidate_layers)
 
-    scenarios = {}
-    for scenario, checkpoint_bytes in candidate_artifacts[
-        "all_candidates_sum_actual_and_missing_estimated"
-    ].items():
-        scenarios[scenario] = projection_lower_bound(
-            baseline_bytes=model["model_bytes"],
-            metadata_bytes=model["metadata_bytes_excluding_weight_shards_and_index"],
-            weight_payload_bytes=model["weight_payload_bytes"],
-            dense_payload_bytes=dense_after_candidate_compression,
-            checkpoint_bytes=int(checkpoint_bytes),
-        )
-        scenarios[scenario]["meets_max_dense_weight_fraction"] = (
-            scenarios[scenario]["dense_weight_payload_fraction"]
-            <= args.max_dense_weight_fraction
-        )
-        scenarios[scenario]["ratio_targets"] = {
-            str(target): {
-                "target_bytes_at_most": math.floor(model["model_bytes"] / target),
-                "meets_even_at_projected_lower_bound": (
-                    scenarios[scenario]["projected_bundle_lower_bound_bytes"]
-                    <= model["model_bytes"] / target
-                ),
-            }
-            for target in args.compression_targets
-        }
-
-    all_layer_payload = sum(
-        layer_compressible_payload(model["tensor_payload_bytes"], layer)
-        for layer in range(model["total_layers"])
-    )
-    fixed_dense_payload = model["weight_payload_bytes"] - all_layer_payload
-    observed_mean = candidate_artifacts["observed_mean_bytes"]
     observed_min = candidate_artifacts["observed_min_bytes"]
-    all_layer_projection = {
-        "scope": "hypothetical all-transformer-layer extrapolation; not measured artifacts",
-        "all_layers_compressible_weight_payload_bytes": all_layer_payload,
-        "fixed_dense_weight_payload_bytes": fixed_dense_payload,
-        "dense_weight_payload_fraction": fixed_dense_payload / model["weight_payload_bytes"],
-        "artifact_size_basis": {
-            "mean_observed_checkpoint_bytes": observed_mean,
-            "minimum_observed_checkpoint_bytes": observed_min,
-            "observed_checkpoint_count": len(candidate_artifacts["observed_by_layer"]),
-            "candidate_count": len(candidate_layers),
-        },
-        "projected_bundle_lower_bound": {},
-    }
-    for scenario, estimate in (("mean", observed_mean), ("minimum", observed_min)):
-        projected = projection_lower_bound(
-            baseline_bytes=model["model_bytes"],
-            metadata_bytes=model["metadata_bytes_excluding_weight_shards_and_index"],
-            weight_payload_bytes=model["weight_payload_bytes"],
-            dense_payload_bytes=fixed_dense_payload,
-            checkpoint_bytes=round(estimate * model["total_layers"]),
-        )
-        projected["ratio_targets"] = {
-            str(target): projected["projected_bundle_lower_bound_bytes"]
-            <= model["model_bytes"] / target
-            for target in args.compression_targets
+    observed_mean = candidate_artifacts["observed_mean_bytes"]
+    observed_max = candidate_artifacts["observed_max_bytes"]
+    candidate_count_frontier = []
+    sorted_layer_payloads = sorted(per_layer_payload.values(), reverse=True)
+    for compressed_count in range(len(candidate_layers) + 1):
+        compressed_dense_payload = sum(sorted_layer_payloads[:compressed_count])
+        dense_payload = scope_weight_payload - compressed_dense_payload
+        checkpoint_estimates = {
+            "optimistic": compressed_count * observed_min,
+            "nominal": round(compressed_count * observed_mean),
+            "conservative": compressed_count * observed_max,
         }
-        all_layer_projection["projected_bundle_lower_bound"][scenario] = projected
+        estimates = {}
+        for label, checkpoint_bytes in checkpoint_estimates.items():
+            total_lower_bound = dense_payload + checkpoint_bytes
+            estimates[label] = {
+                "checkpoint_bytes_estimated": checkpoint_bytes,
+                "scope_package_bytes_lower_bound": total_lower_bound,
+                "scope_compression_ratio_upper_bound": (
+                    scope_weight_payload / total_lower_bound if total_lower_bound else None
+                ),
+                "dense_weight_payload_fraction": dense_payload / scope_weight_payload,
+                "meets_max_dense_weight_fraction": (
+                    dense_payload / scope_weight_payload <= args.max_dense_weight_fraction
+                ),
+                "ratio_targets": {
+                    str(target): {
+                        "target_bytes_at_most": math.floor(scope_weight_payload / target),
+                        "meets_even_at_scoped_lower_bound": total_lower_bound <= scope_weight_payload / target,
+                    }
+                    for target in args.compression_targets
+                },
+            }
+        candidate_count_frontier.append({
+            "compressed_candidate_count": compressed_count,
+            "dense_layers_retained_in_scope": len(scope_layers) - compressed_count,
+            "estimate_basis": (
+                "checkpoint sizes use observed min/mean/max; dense savings use the "
+                "largest per-layer projection/norm payloads first"
+            ),
+            "scenarios": estimates,
+        })
 
-    ten_x = model["model_bytes"] / 10
-    fixed_floor = (
-        model["metadata_bytes_excluding_weight_shards_and_index"] + fixed_dense_payload
-    )
-    max_artifact_bytes_for_10x = ten_x - fixed_floor
-    all_layer_projection["10x_artifact_budget_if_every_layer_compressed"] = {
-        "total_artifact_bytes_at_most_before_any_omitted_overhead": max(0, max_artifact_bytes_for_10x),
-        "average_artifact_bytes_per_layer_at_most_before_omitted_overhead": (
-            max_artifact_bytes_for_10x / model["total_layers"]
-        ),
-        "fixed_bytes_already_exceed_10x_budget": max_artifact_bytes_for_10x < 0,
-    }
+    all_candidates_compressed_payload = candidate_dense_payload
+    dense_payload_after_all = scope_weight_payload - all_candidates_compressed_payload
+    ten_x_budget = scope_weight_payload / 10
+    max_checkpoint_bytes_for_10x = ten_x_budget - dense_payload_after_all
 
     report = {
-        "report_type": "CPU-only NEC storage feasibility preflight",
+        "report_type": "CPU-only NEC 16-layer-scope storage feasibility preflight",
         "model": {
-            "directory": str(args.model_dir),
-            "serialized_dense_snapshot_bytes": model["model_bytes"],
-            "file_count": model["file_count"],
-            "transformer_layers": model["total_layers"],
-            "safetensors_weight_payload_bytes": model["weight_payload_bytes"],
-            "weight_shards": model["weight_shards"],
-            "weight_shard_bytes": model["weight_shard_bytes"],
-            "required_nonweight_metadata_bytes_excluding_index": model[
-                "metadata_bytes_excluding_weight_shards_and_index"
-            ],
-            "source_index_bytes": model["source_index_bytes"],
+            "source_snapshot": str(args.model_dir),
+            "experiment_scope_layers": list(scope_layers),
+            "experiment_scope_layer_count": len(scope_layers),
+            "dense_scope_tensor_payload_bytes": scope_weight_payload,
+            "scope_layer_tensor_payload_bytes": {
+                str(layer): size for layer, size in scope_layer_payload.items()
+            },
         },
         "allocation_scope": {
             "candidate_layers": list(candidate_layers),
             "candidate_count": len(candidate_layers),
             "candidate_compressible_dense_payload_bytes": candidate_dense_payload,
-            "dense_weight_payload_bytes_after_compressing_all_candidates": dense_after_candidate_compression,
-            "dense_weight_payload_fraction_after_compressing_all_candidates": (
-                dense_after_candidate_compression / model["weight_payload_bytes"]
-            ),
             "checkpoint_artifacts": candidate_artifacts,
-            "all_candidates_compressed_scenarios": scenarios,
-            "research_test_allowed_even_if_deployment_targets_fail": True,
+            "storage_frontier_by_compressed_count": candidate_count_frontier,
+            "10x_artifact_budget_if_all_candidates_compressed": {
+                "remaining_dense_scope_payload_bytes": dense_payload_after_all,
+                "max_checkpoint_bytes_before_omitted_overhead": max(0, max_checkpoint_bytes_for_10x),
+                "max_average_checkpoint_bytes_per_compressed_layer": (
+                    max(0, max_checkpoint_bytes_for_10x) / len(candidate_layers)
+                ),
+                "dense_scope_payload_alone_exceeds_10x_budget": max_checkpoint_bytes_for_10x < 0,
+            },
         },
-        "whole_model_future_extrapolation": all_layer_projection,
         "objective_requirements": {
-            "primary_goal": "maximize measured complete-model serialized compression ratio subject to quality constraints",
-            "aspirational_whole_model_ratio": 10.0,
+            "primary_goal": "maximize measured serialized compression within the 16-layer experiment scope subject to quality constraints",
+            "aspirational_ratio_within_scope": 10.0,
             "3x_is_insufficient": True,
             "max_dense_weight_fraction_is_a_ceiling": args.max_dense_weight_fraction,
-            "compression_ratio_definition": "dense snapshot directory bytes divided by complete deployable mixed-model package bytes",
+            "compression_ratio_definition": "dense tensor payload bytes for the scoped layers divided by scoped dense tensor payload plus serialized NEC checkpoint bytes",
             "ratio_targets_assessed": args.compression_targets,
         },
         "limitations": [
-            "Projected sizes are lower bounds, not measured deployable bundle sizes.",
+            "Scoped package sizes and ratios are lower bounds / upper bounds: dense tensor serialization headers and other package overhead are omitted.",
             "Missing checkpoint sizes use the observed candidate artifacts as estimates.",
-            "Output safetensors headers/index, shard padding, runtime/loader files, and packaging overhead are omitted.",
-            "A 16-layer quality/allocation experiment remains valid research even when its candidate scope cannot meet a whole-model deployment ratio target.",
-            "Final compression claims require materializing the complete deployable package and summing every serialized file byte.",
+            "This report is scoped to the selected 16 layers and makes no storage claim about layers outside that scope.",
+            "Quality feasibility is determined only by the measured PPL/KL evaluation, not this storage preflight.",
+            "Any later deployable-model compression claim requires materializing and byte-counting its complete package separately.",
         ],
     }
     rendered = json.dumps(report, indent=2, sort_keys=True)

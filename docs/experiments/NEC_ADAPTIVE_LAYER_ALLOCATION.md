@@ -1,14 +1,14 @@
 # NEC adaptive layer allocation: first prototype
 
-## Current objective and experiment scope
+## Deployment objective and active experiment scope
 
-The deployment objective is to maximize the **measured whole-model serialized
-compression ratio**, subject to an independently evaluated quality limit
-(currently PPL `<= 10`, with KL reported as a complementary metric). The
-long-term target remains approximately **10x**. A 3x ratio is an insufficient
-result, not a target or a successful operating point. The 25% maximum dense
-weight fraction is a ceiling only; the allocator must not try to use up that
-allowance. It may retain fewer dense weights when quality permits.
+The long-term deployment objective is to maximize the **measured whole-model
+serialized compression ratio**, subject to an independently evaluated
+quality limit (currently PPL `<= 10`, with KL reported as a complementary
+metric). The long-term target remains approximately **10x**. A 3x ratio is an
+insufficient result, not a target or a successful operating point. The 25%
+maximum dense-weight fraction is a ceiling only; the allocator must not try to
+use up that allowance. It may retain fewer dense weights when quality permits.
 
 The ratio denominator is the serialized dense model snapshot. The numerator
 must be the byte sum of the **complete deployable mixed-model package**:
@@ -19,25 +19,27 @@ region savings, and simulated low-bit storage are not whole-model compression
 measurements. A result may claim a ratio only after the complete package is
 materialized and measured.
 
-The 16-layer experiment is a **16-candidate allocation and quality study**,
-following the same structure as the four-candidate proof of concept. It is
-not a claim that the entire 32-layer model has been compressed. The remaining
-model layers stay dense for that study. We will report the resulting whole-
-model ratio as a separate storage fact, even though this candidate scope
-cannot meet the 3x or 10x deployment target. That does not cancel or invalidate
-the 16-layer allocation experiment: its purpose is to test layer selection,
-quality loss, and search efficiency at a larger candidate count.
+The active experiment is scoped to the **16 layers under test**, following the
+same structure as the four-layer proof of concept. Within this experiment,
+the 25% dense-weight ceiling and storage comparisons are calculated over
+those 16 layers. Do not fold the rest of a larger source model into this
+experiment's storage denominator or use that larger-model calculation to
+reject the test. The experiment measures layer selection, quality loss, and
+search efficiency at a larger candidate count. PPL, teacher KL, and accuracy
+still use the complete original Llama-2-7B architecture; layers 16–31 remain
+unchanged in those forward passes. Any claim about compressing a larger
+complete model is a separate result.
 
 Before any expensive compile or GPU evaluation, run
 [`scripts/preflight_nec_compression_targets.py`](../../scripts/preflight_nec_compression_targets.py)
 to check storage-only lower bounds. It compares a dense model snapshot with
-the tensors left dense and the actual serialized checkpoint files available.
-When candidate checkpoints are missing, it shows estimates based on the
-observed artifact sizes. Its output is a feasibility preflight, not a measured
-deployable ratio: generated safetensors headers/index, package loader/runtime
-files, and other format overhead are omitted. A target that fails even this
-lower-bound check is infeasible for that allocation scope. A target that
-passes still requires building and measuring the real package.
+the dense tensor payload for the selected 16-layer scope and the available
+serialized checkpoint files. When candidate checkpoints are missing, it
+shows estimates based on observed artifact sizes. Its output is a scoped
+feasibility preflight, not a measured package ratio: generated safetensors
+headers/index, loader/runtime files, and other format overhead are omitted. A
+target that fails even this lower-bound check is infeasible for that scope. A
+target that passes still requires building and measuring the real package.
 
 The current search prototype has a fixed compressed-layer count and selects
 for quality; it does not yet optimize complete-package bytes jointly with
@@ -175,22 +177,23 @@ ranking accuracy and quality regret.
 
 ## Interface and feasibility
 
-The script accepts either `--compress-count N` among available checkpoints or
-the model-wide `--keep-dense-layers K`. The latter is rejected when the
-checkpoint set cannot leave exactly `K` model layers dense. For example, four
-saved checkpoints cannot satisfy `--keep-dense-layers 8` on a 32-layer model;
-all four candidates together still leave 28 layers dense. This prevents a
-requested allocation from silently being treated as a smaller experiment.
+The 16-layer study uses `--compress-count N` over its available checkpoint
+set. The prototype's `--keep-dense-layers K` currently refers to the loaded
+model's layer count, so it is not the interface for specifying a dense count
+within this 16-layer experiment. Missing checkpoints fail the requested
+compression count instead of silently shrinking the experiment.
 
-For a 16-candidate study, report the full measured quality/storage frontier
+Reports must show both the complete model used for quality evaluation and the
+16-layer storage scope, with separate layer counts and byte denominators.
+
+For the 16-layer study, report the full measured quality/storage frontier
 for the tested compression counts: selected candidate IDs, candidate
 checkpoints actually used, PPL, teacher KL, token count/split, dense-layer
-count, and candidate-region bytes. Also report the complete-model serialized
-ratio only if a deployable mixed-model package was materialized and measured;
-otherwise show the preflight lower bound with that label. Do not describe
-failure to reach 3x or 10x in this restricted study as success, and do not
-cancel the allocation study because its candidate scope cannot reach those
-deployment targets.
+count, and scoped bytes. Label preflight payload ratios as estimates; report
+an actual serialized ratio only after materializing and counting the complete
+package for this 16-layer scope. Do not describe failure to reach 3x or 10x
+within the scope as success, and do not cancel the allocation study because a
+storage-only estimate falls short.
 
 The prototype is in [`scripts/search_nec_layer_allocation.py`](../../scripts/search_nec_layer_allocation.py),
 with the Fisher interaction and conditional search in

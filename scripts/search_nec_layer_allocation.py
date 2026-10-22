@@ -195,6 +195,7 @@ def storage_summary(checkpoint_dir, dense, layers, selected):
     per_layer = {}
     dense_total = 0
     allocated_total = 0
+    dense_retained = 0
     for layer in layers:
         dense_bytes = sum(
             int(dense[layer][name].numel() * dense[layer][name].element_size())
@@ -206,6 +207,8 @@ def storage_summary(checkpoint_dir, dense, layers, selected):
         allocated_bytes = checkpoint_bytes if layer in selected else dense_bytes
         dense_total += dense_bytes
         allocated_total += allocated_bytes
+        if layer not in selected:
+            dense_retained += dense_bytes
         per_layer[str(layer)] = {
             "dense_projection_and_norm_bytes": dense_bytes,
             "serialized_checkpoint_bytes": checkpoint_bytes,
@@ -213,19 +216,21 @@ def storage_summary(checkpoint_dir, dense, layers, selected):
             "allocated_bytes": allocated_bytes,
         }
     return {
-        "scope": (
-            "candidate layer tensors only; all other model layers remain dense; "
-            "this is not a serialized deployable whole-model bundle measurement"
-        ),
+        "scope": "candidate layers only; dense FP16 tensor payload plus actual serialized NEC checkpoint files",
+        "candidate_layer_ids": list(layers),
+        "compressed_layer_ids": sorted(selected),
+        "dense_layers_retained_in_scope": len(layers) - len(selected),
         "candidate_dense_bytes": dense_total,
         "allocated_candidate_bytes": allocated_total,
         "bytes_saved_vs_dense_candidates": dense_total - allocated_total,
-        "whole_model_deployable_bytes_measured": False,
-        "whole_model_compression_ratio_measured": None,
-        "whole_model_ratio_note": (
-            "Requires materializing and byte-counting the complete mixed-model "
-            "package, including dense weights, NEC checkpoints, index/metadata, "
-            "and required loader/runtime files."
+        "dense_candidate_bytes_retained": dense_retained,
+        "dense_weight_fraction_in_scope": dense_retained / dense_total if dense_total else 0.0,
+        "scoped_compression_ratio": dense_total / allocated_total if allocated_total else None,
+        "whole_deployable_package_measured": False,
+        "scope_ratio_note": (
+            "Scoped weight-storage ratio only. It uses exact dense tensor payload "
+            "bytes and actual checkpoint file sizes; package-level metadata and "
+            "loader/runtime files are outside this layer-weight accounting."
         ),
         "layers": per_layer,
     }
@@ -561,12 +566,14 @@ def main():
         "torch": torch.__version__,
         "gpu": torch.cuda.get_device_name(),
         "model_compatibility": compatibility,
-        "model_layer_count": model_layer_count,
-        "candidate_layers": list(layers),
+        "quality_evaluation_model_layer_count": model_layer_count,
+        "allocation_scope_layers": list(layers),
+        "allocation_scope_layer_count": len(layers),
         "eligible_candidate_layers": list(eligible_layers),
         "protected_layers": sorted(protected_layers),
         "requested_compressed_count": compress_count,
-        "resulting_dense_layer_count": model_layer_count - compress_count,
+        "compressed_layer_count_in_scope": compress_count,
+        "dense_layer_count_in_scope": len(layers) - compress_count,
         "max_ppl": args.max_ppl,
         "selected_allocation": {
             "compressed_layers": sorted(selected),
