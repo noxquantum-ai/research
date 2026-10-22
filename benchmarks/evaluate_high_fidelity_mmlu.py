@@ -52,6 +52,19 @@ def install_pinned_mmlu_loader(datasets_module):
     return calls, original
 
 
+def audit_mmlu_checkpoint(args):
+    """Validate the NEC artifact against the explicit MMLU invocation settings."""
+    return validate_high_fidelity_checkpoint(
+        args.checkpoint_dir,
+        expected_calibration_tokens=args.expected_calibration_tokens,
+        expected_heldout_tokens=args.expected_heldout_tokens,
+        allow_partial_prefix=args.allow_partial_prefix,
+        expected_quantization_schedule=args.expected_quantization_schedule,
+        expected_cg_threshold=args.expected_cg_threshold,
+        expected_cg_iterations=args.expected_cg_iterations,
+    )
+
+
 def summarize_mmlu_harness(results: dict, subjects: list[str], *, full_test: bool) -> dict:
     expected_tasks = {f"mmlu_{subject}" for subject in subjects}
     task_results = results.get("results", {})
@@ -146,6 +159,12 @@ def main() -> None:
     parser.add_argument("--checkpoint-dir", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--allow-partial-prefix", action="store_true",
+                        help="Evaluate an explicit contiguous NEC layer prefix with a dense suffix")
+    parser.add_argument("--expected-quantization-schedule", choices=("in_sweep", "post_sweep"),
+                        default="in_sweep")
+    parser.add_argument("--expected-cg-threshold", type=int, default=4096)
+    parser.add_argument("--expected-cg-iterations", type=int, default=6)
     parser.add_argument("--expected-calibration-tokens", type=int, default=256)
     parser.add_argument("--expected-heldout-tokens", type=int, default=128)
     parser.add_argument("--smoke-limit", type=int, default=0,
@@ -157,6 +176,8 @@ def main() -> None:
         parser.error("--checkpoint-dir is required for --variant high_fidelity_nec")
     if args.variant == "dense" and args.checkpoint_dir is not None:
         parser.error("--checkpoint-dir is forbidden for --variant dense")
+    if args.variant == "dense" and args.allow_partial_prefix:
+        parser.error("--allow-partial-prefix is valid only for --variant high_fidelity_nec")
     if args.output.exists():
         raise FileExistsError(f"Refusing to overwrite {args.output}")
     raw_path = args.output.with_name(args.output.stem + ".lm_eval_raw.json")
@@ -180,18 +201,12 @@ def main() -> None:
         subjects = sorted({row["subject"] for row in splits["test"]})
         if len(subjects) != 57:
             raise RuntimeError("Pinned MMLU audit did not find 57 subjects")
-        audit = (
-            validate_high_fidelity_checkpoint(
-                args.checkpoint_dir,
-                expected_calibration_tokens=args.expected_calibration_tokens,
-                expected_heldout_tokens=args.expected_heldout_tokens,
-            )
-            if args.variant == "high_fidelity_nec" else None
-        )
+        audit = audit_mmlu_checkpoint(args) if args.variant == "high_fidelity_nec" else None
         model, tokenizer, injected, compatibility, _ = load_model(
             args.checkpoint_dir,
             offload_folder=args.output.parent / "evaluation_offload",
             variant=args.variant,
+            allow_partial_prefix=args.allow_partial_prefix,
         )
         lm = HFLM(
             pretrained=model,
@@ -291,12 +306,19 @@ def main() -> None:
         "max_context_length": 4096,
         "use_cache": False,
         "seeds": {"python": 0, "numpy": 1234, "torch": 1234, "fewshot": 1234},
+        "compressed_layers": injected,
+        "partial_prefix": bool(args.allow_partial_prefix),
     }
     is_dense = args.variant == "dense"
     report = {
         "status": "COMPLETE" if full_test else "SMOKE_ONLY",
         "evaluation": f"{args.variant}_mmlu_5shot",
         "model_variant": args.variant,
+        "evaluation_scope": (
+            "compressed_layer_prefix_with_dense_suffix"
+            if args.allow_partial_prefix else "full_model"
+        ),
+        "partial_prefix": bool(args.allow_partial_prefix),
         "model_id": MODEL_ID,
         "model_revision": MODEL_REVISION,
         "model_tokenizer_compatibility": compatibility,

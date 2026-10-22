@@ -49,6 +49,7 @@ Each invocation runs exactly one stage and then stops:
   layer0-dev-ppl     Matched dense and one-layer NEC PPL on raw WikiText-2 validation
   layer0-3-reference Extend the verified layer-0 artifact to layers 0-3 (same compiler settings)
   layer0-3-dev-ppl   Matched dense and four-layer NEC PPL on raw WikiText-2 validation
+  layer0-3-dev-mmlu  Matched dense and four-layer NEC 5-shot MMLU on all subjects
   layer0-pack-audit  Pack round-trip and held-out single-block output check
   status             Print saved status without running computation
 
@@ -610,6 +611,37 @@ case "$STAGE" in
         --nec "$eval_dir/nec.json" \
         --output "$eval_dir/comparison/report.json" \
         --block-tokens 512 --bootstrap-repetitions 5000 --seed 20261021
+    ;;
+  layer0-3-dev-mmlu)
+    layer_dir="$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg"
+    eval_dir="$layer_dir/evaluation-dev-prefix4"
+    if [[ ! -f "$layer_dir/model_manifest.json" || ! -f "$layer_dir/compressed_layer_3.pt" ]]; then
+      echo "ERROR: layer0-3-dev-mmlu requires completed NEC artifacts for layers 0-3." >&2
+      exit 2
+    fi
+    if [[ -e "$eval_dir/dense_mmlu_5shot.json" || -e "$eval_dir/nec_mmlu_5shot.json" || \
+          -e "$eval_dir/dense_mmlu_5shot.lm_eval_raw.json" || -e "$eval_dir/nec_mmlu_5shot.lm_eval_raw.json" ]]; then
+      echo "ERROR: MMLU output already exists; refusing to overwrite. Inspect the existing result files." >&2
+      exit 2
+    fi
+    export NEC_EVAL_GPU_MEMORY_GIB="${NEC_EVAL_GPU_MEMORY_GIB:-32}"
+    export NEC_EVAL_CPU_MEMORY_GIB="${NEC_EVAL_CPU_MEMORY_GIB:-48}"
+    run_logged layer0-3-dense-dev-mmlu "$eval_dir/dense-mmlu" \
+      "$VENV_DIR/bin/python" benchmarks/evaluate_high_fidelity_mmlu.py \
+        --variant dense \
+        --output "$eval_dir/dense_mmlu_5shot.json" \
+        --batch-size 1 --smoke-first
+    run_logged layer0-3-nec-dev-mmlu "$eval_dir/nec-mmlu" \
+      "$VENV_DIR/bin/python" benchmarks/evaluate_high_fidelity_mmlu.py \
+        --variant high_fidelity_nec \
+        --checkpoint-dir "$layer_dir" \
+        --output "$eval_dir/nec_mmlu_5shot.json" \
+        --allow-partial-prefix \
+        --expected-calibration-tokens 4096 \
+        --expected-heldout-tokens 1024 \
+        --expected-quantization-schedule post_sweep \
+        --expected-cg-threshold 4096 --expected-cg-iterations 48 \
+        --batch-size 1 --smoke-first
     ;;
   layer0-pack-audit)
     layer_dir="$QUAL_ROOT/layer0/reference-post-sweep-q4-48cg"

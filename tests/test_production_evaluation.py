@@ -11,6 +11,7 @@ import torch
 from nox.compiler import nox_hybrid_dmrg_decompose, quantize_4bit_grouped
 from nox.block_compiler import compile_transformer_block
 from benchmarks.evaluate_high_fidelity_mmlu import (
+    audit_mmlu_checkpoint,
     audit_mmlu_response_finiteness,
     install_pinned_mmlu_loader,
     summarize_mmlu_harness,
@@ -472,6 +473,32 @@ class ProductionEvaluationTests(unittest.TestCase):
         self.assertEqual(module.received[0][1]["revision"], MMLU_REVISION)
         self.assertEqual(calls[0]["revision"], MMLU_REVISION)
         module.load_dataset = original
+
+    def test_mmlu_checkpoint_audit_forwards_explicit_partial_prefix_contract(self):
+        expected = {"compressed_layers": [0, 1, 2, 3]}
+        args = SimpleNamespace(
+            checkpoint_dir=Path("prefix4"),
+            expected_calibration_tokens=4096,
+            expected_heldout_tokens=1024,
+            allow_partial_prefix=True,
+            expected_quantization_schedule="post_sweep",
+            expected_cg_threshold=4096,
+            expected_cg_iterations=48,
+        )
+        with patch(
+            "benchmarks.evaluate_high_fidelity_mmlu.validate_high_fidelity_checkpoint",
+            return_value=expected,
+        ) as validate:
+            self.assertIs(audit_mmlu_checkpoint(args), expected)
+        validate.assert_called_once_with(
+            Path("prefix4"),
+            expected_calibration_tokens=4096,
+            expected_heldout_tokens=1024,
+            allow_partial_prefix=True,
+            expected_quantization_schedule="post_sweep",
+            expected_cg_threshold=4096,
+            expected_cg_iterations=48,
+        )
 
     def test_harness_summary_is_question_weighted_and_complete(self):
         subjects = ["a", "b"]
