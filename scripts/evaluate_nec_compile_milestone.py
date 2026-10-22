@@ -79,7 +79,7 @@ def main() -> None:
     injected = inject_nox_checkpoints(
         model, str(args.checkpoint_dir), expected_layers=expected_layers,
     )
-    if injected != expected_layers:
+    if sorted(injected) != expected_layers:
         raise RuntimeError(f"Injected layers {injected}; expected {expected_layers}")
     compressed = {
         layer: {
