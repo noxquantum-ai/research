@@ -19,7 +19,6 @@ sys.path.insert(0, str(ROOT))
 
 from benchmarks.benchmark_day3_cascade import sample_calibration_offsets
 from nox.block_compiler import scaled_dot_product_attention_2d
-from nox.compiler import reconstruct_from_artifact
 from nox.data import load_wikitext2_raw_split
 from nox.schmidt_correction import compile_schmidt_correction
 
@@ -50,6 +49,10 @@ def main() -> None:
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument("--capture-batch-windows", type=int, default=4)
     parser.add_argument("--rank", type=int, default=512)
+    parser.add_argument(
+        "--qkv-rank", type=int, default=None,
+        help="Schmidt correction rank for Q/K/V; defaults to --rank.",
+    )
     parser.add_argument("--ridge-ratio", type=float, default=0.02)
     parser.add_argument("--drift-compensation", type=float, default=1.0)
     parser.add_argument(
@@ -66,7 +69,8 @@ def main() -> None:
         raise FileExistsError("Schmidt output directory must be empty")
     if args.calibration_tokens % args.sequence_length:
         raise ValueError("calibration tokens must be divisible by sequence length")
-    if args.capture_batch_windows <= 0 or args.rank <= 0:
+    qkv_rank = args.rank if args.qkv_rank is None else args.qkv_rank
+    if args.capture_batch_windows <= 0 or args.rank <= 0 or qkv_rank <= 0:
         raise ValueError("batch window count and rank must be positive")
     args.output.mkdir(parents=True, exist_ok=True)
     device = torch.device(args.device)
@@ -139,15 +143,24 @@ def main() -> None:
         )
         dense_attention = layer.self_attn.o_proj.weight.detach().float() @ dense_context
 
-        reconstructed = {
-            name: reconstruct_from_artifact(
-                source_artifacts[name], device=device, dtype=torch.float32,
+        qkv_artifacts = {}
+        qkv_outputs = {}
+        for projection_offset, (name, target) in enumerate((
+            ("q_proj", dense_q), ("k_proj", dense_k), ("v_proj", dense_v),
+        )):
+            artifact, output = compile_schmidt_correction(
+                source_artifacts[name],
+                compressed_norm,
+                target,
+                rank=qkv_rank,
+                ridge_ratio=args.ridge_ratio,
+                seed=10_000 + 3 * index + projection_offset,
             )
-            for name in ("q_proj", "k_proj", "v_proj")
-        }
-        compressed_q = reconstructed["q_proj"] @ compressed_norm
-        compressed_k = reconstructed["k_proj"] @ compressed_norm
-        compressed_v = reconstructed["v_proj"] @ compressed_norm
+            qkv_artifacts[name] = artifact
+            qkv_outputs[name] = output
+        compressed_q = qkv_outputs["q_proj"]
+        compressed_k = qkv_outputs["k_proj"]
+        compressed_v = qkv_outputs["v_proj"]
         compressed_context = scaled_dot_product_attention_2d(
             compressed_q, compressed_k, compressed_v,
             n_heads, n_kv_heads, args.sequence_length,
@@ -173,9 +186,7 @@ def main() -> None:
         compressed_hidden = residual_hidden + mlp_output
 
         artifacts = {
-            "q_proj": source_artifacts["q_proj"],
-            "k_proj": source_artifacts["k_proj"],
-            "v_proj": source_artifacts["v_proj"],
+            **qkv_artifacts,
             "o_proj": corrected_o,
         }
         output_checkpoint = {
@@ -196,6 +207,11 @@ def main() -> None:
         record = {
             "layer": index,
             "rank": corrected_o["rank"],
+            "qkv_rank": qkv_rank,
+            "qkv_fit_error_after": {
+                name: qkv_artifacts[name]["relative_output_error_after"]
+                for name in ("q_proj", "k_proj", "v_proj")
+            },
             "o_payload_bytes": corrected_o["payload_bytes"],
             "attention_fit_error_before": corrected_o["relative_output_error_before"],
             "attention_fit_error_after": corrected_o["relative_output_error_after"],
@@ -205,7 +221,7 @@ def main() -> None:
         }
         layer_records.append(record)
         print("LAYER " + json.dumps(record), flush=True)
-        del dense_hidden, teacher_norm, compressed_norm, reconstructed
+        del dense_hidden, teacher_norm, compressed_norm, qkv_outputs
         torch.cuda.empty_cache() if device.type == "cuda" else None
 
     manifest = {
@@ -222,6 +238,7 @@ def main() -> None:
             "source": source_metadata,
         },
         "schmidt_rank": args.rank,
+        "qkv_schmidt_rank": qkv_rank,
         "ridge_ratio": args.ridge_ratio,
         "drift_compensation": args.drift_compensation,
         "teacher_target": args.teacher_target,
