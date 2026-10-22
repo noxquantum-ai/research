@@ -11,7 +11,11 @@ from nox.calibration import (
     accumulate_calibration_statistics,
 )
 from nox.compiler import (
+    _site1_design_frobenius_squared,
+    _site1_factorized_adjoint,
     _site1_factorized_normal_matvec,
+    _site2_design_frobenius_squared,
+    _site2_factorized_adjoint,
     _site2_factorized_normal_matvec,
     _low_rank_product_relative_error,
     _left_singular_system_from_gram,
@@ -54,6 +58,20 @@ class StreamingCalibrationTests(unittest.TestCase):
         expected = design.T @ (design @ vector)
         actual = _site1_factorized_normal_matvec(c0, x, right23, vector)
         torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
+        projected = torch.randn(
+            3, 2, 3, 7, 3, dtype=torch.float64,
+        )
+        expected_adjoint = design.T @ projected.reshape(-1, 3)
+        actual_adjoint = _site1_factorized_adjoint(
+            c0, x, right23, projected,
+        )
+        torch.testing.assert_close(
+            actual_adjoint, expected_adjoint, atol=1e-10, rtol=1e-10,
+        )
+        torch.testing.assert_close(
+            _site1_design_frobenius_squared(c0, x, right23),
+            torch.sum(design.square()), atol=1e-10, rtol=1e-10,
+        )
 
     def test_site2_factorized_normal_matvec_matches_explicit_design(self):
         torch.manual_seed(107)
@@ -68,6 +86,20 @@ class StreamingCalibrationTests(unittest.TestCase):
         expected = design.T @ (design @ vector)
         actual = _site2_factorized_normal_matvec(left01, x, c3, vector)
         torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
+        projected = torch.randn(
+            3, 2, 3, 7, 3, dtype=torch.float64,
+        )
+        expected_adjoint = design.T @ projected.reshape(-1, 3)
+        actual_adjoint = _site2_factorized_adjoint(
+            left01, x, c3, projected,
+        )
+        torch.testing.assert_close(
+            actual_adjoint, expected_adjoint, atol=1e-10, rtol=1e-10,
+        )
+        torch.testing.assert_close(
+            _site2_design_frobenius_squared(left01, x, c3),
+            torch.sum(design.square()), atol=1e-10, rtol=1e-10,
+        )
 
     def test_low_rank_product_error_matches_materialized_float64_objective(self):
         torch.manual_seed(108)

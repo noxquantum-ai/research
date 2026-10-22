@@ -124,6 +124,131 @@ def _site2_factorized_normal_matvec(left01, x, c3, vector):
     )
 
 
+def _site1_factorized_adjoint(c0, x, right23, projected):
+    """Apply the transpose of the site-1 design matrix."""
+    a, i, b = c0.shape
+    i_x, j, k, l, r = x.shape
+    d, e, g, k_r, l_r = right23.shape
+    if (i_x, k_r, l_r) != (i, k, l):
+        raise ValueError("Site-1 factor dimensions do not match")
+    if projected.shape[:4] != (a, e, g, r):
+        raise ValueError("Site-1 projected tensor dimensions do not match")
+    outputs = projected.shape[4]
+
+    right_matrix = (
+        right23.permute(0, 3, 4, 1, 2).contiguous()
+        .reshape(d * k * l, e * g)
+    )
+    middle_adjoint = (
+        projected.permute(0, 4, 3, 1, 2).contiguous()
+        .reshape(a * outputs * r, e * g)
+        @ right_matrix.T
+    )
+    middle_adjoint = (
+        middle_adjoint.reshape(a, outputs, r, d, k, l)
+        .permute(0, 3, 1, 4, 5, 2).contiguous()
+        .reshape(a * d * outputs, k * l * r)
+    )
+    x_matrix = x.reshape(i * j, k * l * r)
+    left_adjoint = middle_adjoint @ x_matrix.T
+    left_adjoint = (
+        left_adjoint.reshape(a, d, outputs, i, j)
+        .permute(0, 3, 1, 4, 2).contiguous()
+        .reshape(a * i, d * j * outputs)
+    )
+    result = c0.reshape(a * i, b).T @ left_adjoint
+    return result.reshape(b * d * j, outputs)
+
+
+def _site2_factorized_adjoint(left01, x, c3, projected):
+    """Apply the transpose of the site-2 design matrix."""
+    a, c, i, j, d = left01.shape
+    i_x, j_x, k, l, r = x.shape
+    f, g, l_c = c3.shape
+    if (i_x, j_x, l_c) != (i, j, l):
+        raise ValueError("Site-2 factor dimensions do not match")
+    if projected.shape[:4] != (a, c, g, r):
+        raise ValueError("Site-2 projected tensor dimensions do not match")
+    outputs = projected.shape[4]
+
+    left_matrix = (
+        left01.permute(4, 2, 3, 0, 1).contiguous()
+        .reshape(d * i * j, a * c)
+    )
+    middle_adjoint = (
+        projected.permute(4, 2, 3, 0, 1).contiguous()
+        .reshape(outputs * g * r, a * c)
+        @ left_matrix.T
+    )
+    middle_adjoint = (
+        middle_adjoint.reshape(outputs, g, r, d, i, j)
+        .permute(3, 0, 1, 4, 5, 2).contiguous()
+        .reshape(d * outputs * g, i * j * r)
+    )
+    x_matrix = (
+        x.permute(2, 3, 0, 1, 4).contiguous()
+        .reshape(k * l, i * j * r)
+    )
+    right_adjoint = middle_adjoint @ x_matrix.T
+    right_adjoint = (
+        right_adjoint.reshape(d, outputs, g, k, l)
+        .permute(0, 3, 1, 2, 4).contiguous()
+        .reshape(d * k * outputs, g * l)
+    )
+    result = right_adjoint @ c3.reshape(f, g * l).T
+    return (
+        result.reshape(d, k, outputs, f)
+        .permute(0, 3, 1, 2).contiguous()
+        .reshape(d * f * k, outputs)
+    )
+
+
+def _factorized_design_frobenius_squared(x_samples, left_gram, right_gram, sample_chunk=1024):
+    """Evaluate sum x.T (left_gram kron right_gram) x in bounded memory."""
+    total = torch.zeros((), device=x_samples.device, dtype=torch.float64)
+    for start in range(0, x_samples.shape[0], sample_chunk):
+        sample = x_samples[start:start + sample_chunk]
+        weighted = torch.matmul(left_gram, sample)
+        weighted = torch.matmul(weighted, right_gram)
+        total.add_(torch.sum(sample * weighted))
+    return total
+
+
+def _site1_design_frobenius_squared(c0, x, right23):
+    """Compute the exact site-1 design Frobenius norm without building it."""
+    _, i, _ = c0.shape
+    i_x, j, k, l, r = x.shape
+    d, e, g, k_r, l_r = right23.shape
+    if (i_x, k_r, l_r) != (i, k, l):
+        raise ValueError("Site-1 factor dimensions do not match")
+    left_gram = torch.einsum("aib,ajb->ij", c0, c0)
+    right_matrix = right23.reshape(d * e * g, k * l)
+    right_gram = right_matrix.T @ right_matrix
+    samples = (
+        x.permute(1, 4, 0, 2, 3).contiguous()
+        .reshape(j * r, i, k * l)
+    )
+    return _factorized_design_frobenius_squared(samples, left_gram, right_gram)
+
+
+def _site2_design_frobenius_squared(left01, x, c3):
+    """Compute the exact site-2 design Frobenius norm without building it."""
+    a, c, i, j, d = left01.shape
+    i_x, j_x, k, l, r = x.shape
+    f, g, l_c = c3.shape
+    if (i_x, j_x, l_c) != (i, j, l):
+        raise ValueError("Site-2 factor dimensions do not match")
+    left_matrix = left01.permute(0, 1, 4, 2, 3).reshape(a * c * d, i * j)
+    left_gram = left_matrix.T @ left_matrix
+    right_matrix = c3.reshape(f * g, l)
+    right_gram = right_matrix.T @ right_matrix
+    samples = (
+        x.permute(2, 4, 0, 1, 3).contiguous()
+        .reshape(k * r, i * j, l)
+    )
+    return _factorized_design_frobenius_squared(samples, left_gram, right_gram)
+
+
 def quantize_4bit_grouped(tensor, group_size=64, return_diagnostics=False):
     """Return 4-bit quantized/dequantized values in the input tensor's dtype.
 
@@ -1195,26 +1320,23 @@ def nox_hybrid_dmrg_decompose(
         # old eight-mode cap existed only to keep that design matrix below the
         # VRAM limit and caused hundreds of undersized GPU launches per step.
         step_chunk1 = chunk_size
-        design_chunk1 = min(8, chunk_size)
 
         if D1 > cg_threshold:
-            # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
+            # Matrix-Free Warm-Started CG.  The RHS, norm, and normal operator
+            # all retain their tensor-network factorization on the GPU.
             rhs1 = torch.zeros((D1, o1), device=device, dtype=torch.float32)
             # Keep the norm reduction on-device. Calling .item() for every
             # calibration chunk serializes the CUDA stream and materially
             # slows the matrix-free path.
             # FP64 preserves the previous Python-float accumulation precision;
             # only scalar additions use FP64, not the expensive contractions.
-            sum_frob1 = torch.zeros((), device=device, dtype=torch.float64)
-            for r_start in range(0, r_cov, design_chunk1):
-                r_end = min(r_start + design_chunk1, r_cov)
-                L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
-                Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
-                del L0_c
-                Y1_c = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1).reshape(-1, o1)
-                rhs1.addmm_(Z1_c.T, Y1_c)
-                sum_frob1.add_(torch.sum(Z1_c.square()))
-                del Z1_c, Y1_c
+            sum_frob1 = _site1_design_frobenius_squared(c0, X_red, R23)
+            for r_start in range(0, r_cov, step_chunk1):
+                r_end = min(r_start + step_chunk1, r_cov)
+                y1 = Y_red[..., r_start:r_end].permute(0, 2, 3, 4, 1)
+                rhs1.add_(_site1_factorized_adjoint(
+                    c0, X_red[..., r_start:r_end], R23, y1,
+                ))
 
             reg_scale1 = cur_gamma * (sum_frob1 / D1 + 1e-6)
             rhs1.add_(reg_scale1 * c1_prior)
@@ -1314,22 +1436,18 @@ def nox_hybrid_dmrg_decompose(
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
         step_chunk2 = chunk_size
-        design_chunk2 = min(8, chunk_size)
 
         if D2 > cg_threshold:
-            # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
+            # Matrix-Free Warm-Started CG through the same factorized operator.
             rhs2 = torch.zeros((D2, o2), device=device, dtype=torch.float32)
             # As at site 1, avoid a host synchronization for every chunk.
-            sum_frob2 = torch.zeros((), device=device, dtype=torch.float64)
-            for r_start in range(0, r_cov, design_chunk2):
-                r_end = min(r_start + design_chunk2, r_cov)
-                L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
-                Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
-                del L01_X_c
-                Y2_c = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2).reshape(-1, o2)
-                rhs2.addmm_(Z2_c.T, Y2_c)
-                sum_frob2.add_(torch.sum(Z2_c.square()))
-                del Z2_c, Y2_c
+            sum_frob2 = _site2_design_frobenius_squared(L01, X_red, c3)
+            for r_start in range(0, r_cov, step_chunk2):
+                r_end = min(r_start + step_chunk2, r_cov)
+                y2 = Y_red[..., r_start:r_end].permute(0, 1, 3, 4, 2)
+                rhs2.add_(_site2_factorized_adjoint(
+                    L01, X_red[..., r_start:r_end], c3, y2,
+                ))
 
             reg_scale2 = cur_gamma * (sum_frob2 / D2 + 1e-6)
             rhs2.add_(reg_scale2 * c2_prior)
