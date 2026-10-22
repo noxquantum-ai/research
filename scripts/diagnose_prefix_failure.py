@@ -271,6 +271,18 @@ def main():
     parser.add_argument("--checkpoint-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--max-eval-tokens", type=int, default=4096)
+    parser.add_argument(
+        "--variants", nargs="+",
+        help="Optional names to evaluate; dense is required as the agreement reference.",
+    )
+    parser.add_argument(
+        "--kl-variants", nargs="*",
+        help="Optional subset of selected variant names for dense-teacher KL.",
+    )
+    parser.add_argument(
+        "--skip-traces", action="store_true",
+        help="Skip the saved-activation traces when only quality metrics are needed.",
+    )
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
@@ -328,6 +340,18 @@ def main():
         "dense": {},
         **{f"layer{i}_only": {i: PROJECTIONS} for i in range(4)},
         **{f"prefix{n}": {i: PROJECTIONS for i in range(n)} for n in (2, 3, 4)},
+        **{
+            f"pair_compress_{left}{right}": {
+                index: PROJECTIONS for index in (left, right)
+            }
+            for left, right in ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
+        },
+        **{
+            f"triple_compress_{indices}": {
+                index: PROJECTIONS for index in range(4) if str(index) in indices
+            }
+            for indices in ("012", "013", "023", "123")
+        },
         "prefix4_layer0_dense": {i: PROJECTIONS for i in range(1, 4)},
         "prefix4_layer3_dense": {i: PROJECTIONS for i in range(3)},
         "prefix4_boundaries_dense": {i: PROJECTIONS for i in (1, 2)},
@@ -335,13 +359,30 @@ def main():
         "prefix4_mlp_only": {i: PROJECTIONS[4:] for i in range(4)},
         "prefix4_fp32_decode_then_cast": {i: PROJECTIONS for i in range(4)},
     }
+    if args.variants is not None:
+        unknown = sorted(set(args.variants) - set(variants))
+        if unknown:
+            raise ValueError(f"Unknown diagnostic variants: {unknown}")
+        requested = set(args.variants)
+        if "dense" not in requested:
+            raise ValueError("--variants must include dense as the agreement reference")
+        variants = {name: value for name, value in variants.items() if name in requested}
     record["storage"] = storage_accounting(args.checkpoint_dir, dense, variants)
-    kl_variants = {
+    default_kl_variants = {
         "prefix4",
         "prefix4_layer0_dense",
         "prefix4_layer3_dense",
         "prefix4_boundaries_dense",
     }
+    kl_variants = (
+        set(args.kl_variants) if args.kl_variants is not None else default_kl_variants
+    )
+    unknown_kl = sorted(kl_variants - set(variants))
+    if unknown_kl:
+        raise ValueError(f"KL variants must be selected with --variants: {unknown_kl}")
+    record["ppl_protocol"]["selected_variants"] = list(variants)
+    record["ppl_protocol"]["kl_variants"] = sorted(kl_variants)
+    record["ppl_protocol"]["activation_traces_enabled"] = not args.skip_traces
     save()
     text, data = load_wikitext2_raw_split("validation")
     record["dataset"] = data
@@ -382,19 +423,20 @@ def main():
         print(f"RESULT {name} {json.dumps(record['ppl'][name])}", flush=True)
         save()
     del fp32decoded
-    offsets = manifest["run_identity"]["input_data"]["validation_window_offsets"]
-    saved_ids = torch.stack([ids[0, j:j + 128] for j in offsets])
-    for name, trace_ids in (("saved_validation_128", saved_ids), ("first2048_long", ids[:, :2048]),
-                            ("first2048_reset128", ids[:, :2048].reshape(-1, 128))):
-        print(f"PHASE=trace name={name}", flush=True)
-        traced, clean = trace(model, dense, compressed, trace_ids)
-        record["traces"][name] = traced
-        if name == "saved_validation_128":
-            record["saved_input_parity"] = {}
-            for i in range(4):
-                cached = torch.load(args.checkpoint_dir / f"dense_input_layer_{i}.pt", map_location="cpu", weights_only=True)["X_test"]
-                record["saved_input_parity"][str(i)] = summarize(cached.T, clean[i]["input"].reshape(-1, cached.shape[0]))
-        save()
+    if not args.skip_traces:
+        offsets = manifest["run_identity"]["input_data"]["validation_window_offsets"]
+        saved_ids = torch.stack([ids[0, j:j + 128] for j in offsets])
+        for name, trace_ids in (("saved_validation_128", saved_ids), ("first2048_long", ids[:, :2048]),
+                                ("first2048_reset128", ids[:, :2048].reshape(-1, 128))):
+            print(f"PHASE=trace name={name}", flush=True)
+            traced, clean = trace(model, dense, compressed, trace_ids)
+            record["traces"][name] = traced
+            if name == "saved_validation_128":
+                record["saved_input_parity"] = {}
+                for i in range(4):
+                    cached = torch.load(args.checkpoint_dir / f"dense_input_layer_{i}.pt", map_location="cpu", weights_only=True)["X_test"]
+                    record["saved_input_parity"][str(i)] = summarize(cached.T, clean[i]["input"].reshape(-1, cached.shape[0]))
+            save()
     record["status"] = "COMPLETE"
     record["peak_cuda_allocated_bytes"] = torch.cuda.max_memory_allocated()
     save()
