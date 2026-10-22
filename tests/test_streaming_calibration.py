@@ -11,6 +11,8 @@ from nox.calibration import (
     accumulate_calibration_statistics,
 )
 from nox.compiler import (
+    _site1_factorized_normal_matvec,
+    _site2_factorized_normal_matvec,
     _low_rank_product_relative_error,
     _left_singular_system_from_gram,
     nox_hybrid_dmrg_decompose,
@@ -39,6 +41,34 @@ from benchmarks.compare_streaming_projection_runs import compare as compare_stag
 
 
 class StreamingCalibrationTests(unittest.TestCase):
+    def test_site1_factorized_normal_matvec_matches_explicit_design(self):
+        torch.manual_seed(106)
+        c0 = torch.randn(3, 2, 4, dtype=torch.float64)
+        x = torch.randn(2, 5, 2, 3, 7, dtype=torch.float64)
+        right23 = torch.randn(6, 2, 3, 2, 3, dtype=torch.float64)
+        vector = torch.randn(4 * 6 * 5, 3, dtype=torch.float64)
+        left0 = torch.einsum("aib,ijklr->abjklr", c0, x)
+        design = torch.einsum(
+            "abjklr,degkl->aegrbdj", left0, right23,
+        ).reshape(-1, vector.shape[0])
+        expected = design.T @ (design @ vector)
+        actual = _site1_factorized_normal_matvec(c0, x, right23, vector)
+        torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
+
+    def test_site2_factorized_normal_matvec_matches_explicit_design(self):
+        torch.manual_seed(107)
+        left01 = torch.randn(3, 2, 2, 5, 4, dtype=torch.float64)
+        x = torch.randn(2, 5, 3, 2, 7, dtype=torch.float64)
+        c3 = torch.randn(6, 3, 2, dtype=torch.float64)
+        vector = torch.randn(4 * 6 * 3, 3, dtype=torch.float64)
+        left_x = torch.einsum("acijd,ijklr->acdkrl", left01, x)
+        design = torch.einsum(
+            "acdkrl,fgl->acgrdfk", left_x, c3,
+        ).reshape(-1, vector.shape[0])
+        expected = design.T @ (design @ vector)
+        actual = _site2_factorized_normal_matvec(left01, x, c3, vector)
+        torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
+
     def test_low_rank_product_error_matches_materialized_float64_objective(self):
         torch.manual_seed(108)
         left = torch.randn(19, 5)

@@ -13,6 +13,117 @@ from nox.tensor_order import (
 from nox.residual_codec import CODEC_TYPE, decode_groupwise
 
 
+def _site1_factorized_normal_matvec(c0, x, right23, vector):
+    """Apply the site-1 normal matrix without materializing its design matrix."""
+    a, i, b = c0.shape
+    i_x, j, k, l, r = x.shape
+    d, e, g, k_r, l_r = right23.shape
+    if (i_x, k_r, l_r) != (i, k, l):
+        raise ValueError("Site-1 factor dimensions do not match")
+    if vector.shape[0] != b * d * j:
+        raise ValueError("Site-1 vector width does not match the local core")
+    outputs = vector.shape[1]
+
+    c0_matrix = c0.reshape(a * i, b)
+    vector4 = vector.reshape(b, d, j, outputs)
+    left = c0_matrix @ vector4.reshape(b, d * j * outputs)
+    left = left.reshape(a, i, d, j, outputs)
+
+    x_matrix = x.reshape(i * j, k * l * r)
+    middle = (
+        left.permute(0, 2, 4, 1, 3).contiguous()
+        .reshape(a * d * outputs, i * j)
+        @ x_matrix
+    )
+    middle = middle.reshape(a, d, outputs, k, l, r)
+
+    right_matrix = (
+        right23.permute(0, 3, 4, 1, 2).contiguous()
+        .reshape(d * k * l, e * g)
+    )
+    projected = (
+        middle.permute(0, 2, 5, 1, 3, 4).contiguous()
+        .reshape(a * outputs * r, d * k * l)
+        @ right_matrix
+    )
+
+    middle_adjoint = projected @ right_matrix.T
+    middle_adjoint = (
+        middle_adjoint.reshape(a, outputs, r, d, k, l)
+        .permute(0, 3, 1, 4, 5, 2).contiguous()
+        .reshape(a * d * outputs, k * l * r)
+    )
+    left_adjoint = middle_adjoint @ x_matrix.T
+    left_adjoint = (
+        left_adjoint.reshape(a, d, outputs, i, j)
+        .permute(0, 3, 1, 4, 2).contiguous()
+        .reshape(a * i, d * j * outputs)
+    )
+    result = c0_matrix.T @ left_adjoint
+    return result.reshape(b * d * j, outputs)
+
+
+def _site2_factorized_normal_matvec(left01, x, c3, vector):
+    """Apply the site-2 normal matrix without materializing its design matrix."""
+    a, c, i, j, d = left01.shape
+    i_x, j_x, k, l, r = x.shape
+    f, g, l_c = c3.shape
+    if (i_x, j_x, l_c) != (i, j, l):
+        raise ValueError("Site-2 factor dimensions do not match")
+    if vector.shape[0] != d * f * k:
+        raise ValueError("Site-2 vector width does not match the local core")
+    outputs = vector.shape[1]
+
+    vector4 = vector.reshape(d, f, k, outputs)
+    c3_matrix = c3.reshape(f, g * l)
+    right = (
+        vector4.permute(0, 2, 3, 1).contiguous()
+        .reshape(d * k * outputs, f)
+        @ c3_matrix
+    )
+    right = right.reshape(d, k, outputs, g, l)
+
+    x_matrix = (
+        x.permute(2, 3, 0, 1, 4).contiguous()
+        .reshape(k * l, i * j * r)
+    )
+    middle = (
+        right.permute(0, 2, 3, 1, 4).contiguous()
+        .reshape(d * outputs * g, k * l)
+        @ x_matrix
+    )
+    middle = middle.reshape(d, outputs, g, i, j, r)
+
+    left_matrix = (
+        left01.permute(4, 2, 3, 0, 1).contiguous()
+        .reshape(d * i * j, a * c)
+    )
+    projected = (
+        middle.permute(1, 2, 5, 0, 3, 4).contiguous()
+        .reshape(outputs * g * r, d * i * j)
+        @ left_matrix
+    )
+
+    middle_adjoint = projected @ left_matrix.T
+    middle_adjoint = (
+        middle_adjoint.reshape(outputs, g, r, d, i, j)
+        .permute(3, 0, 1, 4, 5, 2).contiguous()
+        .reshape(d * outputs * g, i * j * r)
+    )
+    right_adjoint = middle_adjoint @ x_matrix.T
+    right_adjoint = (
+        right_adjoint.reshape(d, outputs, g, k, l)
+        .permute(0, 3, 1, 2, 4).contiguous()
+        .reshape(d * k * outputs, g * l)
+    )
+    result = right_adjoint @ c3_matrix.T
+    return (
+        result.reshape(d, k, outputs, f)
+        .permute(0, 3, 1, 2).contiguous()
+        .reshape(d * f * k, outputs)
+    )
+
+
 def quantize_4bit_grouped(tensor, group_size=64, return_diagnostics=False):
     """Return 4-bit quantized/dequantized values in the input tensor's dtype.
 
@@ -1079,7 +1190,11 @@ def nox_hybrid_dmrg_decompose(
             )
         R23 = torch.einsum("dekf,fgl->degkl", c2, c3)
         c1_prior = c1.permute(0, 3, 2, 1).reshape(D1, o1)
-        step_chunk1 = 8 if D1 > cg_threshold else chunk_size
+        # The factorized CG operator does not materialize the enormous local
+        # design matrix, so it can use the normal calibration chunk size.  The
+        # old eight-mode cap existed only to keep that design matrix below the
+        # VRAM limit and caused hundreds of undersized GPU launches per step.
+        step_chunk1 = chunk_size
 
         if D1 > cg_threshold:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
@@ -1111,12 +1226,9 @@ def nox_hybrid_dmrg_decompose(
                 HP = reg_scale1 * P_in
                 for r_start in range(0, r_cov, step_chunk1):
                     r_end = min(r_start + step_chunk1, r_cov)
-                    L0_c = torch.einsum("aib,ijklr->abjklr", c0, X_red[..., r_start:r_end])
-                    Z1_c = torch.einsum("abjklr,degkl->aegrbdj", L0_c, R23).reshape(-1, D1)
-                    del L0_c
-                    v = torch.mm(Z1_c, P_in)
-                    HP.addmm_(Z1_c.T, v)
-                    del Z1_c, v
+                    HP.add_(_site1_factorized_normal_matvec(
+                        c0, X_red[..., r_start:r_end], R23, P_in,
+                    ))
                 return HP
 
             HC1 = matvec1(c1_prior)
@@ -1200,7 +1312,7 @@ def nox_hybrid_dmrg_decompose(
             )
         L01 = torch.einsum("aib,bcjd->acijd", c0, c1)
         c2_prior = c2.permute(0, 3, 2, 1).reshape(D2, o2)
-        step_chunk2 = 8 if D2 > cg_threshold else chunk_size
+        step_chunk2 = chunk_size
 
         if D2 > cg_threshold:
             # Matrix-Free Warm-Started CG (Peak VRAM: ~2 GB instead of 25.7 GB)
@@ -1228,12 +1340,9 @@ def nox_hybrid_dmrg_decompose(
                 HP = reg_scale2 * P_in
                 for r_start in range(0, r_cov, step_chunk2):
                     r_end = min(r_start + step_chunk2, r_cov)
-                    L01_X_c = torch.einsum("acijd,ijklr->acdkrl", L01, X_red[..., r_start:r_end])
-                    Z2_c = torch.einsum("acdkrl,fgl->acgrdfk", L01_X_c, c3).reshape(-1, D2)
-                    del L01_X_c
-                    v = torch.mm(Z2_c, P_in)
-                    HP.addmm_(Z2_c.T, v)
-                    del Z2_c, v
+                    HP.add_(_site2_factorized_normal_matvec(
+                        L01, X_red[..., r_start:r_end], c3, P_in,
+                    ))
                 return HP
 
             HC2 = matvec2(c2_prior)
