@@ -175,7 +175,7 @@ def main() -> None:
         "--scope-layers",
         help="Layer-weight scope used for this experiment; defaults to candidate layers",
     )
-    parser.add_argument("--max-dense-weight-fraction", type=float, default=0.25)
+    parser.add_argument("--max-dense-weight-fraction", type=float)
     parser.add_argument(
         "--max-dense-layers", type=int,
         help="Maximum dense layer count within the candidate layer scope",
@@ -186,12 +186,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--compression-targets", type=float, nargs="+", default=(3.0, 10.0),
-        help="Scoped layer-storage ratios to assess; default: 3x 10x",
+        help="Compression ratios to assess; default: 3x 10x",
     )
     parser.add_argument("--output-json", type=Path)
     args = parser.parse_args()
 
-    if not 0 <= args.max_dense_weight_fraction <= 1:
+    if args.max_dense_weight_fraction is not None and not 0 <= args.max_dense_weight_fraction <= 1:
         parser.error("--max-dense-weight-fraction must be between 0 and 1")
     if args.max_dense_layers is not None and args.max_dense_layers < 0:
         parser.error("--max-dense-layers must be nonnegative")
@@ -271,7 +271,8 @@ def main() -> None:
                 ),
                 "dense_weight_payload_fraction": dense_payload / scope_weight_payload,
                 "meets_max_dense_weight_fraction": (
-                    dense_payload / scope_weight_payload <= args.max_dense_weight_fraction
+                    None if args.max_dense_weight_fraction is None
+                    else dense_payload / scope_weight_payload <= args.max_dense_weight_fraction
                 ),
                 "meets_max_dense_layer_count": (
                     args.max_dense_layers is None
@@ -321,7 +322,7 @@ def main() -> None:
     max_checkpoint_bytes_for_10x = ten_x_budget - dense_payload_after_all
 
     report = {
-        "report_type": "CPU-only NEC 16-layer-scope storage feasibility preflight",
+        "report_type": f"CPU-only NEC storage feasibility preflight ({len(scope_layers)}-layer scope)",
         "model": {
             "source_snapshot": str(args.model_dir),
             "source_serialized_model_bytes": model["model_bytes"],
@@ -349,15 +350,35 @@ def main() -> None:
                     max(0, max_checkpoint_bytes_for_10x) / len(candidate_layers)
                 ),
                 "dense_scope_payload_alone_exceeds_10x_budget": max_checkpoint_bytes_for_10x < 0,
+                "whole_model_max_checkpoint_bytes_before_omitted_overhead": max(
+                    0,
+                    model["model_bytes"] / 10
+                    - (model["model_bytes"] - all_candidates_compressed_payload),
+                ) if args.whole_model_storage else None,
+                "whole_model_max_average_checkpoint_bytes_before_omitted_overhead": max(
+                    0,
+                    (
+                        model["model_bytes"] / 10
+                        - (model["model_bytes"] - all_candidates_compressed_payload)
+                    ) / len(candidate_layers),
+                ) if args.whole_model_storage else None,
+                "whole_model_fixed_bytes_alone_exceed_10x_budget": (
+                    model["model_bytes"] - all_candidates_compressed_payload
+                    > model["model_bytes"] / 10
+                ) if args.whole_model_storage else None,
             },
         },
         "objective_requirements": {
-            "primary_goal": "maximize measured serialized compression within the 16-layer experiment scope subject to quality constraints",
-            "aspirational_ratio_within_scope": 10.0,
+            "primary_goal": (
+                "maximize measured whole-model serialized compression subject to quality constraints"
+                if args.whole_model_storage else
+                "maximize measured serialized compression within the selected layer scope subject to quality constraints"
+            ),
+            "aspirational_ratio": 10.0,
             "3x_is_insufficient": True,
             "max_dense_weight_fraction_is_a_ceiling": args.max_dense_weight_fraction,
             "max_dense_layer_count_in_scope": args.max_dense_layers,
-            "compression_ratio_definition": "dense tensor payload bytes for the scoped layers divided by scoped dense tensor payload plus serialized NEC checkpoint bytes",
+            "compression_ratio_definition": "dense tensor payload bytes for the selected layer scope divided by remaining dense tensor payload plus serialized NEC checkpoint bytes",
             "ratio_targets_assessed": args.compression_targets,
             "whole_model_storage_assessed": args.whole_model_storage,
             "whole_model_ratio_definition": (
@@ -366,9 +387,9 @@ def main() -> None:
             ),
         },
         "limitations": [
-            "Scoped package sizes and ratios are lower bounds / upper bounds: dense tensor serialization headers and other package overhead are omitted.",
+            "Estimated package sizes and ratios are lower bounds / upper bounds: rebuilt dense tensor serialization headers and other package overhead are omitted.",
             "Missing checkpoint sizes use the observed candidate artifacts as estimates.",
-            "This report is scoped to the selected 16 layers and makes no storage claim about layers outside that scope.",
+            "Scoped ratios include only candidate layer tensor payloads; whole-model ratios include all source model files and are still preflight bounds.",
             "Quality feasibility is determined only by the measured PPL/KL evaluation, not this storage preflight.",
             "Any later deployable-model compression claim requires materializing and byte-counting its complete package separately.",
         ],
