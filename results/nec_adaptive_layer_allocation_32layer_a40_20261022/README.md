@@ -26,6 +26,39 @@ python scripts/run_nec_full32_milestone_stages.py \
   --log-dir /workspace/runs/nec-streaming-qualification/logs
 ```
 
+## Time-capped compilation profile
+
+The high-accuracy command above uses two DMRG sweeps and 48 CG iterations.
+Early A40 timings showed that this setting is too slow for the requested
+turnaround: the four attention projections in layer 4 took about 70 minutes,
+and its first Gate projection sweep took another 27.5 minutes. The live run
+was stopped before writing a new layer checkpoint; the original four saved
+artifacts remain unchanged.
+
+For a consistent fast-profile experiment, use a fresh checkpoint directory and
+compile all 32 layers with one sweep and six CG iterations. This is an
+approximately 16-fold reduction in the dominant solver work relative to the
+two-sweep/48-iteration profile. That speed estimate is based on current A40
+timings and is not a measured end-to-end completion time. The six-iteration
+control has known local functional-parity risk, and one sweep may reduce
+approximation quality further. Preserve the full-model quality checkpoints at
+8, 16, 24, and 32 candidates; treat any PPL, KL, and allocation result as
+measured, not assumed.
+
+```bash
+python scripts/run_nec_full32_milestone_stages.py \
+  --checkpoint-dir /workspace/runs/nec-adaptive-layer-allocation-32layer_fast_a40_20261022/checkpoints \
+  --output-dir /workspace/runs/nec-adaptive-layer-allocation-32layer_fast_a40_20261022/milestones \
+  --log-dir /workspace/runs/nec-adaptive-layer-allocation-32layer_fast_a40_20261022/logs \
+  --mpo-sweeps 1 --mpo-cg-iterations 6 --allow-fresh
+```
+
+This recompiles layers 0–31 uniformly rather than combining high-iteration
+checkpoints with lower-iteration ones. The final allocator still enforces the
+four-layer maximum dense allowance and PPL ≤ 10, and the deployable package is
+measured from serialized files. The ~10× whole-model aspiration remains
+visible; it is not implied by this faster profile.
+
 After the final 32-candidate checkpoint, the staged runner automatically runs
 the allocator below. The separate wait-and-run helper is also available when
 the compile runner was already active before that final-allocation hook was
