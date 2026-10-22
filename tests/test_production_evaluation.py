@@ -17,6 +17,7 @@ from benchmarks.evaluate_high_fidelity_mmlu import (
 )
 from runpod_execution.nec_high_fidelity.gpu_qualification import compare_mmlu_smokes
 from benchmarks.evaluate_high_fidelity_nec import (
+    cuda_peak_memory_allocated,
     evaluation_memory_budget,
     reset_cuda_peak_memory_stats,
     save_top1_predictions,
@@ -234,13 +235,22 @@ class ProductionEvaluationTests(unittest.TestCase):
     def test_reset_cuda_peak_stats_uses_explicit_cuda_devices(self):
         with (
             patch("torch.cuda.device_count", return_value=2),
+            patch("torch.cuda.device") as select_device,
             patch("torch.cuda.reset_peak_memory_stats") as reset,
         ):
             reset_cuda_peak_memory_stats()
-        self.assertEqual(
-            [call.args[0] for call in reset.call_args_list],
-            [torch.device("cuda", 0), torch.device("cuda", 1)],
-        )
+        self.assertEqual([call.args[0] for call in select_device.call_args_list], [0, 1])
+        self.assertEqual([call.args for call in reset.call_args_list], [(), ()])
+
+    def test_cuda_peak_allocated_reads_each_device_in_context(self):
+        with (
+            patch("torch.cuda.device_count", return_value=2),
+            patch("torch.cuda.device") as select_device,
+            patch("torch.cuda.max_memory_allocated", side_effect=[100, 200]) as peak,
+        ):
+            self.assertEqual(cuda_peak_memory_allocated(), {"0": 100, "1": 200})
+        self.assertEqual([call.args[0] for call in select_device.call_args_list], [0, 1])
+        self.assertEqual([call.args for call in peak.call_args_list], [(), ()])
 
     def test_runpod_memory_caps_adapt_to_hardware_and_allow_explicit_override(self):
         gib = 1024**3

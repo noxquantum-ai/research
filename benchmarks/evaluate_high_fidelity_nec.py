@@ -191,9 +191,24 @@ def evaluation_memory_budget(gpu_count: int) -> dict[int | str, str]:
 
 
 def reset_cuda_peak_memory_stats() -> None:
-    """Reset allocator peaks using explicit devices (PyTorch 2.11 rejects int IDs here)."""
+    """Reset allocator peaks per device using the current-device API.
+
+    The RunPod PyTorch 2.11 build rejects every explicit device argument to
+    ``reset_peak_memory_stats`` (including ``torch.device('cuda:0')``), while
+    the no-argument form works for the current device.
+    """
     for index in range(torch.cuda.device_count()):
-        torch.cuda.reset_peak_memory_stats(torch.device("cuda", index))
+        with torch.cuda.device(index):
+            torch.cuda.reset_peak_memory_stats()
+
+
+def cuda_peak_memory_allocated() -> dict[str, int]:
+    """Read allocator peaks without relying on backend-specific device arguments."""
+    result = {}
+    for index in range(torch.cuda.device_count()):
+        with torch.cuda.device(index):
+            result[str(index)] = int(torch.cuda.max_memory_allocated())
+    return result
 
 
 def main() -> None:
@@ -462,10 +477,7 @@ def main() -> None:
             "python": sys.version,
             "platform": platform.platform(),
             "package_versions": versions,
-            "cuda_peak_memory_bytes": {
-                str(index): int(torch.cuda.max_memory_allocated(torch.device("cuda", index)))
-                for index in range(torch.cuda.device_count())
-            },
+            "cuda_peak_memory_bytes": cuda_peak_memory_allocated(),
             "hf_device_map": getattr(model, "hf_device_map", None),
         },
         "projection_reconstruction_audit": reconstruction_diagnostics,
