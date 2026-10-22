@@ -18,15 +18,8 @@ def contiguous_checkpoint_count(checkpoint_dir: Path) -> int:
     return count
 
 
-def compile_args(
-    checkpoint_dir: Path,
-    stop_after_layer: int,
-    *,
-    mpo_sweeps: int = 2,
-    mpo_cg_iterations: int = 48,
-    resume: bool = True,
-) -> list[str]:
-    command = [
+def compile_args(checkpoint_dir: Path, stop_after_layer: int) -> list[str]:
+    return [
         sys.executable, "-u", "scripts/compile_high_fidelity.py",
         "--output", str(checkpoint_dir),
         "--start-layer", "0", "--end-layer", "31",
@@ -35,39 +28,22 @@ def compile_args(
         "--calibration-sampling", "uniform", "--validation-sampling", "uniform",
         "--calibration-backend", "full_matrix", "--calibration-windows-per-chunk", "4",
         "--statistics-dtype", "float64", "--calibration-activation-mode", "dense",
-        "--construction-mode", "independent", "--mpo-sweeps", str(mpo_sweeps),
+        "--construction-mode", "independent", "--mpo-sweeps", "2",
         "--mpo-alpha-awt", "0.5", "--mpo-quantization-schedule", "post_sweep",
-        "--mpo-cg-threshold", "4096", "--mpo-cg-iterations", str(mpo_cg_iterations),
+        "--mpo-cg-threshold", "4096", "--mpo-cg-iterations", "48",
         "--representation", "mpo4", "--operator-schmidt-weight-mix", "1.0",
         "--operator-schmidt-activation-mix", "1.0", "--attention-gauge", "none",
         "--mlp-gauge", "none", "--mlp-objective", "independent",
         "--mlp-product-ridge-ratio", "0.05", "--budget-allocation", "uniform",
         "--defect-bridge-mode", "none", "--pees-rank", "0", "--pees-tokens", "4096",
         "--pees-ridge-ratio", "0.01", "--max-checkpoint-multiplier", "1.25",
-        "--site-order", "0,1,2,3", "--device", "cuda:0",
+        "--site-order", "0,1,2,3", "--device", "cuda:0", "--resume",
     ]
-    if resume:
-        command.append("--resume")
-    return command
 
 
-def run_compile(
-    checkpoint_dir: Path,
-    log_path: Path,
-    milestone: int,
-    *,
-    mpo_sweeps: int,
-    mpo_cg_iterations: int,
-) -> None:
+def run_compile(checkpoint_dir: Path, log_path: Path, milestone: int) -> None:
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    resume = (checkpoint_dir / "model_manifest.json").is_file()
-    command = compile_args(
-        checkpoint_dir,
-        stop_after_layer=milestone - 1,
-        mpo_sweeps=mpo_sweeps,
-        mpo_cg_iterations=mpo_cg_iterations,
-        resume=resume,
-    )
+    command = compile_args(checkpoint_dir, stop_after_layer=milestone - 1)
     with log_path.open("a", encoding="utf-8") as log:
         log.write(f"\n=== compile stage through milestone {milestone} ===\n")
         log.flush()
@@ -154,23 +130,12 @@ def main() -> None:
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--log-dir", type=Path, required=True)
-    parser.add_argument("--mpo-sweeps", type=int, default=2)
-    parser.add_argument("--mpo-cg-iterations", type=int, default=48)
-    parser.add_argument(
-        "--allow-fresh", action="store_true",
-        help="Start a new checkpoint directory instead of requiring the four saved layer artifacts.",
-    )
     args = parser.parse_args()
-    initial_count = contiguous_checkpoint_count(args.checkpoint_dir)
-    has_manifest = (args.checkpoint_dir / "model_manifest.json").is_file()
-    if not has_manifest and not args.allow_fresh:
+    if not (args.checkpoint_dir / "model_manifest.json").is_file():
         raise FileNotFoundError("The resumable NEC checkpoint manifest is missing")
-    if not has_manifest and initial_count:
-        raise ValueError("A fresh checkpoint directory must not contain partial layer artifacts")
-    if has_manifest and initial_count < 4:
+    initial_count = contiguous_checkpoint_count(args.checkpoint_dir)
+    if initial_count < 4:
         raise ValueError(f"Expected the four existing layer checkpoints; found {initial_count}")
-    if args.mpo_sweeps < 0 or args.mpo_cg_iterations <= 0:
-        raise ValueError("MPO sweeps must be nonnegative and CG iterations must be positive")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -181,8 +146,6 @@ def main() -> None:
                 args.checkpoint_dir,
                 args.log_dir / "layer0-31-staged-compile.log",
                 milestone,
-                mpo_sweeps=args.mpo_sweeps,
-                mpo_cg_iterations=args.mpo_cg_iterations,
             )
         print(f"EVALUATING full model at {milestone}/32 compiled candidates", flush=True)
         run_milestone_evaluation(
