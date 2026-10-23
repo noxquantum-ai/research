@@ -25,8 +25,11 @@ from nox.operator_schmidt import (
 from nox.residual_codec import codec_payload_bytes, decode_groupwise, encode_groupwise
 
 
-LEGACY_CODEC_TYPE = "nec_packed_operator_schmidt_v1"
-CODEC_TYPE = "nec_packed_operator_schmidt_v2"
+LEGACY_CODEC_TYPES = (
+    "nec_packed_operator_schmidt_v1",
+    "nec_packed_operator_schmidt_v2",
+)
+CODEC_TYPE = "nec_packed_operator_schmidt_v3"
 
 
 def packed_matrix_payload_bytes(rows: int, columns: int, bits: int, group_size: int) -> int:
@@ -80,6 +83,31 @@ def rank_for_payload_budget(
             output_scale_count=output_scale_count,
         )
         if payload <= byte_budget:
+            low = middle
+        else:
+            high = middle - 1
+    return low
+
+
+def direct_schmidt_payload_bytes(
+    d_out: int, d_in: int, rank: int, bits: int, group_size: int,
+) -> int:
+    return (
+        packed_matrix_payload_bytes(rank, d_out, bits, group_size)
+        + packed_matrix_payload_bytes(rank, d_in, bits, group_size)
+    )
+
+
+def direct_rank_for_payload_budget(
+    d_out: int, d_in: int, byte_budget: int, bits: int, group_size: int,
+    *, maximum_rank: int,
+) -> int:
+    low, high = 0, min(d_out, d_in, maximum_rank)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if direct_schmidt_payload_bytes(
+            d_out, d_in, middle, bits, group_size,
+        ) <= byte_budget:
             low = middle
         else:
             high = middle - 1
@@ -180,14 +208,134 @@ def _quantized_als(
     return left, right, history
 
 
+def _fit_calibration_schmidt_branch(
+    residual_outputs: torch.Tensor,
+    calibration_inputs: torch.Tensor,
+    *,
+    byte_budget: int,
+    bits: int,
+    group_size: int,
+    fit_tokens: int,
+    ridge_ratio: float,
+    seed: int,
+) -> tuple[dict | None, torch.Tensor | None, dict]:
+    """Fit a byte-bounded Schmidt branch to residual behavior by direct ALS."""
+
+    d_out, tokens = residual_outputs.shape
+    d_in = int(calibration_inputs.shape[0])
+    sample_count = min(tokens, int(fit_tokens))
+    if byte_budget <= 0 or sample_count <= 0:
+        return None, None, {"rank": 0, "payload_bytes": 0}
+    rank = direct_rank_for_payload_budget(
+        d_out, d_in, byte_budget, bits, group_size,
+        maximum_rank=sample_count,
+    )
+    if rank <= 0:
+        return None, None, {"rank": 0, "payload_bytes": 0}
+
+    if sample_count == tokens:
+        indices = torch.arange(tokens, device=calibration_inputs.device)
+    else:
+        indices = torch.linspace(
+            0, tokens - 1, sample_count, device=calibration_inputs.device,
+        ).round().long()
+    inputs = calibration_inputs.float().index_select(1, indices)
+    residual = residual_outputs.float().index_select(1, indices)
+    u, values, vh = _truncated_svd(
+        residual, rank, oversample=8, power_iterations=1, seed=seed,
+    )
+    root = values[:rank].clamp_min(0).sqrt()
+    left = (u[:, :rank] * root[None, :]).T.contiguous()
+    temporal = (root[:, None] * vh[:rank]).contiguous()
+
+    input_gram = inputs.T @ inputs
+    input_ridge = ridge_ratio * input_gram.diagonal().mean().clamp_min(1e-12)
+    input_dual = torch.linalg.solve(
+        input_gram + input_ridge * torch.eye(
+            sample_count, device=input_gram.device, dtype=input_gram.dtype,
+        ),
+        inputs.T,
+    )
+    right = temporal @ input_dual
+    left = _quantize_dequantize(left, bits, group_size)
+    right = _quantize_dequantize(right, bits, group_size)
+
+    # One gradient-free alternating sweep uses every calibration token for the
+    # output core, then the sampled activation system for the input core.
+    all_inputs = calibration_inputs.float()
+    all_residual = residual_outputs.float()
+    coefficients = right @ all_inputs
+    coefficient_gram = coefficients @ coefficients.T
+    coefficient_ridge = ridge_ratio * coefficient_gram.diagonal().mean().clamp_min(1e-12)
+    left_t = torch.linalg.solve(
+        coefficient_gram + coefficient_ridge * torch.eye(
+            rank, device=coefficient_gram.device, dtype=coefficient_gram.dtype,
+        ),
+        (all_residual @ coefficients.T).T,
+    ).T
+    left = _quantize_dequantize(left_t.T.contiguous(), bits, group_size)
+
+    left_gram = left @ left.T
+    left_ridge = ridge_ratio * left_gram.diagonal().mean().clamp_min(1e-12)
+    desired_temporal = torch.linalg.solve(
+        left_gram + left_ridge * torch.eye(
+            rank, device=left_gram.device, dtype=left_gram.dtype,
+        ),
+        left @ residual,
+    )
+    right = _quantize_dequantize(desired_temporal @ input_dual, bits, group_size)
+
+    coefficients = right @ all_inputs
+    coefficient_gram = coefficients @ coefficients.T
+    coefficient_ridge = ridge_ratio * coefficient_gram.diagonal().mean().clamp_min(1e-12)
+    left_t = torch.linalg.solve(
+        coefficient_gram + coefficient_ridge * torch.eye(
+            rank, device=coefficient_gram.device, dtype=coefficient_gram.dtype,
+        ),
+        (all_residual @ coefficients.T).T,
+    ).T
+    left = _quantize_dequantize(left_t.T.contiguous(), bits, group_size)
+
+    correction = left.T @ right
+    predicted_residual = correction @ all_inputs
+    branch = {
+        "representation": "activation_residual_schmidt_branch",
+        "rank": rank,
+        "factor_bits": bits,
+        "group_size": group_size,
+        "left_codec": encode_groupwise(left, bits=bits, group_size=group_size),
+        "right_codec": encode_groupwise(right, bits=bits, group_size=group_size),
+        "fit_tokens": sample_count,
+        "gradient_free_als_sweeps": 1,
+    }
+    payload = codec_payload_bytes(branch["left_codec"]) + codec_payload_bytes(
+        branch["right_codec"],
+    )
+    branch["payload_bytes"] = int(payload)
+    diagnostics = {
+        "rank": rank,
+        "factor_bits": bits,
+        "payload_bytes": int(payload),
+        "residual_error_after_branch": _relative_frobenius(
+            all_residual, predicted_residual,
+        ),
+    }
+    return branch, correction, diagnostics
+
+
 def packed_schmidt_payload_bytes_from_artifact(artifact: dict) -> int:
     output_scale = artifact.get("output_scale")
-    return int(
+    payload = int(
         codec_payload_bytes(artifact["left_codec"])
         + codec_payload_bytes(artifact["right_codec"])
         + artifact["input_scale"].numel() * artifact["input_scale"].element_size()
         + (0 if output_scale is None else output_scale.numel() * output_scale.element_size())
     )
+    residual = artifact.get("calibration_schmidt_branch")
+    if residual is not None:
+        payload += codec_payload_bytes(residual["left_codec"])
+        payload += codec_payload_bytes(residual["right_codec"])
+    return int(payload)
 
 
 def reconstruct_packed_schmidt(
@@ -196,7 +344,7 @@ def reconstruct_packed_schmidt(
     device: str | torch.device = "cpu",
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
-    if artifact.get("codec_type") not in (LEGACY_CODEC_TYPE, CODEC_TYPE):
+    if artifact.get("codec_type") not in (*LEGACY_CODEC_TYPES, CODEC_TYPE):
         raise ValueError(f"unsupported packed Schmidt codec: {artifact.get('codec_type')!r}")
     left = decode_groupwise(artifact["left_codec"], device=device, dtype=torch.float32)
     right = decode_groupwise(artifact["right_codec"], device=device, dtype=torch.float32)
@@ -206,6 +354,15 @@ def reconstruct_packed_schmidt(
     if artifact.get("output_scale") is not None:
         output_scale = artifact["output_scale"].to(device=device, dtype=torch.float32)
         dense = dense * output_scale[:, None]
+    residual = artifact.get("calibration_schmidt_branch")
+    if residual is not None:
+        residual_left = decode_groupwise(
+            residual["left_codec"], device=device, dtype=torch.float32,
+        )
+        residual_right = decode_groupwise(
+            residual["right_codec"], device=device, dtype=torch.float32,
+        )
+        dense = dense + residual_left.T @ residual_right
     return dense.to(dtype=dtype)
 
 
@@ -220,6 +377,9 @@ def compile_packed_schmidt(
     bits_candidates: Iterable[int] = (2, 3, 4),
     group_size: int = 64,
     activation_alpha: float = 0.5,
+    calibration_branch_fraction: float = 0.0,
+    calibration_branch_bits: int = 3,
+    calibration_branch_fit_tokens: int = 512,
     als_sweeps: int = 1,
     ridge_ratio: float = 1e-5,
     n_heads: int = 32,
@@ -236,6 +396,14 @@ def compile_packed_schmidt(
         raise ValueError("byte_budget must be positive")
     if group_size <= 0 or als_sweeps < 0 or ridge_ratio < 0:
         raise ValueError("invalid group size or ALS controls")
+    if not 0 <= calibration_branch_fraction < 1:
+        raise ValueError("calibration_branch_fraction must be in [0, 1)")
+    if calibration_branch_bits not in (2, 3, 4):
+        raise ValueError("calibration_branch_bits must be 2, 3, or 4")
+    if calibration_branch_fit_tokens <= 0:
+        raise ValueError("calibration_branch_fit_tokens must be positive")
+    if calibration_branch_fraction and calibration_inputs is None:
+        raise ValueError("a calibration Schmidt branch requires calibration inputs")
     bits_values = tuple(dict.fromkeys(int(value) for value in bits_candidates))
     if not bits_values or any(value not in (2, 3, 4) for value in bits_values):
         raise ValueError("bits_candidates must contain only 2, 3, or 4")
@@ -270,9 +438,12 @@ def compile_packed_schmidt(
     conditioned = source * input_scale[None, :]
     unfolding = _matrix_to_unfolding(conditioned, layout)
 
+    branch_budget = math.floor(byte_budget * calibration_branch_fraction)
+    base_budget = byte_budget - branch_budget
+
     ranks = {
         bits: rank_for_payload_budget(
-            layout, byte_budget, bits, group_size,
+            layout, base_budget, bits, group_size,
             input_scale_count=d_in, output_scale_count=d_out,
         )
         for bits in bits_values
@@ -353,19 +524,40 @@ def compile_packed_schmidt(
         "input_scale": input_scale.to(device="cpu", dtype=torch.float16),
         "output_scale": output_scale.to(device="cpu", dtype=torch.float16),
         "byte_budget": int(byte_budget),
+        "base_byte_budget": int(base_budget),
+        "calibration_branch_byte_budget": int(branch_budget),
         "selection": selected,
         "candidate_frontier": candidates,
-        "construction": "canonical_schmidt_plus_gradient_free_quantized_als_and_output_leg_gauge",
+        "construction": "byte_bounded_block_sum_schmidt_mpo_with_gradient_free_als",
         "post_compression_healing": False,
         "dense_base_matrix": False,
         "sparse_sidecar": False,
     }
     artifact["payload_bytes"] = packed_schmidt_payload_bytes_from_artifact(artifact)
-    if artifact["payload_bytes"] > byte_budget:
+    if artifact["payload_bytes"] > base_budget:
         raise RuntimeError("serialized tensor payload exceeded the assigned byte budget")
     reconstructed = reconstruct_packed_schmidt(
         artifact, device=source.device, dtype=torch.float32,
     )
+    branch_diagnostics = None
+    if branch_budget:
+        residual_outputs = target_outputs - reconstructed @ calibration_inputs.float()
+        branch, correction, branch_diagnostics = _fit_calibration_schmidt_branch(
+            residual_outputs,
+            calibration_inputs,
+            byte_budget=branch_budget,
+            bits=calibration_branch_bits,
+            group_size=group_size,
+            fit_tokens=calibration_branch_fit_tokens,
+            ridge_ratio=max(ridge_ratio, 1e-4),
+            seed=seed + 10_000,
+        )
+        if branch is not None:
+            artifact["calibration_schmidt_branch"] = branch
+            reconstructed = reconstructed + correction
+        artifact["payload_bytes"] = packed_schmidt_payload_bytes_from_artifact(artifact)
+        if artifact["payload_bytes"] > byte_budget:
+            raise RuntimeError("Schmidt branches exceeded the assigned byte budget")
     diagnostics = {
         "layout": artifact["layout"],
         "selected_bits": bits,
@@ -379,6 +571,7 @@ def compile_packed_schmidt(
         "output_leg_scale_max": float(output_scale.max()),
         "output_leg_scale_mean": float(output_scale.mean()),
         "candidate_frontier": candidates,
+        "calibration_schmidt_branch": branch_diagnostics,
     }
     if calibration_inputs is not None:
         prediction = reconstructed @ calibration_inputs.float()

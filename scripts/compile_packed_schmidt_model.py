@@ -151,6 +151,9 @@ def main() -> None:
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument("--als-sweeps", type=int, default=1)
     parser.add_argument("--activation-alpha", type=float, default=0.5)
+    parser.add_argument("--calibration-branch-fraction", type=float, default=0.0)
+    parser.add_argument("--calibration-branch-bits", type=int, choices=(2, 3, 4), default=3)
+    parser.add_argument("--calibration-branch-fit-tokens", type=int, default=512)
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument(
@@ -170,6 +173,8 @@ def main() -> None:
         parser.error("metadata reserve must be positive")
     if not 0 <= args.activation_alpha <= 1:
         parser.error("--activation-alpha must be between zero and one")
+    if not 0 <= args.calibration_branch_fraction < 1:
+        parser.error("--calibration-branch-fraction must be in [0, 1)")
 
     config = json.loads((args.model_dir / "config.json").read_text())
     layer_count = int(config["num_hidden_layers"])
@@ -288,6 +293,9 @@ def main() -> None:
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
+                calibration_branch_fraction=args.calibration_branch_fraction,
+                calibration_branch_bits=args.calibration_branch_bits,
+                calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -314,6 +322,9 @@ def main() -> None:
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
             activation_alpha=args.activation_alpha,
+            calibration_branch_fraction=args.calibration_branch_fraction,
+            calibration_branch_bits=args.calibration_branch_bits,
+            calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -348,6 +359,9 @@ def main() -> None:
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
+                calibration_branch_fraction=args.calibration_branch_fraction,
+                calibration_branch_bits=args.calibration_branch_bits,
+                calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -373,6 +387,9 @@ def main() -> None:
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
             activation_alpha=args.activation_alpha,
+            calibration_branch_fraction=args.calibration_branch_fraction,
+            calibration_branch_bits=args.calibration_branch_bits,
+            calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -385,7 +402,7 @@ def main() -> None:
         checkpoint = {
             "layer_idx": layer,
             "compressed_artifacts": artifacts,
-            "compression_path": "nec_packed_operator_schmidt_v2",
+            "compression_path": "nec_packed_operator_schmidt_v3",
             "post_compression_healing": False,
         }
         torch.save(checkpoint, output_path)
@@ -443,6 +460,11 @@ def main() -> None:
         "factor_bits_candidates": list(args.factor_bits),
         "group_size": args.group_size,
         "activation_alpha": args.activation_alpha,
+        "calibration_schmidt_branch": {
+            "byte_fraction_per_operator": args.calibration_branch_fraction,
+            "factor_bits": args.calibration_branch_bits,
+            "fit_tokens": args.calibration_branch_fit_tokens,
+        },
         "gradient_free_als_sweeps": args.als_sweeps,
         "layers": layer_records,
         "serialized_checkpoint_bytes_present": checkpoint_bytes,
