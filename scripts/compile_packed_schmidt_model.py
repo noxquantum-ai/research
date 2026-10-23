@@ -218,6 +218,10 @@ def main() -> None:
     parser.add_argument("--joint-mlp-sweeps", type=int, default=0)
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
+    parser.add_argument(
+        "--initialization-output", type=Path,
+        help="Optional separate checkpoint directory for paired construction controls.",
+    )
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument(
@@ -280,6 +284,10 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=True)
     if not args.resume and any(args.output.iterdir()):
         raise FileExistsError("output directory must be empty unless --resume is used")
+    if args.initialization_output is not None:
+        if args.initialization_output.resolve() == args.output.resolve():
+            raise ValueError("initialization controls must use a separate directory")
+        args.initialization_output.mkdir(parents=True, exist_ok=True)
 
     # Derive the full 32-layer plan from source tensor sizes.  A partial pilot
     # receives the same per-operator allowance as the eventual full compile.
@@ -634,6 +642,17 @@ def main() -> None:
         artifacts[name] = artifact
         projection_records[name] = diagnostics
         joint_mlp_diagnostics = None
+        if args.initialization_output is not None:
+            initial_path = args.initialization_output / f"compressed_layer_{layer}.pt"
+            if initial_path.exists():
+                raise FileExistsError(initial_path)
+            torch.save({
+                "layer_idx": layer,
+                "compressed_artifacts": artifacts,
+                "compression_path": "nec_packed_operator_schmidt_v3",
+                "construction_stage": "before_joint_mlp_construction",
+                "post_compression_healing": False,
+            }, initial_path)
         if args.joint_mlp_sweeps:
             joint_artifacts, joint_weights, joint_mlp_diagnostics = (
                 construct_functional_schmidt_mlp(
