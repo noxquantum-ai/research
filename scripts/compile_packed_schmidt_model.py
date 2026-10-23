@@ -200,6 +200,7 @@ def main() -> None:
     parser.add_argument("--column-branch-fraction", type=float, default=0.0)
     parser.add_argument("--column-branch-bits", type=int, choices=(2, 3, 4), default=4)
     parser.add_argument("--column-branch-ridge-ratio", type=float, default=1e-3)
+    parser.add_argument("--complementary-branch-fraction", type=float, default=0.0)
     parser.add_argument("--swiglu-compensation", action="store_true")
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
@@ -232,7 +233,12 @@ def main() -> None:
         parser.error("--calibration-branch-ridge-ratio must be nonnegative")
     if not 0 <= args.column_branch_fraction < 1:
         parser.error("--column-branch-fraction must be in [0, 1)")
-    if args.calibration_branch_fraction + args.column_branch_fraction >= 1:
+    if not 0 <= args.complementary_branch_fraction < 1:
+        parser.error("--complementary-branch-fraction must be in [0, 1)")
+    if (
+        args.calibration_branch_fraction + args.column_branch_fraction
+        + args.complementary_branch_fraction >= 1
+    ):
         parser.error("combined calibration branch fractions must be below one")
     if args.column_branch_ridge_ratio < 0:
         parser.error("--column-branch-ridge-ratio must be nonnegative")
@@ -360,6 +366,16 @@ def main() -> None:
         output_path = args.output / f"compressed_layer_{layer}.pt"
         if args.resume and output_path.is_file():
             checkpoint = torch.load(output_path, map_location="cpu", weights_only=True)
+            for name, item in checkpoint["compressed_artifacts"].items():
+                if item["payload_bytes"] > per_layer_operator_budgets[layer][name]:
+                    raise ValueError(f"resumed layer {layer} {name} exceeds its byte budget")
+                if (
+                    packed_schmidt_coefficient_count_from_artifact(item)
+                    > per_layer_operator_coefficient_budgets[layer][name]
+                ):
+                    raise ValueError(
+                        f"resumed layer {layer} {name} exceeds its coefficient budget"
+                    )
             payload = sum(int(item["payload_bytes"]) for item in checkpoint["compressed_artifacts"].values())
             coefficient_count = sum(
                 packed_schmidt_coefficient_count_from_artifact(item)
@@ -433,6 +449,7 @@ def main() -> None:
                 column_branch_fraction=args.column_branch_fraction,
                 column_branch_bits=args.column_branch_bits,
                 column_branch_ridge_ratio=args.column_branch_ridge_ratio,
+                complementary_branch_fraction=args.complementary_branch_fraction,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -468,6 +485,7 @@ def main() -> None:
             column_branch_fraction=args.column_branch_fraction,
             column_branch_bits=args.column_branch_bits,
             column_branch_ridge_ratio=args.column_branch_ridge_ratio,
+            complementary_branch_fraction=args.complementary_branch_fraction,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -530,6 +548,7 @@ def main() -> None:
                 column_branch_fraction=args.column_branch_fraction,
                 column_branch_bits=args.column_branch_bits,
                 column_branch_ridge_ratio=args.column_branch_ridge_ratio,
+                complementary_branch_fraction=args.complementary_branch_fraction,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -569,6 +588,7 @@ def main() -> None:
             column_branch_fraction=args.column_branch_fraction,
             column_branch_bits=args.column_branch_bits,
             column_branch_ridge_ratio=args.column_branch_ridge_ratio,
+            complementary_branch_fraction=args.complementary_branch_fraction,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -661,6 +681,20 @@ def main() -> None:
         + present_artifact_coefficient_count
         + missing_artifact_coefficient_budget
     )
+    # The model actually evaluated keeps uncompiled layers dense. A future
+    # full compile projection must never be presented as its achieved ratio.
+    missing_dense_coefficients = (
+        layer_count - len(present_layers)
+    ) * sum(scalar_by_projection.values())
+    evaluated_assembly_coefficients = (
+        fixed_model_coefficient_count
+        + present_artifact_coefficient_count
+        + missing_dense_coefficients
+    )
+    evaluated_assembly_package_bytes_upper_bound = (
+        fixed_package_bytes + checkpoint_bytes
+        + 2 * missing_dense_coefficients + metadata_reserve_bytes
+    )
     manifest = {
         "schema": "nec_packed_schmidt_compile_v1",
         "model_dir": str(args.model_dir.resolve()),
@@ -694,11 +728,28 @@ def main() -> None:
             "ridge_ratio": args.column_branch_ridge_ratio,
         },
         "swiglu_compensation": args.swiglu_compensation,
+        "complementary_branch_fraction": args.complementary_branch_fraction,
         "gradient_free_als_sweeps": args.als_sweeps,
         "layers": layer_records,
         "serialized_checkpoint_bytes_present": checkpoint_bytes,
         "logical_artifact_coefficient_count_present": (
             present_artifact_coefficient_count
+        ),
+        "evaluated_assembly_coefficient_count": evaluated_assembly_coefficients,
+        "evaluated_assembly_structural_reduction": (
+            dense_model_coefficient_count / evaluated_assembly_coefficients
+        ),
+        "evaluated_assembly_package_bytes_upper_bound": (
+            evaluated_assembly_package_bytes_upper_bound
+        ),
+        "evaluated_assembly_package_ratio_lower_bound": (
+            dense_package_bytes / evaluated_assembly_package_bytes_upper_bound
+        ),
+        "projected_storage_budget_satisfied": (
+            projected_package_upper_bound <= package_cap
+        ),
+        "projected_coefficient_budget_satisfied": (
+            projected_model_coefficient_upper_bound <= structural_coefficient_cap
         ),
         "projected_complete_model_coefficient_count_upper_bound": (
             projected_model_coefficient_upper_bound
@@ -710,7 +761,8 @@ def main() -> None:
         "projected_complete_package_ratio_lower_bound": (
             dense_package_bytes / projected_package_upper_bound
         ),
-        "complete_package_is_materialized": present_layer_count == layer_count,
+        "all_layer_artifacts_are_materialized": present_layer_count == layer_count,
+        "complete_package_is_materialized": False,
         "layer_multipliers": per_layer_multipliers,
         "seconds": time.monotonic() - started,
     }

@@ -393,8 +393,6 @@ def _fit_calibration_schmidt_branch(
     ).T
     left = _quantize_dequantize(left_t.T.contiguous(), bits, group_size)
 
-    correction = left.T @ right
-    predicted_residual = correction @ all_inputs
     branch = {
         "representation": "activation_residual_schmidt_branch",
         "rank": rank,
@@ -405,6 +403,16 @@ def _fit_calibration_schmidt_branch(
         "fit_tokens": sample_count,
         "gradient_free_als_sweeps": 1,
     }
+    # Construction must propagate the serialized FP16 scales as inference
+    # does, rather than the higher-precision quantization simulation.
+    stored_left = decode_groupwise(
+        branch["left_codec"], device=all_inputs.device, dtype=torch.float32,
+    )
+    stored_right = decode_groupwise(
+        branch["right_codec"], device=all_inputs.device, dtype=torch.float32,
+    )
+    correction = stored_left.T @ stored_right
+    predicted_residual = correction @ all_inputs
     payload = codec_payload_bytes(branch["left_codec"]) + codec_payload_bytes(
         branch["right_codec"],
     )
@@ -539,6 +547,9 @@ def packed_schmidt_payload_bytes_from_artifact(artifact: dict) -> int:
     column_branch = artifact.get("calibration_column_branch")
     if column_branch is not None:
         payload += _column_branch_payload_bytes(column_branch)
+    complementary_branch = artifact.get("complementary_schmidt_branch")
+    if complementary_branch is not None:
+        payload += packed_schmidt_payload_bytes_from_artifact(complementary_branch)
     return int(payload)
 
 
@@ -571,6 +582,9 @@ def packed_schmidt_coefficient_count_from_artifact(artifact: dict) -> int:
     column_branch = artifact.get("calibration_column_branch")
     if column_branch is not None:
         count += _column_branch_coefficient_count(column_branch)
+    complementary_branch = artifact.get("complementary_schmidt_branch")
+    if complementary_branch is not None:
+        count += packed_schmidt_coefficient_count_from_artifact(complementary_branch)
     return int(count)
 
 
@@ -590,6 +604,11 @@ def reconstruct_packed_schmidt(
     if artifact.get("output_scale") is not None:
         output_scale = artifact["output_scale"].to(device=device, dtype=torch.float32)
         dense = dense * output_scale[:, None]
+    complementary_branch = artifact.get("complementary_schmidt_branch")
+    if complementary_branch is not None:
+        dense += reconstruct_packed_schmidt(
+            complementary_branch, device=device, dtype=torch.float32,
+        )
     column_branch = artifact.get("calibration_column_branch")
     if column_branch is not None:
         indices = column_branch["column_indices"].to(device=device, dtype=torch.long)
@@ -629,6 +648,7 @@ def compile_packed_schmidt(
     column_branch_fraction: float = 0.0,
     column_branch_bits: int = 4,
     column_branch_ridge_ratio: float = 1e-3,
+    complementary_branch_fraction: float = 0.0,
     als_sweeps: int = 1,
     ridge_ratio: float = 1e-5,
     n_heads: int = 32,
@@ -649,7 +669,12 @@ def compile_packed_schmidt(
         raise ValueError("invalid group size or ALS controls")
     if not 0 <= calibration_branch_fraction < 1 or not 0 <= column_branch_fraction < 1:
         raise ValueError("calibration branch fractions must be in [0, 1)")
-    if calibration_branch_fraction + column_branch_fraction >= 1:
+    if not 0 <= complementary_branch_fraction < 1:
+        raise ValueError("complementary_branch_fraction must be in [0, 1)")
+    if (
+        calibration_branch_fraction + column_branch_fraction
+        + complementary_branch_fraction >= 1
+    ):
         raise ValueError("combined calibration branch fractions must be below one")
     if calibration_branch_bits not in (2, 3, 4):
         raise ValueError("calibration_branch_bits must be 2, 3, or 4")
@@ -698,7 +723,10 @@ def compile_packed_schmidt(
 
     branch_budget = math.floor(byte_budget * calibration_branch_fraction)
     column_branch_budget = math.floor(byte_budget * column_branch_fraction)
-    base_budget = byte_budget - branch_budget - column_branch_budget
+    complementary_branch_budget = math.floor(byte_budget * complementary_branch_fraction)
+    base_budget = (
+        byte_budget - branch_budget - column_branch_budget - complementary_branch_budget
+    )
     branch_coefficient_budget = (
         None
         if coefficient_budget is None
@@ -709,12 +737,17 @@ def compile_packed_schmidt(
         if coefficient_budget is None
         else math.floor(coefficient_budget * column_branch_fraction)
     )
+    complementary_branch_coefficient_budget = (
+        None if coefficient_budget is None
+        else math.floor(coefficient_budget * complementary_branch_fraction)
+    )
     base_coefficient_budget = (
         None
         if coefficient_budget is None
         else coefficient_budget
         - branch_coefficient_budget
         - column_branch_coefficient_budget
+        - complementary_branch_coefficient_budget
     )
 
     ranks_by_bytes = {
@@ -859,6 +892,43 @@ def compile_packed_schmidt(
     reconstructed = reconstruct_packed_schmidt(
         artifact, device=source.device, dtype=torch.float32,
     )
+    complementary_branch_diagnostics = None
+    if complementary_branch_budget:
+        complementary_policy = (
+            "semantic" if layout_policy == "packed_efficiency" else "packed_efficiency"
+        )
+        complementary_targets = (
+            None if target_outputs is None
+            else target_outputs - reconstructed @ calibration_inputs.float()
+        )
+        complementary_branch, correction, complementary_branch_diagnostics = (
+            compile_packed_schmidt(
+                source - reconstructed,
+                byte_budget=complementary_branch_budget,
+                coefficient_budget=complementary_branch_coefficient_budget,
+                projection_name=projection_name,
+                layout_policy=complementary_policy,
+                calibration_inputs=calibration_inputs,
+                calibration_targets=complementary_targets,
+                bits_candidates=bits_values,
+                group_size=group_size,
+                activation_alpha=activation_alpha,
+                als_sweeps=als_sweeps,
+                ridge_ratio=ridge_ratio,
+                n_heads=n_heads,
+                head_dim=head_dim,
+                oversample=oversample,
+                power_iterations=power_iterations,
+                seed=seed + 20_000,
+            )
+        )
+        artifact["complementary_schmidt_branch"] = complementary_branch
+        artifact["representation"] = "sum_of_complementary_schmidt_mpos"
+        artifact["complementary_branch_byte_budget"] = complementary_branch_budget
+        artifact["complementary_branch_coefficient_budget"] = (
+            complementary_branch_coefficient_budget
+        )
+        reconstructed = reconstructed + correction
     column_branch_diagnostics = None
     if column_branch_budget:
         residual_outputs = target_outputs - reconstructed @ calibration_inputs.float()
@@ -876,6 +946,7 @@ def compile_packed_schmidt(
         )
         if column_branch is not None:
             artifact["calibration_column_branch"] = column_branch
+            artifact["sparse_sidecar"] = True
             reconstructed = reconstructed + correction
     branch_diagnostics = None
     if branch_budget:
@@ -933,6 +1004,7 @@ def compile_packed_schmidt(
         "output_leg_scale_mean": float(output_scale.mean()),
         "candidate_frontier": candidates,
         "calibration_column_branch": column_branch_diagnostics,
+        "complementary_schmidt_branch": complementary_branch_diagnostics,
         "calibration_schmidt_branch": branch_diagnostics,
     }
     if calibration_inputs is not None:

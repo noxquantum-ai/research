@@ -4,15 +4,38 @@ import torch
 
 from nox.operator_schmidt import OperatorSchmidtLayout
 from nox.packed_schmidt import (
+    compile_packed_schmidt,
     packed_matrix_coefficient_count,
     packed_schmidt_coefficient_count,
     packed_schmidt_coefficient_count_from_artifact,
     rank_for_coefficient_budget,
+    reconstruct_packed_schmidt,
 )
 from nox.residual_codec import encode_groupwise
 
 
 class PackedSchmidtStructuralBudgetTests(unittest.TestCase):
+    def test_compiled_defects_roundtrip_and_stay_inside_both_budgets(self):
+        generator = torch.Generator().manual_seed(41)
+        weight = torch.randn(32, 32, generator=generator)
+        inputs = torch.randn(32, 64, generator=generator)
+        artifact, decoded, _ = compile_packed_schmidt(
+            weight, byte_budget=2200, coefficient_budget=1600,
+            calibration_inputs=inputs, bits_candidates=(3, 4),
+            group_size=4, als_sweeps=0,
+            calibration_branch_fraction=0.1,
+            calibration_branch_fit_tokens=32,
+            column_branch_fraction=0.2,
+            complementary_branch_fraction=0.2,
+        )
+        self.assertIn("complementary_schmidt_branch", artifact)
+        self.assertIn("calibration_column_branch", artifact)
+        self.assertIn("calibration_schmidt_branch", artifact)
+        self.assertTrue(artifact["sparse_sidecar"])
+        torch.testing.assert_close(reconstruct_packed_schmidt(artifact), decoded)
+        self.assertLessEqual(artifact["payload_bytes"], 2200)
+        self.assertLessEqual(artifact["logical_coefficient_count"], 1600)
+
     def setUp(self):
         self.layout = OperatorSchmidtLayout(
             "test", (2, 3), (2, 4), (0, 2, 1, 3),

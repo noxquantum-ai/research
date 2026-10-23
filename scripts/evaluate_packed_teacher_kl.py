@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -19,9 +20,9 @@ sys.path.insert(0, str(ROOT))
 
 from benchmarks.benchmark_day4_perplexity import (
     inject_nox_checkpoints,
-    load_wikitext2_test_text,
     sliding_window_specifications,
 )
+from nox.data import load_wikitext2_raw_split
 
 
 @torch.inference_mode()
@@ -31,6 +32,8 @@ def main() -> None:
     parser.add_argument("--model-id", required=True)
     parser.add_argument("--model-revision", default="main")
     parser.add_argument("--max-eval-tokens", type=int, default=10_000)
+    parser.add_argument("--split", choices=("train", "validation", "test"), default="test")
+    parser.add_argument("--token-offset", type=int, default=0)
     parser.add_argument("--seq-len", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
     parser.add_argument("--kl-chunk-tokens", type=int, default=128)
@@ -45,6 +48,8 @@ def main() -> None:
 
     if args.kl_chunk_tokens <= 0:
         raise ValueError("--kl-chunk-tokens must be positive")
+    if args.token_offset < 0:
+        raise ValueError("--token-offset must be nonnegative")
     dtype = torch.float16 if str(args.device).startswith("cuda") else torch.float32
     tokenizer = AutoTokenizer.from_pretrained(args.model_id, revision=args.model_revision)
     model = AutoModelForCausalLM.from_pretrained(
@@ -58,8 +63,11 @@ def main() -> None:
         model.to(args.device)
     model.eval()
 
-    text, split_metadata = load_wikitext2_test_text(return_metadata=True)
+    text, split_metadata = load_wikitext2_raw_split(args.split)
     ids = tokenizer(text, return_tensors="pt", add_special_tokens=True).input_ids
+    if args.token_offset >= ids.shape[1] - 1:
+        raise ValueError("--token-offset leaves fewer than two input tokens")
+    ids = ids[:, args.token_offset:]
     windows, input_tokens = sliding_window_specifications(
         ids.shape[1],
         seq_len=args.seq_len,
@@ -144,6 +152,10 @@ def main() -> None:
         "compressed_layers": sorted(int(index) for index in injected),
         "compressed_projections": list(projections),
         "test_split": split_metadata,
+        "token_offset": args.token_offset,
+        "input_token_ids_sha256": hashlib.sha256(
+            ids[:, :input_tokens].contiguous().numpy().astype("<i8").tobytes()
+        ).hexdigest(),
         "input_tokens": int(input_tokens),
         "scored_tokens": int(scored_tokens),
         "context": int(args.seq_len),
