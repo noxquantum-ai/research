@@ -60,11 +60,13 @@ class FunctionalSchmidtTests(unittest.TestCase):
                 bits_candidates=(4,), group_size=4, als_sweeps=0,
             )
         result, weights, report = construct_functional_schmidt_mlp(
-            artifacts, inputs, target, cg_iterations=6, sequence_length=8,
+            artifacts, inputs, target, gate_targets=dense["gate_proj"] @ inputs,
+            cg_iterations=6, sequence_length=8,
         )
         self.assertLess(report["final_guard_relative_mse"], report["initial_guard_relative_mse"])
         self.assertLessEqual(report["final_fit_relative_mse"], report["initial_fit_relative_mse"])
         self.assertFalse(report["uses_autograd"])
+        self.assertFalse(report["uses_nonlinear_derivatives"])
         for name in shapes:
             self.assertEqual(
                 packed_schmidt_coefficient_count_from_artifact(artifacts[name]),

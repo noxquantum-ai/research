@@ -22,7 +22,7 @@ from scripts.run_residual_codec_pilot import block_error_metrics, load_activatio
 
 class PackedResidualCodecTests(unittest.TestCase):
     def test_signed_levels_round_trip_for_all_supported_widths(self):
-        for bits in (2, 3, 4):
+        for bits in (2, 3, 4, 5, 6, 8):
             qmax = (1 << (bits - 1)) - 1
             qmin = -qmax
             values = torch.tensor(

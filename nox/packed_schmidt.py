@@ -22,7 +22,7 @@ from nox.operator_schmidt import (
     candidate_layouts,
     operator_schmidt_to_dense,
 )
-from nox.residual_codec import codec_payload_bytes, decode_groupwise, encode_groupwise
+from nox.residual_codec import SUPPORTED_BITS, codec_payload_bytes, decode_groupwise, encode_groupwise
 
 
 LEGACY_CODEC_TYPES = (
@@ -751,19 +751,19 @@ def compile_packed_schmidt(
         + complementary_branch_fraction >= 1
     ):
         raise ValueError("combined calibration branch fractions must be below one")
-    if calibration_branch_bits not in (2, 3, 4):
-        raise ValueError("calibration_branch_bits must be 2, 3, or 4")
+    if calibration_branch_bits not in SUPPORTED_BITS:
+        raise ValueError(f"calibration_branch_bits must be one of {SUPPORTED_BITS}")
     if calibration_branch_fit_tokens <= 0:
         raise ValueError("calibration_branch_fit_tokens must be positive")
     if calibration_branch_ridge_ratio < 0:
         raise ValueError("calibration_branch_ridge_ratio must be nonnegative")
-    if column_branch_bits not in (2, 3, 4) or column_branch_ridge_ratio < 0:
+    if column_branch_bits not in SUPPORTED_BITS or column_branch_ridge_ratio < 0:
         raise ValueError("invalid column branch codec or ridge controls")
     if (calibration_branch_fraction or column_branch_fraction) and calibration_inputs is None:
         raise ValueError("calibration branches require calibration inputs")
     bits_values = tuple(dict.fromkeys(int(value) for value in bits_candidates))
-    if not bits_values or any(value not in (2, 3, 4) for value in bits_values):
-        raise ValueError("bits_candidates must contain only 2, 3, or 4")
+    if not bits_values or any(value not in SUPPORTED_BITS for value in bits_values):
+        raise ValueError(f"bits_candidates must be drawn from {SUPPORTED_BITS}")
 
     dense_source_bytes = int(weight.numel() * weight.element_size())
     source = weight.detach().float()

@@ -207,11 +207,11 @@ def main() -> None:
         "--mlp-input-metric", choices=("diagonal", "product_covariance"),
     )
     parser.add_argument("--calibration-branch-fraction", type=float, default=0.0)
-    parser.add_argument("--calibration-branch-bits", type=int, choices=(2, 3, 4), default=3)
+    parser.add_argument("--calibration-branch-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=3)
     parser.add_argument("--calibration-branch-fit-tokens", type=int, default=512)
     parser.add_argument("--calibration-branch-ridge-ratio", type=float, default=1e-4)
     parser.add_argument("--column-branch-fraction", type=float, default=0.0)
-    parser.add_argument("--column-branch-bits", type=int, choices=(2, 3, 4), default=4)
+    parser.add_argument("--column-branch-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=4)
     parser.add_argument("--column-branch-ridge-ratio", type=float, default=1e-3)
     parser.add_argument("--complementary-branch-fraction", type=float, default=0.0)
     parser.add_argument("--swiglu-compensation", action="store_true")
@@ -264,6 +264,13 @@ def main() -> None:
         parser.error("joint MLP ridge must be finite and positive")
 
     config = json.loads((args.model_dir / "config.json").read_text())
+    capture_manifest_path = args.activation_dir / "model_manifest.json"
+    capture_manifest = (
+        json.loads(capture_manifest_path.read_text()) if capture_manifest_path.is_file() else {}
+    )
+    captured_sequence_length = capture_manifest.get("sequence_length")
+    if captured_sequence_length is not None and captured_sequence_length != args.sequence_length:
+        raise ValueError("compiler sequence length differs from activation capture")
     layer_count = int(config["num_hidden_layers"])
     layers = parse_layers(args.layers, layer_count)
     multipliers = role_multipliers(args.role_multipliers)
@@ -422,6 +429,8 @@ def main() -> None:
             args.activation_dir / f"calibration_input_layer_{layer}.pt",
             map_location=device, weights_only=True,
         ).float()[:, :args.calibration_tokens].contiguous()
+        if dense_hidden.shape[1] != args.calibration_tokens:
+            raise ValueError("activation cache contains fewer tokens than requested")
         uses_compiled_prefix = (
             args.calibration_trajectory == "compiled_prefix"
             and compressed_hidden is not None
@@ -630,6 +639,7 @@ def main() -> None:
                 construct_functional_schmidt_mlp(
                     artifacts, norm2,
                     dense_residual_hidden + dense_mlp_output - residual_hidden,
+                    gate_targets=dense_gate_up["gate_proj"],
                     sweeps=args.joint_mlp_sweeps,
                     cg_iterations=args.joint_mlp_cg_iterations,
                     ridge_ratio=args.joint_mlp_ridge_ratio,
@@ -762,6 +772,10 @@ def main() -> None:
             "tokens_per_layer": args.calibration_tokens,
             "sequence_length": args.sequence_length,
             "activation_directory": str(args.activation_dir.resolve()),
+            "activation_manifest_sha256": (
+                hashlib.sha256(capture_manifest_path.read_bytes()).hexdigest()
+                if capture_manifest_path.is_file() else None
+            ),
             "trajectory": args.calibration_trajectory,
         },
         "factor_bits_candidates": list(args.factor_bits),

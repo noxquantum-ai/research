@@ -12,7 +12,7 @@ import math
 import torch
 
 
-SUPPORTED_BITS = (2, 3, 4)
+SUPPORTED_BITS = (2, 3, 4, 5, 6, 8)
 CODEC_TYPE = "groupwise_packed_v1"
 
 

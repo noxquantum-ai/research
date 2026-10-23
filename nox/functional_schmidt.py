@@ -1,7 +1,7 @@
 """Construct packed Schmidt MLP cores against the coupled SwiGLU function.
 
 For one fixed MPO core, Up and Down give linear least-squares systems.
-Gate gives a local linear system through the analytic SiLU derivative.
+Gate candidates solve linear reconstruction of clean teacher preactivations.
 Matrix-free, prior-anchored conjugate gradients solve those systems without
 autograd. Candidate cores are packed before scoring the exact nonlinear
 function on separate construction and guard samples. No coefficients, ranks,
@@ -108,6 +108,7 @@ def construct_functional_schmidt_mlp(
     inputs: torch.Tensor,
     targets: torch.Tensor,
     *,
+    gate_targets: torch.Tensor | None = None,
     sweeps: int = 1,
     cg_iterations: int = 8,
     ridge_ratio: float = 0.05,
@@ -124,6 +125,11 @@ def construct_functional_schmidt_mlp(
 
     if inputs.ndim != 2 or targets.ndim != 2 or inputs.shape[1] != targets.shape[1]:
         raise ValueError("inputs and targets must share their sample axis")
+    if gate_targets is not None and (
+        gate_targets.ndim != 2 or gate_targets.shape[1] != inputs.shape[1]
+        or gate_targets.shape[0] != artifacts["gate_proj"]["orig_shape"][0]
+    ):
+        raise ValueError("gate targets must match the gate output and sample dimensions")
     if not 0 < guard_fraction < 1 or ridge_ratio <= 0 or cg_iterations < 1 or sweeps < 1:
         raise ValueError("invalid functional construction controls")
     if sequence_length < 1 or inputs.shape[1] % sequence_length:
@@ -157,6 +163,8 @@ def construct_functional_schmidt_mlp(
         # features; Up and Gate then improve those features jointly through
         # that readout; a final Down solve closes the module construction.
         for role in ("down_proj", "up_proj", "gate_proj", "down_proj"):
+            if role == "gate_proj" and gate_targets is None:
+                continue
             for side in ("left", "right"):
                 artifact = result[role]
                 mapper = SchmidtCoreMap(artifact, inputs.device)
@@ -166,30 +174,30 @@ def construct_functional_schmidt_mlp(
                 active = F.silu(gate) * up
                 if role == "down_proj":
                     core_inputs = active
-                    derivative = None
+                    channel_multiplier = None
                     output_sensitivity = torch.ones(targets.shape[0], device=inputs.device)
-                else:
+                elif role == "up_proj":
                     core_inputs = fit_x
-                    if role == "up_proj":
-                        derivative = F.silu(gate)
-                    else:
-                        sigmoid = gate.sigmoid()
-                        derivative = sigmoid * (1 + gate * (1 - sigmoid)) * up
+                    channel_multiplier = F.silu(gate)
                     output_sensitivity = (
                         weights["down_proj"].square().sum(dim=0)
-                        * derivative.square().mean(dim=1)
+                        * channel_multiplier.square().mean(dim=1)
                     )
+                else:
+                    core_inputs = fit_x
+                    channel_multiplier = None
+                    output_sensitivity = torch.ones(gate.shape[0], device=inputs.device)
                 scale = 1 / math.sqrt(split)
 
                 def forward(increment):
                     response = mapper.weight(increment, side) @ core_inputs
-                    if derivative is not None:
-                        response = weights["down_proj"] @ (derivative * response)
+                    if channel_multiplier is not None:
+                        response = weights["down_proj"] @ (channel_multiplier * response)
                     return response * scale
 
                 def adjoint(output):
-                    if derivative is not None:
-                        output = derivative * (weights["down_proj"].T @ output)
+                    if channel_multiplier is not None:
+                        output = channel_multiplier * (weights["down_proj"].T @ output)
                     dense = (output @ core_inputs.T) * scale
                     return mapper.adjoint(dense, side)
 
@@ -198,7 +206,11 @@ def construct_functional_schmidt_mlp(
                 )
                 ridge = ridge_ratio * diagonal.mean().clamp_min(1e-20)
                 normal = lambda increment: adjoint(forward(increment)) + ridge * increment
-                residual = (fit_y - weights["down_proj"] @ active) * scale
+                residual = (
+                    (gate_targets[:, :split].float() - gate) * scale
+                    if role == "gate_proj" else
+                    (fit_y - weights["down_proj"] @ active) * scale
+                )
                 rhs = adjoint(residual)
                 delta, cg_history = _prior_anchored_pcg(
                     normal, rhs, diagonal + ridge, iterations=cg_iterations, tolerance=1e-3,
@@ -237,6 +249,10 @@ def construct_functional_schmidt_mlp(
                     current_fit, current_guard = best_fit, best_guard
                 records.append({
                     "sweep": sweep, "role": role, "core": side,
+                    "solve_objective": (
+                        "clean_gate_preactivations" if role == "gate_proj"
+                        else "coupled_mlp_output"
+                    ),
                     "accepted_fraction": accepted_fraction,
                     "fit_relative_mse": current_fit, "guard_relative_mse": current_guard,
                     "cg_history": cg_history, "trials": trial_scores,
@@ -244,6 +260,7 @@ def construct_functional_schmidt_mlp(
     return result, weights, {
         "objective": "exact_coupled_swiglu_output_with_prior_anchored_core_solves",
         "uses_autograd": False,
+        "uses_nonlinear_derivatives": False,
         "fit_tokens": split, "guard_tokens": targets.shape[1] - split,
         "initial_fit_relative_mse": initial_errors[0],
         "initial_guard_relative_mse": initial_errors[1],
