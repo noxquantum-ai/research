@@ -25,7 +25,7 @@ TASKS = (
     ("boolq", 0, "acc,none", 3270),
     ("hellaswag", 0, "acc_norm,none", 10042),
     ("mmlu", 5, "acc,none", 14042),
-    ("triviaqa", 0, "exact_match,remove_whitespace", None),
+    ("triviaqa", 0, "exact_match,remove_whitespace", 17944),
     ("gsm8k", 5, "exact_match,strict-match", 1319),
 )
 HARNESS_VERSION = "0.4.11"
@@ -46,6 +46,8 @@ def write_json(path, data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package-dir", type=Path, required=True)
+    parser.add_argument("--model-kind", choices=("nec", "dense"), default="nec")
+    parser.add_argument("--dense-model-dir", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--batch-size", default="auto:4")
     parser.add_argument("--max-batch-size", type=int, default=32)
@@ -61,8 +63,12 @@ def main():
         if not destination.exists():
             shutil.copy2(source, destination)
     status_path = args.output_dir / "status.json"
+    if args.model_kind == "dense" and args.dense_model_dir is None:
+        parser.error("--dense-model-dir is required for --model-kind dense")
+    model_path = args.package_dir if args.model_kind == "nec" else args.dense_model_dir
     status = {"schema": "nec_full_capability_suite_v1", "phase": "loading",
-              "package_dir": str(args.package_dir.resolve()), "dense_evaluation": False,
+              "model_kind": args.model_kind, "model_dir": str(model_path.resolve()),
+              "dense_evaluation": args.model_kind == "dense",
               "full_splits": True, "completed": {}, "failed": {}}
     for task, *_ in TASKS:
         path = args.output_dir / f"{task}_summary.json"
@@ -96,14 +102,20 @@ def main():
     datasets.load_dataset = pinned_loader
     from lm_eval import evaluator
     from lm_eval.models.huggingface import HFLM
-    from transformers import AutoTokenizer
-    sys.path.insert(0, str(args.package_dir.resolve()))
-    from load_nec_package import load_model
+    from transformers import AutoModelForCausalLM, AutoTokenizer
     torch.set_num_threads(min(8, os.cpu_count() or 1))
     torch.manual_seed(1234)
     started = time.monotonic()
-    model = load_model(device_map="auto", torch_dtype=torch.float16)
-    tokenizer = AutoTokenizer.from_pretrained(args.package_dir, local_files_only=True)
+    if args.model_kind == "nec":
+        sys.path.insert(0, str(args.package_dir.resolve()))
+        from load_nec_package import load_model
+        model = load_model(device_map="auto", torch_dtype=torch.float16)
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            args.dense_model_dir, torch_dtype=torch.float16,
+            device_map="auto", local_files_only=True,
+        ).eval()
+    tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
     lm = HFLM(pretrained=model, tokenizer=tokenizer, batch_size=args.batch_size,
               max_batch_size=args.max_batch_size, max_length=4096, logits_cache=True)
     versions = {name: importlib.metadata.version(name) for name in
@@ -111,7 +123,8 @@ def main():
     write_json(args.output_dir / "protocol.json", {
         "schema": "nec_full_capability_protocol_v1", "versions": versions,
         "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "package_dir": str(args.package_dir.resolve()), "inference": "NEC reconstructed FP16",
+        "model_kind": args.model_kind, "model_dir": str(model_path.resolve()),
+        "inference": "NEC reconstructed FP16" if args.model_kind == "nec" else "original dense FP16",
         "model_load_seconds": time.monotonic() - started,
         "gpu": torch.cuda.get_device_name(), "batch_size": args.batch_size,
         "max_batch_size": args.max_batch_size, "context": 4096,
@@ -120,7 +133,7 @@ def main():
         "tasks": [dict(task=t, fewshot=s, primary_metric=m, expected_samples=n)
                   for t, s, m, n in TASKS],
         "external_reference_protocol_match": "not established",
-        "dense_evaluation": False,
+        "dense_evaluation": args.model_kind == "dense",
     })
     for task, fewshot, metric, expected in TASKS:
         if task in status["completed"] or (args.tasks and task not in args.tasks):
@@ -160,7 +173,8 @@ def main():
             value = metrics.get(metric)
             if value is None or not math.isfinite(float(value)):
                 raise RuntimeError(f"Missing/invalid prespecified metric {metric}: {metrics}")
-            summary = {"task": task, "full_split": True, "fewshot": fewshot,
+            summary = {"task": task, "model_kind": args.model_kind,
+                       "full_split": True, "fewshot": fewshot,
                        "samples": evaluated, "sample_counts": sample_counts,
                        "primary_metric": metric, "score": value,
                        "score_percent": float(value) * 100, "all_metrics": metrics,

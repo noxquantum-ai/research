@@ -29,7 +29,7 @@ See the [complete experiment report](results/nec_sparse_excitation_a40_20261023/
 
 ## Full capability benchmarks
 
-The five full benchmarks are being evaluated on **NEC only**, using pinned LM Evaluation Harness settings and GPU batching. No new dense benchmark run is requested. Reference scores below were supplied by the user and appear in [CompactifAI's published comparison](https://arxiv.org/html/2401.14109v2); matching prompts, few-shot settings and scoring protocols have not been established, so these columns are external references rather than matched baselines.
+The five full benchmarks are being run for both NEC and the original dense model under identical LM Evaluation Harness settings, prompts and full splits. This gives us matched dense scores, including BoolQ, from one harness. Reference scores below were supplied by the user and appear in [CompactifAI's published comparison](https://arxiv.org/html/2401.14109v2); matching prompts, few-shot settings and scoring protocols have not been established, so these columns are external references rather than matched baselines.
 
 | Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | NEC 5.413× |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -39,7 +39,7 @@ The five full benchmarks are being evaluated on **NEC only**, using pinned LM Ev
 | TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending |
 | GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending |
 
-All entries are percentages; higher is better. Full protocols, sample counts and completion status will accompany measured NEC scores. See the [benchmark protocol](results/nec_full_five_benchmarks_a40_20261023/README.md).
+All entries are percentages; higher is better. Dense and NEC scores will use the same harness for the matched comparison. CompactifAI columns are external references, since the paper does not establish that its prompts and few-shot settings match ours. Full protocols, sample counts and status are in the [benchmark report](results/nec_full_five_benchmarks_a40_20261023/README.md).
 
 ## Earlier dual-budget result
 
