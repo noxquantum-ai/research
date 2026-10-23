@@ -150,6 +150,7 @@ def main() -> None:
     parser.add_argument("--factor-bits", type=int, nargs="+", default=(2, 3))
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument("--als-sweeps", type=int, default=1)
+    parser.add_argument("--activation-alpha", type=float, default=0.5)
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument(
@@ -167,6 +168,8 @@ def main() -> None:
         parser.error("calibration tokens must be a multiple of sequence length")
     if args.metadata_reserve_mib <= 0:
         parser.error("metadata reserve must be positive")
+    if not 0 <= args.activation_alpha <= 1:
+        parser.error("--activation-alpha must be between zero and one")
 
     config = json.loads((args.model_dir / "config.json").read_text())
     layer_count = int(config["num_hidden_layers"])
@@ -272,6 +275,7 @@ def main() -> None:
                 calibration_inputs=norm1,
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
+                activation_alpha=args.activation_alpha,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -295,6 +299,7 @@ def main() -> None:
             calibration_inputs=compressed_context,
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
+            activation_alpha=args.activation_alpha,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -317,6 +322,7 @@ def main() -> None:
                 calibration_inputs=norm2,
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
+                activation_alpha=args.activation_alpha,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -338,6 +344,7 @@ def main() -> None:
             calibration_inputs=compressed_active,
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
+            activation_alpha=args.activation_alpha,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -405,6 +412,7 @@ def main() -> None:
         },
         "factor_bits_candidates": list(args.factor_bits),
         "group_size": args.group_size,
+        "activation_alpha": args.activation_alpha,
         "gradient_free_als_sweeps": args.als_sweeps,
         "layers": layer_records,
         "serialized_checkpoint_bytes_present": checkpoint_bytes,
