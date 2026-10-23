@@ -1,6 +1,8 @@
 {
   "schema": "nec_dual_budget_study_v1",
   "date": "2026-10-23",
+  "evaluation_scope": "4095-token WikiText-2 test slice repeatedly used for development; not untouched holdout",
+  "partial_run_ratio_scope": "projected full32 compile under reserved budgets; not achieved evaluated-assembly ratios",
   "dense_model_coefficients": 6738417664,
   "fixed_nonprojection_coefficients": 262412288,
   "byte_only_full32": {
@@ -48,6 +50,61 @@
       "dense_top1_agreement": 0.2744810744810745,
       "structural_reduction_lower_bound": 2.0035840082440783,
       "package_ratio_lower_bound": 5.256598274324598
+    },
+    {
+      "name": "balanced_cut_column_defect_5pct_residual_10pct",
+      "ppl": 54.775972309010385,
+      "teacher_kl": 2.4471944288914593,
+      "structural_reduction_lower_bound": 2.0035200396625044,
+      "package_ratio_lower_bound": 5.254114577237277
+    },
+    {
+      "name": "balanced_cut_column_defect_5pct_residual_20pct",
+      "ppl": 51.63732897261554,
+      "teacher_kl": 2.3907605309310775,
+      "next_token_accuracy": 0.33772893772893775,
+      "dense_top1_agreement": 0.41074481074481073,
+      "structural_reduction_lower_bound": 2.0034463956639645,
+      "package_ratio_lower_bound": 5.253982065726088,
+      "actual_region_coefficients": 770903430,
+      "actual_region_checkpoint_bytes": 406590696,
+      "actual_region_structural_reduction": 2.100135089553305,
+      "actual_region_serialized_compression": 7.963789432112337,
+      "evaluated_assembly_coefficients": 5890319750,
+      "evaluated_assembly_structural_reduction": 1.1439816427622627,
+      "evaluated_assembly_package_bytes_estimate": 10647835519,
+      "evaluated_assembly_storage_ratio_estimate": 1.2659143247421156
+    },
+    {
+      "name": "balanced_cut_column_defect_5pct_residual_30pct",
+      "ppl": 59.88379575190508,
+      "teacher_kl": 2.5333535990036635,
+      "structural_reduction_lower_bound": 2.0034721820632577,
+      "package_ratio_lower_bound": 5.25402820151751
+    },
+    {
+      "name": "balanced_cut_defect_5pct_residual_20pct_complementary_cut_20pct",
+      "ppl": 69.57119531886136,
+      "teacher_kl": 2.6737463035121825,
+      "structural_reduction_lower_bound": 2.0038740781962527,
+      "package_ratio_lower_bound": 5.253146764685621
+    }
+  ],
+  "validation_slice_results": [
+    {
+      "name": "diagonal_metric_residual_20pct_baseline",
+      "ppl": 60.46768125476059,
+      "teacher_kl": 2.7047366758937152
+    },
+    {
+      "name": "product_covariance_metric_residual_20pct",
+      "ppl": 71.43758271760561,
+      "teacher_kl": 2.865576885349956
+    },
+    {
+      "name": "diagonal_metric_mlp_weighted_allocation",
+      "ppl": 63.37823281068651,
+      "teacher_kl": 2.7573072341228957
     }
   ],
   "quality_gate": {

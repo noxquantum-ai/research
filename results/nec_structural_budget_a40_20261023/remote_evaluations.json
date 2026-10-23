@@ -1,0 +1,749 @@
+{
+  "nec-structural2-column05-residual10-als3-8": {
+    "evaluation": {
+      "schema": "nec_packed_teacher_kl_v1",
+      "model_id": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_revision": "main",
+      "checkpoint_dir": "/workspace/runs/nec-structural2-column05-residual10-als3-8",
+      "compressed_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "test_split": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "test",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+        "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+        "source_bytes": 732610,
+        "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+        "text_bytes": 1296370,
+        "text_join": "double_newline",
+        "rows": 4358,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "input_tokens": 4096,
+      "scored_tokens": 4095,
+      "context": 2048,
+      "stride": 512,
+      "teacher": {
+        "perplexity": 4.859409413674173,
+        "mean_nll": 1.5809169107081418,
+        "next_token_accuracy": 0.6283272283272283
+      },
+      "student": {
+        "perplexity": 54.775972309010385,
+        "mean_nll": 4.003251636287204,
+        "teacher_kl_nats_per_token": 2.4471944288914593,
+        "next_token_accuracy": 0.3321123321123321,
+        "dense_top1_agreement": 0.40024420024420027
+      },
+      "seconds": 10.142604922002647
+    },
+    "manifest_summary": {
+      "schema": "nec_packed_schmidt_compile_v1",
+      "model_dir": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_config_sha256": "3c66a81e29ce617a74ff2e4055e7fb275b5c9457103864745693fbce59b368a2",
+      "compiled_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "dense_base_matrix": false,
+      "post_compression_healing": false,
+      "calibration": {
+        "tokens_per_layer": 4096,
+        "sequence_length": 128,
+        "activation_directory": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg",
+        "trajectory": "dense"
+      },
+      "factor_bits_candidates": [
+        2,
+        3,
+        4
+      ],
+      "group_size": 64,
+      "layout_policy": "packed_efficiency",
+      "activation_alpha": 0.5,
+      "calibration_schmidt_branch": {
+        "byte_fraction_per_operator": 0.1,
+        "factor_bits": 4,
+        "fit_tokens": 512,
+        "ridge_ratio": 0.0001
+      },
+      "calibration_column_branch": {
+        "coefficient_and_byte_fraction_per_operator": 0.05,
+        "factor_bits": 4,
+        "ridge_ratio": 0.001
+      },
+      "swiglu_compensation": true,
+      "gradient_free_als_sweeps": 3,
+      "serialized_checkpoint_bytes_present": 406525992,
+      "logical_artifact_coefficient_count_present": 770779800,
+      "projected_complete_model_coefficient_count_upper_bound": 3363289376,
+      "projected_complete_structural_reduction_lower_bound": 2.0035200396625044,
+      "projected_complete_package_bytes_upper_bound": 2565465087,
+      "projected_complete_package_ratio_lower_bound": 5.254114577237277,
+      "complete_package_is_materialized": false,
+      "layer_multipliers": {
+        "0": 0.85,
+        "1": 1,
+        "2": 1.1,
+        "3": 1,
+        "4": 1.05,
+        "5": 0.85,
+        "6": 1,
+        "7": 1.15,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 1,
+        "15": 1,
+        "16": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "20": 1,
+        "21": 1,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "25": 1,
+        "26": 1,
+        "27": 1,
+        "28": 1,
+        "29": 1,
+        "30": 1,
+        "31": 1
+      },
+      "seconds": 37.294666228990536
+    }
+  },
+  "nec-structural2-column05-residual20-als3-8": {
+    "evaluation": {
+      "schema": "nec_packed_teacher_kl_v1",
+      "model_id": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_revision": "main",
+      "checkpoint_dir": "/workspace/runs/nec-structural2-column05-residual20-als3-8",
+      "compressed_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "test_split": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "test",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+        "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+        "source_bytes": 732610,
+        "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+        "text_bytes": 1296370,
+        "text_join": "double_newline",
+        "rows": 4358,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "input_tokens": 4096,
+      "scored_tokens": 4095,
+      "context": 2048,
+      "stride": 512,
+      "teacher": {
+        "perplexity": 4.859409413674173,
+        "mean_nll": 1.5809169107081418,
+        "next_token_accuracy": 0.6283272283272283
+      },
+      "student": {
+        "perplexity": 51.63732897261554,
+        "mean_nll": 3.944244840640236,
+        "teacher_kl_nats_per_token": 2.3907605309310775,
+        "next_token_accuracy": 0.33772893772893775,
+        "dense_top1_agreement": 0.41074481074481073
+      },
+      "seconds": 11.671113057003822
+    },
+    "manifest_summary": {
+      "schema": "nec_packed_schmidt_compile_v1",
+      "model_dir": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_config_sha256": "3c66a81e29ce617a74ff2e4055e7fb275b5c9457103864745693fbce59b368a2",
+      "compiled_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "dense_base_matrix": false,
+      "post_compression_healing": false,
+      "calibration": {
+        "tokens_per_layer": 4096,
+        "sequence_length": 128,
+        "activation_directory": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg",
+        "trajectory": "dense"
+      },
+      "factor_bits_candidates": [
+        2,
+        3,
+        4
+      ],
+      "group_size": 64,
+      "layout_policy": "packed_efficiency",
+      "activation_alpha": 0.5,
+      "calibration_schmidt_branch": {
+        "byte_fraction_per_operator": 0.2,
+        "factor_bits": 4,
+        "fit_tokens": 512,
+        "ridge_ratio": 0.0001
+      },
+      "calibration_column_branch": {
+        "coefficient_and_byte_fraction_per_operator": 0.05,
+        "factor_bits": 4,
+        "ridge_ratio": 0.001
+      },
+      "swiglu_compensation": true,
+      "gradient_free_als_sweeps": 3,
+      "serialized_checkpoint_bytes_present": 406590696,
+      "logical_artifact_coefficient_count_present": 770903430,
+      "projected_complete_model_coefficient_count_upper_bound": 3363413006,
+      "projected_complete_structural_reduction_lower_bound": 2.0034463956639645,
+      "projected_complete_package_bytes_upper_bound": 2565529791,
+      "projected_complete_package_ratio_lower_bound": 5.253982065726088,
+      "complete_package_is_materialized": false,
+      "layer_multipliers": {
+        "0": 0.85,
+        "1": 1,
+        "2": 1.1,
+        "3": 1,
+        "4": 1.05,
+        "5": 0.85,
+        "6": 1,
+        "7": 1.15,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 1,
+        "15": 1,
+        "16": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "20": 1,
+        "21": 1,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "25": 1,
+        "26": 1,
+        "27": 1,
+        "28": 1,
+        "29": 1,
+        "30": 1,
+        "31": 1
+      },
+      "seconds": 34.62706360401353
+    },
+    "projection_ablation": {
+      "schema": "nec_packed_projection_ablation_v1",
+      "checkpoint_dir": "/workspace/runs/nec-structural2-column05-residual20-als3-8",
+      "compressed_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "dataset": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "test",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+        "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+        "source_bytes": 732610,
+        "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+        "text_bytes": 1296370,
+        "text_join": "double_newline",
+        "rows": 4358,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "protocol": {
+        "max_eval_tokens": 4096,
+        "seq_len": 2048,
+        "stride": 512
+      },
+      "results": {
+        "dense": {
+          "compressed_projections": [],
+          "perplexity": 4.8594092533646585,
+          "mean_nll": 1.5809168777186355,
+          "next_token_accuracy": 0.6283272283272283,
+          "scored_tokens": 4095
+        },
+        "q_k": {
+          "compressed_projections": [
+            "q_proj",
+            "k_proj"
+          ],
+          "perplexity": 4.973484421769806,
+          "mean_nll": 1.6041206853584784,
+          "next_token_accuracy": 0.6263736263736264,
+          "scored_tokens": 4095
+        },
+        "v_o": {
+          "compressed_projections": [
+            "v_proj",
+            "o_proj"
+          ],
+          "perplexity": 6.41417377313516,
+          "mean_nll": 1.8585101936908577,
+          "next_token_accuracy": 0.588034188034188,
+          "scored_tokens": 4095
+        },
+        "attention": {
+          "compressed_projections": [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj"
+          ],
+          "perplexity": 6.792330310074608,
+          "mean_nll": 1.9157940800518924,
+          "next_token_accuracy": 0.5807081807081808,
+          "scored_tokens": 4095
+        },
+        "gate_up": {
+          "compressed_projections": [
+            "gate_proj",
+            "up_proj"
+          ],
+          "perplexity": 13.956537308866974,
+          "mean_nll": 2.635948022788843,
+          "next_token_accuracy": 0.484981684981685,
+          "scored_tokens": 4095
+        },
+        "down": {
+          "compressed_projections": [
+            "down_proj"
+          ],
+          "perplexity": 8.940872928696974,
+          "mean_nll": 2.190633227449634,
+          "next_token_accuracy": 0.5418803418803418,
+          "scored_tokens": 4095
+        },
+        "mlp": {
+          "compressed_projections": [
+            "gate_proj",
+            "up_proj",
+            "down_proj"
+          ],
+          "perplexity": 32.730567266842726,
+          "mean_nll": 3.4883094200721154,
+          "next_token_accuracy": 0.3860805860805861,
+          "scored_tokens": 4095
+        },
+        "all": {
+          "compressed_projections": [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj"
+          ],
+          "perplexity": 51.63732890661224,
+          "mean_nll": 3.944244839362027,
+          "next_token_accuracy": 0.33772893772893775,
+          "scored_tokens": 4095
+        }
+      },
+      "seconds": 52.417206240003
+    }
+  },
+  "nec-structural2-column05-residual30-als3-8": {
+    "evaluation": {
+      "schema": "nec_packed_teacher_kl_v1",
+      "model_id": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_revision": "main",
+      "checkpoint_dir": "/workspace/runs/nec-structural2-column05-residual30-als3-8",
+      "compressed_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "test_split": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "test",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+        "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+        "source_bytes": 732610,
+        "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+        "text_bytes": 1296370,
+        "text_join": "double_newline",
+        "rows": 4358,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "input_tokens": 4096,
+      "scored_tokens": 4095,
+      "context": 2048,
+      "stride": 512,
+      "teacher": {
+        "perplexity": 4.859409413674173,
+        "mean_nll": 1.5809169107081418,
+        "next_token_accuracy": 0.6283272283272283
+      },
+      "student": {
+        "perplexity": 59.88379575190508,
+        "mean_nll": 4.092405946852782,
+        "teacher_kl_nats_per_token": 2.5333535990036635,
+        "next_token_accuracy": 0.32332112332112334,
+        "dense_top1_agreement": 0.38974358974358975
+      },
+      "seconds": 11.861650915001519
+    },
+    "manifest_summary": {
+      "schema": "nec_packed_schmidt_compile_v1",
+      "model_dir": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_config_sha256": "3c66a81e29ce617a74ff2e4055e7fb275b5c9457103864745693fbce59b368a2",
+      "compiled_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "dense_base_matrix": false,
+      "post_compression_healing": false,
+      "calibration": {
+        "tokens_per_layer": 4096,
+        "sequence_length": 128,
+        "activation_directory": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg",
+        "trajectory": "dense"
+      },
+      "factor_bits_candidates": [
+        2,
+        3,
+        4
+      ],
+      "group_size": 64,
+      "layout_policy": "packed_efficiency",
+      "activation_alpha": 0.5,
+      "calibration_schmidt_branch": {
+        "byte_fraction_per_operator": 0.3,
+        "factor_bits": 4,
+        "fit_tokens": 512,
+        "ridge_ratio": 0.0001
+      },
+      "calibration_column_branch": {
+        "coefficient_and_byte_fraction_per_operator": 0.05,
+        "factor_bits": 4,
+        "ridge_ratio": 0.001
+      },
+      "swiglu_compensation": true,
+      "gradient_free_als_sweeps": 3,
+      "serialized_checkpoint_bytes_present": 406568168,
+      "logical_artifact_coefficient_count_present": 770860140,
+      "projected_complete_model_coefficient_count_upper_bound": 3363369716,
+      "projected_complete_structural_reduction_lower_bound": 2.0034721820632577,
+      "projected_complete_package_bytes_upper_bound": 2565507263,
+      "projected_complete_package_ratio_lower_bound": 5.25402820151751,
+      "complete_package_is_materialized": false,
+      "layer_multipliers": {
+        "0": 0.85,
+        "1": 1,
+        "2": 1.1,
+        "3": 1,
+        "4": 1.05,
+        "5": 0.85,
+        "6": 1,
+        "7": 1.15,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 1,
+        "15": 1,
+        "16": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "20": 1,
+        "21": 1,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "25": 1,
+        "26": 1,
+        "27": 1,
+        "28": 1,
+        "29": 1,
+        "30": 1,
+        "31": 1
+      },
+      "seconds": 40.02699663594831
+    }
+  },
+  "nec-structural2-column05-residual20-complement20-8": {
+    "evaluation": {
+      "schema": "nec_packed_teacher_kl_v1",
+      "model_id": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_revision": "main",
+      "checkpoint_dir": "/workspace/runs/nec-structural2-column05-residual20-complement20-8",
+      "compressed_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "test_split": {
+        "dataset": "wikitext-2-raw-v1",
+        "dataset_repo": "Salesforce/wikitext",
+        "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+        "split": "test",
+        "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+        "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+        "source_bytes": 732610,
+        "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+        "text_bytes": 1296370,
+        "text_join": "double_newline",
+        "rows": 4358,
+        "literal_unk_count": 0,
+        "fallback": false
+      },
+      "token_offset": 0,
+      "input_token_ids_sha256": "74eef0b288393509a8f902f2833b3f10587c451524d119074bb8a0ce52cdf773",
+      "input_tokens": 4096,
+      "scored_tokens": 4095,
+      "context": 2048,
+      "stride": 512,
+      "teacher": {
+        "perplexity": 4.859409413674173,
+        "mean_nll": 1.5809169107081418,
+        "next_token_accuracy": 0.6283272283272283
+      },
+      "student": {
+        "perplexity": 69.57119531886136,
+        "mean_nll": 4.242350621315351,
+        "teacher_kl_nats_per_token": 2.6737463035121825,
+        "next_token_accuracy": 0.3018315018315018,
+        "dense_top1_agreement": 0.36874236874236876
+      },
+      "seconds": 11.257702984032221
+    },
+    "manifest_summary": {
+      "schema": "nec_packed_schmidt_compile_v1",
+      "model_dir": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+      "model_config_sha256": "3c66a81e29ce617a74ff2e4055e7fb275b5c9457103864745693fbce59b368a2",
+      "compiled_layers": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "dense_base_matrix": false,
+      "post_compression_healing": false,
+      "calibration": {
+        "tokens_per_layer": 4096,
+        "sequence_length": 128,
+        "activation_directory": "/workspace/runs/nec-streaming-qualification/layer0/reference-post-sweep-q4-48cg",
+        "trajectory": "dense"
+      },
+      "factor_bits_candidates": [
+        2,
+        3,
+        4
+      ],
+      "group_size": 64,
+      "layout_policy": "packed_efficiency",
+      "activation_alpha": 0.5,
+      "calibration_schmidt_branch": {
+        "byte_fraction_per_operator": 0.2,
+        "factor_bits": 4,
+        "fit_tokens": 512,
+        "ridge_ratio": 0.0001
+      },
+      "calibration_column_branch": {
+        "coefficient_and_byte_fraction_per_operator": 0.05,
+        "factor_bits": 4,
+        "ridge_ratio": 0.001
+      },
+      "swiglu_compensation": true,
+      "complementary_branch_fraction": 0.2,
+      "gradient_free_als_sweeps": 3,
+      "serialized_checkpoint_bytes_present": 406998640,
+      "logical_artifact_coefficient_count_present": 770185584,
+      "evaluated_assembly_coefficient_count": 5889601904,
+      "evaluated_assembly_structural_reduction": 1.1441210753860147,
+      "evaluated_assembly_package_bytes_upper_bound": 10669214983,
+      "evaluated_assembly_package_ratio_lower_bound": 1.263377627358472,
+      "projected_storage_budget_satisfied": true,
+      "projected_coefficient_budget_satisfied": true,
+      "projected_complete_model_coefficient_count_upper_bound": 3362695160,
+      "projected_complete_structural_reduction_lower_bound": 2.0038740781962527,
+      "projected_complete_package_bytes_upper_bound": 2565937735,
+      "projected_complete_package_ratio_lower_bound": 5.253146764685621,
+      "all_layer_artifacts_are_materialized": false,
+      "complete_package_is_materialized": false,
+      "layer_multipliers": {
+        "0": 0.85,
+        "1": 1,
+        "2": 1.1,
+        "3": 1,
+        "4": 1.05,
+        "5": 0.85,
+        "6": 1,
+        "7": 1.15,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 1,
+        "15": 1,
+        "16": 1,
+        "17": 1,
+        "18": 1,
+        "19": 1,
+        "20": 1,
+        "21": 1,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "25": 1,
+        "26": 1,
+        "27": 1,
+        "28": 1,
+        "29": 1,
+        "30": 1,
+        "31": 1
+      },
+      "seconds": 36.50235513201915
+    }
+  }
+}
