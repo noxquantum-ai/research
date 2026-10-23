@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from nox.block_compiler import ridge_compensated_up_target, scaled_dot_product_attention_2d
+from nox.functional_schmidt import construct_functional_schmidt_mlp
 from nox.packed_schmidt import (
     compile_packed_schmidt,
     packed_schmidt_coefficient_count_from_artifact,
@@ -214,6 +215,9 @@ def main() -> None:
     parser.add_argument("--column-branch-ridge-ratio", type=float, default=1e-3)
     parser.add_argument("--complementary-branch-fraction", type=float, default=0.0)
     parser.add_argument("--swiglu-compensation", action="store_true")
+    parser.add_argument("--joint-mlp-sweeps", type=int, default=0)
+    parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
+    parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument(
@@ -254,6 +258,10 @@ def main() -> None:
         parser.error("combined calibration branch fractions must be below one")
     if args.column_branch_ridge_ratio < 0:
         parser.error("--column-branch-ridge-ratio must be nonnegative")
+    if args.joint_mlp_sweeps < 0 or args.joint_mlp_cg_iterations < 1:
+        parser.error("joint MLP sweeps must be nonnegative and CG iterations positive")
+    if not math.isfinite(args.joint_mlp_ridge_ratio) or args.joint_mlp_ridge_ratio <= 0:
+        parser.error("joint MLP ridge must be finite and positive")
 
     config = json.loads((args.model_dir / "config.json").read_text())
     layer_count = int(config["num_hidden_layers"])
@@ -616,6 +624,26 @@ def main() -> None:
         )
         artifacts[name] = artifact
         projection_records[name] = diagnostics
+        joint_mlp_diagnostics = None
+        if args.joint_mlp_sweeps:
+            joint_artifacts, joint_weights, joint_mlp_diagnostics = (
+                construct_functional_schmidt_mlp(
+                    artifacts, norm2,
+                    dense_residual_hidden + dense_mlp_output - residual_hidden,
+                    sweeps=args.joint_mlp_sweeps,
+                    cg_iterations=args.joint_mlp_cg_iterations,
+                    ridge_ratio=args.joint_mlp_ridge_ratio,
+                    sequence_length=args.sequence_length,
+                )
+            )
+            artifacts.update(joint_artifacts)
+            reconstructed.update(joint_weights)
+            compressed_active = (
+                F.silu(joint_weights["gate_proj"] @ norm2)
+                * (joint_weights["up_proj"] @ norm2)
+            )
+            decoded_down = joint_weights["down_proj"]
+            del joint_artifacts, joint_weights
         compressed_hidden = residual_hidden + decoded_down @ compressed_active
         previous_layer = layer
         checkpoint = {
@@ -637,6 +665,10 @@ def main() -> None:
             "logical_coefficient_count": coefficient_count,
             "serialized_checkpoint_bytes": output_path.stat().st_size,
             "projection_diagnostics": projection_records,
+            "projection_diagnostics_stage": (
+                "before_joint_mlp_construction" if args.joint_mlp_sweeps else "final"
+            ),
+            "joint_mlp_construction": joint_mlp_diagnostics,
             "calibration_input": (
                 "compiled_prefix" if uses_compiled_prefix else "dense_trajectory"
             ),
@@ -752,6 +784,12 @@ def main() -> None:
             "ridge_ratio": args.column_branch_ridge_ratio,
         },
         "swiglu_compensation": args.swiglu_compensation,
+        "joint_mlp_construction": {
+            "sweeps": args.joint_mlp_sweeps,
+            "cg_iterations": args.joint_mlp_cg_iterations,
+            "ridge_ratio": args.joint_mlp_ridge_ratio,
+            "target": "clean_whole_block_output_including_residual_stream",
+        },
         "complementary_branch_fraction": args.complementary_branch_fraction,
         "gradient_free_als_sweeps": args.als_sweeps,
         "layers": layer_records,
