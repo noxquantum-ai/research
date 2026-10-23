@@ -31,15 +31,17 @@ See the [complete experiment report](results/nec_sparse_excitation_a40_20261023/
 
 The five full benchmarks are being run for both NEC and the original dense model under identical LM Evaluation Harness settings, prompts and full splits. This gives us matched dense scores, including BoolQ, from one harness. Reference scores below were supplied by the user and appear in [CompactifAI's published comparison](https://arxiv.org/html/2401.14109v2); matching prompts, few-shot settings and scoring protocols have not been established, so these columns are external references rather than matched baselines.
 
-| Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | NEC 5.413× |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Pending |
-| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Pending |
-| BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | Pending |
-| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending |
-| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending |
+| Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | Dense, matched harness | NEC 5.413× |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Pending | Pending |
+| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Pending | Pending |
+| BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | **79.36** | **48.50** |
+| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending | Pending |
+| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending | Pending |
 
 All entries are percentages; higher is better. Dense and NEC scores will use the same harness for the matched comparison. CompactifAI columns are external references, since the paper does not establish that its prompts and few-shot settings match ours. Full protocols, sample counts and status are in the [benchmark report](results/nec_full_five_benchmarks_a40_20261023/README.md).
+
+The matched BoolQ run scored 79.36% for dense and 48.50% for NEC on all 3,270 validation questions, a 30.86-point gap. This exposes a substantial capability loss on this task despite the held-out WikiText-2 PPL result. See the [paired full-split records](results/nec_full_five_benchmarks_a40_20261023/progress/).
 
 ## Earlier dual-budget result
 

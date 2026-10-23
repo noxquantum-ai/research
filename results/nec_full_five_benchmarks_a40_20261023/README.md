@@ -47,10 +47,14 @@ LM Evaluation Harness but does not provide sufficient prompt/few-shot details
 to establish a matched protocol. Reference columns are not our dense results
 and must not be treated as a controlled accuracy-retention comparison.
 
-| Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | NEC 5.413× |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Pending |
-| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Pending |
-| BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | Pending |
-| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending |
-| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending |
+| Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | Dense, matched harness | NEC 5.413× |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Pending | Pending |
+| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Pending | Pending |
+| BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | **79.36** | **48.50** |
+| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending | Pending |
+| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending | Pending |
+
+Matched BoolQ used the complete 3,270-question validation split: dense 79.36%,
+NEC 48.50%, a 30.86 percentage-point gap. Raw reports are in
+[`progress/`](progress/).
