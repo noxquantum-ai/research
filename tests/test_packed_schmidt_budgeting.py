@@ -2,8 +2,13 @@ import unittest
 
 import torch
 
-from nox.operator_schmidt import OperatorSchmidtLayout
+from nox.operator_schmidt import (
+    OperatorSchmidtLayout, _matrix_to_unfolding, operator_schmidt_to_dense,
+)
 from nox.packed_schmidt import (
+    _core_from_input_metric,
+    _input_mode_cholesky_factors,
+    _matrix_in_input_metric,
     compile_packed_schmidt,
     packed_matrix_coefficient_count,
     packed_schmidt_coefficient_count,
@@ -15,6 +20,29 @@ from nox.residual_codec import encode_groupwise
 
 
 class PackedSchmidtStructuralBudgetTests(unittest.TestCase):
+    def test_mode_metric_is_absorbed_into_either_tensor_cut(self):
+        generator = torch.Generator().manual_seed(53)
+        weight = torch.randn(12, 24, generator=generator)
+        inputs = torch.randn(24, 80, generator=generator)
+        factors = _input_mode_cholesky_factors(
+            inputs, (4, 6), ridge_ratio=0.01,
+        )
+        weighted = _matrix_in_input_metric(weight, factors)
+        torch.testing.assert_close(weighted, weight @ torch.kron(*factors))
+        for axes in ((0, 2, 1, 3), (0, 3, 1, 2)):
+            layout = OperatorSchmidtLayout("metric_test", (3, 4), (4, 6), axes)
+            u, values, vh = torch.linalg.svd(
+                _matrix_to_unfolding(weighted, layout), full_matrices=False,
+            )
+            left, right = (u * values.sqrt()).T, values.sqrt()[:, None] * vh
+            core_factors = factors if axes == (0, 2, 1, 3) else factors[::-1]
+            left = _core_from_input_metric(left, core_factors[0])
+            right = _core_from_input_metric(right, core_factors[1])
+            torch.testing.assert_close(
+                operator_schmidt_to_dense(left, right, layout), weight,
+                atol=8e-6, rtol=8e-6,
+            )
+
     def test_compiled_defects_roundtrip_and_stay_inside_both_budgets(self):
         generator = torch.Generator().manual_seed(41)
         weight = torch.randn(32, 32, generator=generator)
@@ -27,6 +55,7 @@ class PackedSchmidtStructuralBudgetTests(unittest.TestCase):
             calibration_branch_fit_tokens=32,
             column_branch_fraction=0.2,
             complementary_branch_fraction=0.2,
+            input_metric="product_covariance",
         )
         self.assertIn("complementary_schmidt_branch", artifact)
         self.assertIn("calibration_column_branch", artifact)

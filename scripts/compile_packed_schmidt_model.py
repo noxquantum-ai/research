@@ -193,6 +193,10 @@ def main() -> None:
     )
     parser.add_argument("--als-sweeps", type=int, default=1)
     parser.add_argument("--activation-alpha", type=float, default=0.5)
+    parser.add_argument(
+        "--input-metric", choices=("diagonal", "product_covariance"), default="diagonal",
+    )
+    parser.add_argument("--input-metric-ridge-ratio", type=float, default=0.01)
     parser.add_argument("--calibration-branch-fraction", type=float, default=0.0)
     parser.add_argument("--calibration-branch-bits", type=int, choices=(2, 3, 4), default=3)
     parser.add_argument("--calibration-branch-fit-tokens", type=int, default=512)
@@ -442,6 +446,8 @@ def main() -> None:
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
+                input_metric=args.input_metric,
+                input_metric_ridge_ratio=args.input_metric_ridge_ratio,
                 calibration_branch_fraction=args.calibration_branch_fraction,
                 calibration_branch_bits=args.calibration_branch_bits,
                 calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
@@ -478,6 +484,8 @@ def main() -> None:
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
             activation_alpha=args.activation_alpha,
+            input_metric=args.input_metric,
+            input_metric_ridge_ratio=args.input_metric_ridge_ratio,
             calibration_branch_fraction=args.calibration_branch_fraction,
             calibration_branch_bits=args.calibration_branch_bits,
             calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
@@ -541,6 +549,8 @@ def main() -> None:
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
+                input_metric=args.input_metric,
+                input_metric_ridge_ratio=args.input_metric_ridge_ratio,
                 calibration_branch_fraction=args.calibration_branch_fraction,
                 calibration_branch_bits=args.calibration_branch_bits,
                 calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
@@ -581,6 +591,8 @@ def main() -> None:
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
             activation_alpha=args.activation_alpha,
+            input_metric=args.input_metric,
+            input_metric_ridge_ratio=args.input_metric_ridge_ratio,
             calibration_branch_fraction=args.calibration_branch_fraction,
             calibration_branch_bits=args.calibration_branch_bits,
             calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
@@ -716,6 +728,8 @@ def main() -> None:
         "group_size": args.group_size,
         "layout_policy": args.layout_policy,
         "activation_alpha": args.activation_alpha,
+        "input_metric": args.input_metric,
+        "input_metric_ridge_ratio": args.input_metric_ridge_ratio,
         "calibration_schmidt_branch": {
             "byte_fraction_per_operator": args.calibration_branch_fraction,
             "factor_bits": args.calibration_branch_bits,

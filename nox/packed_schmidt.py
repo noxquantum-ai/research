@@ -243,6 +243,56 @@ def _relative_frobenius(reference: torch.Tensor, candidate: torch.Tensor) -> flo
     return float((reference - candidate).norm() / reference.norm().clamp_min(1e-30))
 
 
+def _input_mode_cholesky_factors(
+    inputs: torch.Tensor,
+    input_factors: tuple[int, int],
+    *,
+    ridge_ratio: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Partial traces of input covariance define a separable input metric.
+
+    Each marginal is normalized before ridge regularization. Their Kronecker
+    product is an approximation to full covariance; it is not a full whitening
+    certificate. Only these small mode systems are formed, never X X^T.
+    """
+
+    i0, i1 = input_factors
+    x = inputs.float().reshape(i0, i1, -1)
+    marginals = (
+        torch.einsum("ijn,kjn->ik", x, x),
+        torch.einsum("ijn,ikn->jk", x, x),
+    )
+    factors = []
+    for marginal in marginals:
+        normalized = marginal / marginal.diagonal().mean().clamp_min(1e-20)
+        normalized = (normalized + normalized.T) * 0.5
+        identity = torch.eye(
+            normalized.shape[0], device=normalized.device, dtype=normalized.dtype,
+        )
+        factors.append(torch.linalg.cholesky(normalized + ridge_ratio * identity))
+    return tuple(factors)
+
+
+def _matrix_in_input_metric(
+    matrix: torch.Tensor, factors: tuple[torch.Tensor, torch.Tensor],
+) -> torch.Tensor:
+    s0, s1 = factors
+    tensor = matrix.reshape(matrix.shape[0], s0.shape[0], s1.shape[0])
+    return torch.einsum("oij,ia->oaj", tensor @ s1, s0).reshape_as(matrix)
+
+
+def _core_from_input_metric(core: torch.Tensor, chol: torch.Tensor) -> torch.Tensor:
+    shape = core.shape
+    rows = core.reshape(-1, chol.shape[0])
+    return torch.linalg.solve_triangular(
+        chol.T, rows.T.contiguous(), upper=True,
+    ).T.contiguous().reshape(shape)
+
+
+def _core_in_input_metric(core: torch.Tensor, chol: torch.Tensor) -> torch.Tensor:
+    return (core.reshape(-1, chol.shape[0]) @ chol).reshape_as(core)
+
+
 def _quantized_als(
     unfolding: torch.Tensor,
     left: torch.Tensor,
@@ -252,11 +302,20 @@ def _quantized_als(
     group_size: int,
     sweeps: int,
     ridge_ratio: float,
+    input_metric_factors: tuple[torch.Tensor, torch.Tensor] | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor, list[dict]]:
     """Fit packed Schmidt cores by gradient-free alternating least squares."""
 
-    left = _quantize_dequantize(left, bits, group_size)
-    right = _quantize_dequantize(right, bits, group_size)
+    def quantize(core, side):
+        if input_metric_factors is None:
+            return _quantize_dequantize(core, bits, group_size)
+        chol = input_metric_factors[side]
+        physical = _core_from_input_metric(core, chol)
+        physical = _quantize_dequantize(physical, bits, group_size)
+        return _core_in_input_metric(physical, chol)
+
+    left = quantize(left, 0)
+    right = quantize(right, 1)
     history = [{"sweep": 0, "relative_unfolding_error": _relative_frobenius(
         unfolding, left.T @ right,
     )}]
@@ -272,7 +331,7 @@ def _quantized_als(
             ),
             rhs_left.T,
         ).T
-        left = _quantize_dequantize(left_t.T.contiguous(), bits, group_size)
+        left = quantize(left_t.T.contiguous(), 0)
 
         left_t = left.T
         gram_left = left @ left_t
@@ -283,7 +342,7 @@ def _quantized_als(
             ),
             left @ unfolding,
         )
-        right = _quantize_dequantize(right, bits, group_size)
+        right = quantize(right, 1)
         error = _relative_frobenius(unfolding, left.T @ right)
         accepted = error <= previous_error
         if not accepted:
@@ -649,6 +708,8 @@ def compile_packed_schmidt(
     column_branch_bits: int = 4,
     column_branch_ridge_ratio: float = 1e-3,
     complementary_branch_fraction: float = 0.0,
+    input_metric: str = "diagonal",
+    input_metric_ridge_ratio: float = 0.01,
     als_sweeps: int = 1,
     ridge_ratio: float = 1e-5,
     n_heads: int = 32,
@@ -665,6 +726,12 @@ def compile_packed_schmidt(
         raise ValueError("byte_budget must be positive")
     if coefficient_budget is not None and coefficient_budget <= 0:
         raise ValueError("coefficient_budget must be positive")
+    if input_metric not in ("diagonal", "product_covariance"):
+        raise ValueError("unsupported input metric")
+    if not math.isfinite(input_metric_ridge_ratio) or input_metric_ridge_ratio <= 0:
+        raise ValueError("input metric ridge must be finite and positive")
+    if input_metric == "product_covariance" and calibration_inputs is None:
+        raise ValueError("product covariance requires calibration inputs")
     if group_size <= 0 or als_sweeps < 0 or ridge_ratio < 0:
         raise ValueError("invalid group size or ALS controls")
     if not 0 <= calibration_branch_fraction < 1 or not 0 <= column_branch_fraction < 1:
@@ -719,6 +786,20 @@ def compile_packed_schmidt(
             else calibration_targets.detach().float()
         )
     conditioned = source * input_scale[None, :]
+    mode_metric_factors = None
+    core_metric_factors = None
+    if input_metric == "product_covariance":
+        mode_metric_factors = _input_mode_cholesky_factors(
+            calibration_inputs.float() / input_scale[:, None],
+            layout.input_factors, ridge_ratio=input_metric_ridge_ratio,
+        )
+        conditioned = _matrix_in_input_metric(conditioned, mode_metric_factors)
+        if layout.partition_axes == (0, 2, 1, 3):
+            core_metric_factors = mode_metric_factors
+        elif layout.partition_axes == (0, 3, 1, 2):
+            core_metric_factors = mode_metric_factors[::-1]
+        else:
+            raise ValueError("input metric requires a paired operator-Schmidt cut")
     unfolding = _matrix_to_unfolding(conditioned, layout)
 
     branch_budget = math.floor(byte_budget * calibration_branch_fraction)
@@ -790,9 +871,14 @@ def compile_packed_schmidt(
         left, right, history = _quantized_als(
             unfolding, left, right, bits=bits, group_size=group_size,
             sweeps=als_sweeps, ridge_ratio=ridge_ratio,
+            input_metric_factors=core_metric_factors,
         )
         reconstructed_unfolding = left.T @ right
         conditioned_objective = _relative_frobenius(unfolding, reconstructed_unfolding)
+        if core_metric_factors is not None:
+            left = _core_from_input_metric(left, core_metric_factors[0])
+            right = _core_from_input_metric(right, core_metric_factors[1])
+            reconstructed_unfolding = left.T @ right
         output_scale = torch.ones(d_out, device=source.device, dtype=torch.float32)
         calibration_objective = None
         if calibration_inputs is not None:
@@ -847,6 +933,8 @@ def compile_packed_schmidt(
         "rank": rank,
         "factor_bits": bits,
         "group_size": group_size,
+        "construction_input_metric": input_metric,
+        "construction_input_metric_ridge_ratio": input_metric_ridge_ratio,
         "left_codec": left_codec,
         "right_codec": right_codec,
         "input_scale": input_scale.to(device="cpu", dtype=torch.float16),
@@ -919,6 +1007,8 @@ def compile_packed_schmidt(
                 head_dim=head_dim,
                 oversample=oversample,
                 power_iterations=power_iterations,
+                input_metric=input_metric,
+                input_metric_ridge_ratio=input_metric_ridge_ratio,
                 seed=seed + 20_000,
             )
         )
@@ -990,6 +1080,7 @@ def compile_packed_schmidt(
     diagnostics = {
         "layout": artifact["layout"],
         "layout_policy": layout_policy,
+        "input_metric": input_metric,
         "selected_bits": bits,
         "selected_rank": rank,
         "payload_bytes": artifact["payload_bytes"],
