@@ -4,12 +4,14 @@ We have demonstrated aggressive structural reductions, including configuration-d
 
 ## Latest dual-budget NEC result
 
-A newer sparse-excitation hybrid has an **eight-layer** development result
-of PPL **4.379 versus dense 4.083**, KL **0.089**, with all other layers dense.
-The user supplied that evaluation after terminating its pod. Reproduction and
-extension to all 32 layers are in progress; actual whole-model compression
-and final held-out quality for this candidate are not yet established.
-See the [current hybrid trial and live-result instructions](results/nec_sparse_excitation_a40_20261023/README.md).
+A newer sparse-excitation hybrid exactly reproduced its eight-layer result
+on a replacement A40 pod and has now reached **16 compressed layers at PPL
+5.053 versus dense 4.083**, KL **0.232**. These are matched development-slice
+measurements through the complete original architecture, with uncompiled
+layers still dense. Extension to all 32 layers is in progress; actual
+whole-model compression and final held-out quality for this candidate are
+not yet established. See the [live measured checkpoints](results/nec_sparse_excitation_a40_20261023/live/README.md)
+and [trial protocol](results/nec_sparse_excitation_a40_20261023/README.md).
 
 NEC now tracks actual serialized storage and logical coefficient reduction as
 separate constraints. This corrected an important weakness in the packed
