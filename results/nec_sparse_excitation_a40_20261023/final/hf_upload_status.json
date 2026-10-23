@@ -1,0 +1,14 @@
+{
+  "repo_id": "Fluxx08/NEC-Llama-2-7B-Hybrid",
+  "url": "https://huggingface.co/Fluxx08/NEC-Llama-2-7B-Hybrid",
+  "requested_private": true,
+  "phase": "complete",
+  "updated_utc": "2026-10-23T21:18:45.264182+00:00",
+  "package_bytes": 2490271769,
+  "revision": "3b6f1f379048e52bb982754cd7e8e144c54cfbe7",
+  "private": true,
+  "actual_repository_file_bytes": 2490273288,
+  "whole_model_compression_ratio": 5.412758341003415,
+  "structural_reduction": 2.027791443239196,
+  "three_targets_passed": true
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "nec_paired_greedy_examples_v1",
+  "compressed_layers": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "checkpoint_dir": "/workspace/runs/nec-sparse10-coupled-sequential-full32",
+  "semantics": "Qualitative development prompts; no public benchmark or accuracy score is implied.",
+  "decoding": {
+    "do_sample": false,
+    "num_beams": 1,
+    "max_new_tokens": 64
+  },
+  "examples": [
+    {
+      "prompt": "Q: What is 2 plus 2?\nA: 4.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of France?\nA:",
+      "teacher_raw_completion": "Paris.\n\nQ: What is the capital of Germany?\nA: Berlin.\n\nQ: What is the capital of England?\nA: London.\n\nQ: What is the capital of Spain?\nA: Madrid.\n\nQ: What is the capital of Portugal?\nA:",
+      "student_raw_completion": "Paris.\n\nQ: What is the capital of the United States?\nA: Washington.\n\nQ: What is the capital of the United States?\nA: Washington.\n\nQ: What is the capital of the United States?\nA: Washington.\n\nQ: What is the capital"
+    },
+    {
+      "prompt": "Q: What is 2 plus 2?\nA: 4.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is 17 multiplied by 23?\nA:",
+      "teacher_raw_completion": "391.\n\nQ: What is the sum of 17 and 23?\nA: 40.\n\nQ: What is the sum of 17 and 23?\nA: 40.\n\nQ: What is the sum of 1",
+      "student_raw_completion": "40.\n\nQ: What is 17 multiplied by 23?\nA: 40.\n\nQ: What is 17 multiplied by 23?\nA: 40.\n\nQ: What is 17 multiplied by 2"
+    },
+    {
+      "prompt": "Q: What is 2 plus 2?\nA: 4.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: Which planet is called the Red Planet?\nA:",
+      "teacher_raw_completion": "Mars.\n\nQ: What is the capital of France?\nA: Paris.\n\nQ: What is the capital of Spain?\nA: Madrid.\n\nQ: What is the capital of Germany?\nA: Berlin.\n\nQ: What is the capital of England?\nA:",
+      "student_raw_completion": "Mars.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of Italy?\nA:"
+    },
+    {
+      "prompt": "Q: What is 2 plus 2?\nA: 4.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: At what temperature in degrees Celsius does water freeze at standard pressure?\nA:",
+      "teacher_raw_completion": "0.\n\nQ: What is the capital of France?\nA: Paris.\n\nQ: What is the capital of Spain?\nA: Madrid.\n\nQ: What is the capital of Germany?\nA: Berlin.\n\nQ: What is the capital of the United Kingdom?",
+      "student_raw_completion": "100.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the capital of Italy?"
+    },
+    {
+      "prompt": "Q: What is 2 plus 2?\nA: 4.\n\nQ: What is the capital of Italy?\nA: Rome.\n\nQ: What is the sum of the integers from 1 through 5?\nA:",
+      "teacher_raw_completion": "15.\n\nQ: What is the sum of the integers from 1 through 10?\nA: 55.\n\nQ: What is the sum of the integers from 1 through 100?\nA: 5050.\n\nQ: What",
+      "student_raw_completion": "10.\n\nQ: What is the sum of the integers from 1 through 5?\nA: 10.\n\nQ: What is the sum of the integers from 1 through 5?\nA: 10.\n\nQ: What is the sum of the"
+    }
+  ]
+}

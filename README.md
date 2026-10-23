@@ -1,55 +1,49 @@
 NEC (Nox Entanglement Compiler) is our post-training, quantum-inspired structural compression system for pretrained language models. It uses tensor networks and related mathematical techniques to reduce the number of independent model parameters without post-compression training.
 
-We have demonstrated aggressive structural reductions, including configuration-derived estimates of roughly 7–11×, but those representations severely degrade model capability. Preserving accuracy and functionality at substantial parameter reductions remains NEC’s central unresolved challenge.
+The latest complete Llama-2-7B package meets our minimum joint gates: **5.413× actual whole-model storage compression, 2.028× structural coefficient reduction, and held-out WikiText-2 PPL 8.349**. NEC compresses attention and MLP in every transformer layer without gradient-based fine-tuning or healing. Accuracy remains below the dense baseline; the five capability benchmarks are pending, and the aspirational 10× storage target remains open.
 
-## Latest dual-budget NEC result
+## Latest complete NEC result
 
-A newer sparse-excitation hybrid exactly reproduced its eight-layer result
-on a replacement A40 pod and has now reached **16 compressed layers at PPL
-5.053 versus dense 4.083**, KL **0.232**. These are matched development-slice
-measurements through the complete original architecture, with uncompiled
-layers still dense. Extension to all 32 layers is in progress; actual
-whole-model compression and final held-out quality for this candidate are
-not yet established. See the [live measured checkpoints](results/nec_sparse_excitation_a40_20261023/live/README.md)
-and [trial protocol](results/nec_sparse_excitation_a40_20261023/README.md).
-
-NEC now tracks actual serialized storage and logical coefficient reduction as
-separate constraints. This corrected an important weakness in the packed
-Schmidt path: its completed 5× byte-target model stores 5.614B total logical
-coefficients and therefore achieves only **1.20× structural reduction**.
-
-The revised 32-layer compiler now produces a complete package satisfying
-**6.286× actual serialized compression and 2.023× structural reduction**.
-It compresses attention and MLP in every layer, retains zero transformer
-layers dense, and uses no gradient fine-tuning or healing. Quality still
-fails decisively, so the combined objective is **not achieved**.
+The representation combines a Schmidt/MPO tensor-network backbone, sparse residual coordinate amplitudes, and analytical activation-aware construction. It is a hybrid representation; tensor networks, sparsity and reduced-precision serialization all contribute. Every stored core, amplitude and learned scale counts toward structural size. Complete package storage includes retained embeddings, output head, norms, support masks, metadata, tokenizer and decoder code.
 
 | Full 32-layer result, 2026-10-23 | Dense reference | NEC |
 | --- | ---: | ---: |
-| Complete serialized model | 13,479,247,511 bytes | **2,144,321,837 bytes** |
-| Total stored coefficients, including all factors and scales | 6,738,417,664 | **3,331,706,294** |
-| Whole-model storage compression | 1× | **6.286×** |
-| Whole-model structural reduction | 1× | **2.023×** |
-| Validation-slice PPL, 4,095 scored tokens | 4.083 | **320.234** |
-| Teacher KL, nats/token | 0 | 4.363 |
-| Next-token accuracy | 66.37% | 17.36% |
-| Dense top-1 agreement | 100% | 21.03% |
-| Combined quality / storage / structural acceptance | Reference | **INFEASIBLE: quality fails** |
+| Complete published repository | 13,479,247,511 bytes | **2,490,273,288 bytes** |
+| Total stored weight/factor coefficients | 6,738,417,664 | **3,323,032,892** |
+| Actual whole-model storage compression | 1× | **5.413×** |
+| Structural coefficient reduction | 1× | **2.028×** |
+| Held-out WikiText-2 test PPL | 4.8673 | **8.3490** |
+| Teacher KL, nats/token | 0 | **0.54395** |
+| Next-token accuracy | 62.82% | **54.00%** |
+| Dense top-1 agreement | 100% | **71.03%** |
+| Dense transformer layers retained | 32 | **0** |
+| PPL ≤10, storage ≥5×, structural ≥2× together | Reference | **Passed** |
 
-The complete deployable directory includes retained weights, NEC artifacts,
-metadata, tokenizer files and loader code. Its runtime reconstructs dense
-weights; these storage ratios do not imply equivalent runtime memory savings.
-The remaining 24 layers compiled in 106 seconds with eight checkpoints reused.
+Quality uses 308,700 scored test tokens after offset 32,768, context 2,048 and stride 512. This is the remaining held-out test range, not the entire test split. Dense and NEC use identical token IDs. The package loader reproduces checkpoint-injection logits bit for bit. This establishes the stated PPL/storage/structural gates, not dense-equivalent capability or deployment speed.
 
-Eight-layer development improved PPL from 254.05 to 51.64 through an
-activation-sensitive coordinate defect and residual capacity allocation, but
-the full model still accumulates severe errors. In matched 32-layer test-slice
-ablations, attention alone scores PPL 27.93 and MLP alone 226.11. Exported
-logits match checkpoint injection exactly. Full-model
-accuracy preservation at 5–10× storage and 2–3× structural compression remains
-NEC's unresolved objective.
+Before lossless container compression, the complete package is 2,641,936,119 bytes (**5.102×**). Lossless gzip containers preserve decoded tensors and coefficients exactly; the published repository is about **151.7 MB smaller** after including publication files. Model weights remain on the GPU pod and the [private Hugging Face repository](https://huggingface.co/Fluxx08/NEC-Llama-2-7B-Hybrid), revision `3b6f1f379048e52bb982754cd7e8e144c54cfbe7`.
 
-See the [dual storage/structural budget report](results/nec_structural_budget_a40_20261023/README.md).
+The current loader reconstructs dense matrices for inference. Storage compression therefore does not establish comparable GPU-memory or throughput improvements. Pure layer construction took 52.43 minutes on an A40; the held-out evaluation took 8.09 minutes. These timings exclude preceding research, data preparation and packaging.
+
+See the [complete experiment report](results/nec_sparse_excitation_a40_20261023/README.md), [measured final reports](results/nec_sparse_excitation_a40_20261023/final/summary.json), and [staged raw evaluations](results/nec_sparse_excitation_a40_20261023/live/README.md).
+
+## Full capability benchmarks
+
+The five full benchmarks are being evaluated on **NEC only**, using pinned LM Evaluation Harness settings and GPU batching. No new dense benchmark run is requested. Reference scores below were supplied by the user and appear in [CompactifAI's published comparison](https://arxiv.org/html/2401.14109v2); matching prompts, few-shot settings and scoring protocols have not been established, so these columns are external references rather than matched baselines.
+
+| Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | NEC 5.413× |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Pending |
+| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Pending |
+| BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | Pending |
+| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending |
+| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending |
+
+All entries are percentages; higher is better. Full protocols, sample counts and completion status will accompany measured NEC scores. See the [benchmark protocol](results/nec_full_five_benchmarks_a40_20261023/README.md).
+
+## Earlier dual-budget result
+
+The preceding complete model achieved 6.286× storage and 2.023× structural reduction but failed quality with validation-slice PPL 320.234 (dense 4.083). The newer result above supersedes it; [its report](results/nec_structural_budget_a40_20261023/README.md) remains available as a failed historical experiment.
 
 ## Latest full-model allocation run
 

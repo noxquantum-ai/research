@@ -1,0 +1,2868 @@
+{
+  "schema": "nec_hybrid_component_breakdown_v1",
+  "layers": [
+    {
+      "layer": 0,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "k_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "v_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "o_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1342208,
+          "main_mpo_scale_coefficients": 36076,
+          "other_backbone_branch_coefficients": 352820,
+          "sparse_amplitude_values": 14090240,
+          "sparse_scale_coefficients": 220160,
+          "total_artifact_coefficients": 16041504,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1139008,
+          "sparse_value_and_scale_payload_bytes": 5724160,
+          "total_tensor_payload_bytes": 12499264
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1342208,
+          "main_mpo_scale_coefficients": 36076,
+          "other_backbone_branch_coefficients": 352820,
+          "sparse_amplitude_values": 14090240,
+          "sparse_scale_coefficients": 220160,
+          "total_artifact_coefficients": 16041504,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1139008,
+          "sparse_value_and_scale_payload_bytes": 5724160,
+          "total_tensor_payload_bytes": 12499264
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1342208,
+          "main_mpo_scale_coefficients": 36076,
+          "other_backbone_branch_coefficients": 352820,
+          "sparse_amplitude_values": 14417920,
+          "sparse_scale_coefficients": 225280,
+          "total_artifact_coefficients": 16374304,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1139008,
+          "sparse_value_and_scale_payload_bytes": 5857280,
+          "total_tensor_payload_bytes": 12632384
+        }
+      }
+    },
+    {
+      "layer": 1,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 10,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 11,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 12,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 13,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 14,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 15,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 16,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 17,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 18,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 19,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 2,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 638976,
+          "main_mpo_scale_coefficients": 18176,
+          "other_backbone_branch_coefficients": 174720,
+          "sparse_amplitude_values": 7892992,
+          "sparse_scale_coefficients": 126976,
+          "total_artifact_coefficients": 8851840,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 548608,
+          "sparse_value_and_scale_payload_bytes": 3301376,
+          "total_tensor_payload_bytes": 5947136
+        },
+        "k_proj": {
+          "main_mpo_core_values": 638976,
+          "main_mpo_scale_coefficients": 18176,
+          "other_backbone_branch_coefficients": 174720,
+          "sparse_amplitude_values": 7892992,
+          "sparse_scale_coefficients": 126976,
+          "total_artifact_coefficients": 8851840,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 548608,
+          "sparse_value_and_scale_payload_bytes": 3301376,
+          "total_tensor_payload_bytes": 5947136
+        },
+        "v_proj": {
+          "main_mpo_core_values": 638976,
+          "main_mpo_scale_coefficients": 18176,
+          "other_backbone_branch_coefficients": 174720,
+          "sparse_amplitude_values": 7892992,
+          "sparse_scale_coefficients": 126976,
+          "total_artifact_coefficients": 8851840,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 548608,
+          "sparse_value_and_scale_payload_bytes": 3301376,
+          "total_tensor_payload_bytes": 5947136
+        },
+        "o_proj": {
+          "main_mpo_core_values": 638976,
+          "main_mpo_scale_coefficients": 18176,
+          "other_backbone_branch_coefficients": 174720,
+          "sparse_amplitude_values": 7892992,
+          "sparse_scale_coefficients": 126976,
+          "total_artifact_coefficients": 8851840,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 548608,
+          "sparse_value_and_scale_payload_bytes": 3301376,
+          "total_tensor_payload_bytes": 5947136
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1739392,
+          "main_mpo_scale_coefficients": 42282,
+          "other_backbone_branch_coefficients": 475540,
+          "sparse_amplitude_values": 21190400,
+          "sparse_scale_coefficients": 341248,
+          "total_artifact_coefficients": 23788862,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1478956,
+          "sparse_value_and_scale_payload_bytes": 8872448,
+          "total_tensor_payload_bytes": 15987500
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1739392,
+          "main_mpo_scale_coefficients": 42282,
+          "other_backbone_branch_coefficients": 475540,
+          "sparse_amplitude_values": 21190400,
+          "sparse_scale_coefficients": 341248,
+          "total_artifact_coefficients": 23788862,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1478956,
+          "sparse_value_and_scale_payload_bytes": 8872448,
+          "total_tensor_payload_bytes": 15987500
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1739392,
+          "main_mpo_scale_coefficients": 42282,
+          "other_backbone_branch_coefficients": 475540,
+          "sparse_amplitude_values": 21200896,
+          "sparse_scale_coefficients": 331776,
+          "total_artifact_coefficients": 23789886,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1478956,
+          "sparse_value_and_scale_payload_bytes": 8626176,
+          "total_tensor_payload_bytes": 15741228
+        }
+      }
+    },
+    {
+      "layer": 20,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 21,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 22,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 23,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 24,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 25,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 26,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 27,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 28,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 29,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 3,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 30,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 31,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 4,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 614400,
+          "main_mpo_scale_coefficients": 17792,
+          "other_backbone_branch_coefficients": 166400,
+          "sparse_amplitude_values": 7532544,
+          "sparse_scale_coefficients": 118784,
+          "total_artifact_coefficients": 8449920,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 527104,
+          "sparse_value_and_scale_payload_bytes": 3088384,
+          "total_tensor_payload_bytes": 5712640
+        },
+        "k_proj": {
+          "main_mpo_core_values": 614400,
+          "main_mpo_scale_coefficients": 17792,
+          "other_backbone_branch_coefficients": 166400,
+          "sparse_amplitude_values": 7532544,
+          "sparse_scale_coefficients": 118784,
+          "total_artifact_coefficients": 8449920,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 527104,
+          "sparse_value_and_scale_payload_bytes": 3088384,
+          "total_tensor_payload_bytes": 5712640
+        },
+        "v_proj": {
+          "main_mpo_core_values": 614400,
+          "main_mpo_scale_coefficients": 17792,
+          "other_backbone_branch_coefficients": 166400,
+          "sparse_amplitude_values": 7532544,
+          "sparse_scale_coefficients": 118784,
+          "total_artifact_coefficients": 8449920,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 527104,
+          "sparse_value_and_scale_payload_bytes": 3088384,
+          "total_tensor_payload_bytes": 5712640
+        },
+        "o_proj": {
+          "main_mpo_core_values": 614400,
+          "main_mpo_scale_coefficients": 17792,
+          "other_backbone_branch_coefficients": 166400,
+          "sparse_amplitude_values": 7532544,
+          "sparse_scale_coefficients": 118784,
+          "total_artifact_coefficients": 8449920,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 527104,
+          "sparse_value_and_scale_payload_bytes": 3088384,
+          "total_tensor_payload_bytes": 5712640
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1657216,
+          "main_mpo_scale_coefficients": 40998,
+          "other_backbone_branch_coefficients": 444860,
+          "sparse_amplitude_values": 20243712,
+          "sparse_scale_coefficients": 319232,
+          "total_artifact_coefficients": 22706018,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1405204,
+          "sparse_value_and_scale_payload_bytes": 8300032,
+          "total_tensor_payload_bytes": 15341332
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1657216,
+          "main_mpo_scale_coefficients": 40998,
+          "other_backbone_branch_coefficients": 444860,
+          "sparse_amplitude_values": 20243712,
+          "sparse_scale_coefficients": 319232,
+          "total_artifact_coefficients": 22706018,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1405204,
+          "sparse_value_and_scale_payload_bytes": 8300032,
+          "total_tensor_payload_bytes": 15341332
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1657216,
+          "main_mpo_scale_coefficients": 40998,
+          "other_backbone_branch_coefficients": 444860,
+          "sparse_amplitude_values": 20246528,
+          "sparse_scale_coefficients": 319488,
+          "total_artifact_coefficients": 22709090,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1405204,
+          "sparse_value_and_scale_payload_bytes": 8306688,
+          "total_tensor_payload_bytes": 15347988
+        }
+      }
+    },
+    {
+      "layer": 5,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "k_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "v_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "o_proj": {
+          "main_mpo_core_values": 491520,
+          "main_mpo_scale_coefficients": 15872,
+          "other_backbone_branch_coefficients": 133120,
+          "sparse_amplitude_values": 5242880,
+          "sparse_scale_coefficients": 81920,
+          "total_artifact_coefficients": 5965312,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 424960,
+          "sparse_value_and_scale_payload_bytes": 2129920,
+          "total_tensor_payload_bytes": 4652032
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1342208,
+          "main_mpo_scale_coefficients": 36076,
+          "other_backbone_branch_coefficients": 352820,
+          "sparse_amplitude_values": 14090240,
+          "sparse_scale_coefficients": 220160,
+          "total_artifact_coefficients": 16041504,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1139008,
+          "sparse_value_and_scale_payload_bytes": 5724160,
+          "total_tensor_payload_bytes": 12499264
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1342208,
+          "main_mpo_scale_coefficients": 36076,
+          "other_backbone_branch_coefficients": 352820,
+          "sparse_amplitude_values": 14090240,
+          "sparse_scale_coefficients": 220160,
+          "total_artifact_coefficients": 16041504,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1139008,
+          "sparse_value_and_scale_payload_bytes": 5724160,
+          "total_tensor_payload_bytes": 12499264
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1342208,
+          "main_mpo_scale_coefficients": 36076,
+          "other_backbone_branch_coefficients": 352820,
+          "sparse_amplitude_values": 14417920,
+          "sparse_scale_coefficients": 225280,
+          "total_artifact_coefficients": 16374304,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1139008,
+          "sparse_value_and_scale_payload_bytes": 5857280,
+          "total_tensor_payload_bytes": 12632384
+        }
+      }
+    },
+    {
+      "layer": 6,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 7,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 671744,
+          "main_mpo_scale_coefficients": 18688,
+          "other_backbone_branch_coefficients": 183040,
+          "sparse_amplitude_values": 8249344,
+          "sparse_scale_coefficients": 131072,
+          "total_artifact_coefficients": 9253888,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 575488,
+          "sparse_value_and_scale_payload_bytes": 3407872,
+          "total_tensor_payload_bytes": 6080512
+        },
+        "k_proj": {
+          "main_mpo_core_values": 671744,
+          "main_mpo_scale_coefficients": 18688,
+          "other_backbone_branch_coefficients": 183040,
+          "sparse_amplitude_values": 8249344,
+          "sparse_scale_coefficients": 131072,
+          "total_artifact_coefficients": 9253888,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 575488,
+          "sparse_value_and_scale_payload_bytes": 3407872,
+          "total_tensor_payload_bytes": 6080512
+        },
+        "v_proj": {
+          "main_mpo_core_values": 671744,
+          "main_mpo_scale_coefficients": 18688,
+          "other_backbone_branch_coefficients": 183040,
+          "sparse_amplitude_values": 8249344,
+          "sparse_scale_coefficients": 131072,
+          "total_artifact_coefficients": 9253888,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 575488,
+          "sparse_value_and_scale_payload_bytes": 3407872,
+          "total_tensor_payload_bytes": 6080512
+        },
+        "o_proj": {
+          "main_mpo_core_values": 671744,
+          "main_mpo_scale_coefficients": 18688,
+          "other_backbone_branch_coefficients": 183040,
+          "sparse_amplitude_values": 8249344,
+          "sparse_scale_coefficients": 131072,
+          "total_artifact_coefficients": 9253888,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 575488,
+          "sparse_value_and_scale_payload_bytes": 3407872,
+          "total_tensor_payload_bytes": 6080512
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1821568,
+          "main_mpo_scale_coefficients": 43566,
+          "other_backbone_branch_coefficients": 490880,
+          "sparse_amplitude_values": 22159104,
+          "sparse_scale_coefficients": 352256,
+          "total_artifact_coefficients": 24867374,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1542796,
+          "sparse_value_and_scale_payload_bytes": 9158656,
+          "total_tensor_payload_bytes": 16337548
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1821568,
+          "main_mpo_scale_coefficients": 43566,
+          "other_backbone_branch_coefficients": 490880,
+          "sparse_amplitude_values": 22159104,
+          "sparse_scale_coefficients": 352256,
+          "total_artifact_coefficients": 24867374,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1542796,
+          "sparse_value_and_scale_payload_bytes": 9158656,
+          "total_tensor_payload_bytes": 16337548
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1821568,
+          "main_mpo_scale_coefficients": 43566,
+          "other_backbone_branch_coefficients": 490880,
+          "sparse_amplitude_values": 22167552,
+          "sparse_scale_coefficients": 348160,
+          "total_artifact_coefficients": 24871726,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1542796,
+          "sparse_value_and_scale_payload_bytes": 9052160,
+          "total_tensor_payload_bytes": 16231052
+        }
+      }
+    },
+    {
+      "layer": 8,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    },
+    {
+      "layer": 9,
+      "projections": {
+        "q_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "k_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "v_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "o_proj": {
+          "main_mpo_core_values": 581632,
+          "main_mpo_scale_coefficients": 17280,
+          "other_backbone_branch_coefficients": 158080,
+          "sparse_amplitude_values": 7077888,
+          "sparse_scale_coefficients": 110592,
+          "total_artifact_coefficients": 7945472,
+          "support_mask_bytes": 2097152,
+          "backbone_tensor_payload_bytes": 500224,
+          "sparse_value_and_scale_payload_bytes": 2875392,
+          "total_tensor_payload_bytes": 5472768
+        },
+        "gate_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "up_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19021824,
+          "sparse_scale_coefficients": 297216,
+          "total_artifact_coefficients": 21363314,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7727616,
+          "total_tensor_payload_bytes": 14705076
+        },
+        "down_proj": {
+          "main_mpo_core_values": 1575040,
+          "main_mpo_scale_coefficients": 39714,
+          "other_backbone_branch_coefficients": 429520,
+          "sparse_amplitude_values": 19279872,
+          "sparse_scale_coefficients": 303104,
+          "total_artifact_coefficients": 21627250,
+          "support_mask_bytes": 5636096,
+          "backbone_tensor_payload_bytes": 1341364,
+          "sparse_value_and_scale_payload_bytes": 7880704,
+          "total_tensor_payload_bytes": 14858164
+        }
+      }
+    }
+  ],
+  "totals": {
+    "main_mpo_core_values": 225734912,
+    "main_mpo_scale_coefficients": 6025668,
+    "other_backbone_branch_coefficients": 61376120,
+    "sparse_amplitude_values": 2724787712,
+    "sparse_scale_coefficients": 42696192,
+    "total_artifact_coefficients": 3060620604,
+    "support_mask_bytes": 809500672,
+    "backbone_tensor_payload_bytes": 192794072,
+    "sparse_value_and_scale_payload_bytes": 1110100992,
+    "total_tensor_payload_bytes": 2112395736
+  },
+  "scope": "artifact components only; retained source tensors belong in complete-package accounting",
+  "causal_ablation_directory": "/tmp/nec-hybrid-no-main-mpo-full32",
+  "ablation_is_reoptimized_matched_sparse_baseline": false
+}

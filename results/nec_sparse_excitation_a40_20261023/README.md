@@ -2,8 +2,55 @@
 
 Target: all 32 transformer layers compressed, held-out PPL <= 10, actual
 complete deployable package compression >= 5x, and structural coefficient
-reduction >= 2x, simultaneously, with no gradient-based healing. No success
-has yet been demonstrated for the complete model.
+reduction >= 2x, simultaneously, with no gradient-based healing. **All three
+minimum gates have now been demonstrated together for the complete model.**
+
+
+## Completed full-model result
+
+| Metric | Dense | NEC |
+| --- | ---: | ---: |
+| Complete published bytes | 13,479,247,511 | 2,490,273,288 |
+| Logical weight/factor coefficients | 6,738,417,664 | 3,323,032,892 |
+| Storage / structural reduction | 1× / 1× | **5.412758× / 2.027791×** |
+| Held-out test PPL | 4.867285 | **8.348960** |
+| Teacher KL, nats/token | 0 | 0.543950 |
+| Next-token accuracy | 62.8199% | 53.9990% |
+| Dense top-1 agreement | 100% | 71.0259% |
+
+All 32 layers and all seven projections are NEC-compressed. No transformer
+layers remain dense. The held-out range contains 308,700 scored tokens after
+WikiText-2 test offset 32,768; context 2,048, stride 512. It is not the entire
+test split. The final assembly meets PPL ≤10, actual storage ≥5× and structural
+reduction ≥2× simultaneously. Dense-equivalent accuracy and 10× compression
+remain unachieved; downstream capability benchmarks are pending.
+
+The complete plain package is 2,641,936,119 bytes (5.102034×). Lossless gzip
+containers reduce the final published repository to 2,490,273,288 bytes,
+including the model card and publication files. Both exported loaders reproduce
+original checkpoint-injection logits bit for bit. Logical coefficients are
+unchanged by the lossless containers. The runtime reconstructs dense matrices;
+no compressed GPU execution or throughput improvement is established.
+
+The private model repository is
+[Fluxx08/NEC-Llama-2-7B-Hybrid](https://huggingface.co/Fluxx08/NEC-Llama-2-7B-Hybrid),
+immutable revision `3b6f1f379048e52bb982754cd7e8e144c54cfbe7`.
+Its LFS payload sizes and hashes were checked against the actual uploaded
+files. Model weights were not downloaded to the local workstation.
+
+See [final measured reports](final/summary.json),
+[repository bytes and hashes](final/hf_repository_measurement.json),
+[component accounting](final/representation_breakdown.json),
+[lossless runtime parity](final/gzip_runtime_parity.json), and
+[paired qualitative generations](final/paired_greedy_examples.json).
+Those examples include arithmetic failures; they are not a capability benchmark.
+A zero-main-MPO ablation causes PPL 103,570 on the short development slice.
+That checks contribution within this representation, not a matched reoptimized
+sparse baseline or evidence of a quantum advantage.
+
+Pure layer construction totals 3,145.8 seconds (52.43 minutes) on an A40;
+held-out evaluation took 485.6 seconds. Setup, research and packaging are excluded.
+The original eight-layer checkpoint was reproduced exactly before extension.
 
 The representation combines a Schmidt MPO backbone with sparse residual
 coordinate amplitudes. All amplitudes, cores and learned scales count as
