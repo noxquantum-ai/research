@@ -19,7 +19,7 @@ from safetensors import safe_open
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from nox.block_compiler import scaled_dot_product_attention_2d
+from nox.block_compiler import ridge_compensated_up_target, scaled_dot_product_attention_2d
 from nox.packed_schmidt import compile_packed_schmidt
 
 
@@ -145,7 +145,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--layers", default="0-31")
     parser.add_argument("--target-whole-model-ratio", type=float, default=5.0)
-    parser.add_argument("--metadata-reserve-mib", type=float, default=16.0)
+    parser.add_argument("--metadata-reserve-mib", type=float, default=20.0)
     parser.add_argument("--role-multipliers")
     parser.add_argument("--factor-bits", type=int, nargs="+", default=(2, 3))
     parser.add_argument("--group-size", type=int, default=64)
@@ -350,12 +350,31 @@ def main() -> None:
         }
         for offset, name in enumerate(("gate_proj", "up_proj"), start=4):
             weight = weights[prefix + f"mlp.{name}.weight"]
+            target_outputs = dense_gate_up[name]
+            compensation = None
+            if name == "up_proj":
+                compressed_gate = reconstructed["gate_proj"] @ norm2
+                target_outputs, compensation_ridge, compensation_importance = (
+                    ridge_compensated_up_target(
+                        dense_gate_up["gate_proj"],
+                        dense_gate_up["up_proj"],
+                        compressed_gate,
+                        down_weight=weights[prefix + "mlp.down_proj.weight"],
+                        ridge_ratio=0.05,
+                    )
+                )
+                compensation = {
+                    "target": "down_weighted_swiglu_product",
+                    "ridge": float(compensation_ridge),
+                    "importance_min": float(compensation_importance.min()),
+                    "importance_max": float(compensation_importance.max()),
+                }
             artifact, decoded, diagnostics = compile_packed_schmidt(
                 weight,
                 byte_budget=per_operator_budgets[name],
                 projection_name=name,
                 calibration_inputs=norm2,
-                calibration_targets=dense_gate_up[name],
+                calibration_targets=target_outputs,
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
@@ -369,7 +388,10 @@ def main() -> None:
             )
             artifacts[name] = artifact
             reconstructed[name] = decoded
+            if compensation is not None:
+                diagnostics["swiglu_compensation"] = compensation
             projection_records[name] = diagnostics
+        del compressed_gate, target_outputs, compensation_importance
         compressed_active = (
             F.silu(reconstructed["gate_proj"] @ norm2)
             * (reconstructed["up_proj"] @ norm2)
