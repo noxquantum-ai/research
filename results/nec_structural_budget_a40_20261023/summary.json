@@ -1,0 +1,57 @@
+{
+  "schema": "nec_dual_budget_study_v1",
+  "date": "2026-10-23",
+  "dense_model_coefficients": 6738417664,
+  "fixed_nonprojection_coefficients": 262412288,
+  "byte_only_full32": {
+    "artifact_coefficients": 5351652920,
+    "complete_model_coefficients": 5614065208,
+    "structural_reduction": 1.200274206718833,
+    "projected_package_ratio": 5.001519,
+    "test_slice_ppl": 95.2729,
+    "quality_gate_passed": false,
+    "structural_gate_passed": false
+  },
+  "structural_caps": {
+    "2x": 3369208832,
+    "3x": 2246139221
+  },
+  "eight_layer_results": [
+    {
+      "name": "semantic_cut",
+      "ppl": 481.72159136844806,
+      "teacher_kl": 4.615574409306887,
+      "structural_reduction_lower_bound": 2.0005055651206036,
+      "package_ratio_lower_bound": 5.256745743888872
+    },
+    {
+      "name": "balanced_cut",
+      "ppl": 254.04743433121413,
+      "teacher_kl": 3.9544775777329235,
+      "structural_reduction_lower_bound": 2.00032198259996,
+      "package_ratio_lower_bound": 5.255220542235988
+    },
+    {
+      "name": "balanced_cut_column_defect_5pct",
+      "ppl": 67.12928053245511,
+      "teacher_kl": 2.6522805396902833,
+      "next_token_accuracy": 0.3111111111111111,
+      "dense_top1_agreement": 0.3763125763125763,
+      "structural_reduction_lower_bound": 2.0035840082440783,
+      "package_ratio_lower_bound": 5.256598274324598
+    },
+    {
+      "name": "balanced_cut_column_defect_5pct_sequential",
+      "ppl": 220.05402197935288,
+      "teacher_kl": 3.8012642027639645,
+      "next_token_accuracy": 0.21465201465201464,
+      "dense_top1_agreement": 0.2744810744810745,
+      "structural_reduction_lower_bound": 2.0035840082440783,
+      "package_ratio_lower_bound": 5.256598274324598
+    }
+  ],
+  "quality_gate": {
+    "maximum_ppl": 10.0,
+    "passed": false
+  }
+}

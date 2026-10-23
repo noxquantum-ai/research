@@ -2,6 +2,29 @@ NEC (Nox Entanglement Compiler) is our post-training, quantum-inspired structura
 
 We have demonstrated aggressive structural reductions, including configuration-derived estimates of roughly 7–11×, but those representations severely degrade model capability. Preserving accuracy and functionality at substantial parameter reductions remains NEC’s central unresolved challenge.
 
+## Latest dual-budget NEC result
+
+NEC now tracks actual serialized storage and logical coefficient reduction as
+separate constraints. This corrected an important weakness in the packed
+Schmidt path: its completed 5× byte-target model stores 5.614B total logical
+coefficients and therefore achieves only **1.20× structural reduction**.
+
+The revised compiler enforces at least 2× structural reduction while retaining
+the 5–10× storage objective. On an eight-layer Llama-2-7B prefix, a balanced
+Schmidt cut plus a 5% activation-sensitive defect branch improved PPL from
+254.05 to 67.13 at a conservative **2.0036× structural / 5.2566× serialized**
+lower bound. This remains a failed quality result, not a successful compressed
+model.
+
+| NEC dual-budget checkpoint | Compressed layers | PPL | KL | Structural reduction | Serialized compression | Status |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Byte-only packed Schmidt | 32 | 95.27 | 2.981 | 1.200× | 5.002× projected | Fails quality and structural gates |
+| 2× semantic Schmidt | 8 | 481.72 | 4.616 | ≥2.0005× | ≥5.2567× | Fails quality gate |
+| 2× balanced Schmidt | 8 | 254.05 | 3.954 | ≥2.0003× | ≥5.2552× | Fails quality gate |
+| 2× balanced + 5% defect | 8 | **67.13** | **2.652** | **≥2.0036×** | **≥5.2566×** | Best structural run; still fails PPL ≤ 10 |
+
+See the [dual storage/structural budget report](results/nec_structural_budget_a40_20261023/README.md).
+
 ## Latest full-model allocation run
 
 The 2026-10-22 A40 run applied the adaptive allocator to all 32 Llama-2-7B transformer layers. It compressed 28 layers and retained four dense layers, but the resulting model failed the quality target. Ratios below are measured from serialized files, not estimated coefficient counts.
