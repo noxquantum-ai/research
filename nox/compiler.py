@@ -685,7 +685,7 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
         artifact = unpack_artifact(artifact)
 
     codec_type = artifact.get("codec_type")
-    if codec_type == "nec_packed_operator_schmidt_v1":
+    if codec_type in ("nec_packed_operator_schmidt_v1", "nec_packed_operator_schmidt_v2"):
         from nox.packed_schmidt import reconstruct_packed_schmidt
         return reconstruct_packed_schmidt(artifact, device=device, dtype=dtype)
     if codec_type == "nec_operator_schmidt_v1":

@@ -156,7 +156,7 @@ def main() -> None:
     parser.add_argument(
         "--calibration-trajectory",
         choices=("compiled_prefix", "dense"),
-        default="compiled_prefix",
+        default="dense",
         help="Use the actual compiled prefix or independent dense layer inputs.",
     )
     parser.add_argument("--device", default="cuda")
@@ -357,7 +357,7 @@ def main() -> None:
         checkpoint = {
             "layer_idx": layer,
             "compressed_artifacts": artifacts,
-            "compression_path": "nec_packed_operator_schmidt_v1",
+            "compression_path": "nec_packed_operator_schmidt_v2",
             "post_compression_healing": False,
         }
         torch.save(checkpoint, output_path)

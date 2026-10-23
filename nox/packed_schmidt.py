@@ -25,7 +25,8 @@ from nox.operator_schmidt import (
 from nox.residual_codec import codec_payload_bytes, decode_groupwise, encode_groupwise
 
 
-CODEC_TYPE = "nec_packed_operator_schmidt_v1"
+LEGACY_CODEC_TYPE = "nec_packed_operator_schmidt_v1"
+CODEC_TYPE = "nec_packed_operator_schmidt_v2"
 
 
 def packed_matrix_payload_bytes(rows: int, columns: int, bits: int, group_size: int) -> int:
@@ -47,12 +48,14 @@ def packed_schmidt_payload_bytes(
     group_size: int,
     *,
     input_scale_count: int = 0,
+    output_scale_count: int = 0,
 ) -> int:
     rows, columns = layout.unfolding_shape
     return (
         packed_matrix_payload_bytes(rank, rows, bits, group_size)
         + packed_matrix_payload_bytes(rank, columns, bits, group_size)
         + 2 * int(input_scale_count)
+        + 2 * int(output_scale_count)
     )
 
 
@@ -63,6 +66,7 @@ def rank_for_payload_budget(
     group_size: int,
     *,
     input_scale_count: int = 0,
+    output_scale_count: int = 0,
 ) -> int:
     """Return the greatest Schmidt rank whose packed tensors fit the budget."""
 
@@ -73,6 +77,7 @@ def rank_for_payload_budget(
         payload = packed_schmidt_payload_bytes(
             layout, middle, bits, group_size,
             input_scale_count=input_scale_count,
+            output_scale_count=output_scale_count,
         )
         if payload <= byte_budget:
             low = middle
@@ -176,10 +181,12 @@ def _quantized_als(
 
 
 def packed_schmidt_payload_bytes_from_artifact(artifact: dict) -> int:
+    output_scale = artifact.get("output_scale")
     return int(
         codec_payload_bytes(artifact["left_codec"])
         + codec_payload_bytes(artifact["right_codec"])
         + artifact["input_scale"].numel() * artifact["input_scale"].element_size()
+        + (0 if output_scale is None else output_scale.numel() * output_scale.element_size())
     )
 
 
@@ -189,13 +196,17 @@ def reconstruct_packed_schmidt(
     device: str | torch.device = "cpu",
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
-    if artifact.get("codec_type") != CODEC_TYPE:
+    if artifact.get("codec_type") not in (LEGACY_CODEC_TYPE, CODEC_TYPE):
         raise ValueError(f"unsupported packed Schmidt codec: {artifact.get('codec_type')!r}")
     left = decode_groupwise(artifact["left_codec"], device=device, dtype=torch.float32)
     right = decode_groupwise(artifact["right_codec"], device=device, dtype=torch.float32)
     dense = operator_schmidt_to_dense(left, right, artifact["layout"])
     scale = artifact["input_scale"].to(device=device, dtype=torch.float32)
-    return (dense / scale[None, :]).to(dtype=dtype)
+    dense = dense / scale[None, :]
+    if artifact.get("output_scale") is not None:
+        output_scale = artifact["output_scale"].to(device=device, dtype=torch.float32)
+        dense = dense * output_scale[:, None]
+    return dense.to(dtype=dtype)
 
 
 @torch.no_grad()
@@ -247,7 +258,8 @@ def compile_packed_schmidt(
 
     ranks = {
         bits: rank_for_payload_budget(
-            layout, byte_budget, bits, group_size, input_scale_count=d_in,
+            layout, byte_budget, bits, group_size,
+            input_scale_count=d_in, output_scale_count=d_out,
         )
         for bits in bits_values
     }
@@ -273,21 +285,41 @@ def compile_packed_schmidt(
             sweeps=als_sweeps, ridge_ratio=ridge_ratio,
         )
         reconstructed_unfolding = left.T @ right
-        objective = _relative_frobenius(unfolding, reconstructed_unfolding)
+        conditioned_objective = _relative_frobenius(unfolding, reconstructed_unfolding)
+        output_scale = torch.ones(d_out, device=source.device, dtype=torch.float32)
+        calibration_objective = None
+        if calibration_inputs is not None:
+            candidate_matrix = (
+                _unfolding_to_matrix(reconstructed_unfolding, layout)
+                / input_scale[None, :]
+            )
+            target = source @ calibration_inputs.float()
+            prediction = candidate_matrix @ calibration_inputs.float()
+            numerator = (target * prediction).sum(dim=1)
+            denominator = prediction.square().sum(dim=1).clamp_min(1e-20)
+            output_scale = (numerator / denominator).nan_to_num(1.0).clamp(0.25, 4.0)
+            prediction.mul_(output_scale[:, None])
+            calibration_objective = _relative_frobenius(target, prediction)
+            objective = calibration_objective
+            del candidate_matrix, target, prediction
+        else:
+            objective = conditioned_objective
         record = {
             "bits": bits,
             "rank": rank,
             "payload_bytes_planned": packed_schmidt_payload_bytes(
                 layout, rank, bits, group_size, input_scale_count=d_in,
+                output_scale_count=d_out,
             ),
-            "relative_conditioned_weight_error": objective,
+            "relative_conditioned_weight_error": conditioned_objective,
+            "relative_calibration_output_error_after_output_leg_scale": calibration_objective,
             "als_history": history,
         }
         candidates.append(record)
         if best is None or objective < best[0]:
-            best = (objective, bits, rank, left, right, record)
+            best = (objective, bits, rank, left, right, output_scale, record)
     assert best is not None
-    _, bits, rank, left, right, selected = best
+    _, bits, rank, left, right, output_scale, selected = best
     left_codec = encode_groupwise(left, bits=bits, group_size=group_size)
     right_codec = encode_groupwise(right, bits=bits, group_size=group_size)
     artifact = {
@@ -306,10 +338,11 @@ def compile_packed_schmidt(
         "left_codec": left_codec,
         "right_codec": right_codec,
         "input_scale": input_scale.to(device="cpu", dtype=torch.float16),
+        "output_scale": output_scale.to(device="cpu", dtype=torch.float16),
         "byte_budget": int(byte_budget),
         "selection": selected,
         "candidate_frontier": candidates,
-        "construction": "canonical_schmidt_plus_gradient_free_quantized_als",
+        "construction": "canonical_schmidt_plus_gradient_free_quantized_als_and_output_leg_gauge",
         "post_compression_healing": False,
         "dense_base_matrix": False,
         "sparse_sidecar": False,
@@ -329,6 +362,9 @@ def compile_packed_schmidt(
         "dense_bytes": dense_source_bytes,
         "payload_compression_ratio": dense_source_bytes / artifact["payload_bytes"],
         "relative_weight_error": _relative_frobenius(source, reconstructed),
+        "output_leg_scale_min": float(output_scale.min()),
+        "output_leg_scale_max": float(output_scale.max()),
+        "output_leg_scale_mean": float(output_scale.mean()),
         "candidate_frontier": candidates,
     }
     if calibration_inputs is not None:
