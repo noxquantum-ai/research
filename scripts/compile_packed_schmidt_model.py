@@ -186,7 +186,7 @@ def main() -> None:
     parser.add_argument("--metadata-reserve-mib", type=float, default=20.0)
     parser.add_argument("--role-multipliers")
     parser.add_argument("--layer-multipliers")
-    parser.add_argument("--factor-bits", type=int, nargs="+", default=(2, 3))
+    parser.add_argument("--factor-bits", type=int, nargs="+", default=(2, 3, 4))
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument(
         "--layout-policy", choices=("semantic", "packed_efficiency"), default="semantic",
@@ -208,6 +208,10 @@ def main() -> None:
     )
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--preflight-only", action="store_true",
+        help="Write and print mathematical byte/coefficient feasibility, then exit.",
+    )
     args = parser.parse_args()
     if args.target_whole_model_ratio < 5:
         parser.error("NEC whole-model target must be at least 5x")
@@ -336,6 +340,8 @@ def main() -> None:
     }
     (args.output / "storage_preflight.json").write_text(json.dumps(preflight, indent=2) + "\n")
     print("PREFLIGHT " + json.dumps(preflight), flush=True)
+    if args.preflight_only:
+        return
 
     started = time.monotonic()
     layer_records = []
