@@ -600,6 +600,12 @@ def _fit_calibration_column_branch(
 
 
 def packed_schmidt_payload_bytes_from_artifact(artifact: dict) -> int:
+    if artifact.get("codec_type") == "nec_sparse_excitation_schmidt_v1":
+        return (
+            packed_schmidt_payload_bytes_from_artifact(artifact["base_artifact"])
+            + codec_payload_bytes(artifact["amplitude_codec"])
+            + artifact["support_bits"].numel() * artifact["support_bits"].element_size()
+        )
     if artifact.get("codec_type") == "nec_packed_sector_schmidt_v1":
         return (
             packed_schmidt_payload_bytes_from_artifact(artifact["base_artifact"])
@@ -642,6 +648,11 @@ def packed_codec_coefficient_count(codec: dict) -> int:
 def packed_schmidt_coefficient_count_from_artifact(artifact: dict) -> int:
     """Exact logical coefficient count, including every learned auxiliary."""
 
+    if artifact.get("codec_type") == "nec_sparse_excitation_schmidt_v1":
+        return (
+            packed_schmidt_coefficient_count_from_artifact(artifact["base_artifact"])
+            + packed_codec_coefficient_count(artifact["amplitude_codec"])
+        )
     if artifact.get("codec_type") == "nec_packed_sector_schmidt_v1":
         return (
             packed_schmidt_coefficient_count_from_artifact(artifact["base_artifact"])
@@ -673,6 +684,9 @@ def reconstruct_packed_schmidt(
     device: str | torch.device = "cpu",
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
+    if artifact.get("codec_type") == "nec_sparse_excitation_schmidt_v1":
+        from nox.sparse_schmidt import reconstruct_sparse_schmidt
+        return reconstruct_sparse_schmidt(artifact, device=device, dtype=dtype)
     if artifact.get("codec_type") == "nec_packed_sector_schmidt_v1":
         from nox.sector_schmidt import reconstruct_sector_schmidt
         return reconstruct_sector_schmidt(artifact, device=device, dtype=dtype)

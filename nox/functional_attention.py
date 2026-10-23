@@ -113,9 +113,10 @@ def construct_functional_schmidt_attention(
     records = []
     for sweep in range(sweeps):
         for role in ("o_proj", "v_proj", "o_proj"):
-            for side in ("left", "right"):
+            sides = ("left", "right", "amplitudes") if result[role].get("codec_type") == "nec_sparse_excitation_schmidt_v1" else ("left", "right")
+            for side in sides:
                 mapper = SchmidtCoreMap(result[role], inputs.device)
-                core = mapper.left if side == "left" else mapper.right
+                core = getattr(mapper, side) if side == "amplitudes" else (mapper.left if side == "left" else mapper.right)
                 context = fit_map.forward(weights["v_proj"] @ fit_x)
                 core_inputs = context if role == "o_proj" else fit_x
                 scale = 1 / math.sqrt(split)

@@ -30,6 +30,8 @@ from nox.packed_schmidt import (
     reconstruct_packed_schmidt,
 )
 from nox.sector_schmidt import compile_sector_schmidt, select_swiglu_sectors
+from nox.sequential_compiler import forward_transformer_block
+from nox.sparse_schmidt import compile_sparse_schmidt
 
 
 PROJECTIONS = ("q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj")
@@ -224,6 +226,8 @@ def main() -> None:
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
     parser.add_argument("--joint-attention-sweeps", type=int, default=0)
+    parser.add_argument("--sparse-backbone-fraction", type=float, default=0.0)
+    parser.add_argument("--sparse-amplitude-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=3)
     parser.add_argument("--protected-mlp-coefficient-fraction", type=float, default=0.0)
     parser.add_argument("--sector-probe-dir", type=Path)
     parser.add_argument("--sector-factor-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=5)
@@ -281,6 +285,17 @@ def main() -> None:
         parser.error("protected MLP coefficient fraction must lie in [0,1)")
     if args.protected_mlp_coefficient_fraction and args.sector_probe_dir is None:
         parser.error("protected sectors require --sector-probe-dir")
+    if not 0 <= args.sparse_backbone_fraction < 1:
+        parser.error("sparse backbone fraction must lie in [0,1)")
+    if args.sparse_backbone_fraction and args.protected_mlp_coefficient_fraction:
+        parser.error("sparse excitations and protected neuron sectors are separate representations")
+    operator_constructor = (
+        partial(compile_sparse_schmidt, backbone_fraction=args.sparse_backbone_fraction,
+                amplitude_bits=args.sparse_amplitude_bits,
+                excitation_cg_iterations=args.joint_mlp_cg_iterations,
+                excitation_sequence_length=args.sequence_length)
+        if args.sparse_backbone_fraction else compile_packed_schmidt
+    )
 
     config = json.loads((args.model_dir / "config.json").read_text())
     capture_manifest_path = args.activation_dir / "model_manifest.json"
@@ -431,10 +446,43 @@ def main() -> None:
                 packed_schmidt_coefficient_count_from_artifact(item)
                 for item in checkpoint["compressed_artifacts"].values()
             )
+            prefix_replayed = False
+            if args.calibration_trajectory == "compiled_prefix":
+                # A restored checkpoint must also restore its actual trajectory.
+                # Skipping the forward silently starts the next layer on clean
+                # inputs and invalidates asymmetric sequential construction.
+                if compressed_hidden is None or previous_layer != layer - 1:
+                    compressed_hidden = torch.load(
+                        args.activation_dir / f"calibration_input_layer_{layer}.pt",
+                        map_location=device, weights_only=True,
+                    ).float()[:, :args.calibration_tokens].contiguous()
+                if compressed_hidden.shape[1] != args.calibration_tokens:
+                    raise ValueError("activation cache contains fewer tokens than requested")
+                prefix = f"model.layers.{layer}."
+                norm_names = [prefix + name + ".weight" for name in
+                              ("input_layernorm", "post_attention_layernorm")]
+                replay_weights = {
+                    name: reconstruct_packed_schmidt(value, device=device)
+                    for name, value in checkpoint["compressed_artifacts"].items()
+                }
+                for name, tensor in reader.load(norm_names).items():
+                    replay_weights[name.removeprefix(prefix).removesuffix(".weight")] = (
+                        tensor.to(device=device, dtype=torch.float32)
+                    )
+                compressed_hidden, replay_attention, replay_mlp = forward_transformer_block(
+                    replay_weights, compressed_hidden,
+                    n_heads=int(config["num_attention_heads"]),
+                    n_kv_heads=int(config.get("num_key_value_heads", config["num_attention_heads"])),
+                    seq_len=args.sequence_length, rms_norm_eps=float(config.get("rms_norm_eps", 1e-6)),
+                )
+                previous_layer = layer
+                prefix_replayed = True
+                del replay_weights, replay_attention, replay_mlp
             layer_records.append({
                 "layer": layer, "resumed": True, "payload_bytes": payload,
                 "logical_coefficient_count": coefficient_count,
                 "serialized_checkpoint_bytes": output_path.stat().st_size,
+                "compiled_prefix_replayed": prefix_replayed,
             })
             print(f"LAYER {layer} resumed", flush=True)
             continue
@@ -483,7 +531,7 @@ def main() -> None:
         for offset, name in enumerate(("q_proj", "k_proj", "v_proj")):
             family = "self_attn" if name in ATTENTION else "mlp"
             weight = weights[prefix + f"{family}.{name}.weight"]
-            artifact, decoded, diagnostics = compile_packed_schmidt(
+            artifact, decoded, diagnostics = operator_constructor(
                 weight,
                 byte_budget=per_operator_budgets[name],
                 coefficient_budget=per_operator_coefficient_budgets[name],
@@ -521,7 +569,7 @@ def main() -> None:
         name = "o_proj"
         o_weight = weights[prefix + "self_attn.o_proj.weight"]
         dense_attention = o_weight.float() @ dense_context
-        artifact, decoded_o, diagnostics = compile_packed_schmidt(
+        artifact, decoded_o, diagnostics = operator_constructor(
             o_weight,
             byte_budget=per_operator_budgets[name],
             coefficient_budget=per_operator_coefficient_budgets[name],
@@ -642,7 +690,7 @@ def main() -> None:
                     "importance_max": float(compensation_importance.max()),
                 }
             mlp_constructor = (
-                compile_packed_schmidt if protected_indices is None else
+                operator_constructor if protected_indices is None else
                 partial(compile_sector_schmidt, protected_indices=protected_indices,
                         neuron_axis=0, protected_bits=args.sector_factor_bits)
             )
@@ -689,7 +737,7 @@ def main() -> None:
         dense_active = F.silu(dense_gate_up["gate_proj"]) * dense_gate_up["up_proj"]
         dense_mlp_output = down_weight.float() @ dense_active
         down_constructor = (
-            compile_packed_schmidt if protected_indices is None else
+            operator_constructor if protected_indices is None else
             partial(compile_sector_schmidt, protected_indices=protected_indices,
                     neuron_axis=1, protected_bits=args.sector_factor_bits)
         )
@@ -908,6 +956,11 @@ def main() -> None:
         "joint_attention_construction": {
             "sweeps": args.joint_attention_sweeps,
             "uses_nonlinear_derivatives": False,
+        },
+        "sparse_excitations": {
+            "backbone_budget_fraction": args.sparse_backbone_fraction,
+            "amplitude_bits": args.sparse_amplitude_bits,
+            "mask_bytes_counted": True,
         },
         "protected_mlp_sectors": {
             "coefficient_fraction": args.protected_mlp_coefficient_fraction,

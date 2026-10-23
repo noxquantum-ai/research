@@ -17,6 +17,7 @@ There is no nonlinear derivative, autograd or added inference coefficient.
 | Dense teacher | 4.083 | 0 | 66.37% | 100% |
 | Packed Schmidt initialization | 48.841 | 2.4828 | 36.24% | 43.71% |
 | Coupled function construction | 26.828 | 1.8835 | 41.71% | 51.09% |
+| Sequential asymmetric coupled construction | 16.061 | 1.3630 | 46.96% | 58.14% |
 
 Both candidates use the same ranks, tensor coefficient counts and tensor
 payload sizes. Five-bit cores use the available bytes under the simultaneous
@@ -33,5 +34,14 @@ The capture manifest and paired raw measurements are in
 [paired_8layer.json](paired_8layer.json). Construction code and mathematical
 limitations are described in
 [the redesign note](../../docs/experiments/NEC_ACCURACY_REDESIGN_20261023.md).
-Sequential asymmetric construction and direct-sum nonlinear feature sectors
-remain separate experiments; no unmeasured improvement is attributed to them.
+The sequential experiment uses the actual reconstructed compressed-prefix
+activations and clean teacher block-output targets. Its raw record is in
+[sequential_and_representation_probes.json](sequential_and_representation_probes.json).
+Replaying saved prefix layers is necessary on resume; simply skipping their
+construction would reset downstream calibration onto an incorrect trajectory.
+
+Two separate layer-3 probes used 8192 validation activation tokens. Protected
+nonlinear feature sectors reduced MLP relative error from 0.7445 to 0.7002
+and block-update error from 0.6959 to 0.6598. Coupled Value/Output construction
+alone reduced attention error only from 0.4981 to 0.4963. These are local
+measurements, not end-to-end quality claims or proof the representation scales.

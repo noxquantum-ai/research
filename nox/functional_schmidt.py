@@ -30,7 +30,12 @@ class SchmidtCoreMap:
     def __init__(self, artifact: dict, device):
         self.artifact = artifact
         self.sector = artifact.get("codec_type") == "nec_packed_sector_schmidt_v1"
-        self.base = artifact["base_artifact"] if self.sector else artifact
+        self.sparse = artifact.get("codec_type") == "nec_sparse_excitation_schmidt_v1"
+        self.base = artifact["base_artifact"] if self.sector or self.sparse else artifact
+        if self.sparse:
+            from nox.sparse_schmidt import excitation_indices, excitation_values
+            self.excitation_indices = excitation_indices(artifact, device)
+            self.amplitudes = excitation_values(artifact, device)
         self.bulk_indices = (
             artifact["bulk_indices"].to(device=device, dtype=torch.long) if self.sector else None
         )
@@ -45,6 +50,10 @@ class SchmidtCoreMap:
         )
 
     def weight(self, core: torch.Tensor, side: str) -> torch.Tensor:
+        if side == "amplitudes":
+            return torch.zeros(self.artifact["orig_shape"], device=core.device, dtype=core.dtype).scatter_(
+                1, self.excitation_indices, core,
+            )
         unfolding = core.T @ self.right if side == "left" else self.left.T @ core
         dense = (
             _unfolding_to_matrix(unfolding, self.layout)
@@ -56,6 +65,8 @@ class SchmidtCoreMap:
         return dense
 
     def adjoint(self, dense: torch.Tensor, side: str) -> torch.Tensor:
+        if side == "amplitudes":
+            return dense.gather(1, self.excitation_indices)
         if self.sector:
             dense = dense.index_select(self.artifact["neuron_axis"], self.bulk_indices)
         unfolding = _matrix_to_unfolding(
@@ -64,6 +75,8 @@ class SchmidtCoreMap:
         return self.right @ unfolding.T if side == "left" else self.left @ unfolding
 
     def diagonal(self, input_variance, output_sensitivity, side):
+        if side == "amplitudes":
+            return output_sensitivity[:, None] * input_variance[self.excitation_indices]
         if self.sector:
             if self.artifact["neuron_axis"] == 0:
                 output_sensitivity = output_sensitivity.index_select(0, self.bulk_indices)
@@ -80,11 +93,16 @@ class SchmidtCoreMap:
         ).clamp_min(1e-20)
 
     def packed_candidate(self, core, side):
+        if side == "amplitudes":
+            codec = self.artifact["amplitude_codec"]
+            return {**self.artifact, "amplitude_codec": encode_groupwise(
+                core, bits=int(codec["bits"]), group_size=int(codec["group_size"]),
+            )}
         base = dict(self.base)
         base[side + "_codec"] = encode_groupwise(
             core, bits=int(self.base["factor_bits"]), group_size=int(self.base["group_size"]),
         )
-        if self.sector:
+        if self.sector or self.sparse:
             return {**self.artifact, "base_artifact": base}
         return base
 
@@ -190,10 +208,11 @@ def construct_functional_schmidt_mlp(
         for role in ("down_proj", "up_proj", "gate_proj", "down_proj"):
             if role == "gate_proj" and gate_targets is None:
                 continue
-            for side in ("left", "right"):
+            sides = ("left", "right", "amplitudes") if result[role].get("codec_type") == "nec_sparse_excitation_schmidt_v1" else ("left", "right")
+            for side in sides:
                 artifact = result[role]
                 mapper = SchmidtCoreMap(artifact, inputs.device)
-                core = mapper.left if side == "left" else mapper.right
+                core = getattr(mapper, side) if side == "amplitudes" else (mapper.left if side == "left" else mapper.right)
                 gate = weights["gate_proj"] @ fit_x
                 up = weights["up_proj"] @ fit_x
                 active = F.silu(gate) * up

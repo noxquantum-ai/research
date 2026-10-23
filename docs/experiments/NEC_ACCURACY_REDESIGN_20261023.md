@@ -85,3 +85,35 @@ block errors and full-model PPL compare the same rank, precision and bytes.
 The NEC hypothesis is the combination of packed MPO core construction,
 exact nonlinear acceptance and simultaneous coefficient/serialized-byte limits.
 No general novelty or successful-quality claim is made before validation.
+
+## Representation-level alternative: sparse coordinate excitations
+
+A small MPO bond constrains operator rank in the chosen tensor unfolding.
+If that unfolding has a broad spectrum, increasing fitting effort cannot
+recover its omitted directions. A sparse coordinate residual can retain
+full algebraic rank while using few stored values. The experimental alternative
+therefore stores an actual Schmidt MPO plus sparse residual amplitudes, with
+one serialized support bit per original matrix coordinate. Every amplitude,
+MPO core value and learned scale counts toward the structural limit; support
+masks and all metadata count toward the byte limit.
+
+This is explicitly a tensor-network/sparsity hybrid. Sparsity and quantization
+are established techniques, not a new NEC contribution by relabeling.
+[SparseGPT](https://proceedings.mlr.press/v202/frantar23a/frantar23a.pdf)
+and [Wanda](https://openreview.net/pdf?id=PxoFut3dWW) provide relevant
+training-free sparsification baselines. NEC must test whether its MPO backbone
+and coupled nonlinear construction improve on a matched sparse-only control.
+No quantum advantage or priority claim follows from this architecture.
+
+Support is selected from source-minus-backbone coordinate defects weighted
+by construction input RMS. On the fixed support the compiler solves exact
+prior-anchored linear normal equations. The coupled MLP constructor can also
+solve Up and Down excitation amplitudes through the full MLP function with
+the other operators fixed. Gate remains a linear preactivation reconstruction.
+Candidates are actually packed before fit/guard acceptance. There are no
+nonlinear derivatives, extra hidden dense weights or post-export training.
+
+Before GPU scaling, each operator must fit both hard caps including the
+one-bit support mask. Local validation error, end-to-end held-out PPL and
+actual final export measurements are separate gates. A better local fit alone
+does not establish the full-model targets.
