@@ -1,6 +1,6 @@
 # Full NEC capability benchmark protocol
 
-Evaluate the completed 32-layer NEC hybrid and the original dense model with the same harness, prompts and full splits. Both are run sequentially on the same A40.
+Evaluate the completed 32-layer NEC hybrid on all five complete splits. The original dense model was run on BoolQ only, as a matched comparison under the same harness and prompts. Remaining dense benchmarks are not requested.
 Model: `Fluxx08/NEC-Llama-2-7B-Hybrid`, private HF revision
 `3b6f1f379048e52bb982754cd7e8e144c54cfbe7`.
 Actual published storage: 2,490,273,288 bytes (5.412758× vs dense FP16).
@@ -28,12 +28,12 @@ and the harness's complete task configurations are saved with results. The
 runner checks full effective sample counts and saves per-example responses.
 No measured score will be published until its complete split has finished.
 
-The exported package's bundled decoder reconstructs NEC weights in FP16; the dense arm loads the original FP16 checkpoint. The A40 uses automatic batch sizing (ceiling 32), shared-context choice-logit caching and local-scratch SQLite response caching, with consistent snapshots to the network volume after each task. The arms run sequentially and save independent results. Evaluation measures capability; it does not measure compressed-kernel speed.
+The exported package's bundled decoder reconstructs NEC weights in FP16; the dense BoolQ arm loads the original FP16 checkpoint. The A40 uses automatic batch sizing (ceiling 32), shared-context choice-logit caching and local-scratch SQLite response caching, with consistent snapshots to the network volume after each task. NEC results are saved independently per task. Evaluation measures capability; it does not measure compressed-kernel speed.
 
 Runner: [evaluate_nec_full_suite.py](../../benchmarks/evaluate_nec_full_suite.py).
 Persistent remote directory:
 `/workspace/runs/nec-full-five-benchmarks-20261023` for NEC, and
-`/workspace/runs/dense-full-five-benchmarks-20261023` for dense. Inspect each
+`/workspace/runs/dense-full-five-benchmarks-20261023` for the matched dense BoolQ result. Inspect each
 `status.json`, `protocol.json`, `datasets.json`, `run.log` and
 `<task>_summary.json`. Full raw results use gzip JSON containers. The runner
 accepts `--model-kind dense --dense-model-dir <local-model-snapshot>` for the
@@ -49,11 +49,11 @@ and must not be treated as a controlled accuracy-retention comparison.
 
 | Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | Dense, matched harness | NEC 5.413× |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Pending | Pending |
-| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Pending | Pending |
+| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Not run | Pending |
+| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Not run | Pending |
 | BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | **79.36** | **48.50** |
-| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Pending | Pending |
-| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Pending | Pending |
+| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Not run | Pending |
+| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Not run | Pending |
 
 Matched BoolQ used the complete 3,270-question validation split: dense 79.36%,
 NEC 48.50%, a 30.86 percentage-point gap. Raw reports are in
