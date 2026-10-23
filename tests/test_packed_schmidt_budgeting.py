@@ -9,6 +9,7 @@ from nox.packed_schmidt import (
     _core_from_input_metric,
     _input_mode_cholesky_factors,
     _matrix_in_input_metric,
+    _semantic_layout,
     compile_packed_schmidt,
     packed_matrix_coefficient_count,
     packed_schmidt_coefficient_count,
@@ -42,6 +43,24 @@ class PackedSchmidtStructuralBudgetTests(unittest.TestCase):
                 operator_schmidt_to_dense(left, right, layout), weight,
                 atol=8e-6, rtol=8e-6,
             )
+
+    def test_native_low_rank_control_roundtrip(self):
+        generator = torch.Generator().manual_seed(59)
+        weight = torch.randn(24, 16, generator=generator)
+        inputs = torch.randn(16, 48, generator=generator)
+        layout = _semantic_layout(
+            24, 16, "gate_proj", n_heads=1, head_dim=16, policy="native_low_rank",
+        )
+        self.assertEqual(layout.unfolding_shape, (24, 16))
+        artifact, decoded, _ = compile_packed_schmidt(
+            weight, byte_budget=2000, coefficient_budget=350,
+            calibration_inputs=inputs, layout_policy="native_low_rank",
+            input_metric="product_covariance", group_size=4,
+            bits_candidates=(4,), als_sweeps=1,
+        )
+        self.assertLessEqual(artifact["logical_coefficient_count"], 350)
+        self.assertLessEqual(artifact["payload_bytes"], 2000)
+        torch.testing.assert_close(reconstruct_packed_schmidt(artifact), decoded)
 
     def test_compiled_defects_roundtrip_and_stay_inside_both_budgets(self):
         generator = torch.Generator().manual_seed(41)

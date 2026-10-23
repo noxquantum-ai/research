@@ -209,6 +209,14 @@ def _semantic_layout(
 ) -> OperatorSchmidtLayout:
     """Choose an exact tensor cut for semantic structure or packed bond capacity."""
 
+    if policy == "native_low_rank":
+        # Matched low-rank control: the native output/input bipartition.
+        # With product_covariance, its single nontrivial input mode uses
+        # full input covariance. This is an established SVD baseline.
+        return OperatorSchmidtLayout(
+            "native_output_input_low_rank_control",
+            (d_out, 1), (1, d_in), (0, 2, 1, 3),
+        )
     layouts = candidate_layouts(
         d_out, d_in, projection_name, n_heads=n_heads, head_dim=head_dim,
     )
