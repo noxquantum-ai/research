@@ -1,6 +1,6 @@
 # Live hybrid NEC trial reports
 
-Snapshot phase: `compiling_stage32`; UTC: 2026-10-23T20:30:17.464779+00:00.
+Snapshot phase: `evaluating_fresh_heldout_test`; UTC: 2026-10-23T20:45:39.304845+00:00.
 
 These are measured checkpoints from the new pod. Partial checkpoints retain
 all uncompiled layers dense and do not demonstrate whole-model compression.
@@ -10,6 +10,7 @@ all uncompiled layers dense and do not demonstrate whole-model compression.
 | 0–7 | 4095 | 4.08287 | 4.37879 | 0.08902 | 65.08% | 89.04% |
 | 0–15 | 4095 | 4.08287 | 5.05345 | 0.23211 | 62.15% | 81.51% |
 | 0–23 | 4095 | 4.08287 | 5.99404 | 0.39975 | 59.46% | 76.02% |
+| 0–31 | 4095 | 4.08287 | 6.84527 | 0.53076 | 57.97% | 73.02% |
 
 **All targets demonstrated together: NOT YET.**
 
