@@ -46,32 +46,44 @@ class PackedSchmidtPackageTests(unittest.TestCase):
             (checkpoints / "model_manifest.json").write_text(json.dumps({
                 "compiled_layers": [0],
             }))
-            measurement = materialize_deployable_allocation_package(
-                source, checkpoints, output, (0,), (0,), (), root / "unused", "tiny",
-            )
-            package = Path(measurement["path"])
-            index = json.loads((package / "model.safetensors.index.json").read_text())
-            for norm in ("input_layernorm", "post_attention_layernorm"):
-                self.assertIn(f"model.layers.0.{norm}.weight", index["weight_map"])
-            loader_spec = importlib.util.spec_from_file_location(
-                "tiny_nec_package_loader", package / "load_nec_package.py",
-            )
-            loader = importlib.util.module_from_spec(loader_spec)
-            loader_spec.loader.exec_module(loader)
-            restored = loader.load_model(device_map=None, torch_dtype=torch.float16)
-            expected = dict(model.named_parameters())
-            for name, tensor in restored.named_parameters():
-                torch.testing.assert_close(tensor, expected[name], atol=0, rtol=0)
-            self.assertTrue(measurement["coefficient_accounting_complete"])
-            self.assertEqual(
-                measurement["complete_model_coefficient_count"],
-                measurement["retained_dense_coefficient_count"]
-                + measurement["replacement_coefficient_count"],
-            )
-            self.assertEqual(measurement["serialized_bytes"], sum(
-                path.stat().st_size for path in package.rglob("*") if path.is_file()
-                and "__pycache__" not in path.parts
-            ))
+            counts = []
+            for container in ("plain", "gzip"):
+                with self.subTest(container=container):
+                    measurement = materialize_deployable_allocation_package(
+                        source, checkpoints, output / container, (0,), (0,), (), root / "unused", "tiny",
+                        checkpoint_container=container,
+                    )
+                    package = Path(measurement["path"])
+                    index = json.loads((package / "model.safetensors.index.json").read_text())
+                    for norm in ("input_layernorm", "post_attention_layernorm"):
+                        self.assertIn(f"model.layers.0.{norm}.weight", index["weight_map"])
+                    loader_spec = importlib.util.spec_from_file_location(
+                        "tiny_nec_package_loader_" + container, package / "load_nec_package.py",
+                    )
+                    loader = importlib.util.module_from_spec(loader_spec)
+                    loader_spec.loader.exec_module(loader)
+                    restored = loader.load_model(device_map=None, torch_dtype=torch.float16)
+                    expected = dict(model.named_parameters())
+                    for name, tensor in restored.named_parameters():
+                        torch.testing.assert_close(tensor, expected[name], atol=0, rtol=0)
+                    self.assertTrue(measurement["coefficient_accounting_complete"])
+                    self.assertEqual(
+                        measurement["complete_model_coefficient_count"],
+                        measurement["retained_dense_coefficient_count"]
+                        + measurement["replacement_coefficient_count"],
+                    )
+                    counts.append(measurement["complete_model_coefficient_count"])
+                    self.assertEqual(measurement["serialized_bytes"], sum(
+                        path.stat().st_size for path in package.rglob("*") if path.is_file()
+                        and "__pycache__" not in path.parts
+                    ))
+                    if container == "gzip":
+                        self.assertFalse(list((package / "nec_checkpoints").glob("*.pt")))
+                        self.assertEqual(len(list((package / "nec_checkpoints").glob("*.pt.gz"))), 1)
+                        record = measurement["lossless_container_verification"][0]
+                        self.assertTrue(record["lossless_verified"])
+                        self.assertEqual(record["uncompressed_sha256"], record["roundtrip_sha256"])
+            self.assertEqual(counts[0], counts[1])
 
 
 if __name__ == "__main__":

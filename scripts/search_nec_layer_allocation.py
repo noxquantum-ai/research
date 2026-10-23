@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import gzip
 import hashlib
 import io
 import json
@@ -366,13 +367,15 @@ def storage_summary(
 
 def materialize_deployable_allocation_package(
     source_model_dir, checkpoint_dir, output_dir, layers, compressed_layers,
-    int8_layers, int8_artifact_dir, model_revision,
+    int8_layers, int8_artifact_dir, model_revision, *, checkpoint_container="plain",
 ):
     """Build and byte-count a mixed HF/NEC package with replaced tensors removed."""
     from safetensors import safe_open
     from safetensors.torch import save_file
     from nox.packed_schmidt import packed_schmidt_coefficient_count_from_artifact
 
+    if checkpoint_container not in ("plain", "gzip"):
+        raise ValueError("checkpoint container must be plain or gzip")
     source_model_dir = Path(source_model_dir)
     package_dir = Path(output_dir) / "deployable_model"
     if package_dir.exists():
@@ -486,11 +489,26 @@ def materialize_deployable_allocation_package(
 
     nec_dir = package_dir / "nec_checkpoints"
     nec_dir.mkdir()
+    container_records = []
     for layer in sorted(compressed_layers):
-        shutil.copy2(
-            checkpoint_dir / f"compressed_layer_{layer}.pt",
-            nec_dir / f"compressed_layer_{layer}.pt",
-        )
+        source_checkpoint = checkpoint_dir / f"compressed_layer_{layer}.pt"
+        if checkpoint_container == "plain":
+            shutil.copy2(source_checkpoint, nec_dir / source_checkpoint.name)
+        else:
+            original = source_checkpoint.read_bytes()
+            compressed = gzip.compress(original, compresslevel=1, mtime=0)
+            restored = gzip.decompress(compressed)
+            if restored != original:
+                raise RuntimeError("lossless checkpoint container verification failed")
+            destination = nec_dir / (source_checkpoint.name + ".gz")
+            destination.write_bytes(compressed)
+            container_records.append({
+                "file": destination.name, "source_serialized_bytes": len(original),
+                "container_bytes": len(compressed),
+                "uncompressed_sha256": hashlib.sha256(original).hexdigest(),
+                "roundtrip_sha256": hashlib.sha256(restored).hexdigest(),
+                "lossless_verified": True,
+            })
     shutil.copy2(checkpoint_dir / "model_manifest.json", package_dir / "nec_compile_manifest.json")
     if int8_layers:
         dense_int8_dir = package_dir / "int8_dense_checkpoints"
@@ -508,6 +526,8 @@ def materialize_deployable_allocation_package(
     package_loader = r'''#!/usr/bin/env python3
 """Load the custom mixed NEC/INT8 Llama package in this directory."""
 from pathlib import Path
+import gzip
+import io
 import torch
 from transformers import AutoModelForCausalLM
 from nox.compiler import reconstruct_from_artifact
@@ -516,12 +536,18 @@ ROOT = Path(__file__).resolve().parent
 PROJECTIONS = ("q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj")
 NORMS = ("input_layernorm", "post_attention_layernorm")
 
+def _read_checkpoint(path):
+    source = io.BytesIO(gzip.decompress(path.read_bytes())) if path.suffix == ".gz" else path
+    return torch.load(source, map_location="cpu", weights_only=True)
+
 def load_model(device_map="auto", torch_dtype=torch.float16):
     model = AutoModelForCausalLM.from_pretrained(
         ROOT, device_map=device_map, torch_dtype=torch_dtype, local_files_only=True,
     ).eval()
-    for path in sorted((ROOT / "nec_checkpoints").glob("compressed_layer_*.pt")):
-        data = torch.load(path, map_location="cpu", weights_only=True)
+    checkpoints = list((ROOT / "nec_checkpoints").glob("compressed_layer_*.pt"))
+    checkpoints += list((ROOT / "nec_checkpoints").glob("compressed_layer_*.pt.gz"))
+    for path in sorted(checkpoints):
+        data = _read_checkpoint(path)
         layer = model.model.layers[int(data["layer_idx"])]
         modules = {
             "q_proj": layer.self_attn.q_proj, "k_proj": layer.self_attn.k_proj,
@@ -571,6 +597,10 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         "Load with `load_nec_package.py`; this loads the full Llama architecture, "
         "then reconstructs NEC layers and dequantizes retained INT8 layers. "
         "Install PyTorch, Transformers, and safetensors in the runtime environment.\n"
+        + ("NEC checkpoint containers use lossless gzip; the loader decompresses them "
+           "before decoding the unchanged factor and amplitude tensors. Logical "
+           "coefficient counts are unchanged by container compression.\n"
+           if checkpoint_container == "gzip" else "")
     )
     package_manifest = {
         "model_id": MODEL_ID,
@@ -582,6 +612,8 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         "replaced_tensor_names": sorted(replaced_names),
         "runtime_loader": "load_nec_package.py",
         "nonstandard_weight_loading_required": True,
+        "checkpoint_container": checkpoint_container,
+        "lossless_container_verification": container_records,
     }
     (package_dir / "nec_allocation_manifest.json").write_text(
         json.dumps(package_manifest, indent=2) + "\n"
@@ -625,6 +657,8 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
             if complete_coefficient_count is not None else None
         ),
         "coefficient_accounting_complete": coefficient_count_complete,
+        "checkpoint_container": checkpoint_container,
+        "lossless_container_verification": container_records,
         "coefficient_count_includes": (
             "logical factor values, quantization scales, all correction branches, "
             "retained dense tensors and normalization replacements; excludes padding "

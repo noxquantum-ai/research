@@ -59,3 +59,19 @@ The original dense activation cache can be regenerated from seed 314159,
 32768 training tokens and 8192 validation tokens in 2048-token windows with
 `scripts/capture_packed_nec_activations.py`. Only this rebuildable cache uses
 scratch `/tmp`; model artifacts and results use `/workspace/runs`.
+
+## Lossless serialization option
+
+The exporter also supports `--checkpoint-container gzip`. This changes only
+the serialized checkpoint container, preserves the original checkpoint bytes
+exactly after decompression, and leaves every logical coefficient unchanged.
+The package loader handles decompression itself, so its complete on-disk
+directory remains deployable. Every compressed checkpoint records matching
+source/round-trip SHA-256 hashes. Complete-package bytes are recounted after
+writing the containers, loader, metadata and quality report.
+
+This option is separate from the frozen accuracy experiment and earns no
+structural-compression credit. CPU package tests verify exact equality of all
+model parameters for plain and gzip packages. A real exported model must also
+pass the separate-process bundled-loader parity check before release. The
+outer download archive size is not used as the model compression measurement.
