@@ -88,10 +88,12 @@ No general novelty or successful-quality claim is made before validation.
 
 ## Representation-level alternative: sparse coordinate excitations
 
-A small MPO bond constrains operator rank in the chosen tensor unfolding.
+A small MPO bond constrains rank in the chosen tensor unfolding, not
+necessarily the rank of the native output-by-input matrix. Even a bond-one
+Kronecker operator can have full native matrix rank.
 If that unfolding has a broad spectrum, increasing fitting effort cannot
 recover its omitted directions. A sparse coordinate residual can retain
-full algebraic rank while using few stored values. The experimental alternative
+full rank in that unfolding while using few stored values. The experimental alternative
 therefore stores an actual Schmidt MPO plus sparse residual amplitudes, with
 one serialized support bit per original matrix coordinate. Every amplitude,
 MPO core value and learned scale counts toward the structural limit; support
@@ -104,6 +106,28 @@ and [Wanda](https://openreview.net/pdf?id=PxoFut3dWW) provide relevant
 training-free sparsification baselines. NEC must test whether its MPO backbone
 and coupled nonlinear construction improve on a matched sparse-only control.
 No quantum advantage or priority claim follows from this architecture.
+
+[LoSparse](https://proceedings.mlr.press/v202/li23ap/li23ap.pdf) already
+combines low-rank and sparse approximations but optimizes its factors through
+training. [OATS](https://proceedings.iclr.cc/paper_files/paper/2025/file/7f2fc4053a66edfa430bcdf9a6ff3b17-Paper-Conference.pdf)
+provides a retraining-free activation-scaled sparse/low-rank baseline.
+[SLiM](https://arxiv.org/abs/2410.09615) combines quantization, sparsity and
+analytical low-rank compensation in one shot. The broad hybrid idea is
+established prior art. The current NEC experiment specifically tests an MPO
+backbone, explicitly budgeted packed coordinate defects, coupled functional
+linear construction and asymmetric compressed-prefix targets. Matched
+ablations are needed to attribute gains to each component.
+
+The current bitmap format also imposes a useful storage preflight limit.
+For this model, all transformer projection support maps consume 809500672
+bytes even before storing any amplitude. Retained non-projection tensors and
+source package files consume approximately 527236759 bytes. At 10x versus
+the 13479247511-byte FP16 source, only about 11.2 MB would remain for all
+factor/amplitude values and metadata; the current 20 MiB planning reserve
+alone exceeds that remainder. Thus this exact storage policy is unsuitable
+for a practical 10x run. Achieving that goal requires a different support
+encoding and/or compression of retained tensors, plus substantially fewer
+stored coefficients. This does not weaken the current >=5x/2x accuracy gate.
 
 Support is selected from source-minus-backbone coordinate defects weighted
 by construction input RMS. On the fixed support the compiler solves exact
