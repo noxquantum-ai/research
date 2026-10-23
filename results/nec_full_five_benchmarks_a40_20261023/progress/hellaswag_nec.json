@@ -1,0 +1,25 @@
+{
+  "task": "hellaswag",
+  "model_kind": "nec",
+  "full_split": true,
+  "fewshot": 0,
+  "samples": 10042,
+  "sample_counts": {
+    "hellaswag": {
+      "original": 10042,
+      "effective": 10042
+    }
+  },
+  "primary_metric": "acc_norm,none",
+  "score": 0.5038836885082653,
+  "score_percent": 50.388368850826524,
+  "all_metrics": {
+    "alias": "hellaswag",
+    "acc,none": 0.38329018123879705,
+    "acc_stderr,none": "N/A",
+    "acc_norm,none": 0.5038836885082653,
+    "acc_norm_stderr,none": "N/A"
+  },
+  "seconds": 134.9474534819601,
+  "raw_result_sha256": "1ccab20feaf2084f5a765523fc2739458461a4809bf2d442a903368fd24e1b76"
+}

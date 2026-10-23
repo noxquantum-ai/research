@@ -34,7 +34,7 @@ NEC is being evaluated on all five full benchmarks. Dense Llama-2-7B is being ru
 | Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | Dense, matched harness | NEC 5.413× |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Not run | Pending |
-| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Not run | Pending |
+| HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Not run | **50.39** |
 | BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | **79.36** | **48.50** |
 | TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Not run | Pending |
 | GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Not run | Pending |
@@ -42,6 +42,8 @@ NEC is being evaluated on all five full benchmarks. Dense Llama-2-7B is being ru
 All entries are percentages; higher is better. Dense and NEC scores will use the same harness for the matched comparison. CompactifAI columns are external references, since the paper does not establish that its prompts and few-shot settings match ours. Full protocols, sample counts and status are in the [benchmark report](results/nec_full_five_benchmarks_a40_20261023/README.md).
 
 The matched BoolQ run scored 79.36% for dense and 48.50% for NEC on all 3,270 validation questions, a 30.86-point gap. This exposes a substantial capability loss on this task despite the held-out WikiText-2 PPL result. See the [paired full-split records](results/nec_full_five_benchmarks_a40_20261023/progress/).
+
+NEC HellaSwag scored 50.39% length-normalized accuracy on all 10,042 validation questions. Dense HellaSwag was not run, as requested.
 
 ## Earlier dual-budget result
 
