@@ -380,6 +380,7 @@ def compile_packed_schmidt(
     calibration_branch_fraction: float = 0.0,
     calibration_branch_bits: int = 3,
     calibration_branch_fit_tokens: int = 512,
+    calibration_branch_ridge_ratio: float = 1e-4,
     als_sweeps: int = 1,
     ridge_ratio: float = 1e-5,
     n_heads: int = 32,
@@ -402,6 +403,8 @@ def compile_packed_schmidt(
         raise ValueError("calibration_branch_bits must be 2, 3, or 4")
     if calibration_branch_fit_tokens <= 0:
         raise ValueError("calibration_branch_fit_tokens must be positive")
+    if calibration_branch_ridge_ratio < 0:
+        raise ValueError("calibration_branch_ridge_ratio must be nonnegative")
     if calibration_branch_fraction and calibration_inputs is None:
         raise ValueError("a calibration Schmidt branch requires calibration inputs")
     bits_values = tuple(dict.fromkeys(int(value) for value in bits_candidates))
@@ -549,7 +552,7 @@ def compile_packed_schmidt(
             bits=calibration_branch_bits,
             group_size=group_size,
             fit_tokens=calibration_branch_fit_tokens,
-            ridge_ratio=max(ridge_ratio, 1e-4),
+            ridge_ratio=calibration_branch_ridge_ratio,
             seed=seed + 10_000,
         )
         if branch is not None:
