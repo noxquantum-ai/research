@@ -261,6 +261,17 @@ def main() -> None:
         n_kv_heads = int(config.get("num_key_value_heads", n_heads))
         eps = float(config.get("rms_norm_eps", 1e-6))
         norm1 = rms_norm(hidden, weights[prefix + "input_layernorm.weight"].float(), eps)
+        dense_norm1 = rms_norm(
+            dense_hidden, weights[prefix + "input_layernorm.weight"].float(), eps,
+        )
+        dense_qkv = {
+            name: weights[prefix + f"self_attn.{name}.weight"].float() @ dense_norm1
+            for name in ("q_proj", "k_proj", "v_proj")
+        }
+        dense_context = scaled_dot_product_attention_2d(
+            dense_qkv["q_proj"], dense_qkv["k_proj"], dense_qkv["v_proj"],
+            n_heads, n_kv_heads, args.sequence_length,
+        )
         artifacts = {}
         projection_records = {}
 
@@ -273,6 +284,7 @@ def main() -> None:
                 byte_budget=per_operator_budgets[name],
                 projection_name=name,
                 calibration_inputs=norm1,
+                calibration_targets=dense_qkv[name],
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
@@ -292,11 +304,13 @@ def main() -> None:
         )
         name = "o_proj"
         o_weight = weights[prefix + "self_attn.o_proj.weight"]
+        dense_attention = o_weight.float() @ dense_context
         artifact, decoded_o, diagnostics = compile_packed_schmidt(
             o_weight,
             byte_budget=per_operator_budgets[name],
             projection_name=name,
             calibration_inputs=compressed_context,
+            calibration_targets=dense_attention,
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
             activation_alpha=args.activation_alpha,
@@ -308,11 +322,21 @@ def main() -> None:
         artifacts[name] = artifact
         projection_records[name] = diagnostics
         residual_hidden = hidden + decoded_o @ compressed_context
+        dense_residual_hidden = dense_hidden + dense_attention
         norm2 = rms_norm(
             residual_hidden,
             weights[prefix + "post_attention_layernorm.weight"].float(),
             eps,
         )
+        dense_norm2 = rms_norm(
+            dense_residual_hidden,
+            weights[prefix + "post_attention_layernorm.weight"].float(),
+            eps,
+        )
+        dense_gate_up = {
+            name: weights[prefix + f"mlp.{name}.weight"].float() @ dense_norm2
+            for name in ("gate_proj", "up_proj")
+        }
         for offset, name in enumerate(("gate_proj", "up_proj"), start=4):
             weight = weights[prefix + f"mlp.{name}.weight"]
             artifact, decoded, diagnostics = compile_packed_schmidt(
@@ -320,6 +344,7 @@ def main() -> None:
                 byte_budget=per_operator_budgets[name],
                 projection_name=name,
                 calibration_inputs=norm2,
+                calibration_targets=dense_gate_up[name],
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 activation_alpha=args.activation_alpha,
@@ -337,11 +362,14 @@ def main() -> None:
         )
         name = "down_proj"
         down_weight = weights[prefix + "mlp.down_proj.weight"]
+        dense_active = F.silu(dense_gate_up["gate_proj"]) * dense_gate_up["up_proj"]
+        dense_mlp_output = down_weight.float() @ dense_active
         artifact, decoded_down, diagnostics = compile_packed_schmidt(
             down_weight,
             byte_budget=per_operator_budgets[name],
             projection_name=name,
             calibration_inputs=compressed_active,
+            calibration_targets=dense_mlp_output,
             bits_candidates=args.factor_bits,
             group_size=args.group_size,
             activation_alpha=args.activation_alpha,
@@ -376,7 +404,9 @@ def main() -> None:
         }
         layer_records.append(record)
         print("LAYER " + json.dumps(record), flush=True)
-        del norm1, norm2, compressed_context, compressed_active
+        del norm1, norm2, dense_norm1, dense_norm2
+        del compressed_context, compressed_active, dense_context, dense_active
+        del dense_qkv, dense_gate_up, dense_attention, dense_mlp_output, dense_residual_hidden
         del residual_hidden, dense_hidden, hidden, reconstructed
         del decoded_o, decoded_down, weights, artifacts, checkpoint
         if device.type == "cuda":

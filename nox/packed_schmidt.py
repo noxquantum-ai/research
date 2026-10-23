@@ -216,6 +216,7 @@ def compile_packed_schmidt(
     byte_budget: int,
     projection_name: str | None = None,
     calibration_inputs: torch.Tensor | None = None,
+    calibration_targets: torch.Tensor | None = None,
     bits_candidates: Iterable[int] = (2, 3, 4),
     group_size: int = 64,
     activation_alpha: float = 0.5,
@@ -246,13 +247,26 @@ def compile_packed_schmidt(
         d_out, d_in, projection_name, n_heads=n_heads, head_dim=head_dim,
     )
     if calibration_inputs is None:
+        if calibration_targets is not None:
+            raise ValueError("calibration_targets require calibration_inputs")
         input_scale = torch.ones(d_in, device=source.device, dtype=torch.float32)
+        target_outputs = None
     else:
         if calibration_inputs.ndim != 2 or calibration_inputs.shape[0] != d_in:
             raise ValueError("calibration_inputs must have shape [in_features, tokens]")
+        if calibration_targets is not None and (
+            calibration_targets.ndim != 2
+            or calibration_targets.shape != (d_out, calibration_inputs.shape[1])
+        ):
+            raise ValueError("calibration_targets must have shape [out_features, tokens]")
         rms = calibration_inputs.detach().float().square().mean(dim=1).add(1e-12).sqrt()
         normalized = rms / rms.mean().clamp_min(1e-12)
         input_scale = normalized.pow(float(activation_alpha)).clamp(0.25, 4.0)
+        target_outputs = (
+            source @ calibration_inputs.float()
+            if calibration_targets is None
+            else calibration_targets.detach().float()
+        )
     conditioned = source * input_scale[None, :]
     unfolding = _matrix_to_unfolding(conditioned, layout)
 
@@ -293,15 +307,14 @@ def compile_packed_schmidt(
                 _unfolding_to_matrix(reconstructed_unfolding, layout)
                 / input_scale[None, :]
             )
-            target = source @ calibration_inputs.float()
             prediction = candidate_matrix @ calibration_inputs.float()
-            numerator = (target * prediction).sum(dim=1)
+            numerator = (target_outputs * prediction).sum(dim=1)
             denominator = prediction.square().sum(dim=1).clamp_min(1e-20)
             output_scale = (numerator / denominator).nan_to_num(1.0).clamp(0.25, 4.0)
             prediction.mul_(output_scale[:, None])
-            calibration_objective = _relative_frobenius(target, prediction)
+            calibration_objective = _relative_frobenius(target_outputs, prediction)
             objective = calibration_objective
-            del candidate_matrix, target, prediction
+            del candidate_matrix, prediction
         else:
             objective = conditioned_objective
         record = {
@@ -368,7 +381,13 @@ def compile_packed_schmidt(
         "candidate_frontier": candidates,
     }
     if calibration_inputs is not None:
-        target = source @ calibration_inputs.float()
         prediction = reconstructed @ calibration_inputs.float()
-        diagnostics["relative_calibration_output_error"] = _relative_frobenius(target, prediction)
+        diagnostics["relative_calibration_output_error"] = _relative_frobenius(
+            target_outputs, prediction,
+        )
+        diagnostics["calibration_target"] = (
+            "dense_operator_on_same_inputs"
+            if calibration_targets is None
+            else "external_clean_teacher_outputs"
+        )
     return artifact, reconstructed, diagnostics
