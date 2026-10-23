@@ -24,13 +24,30 @@
         "next_token_accuracy": 0.6507936507936508,
         "dense_top1_agreement": 0.8903540903540903
       }
+    },
+    {
+      "compressed_layer_count": 16,
+      "file": "/workspace/runs/nec-sparse10-coupled-sequential-full32/evaluation_stage16_validation_4k.json",
+      "scored_tokens": 4095,
+      "teacher": {
+        "perplexity": 4.0828723222002665,
+        "mean_nll": 1.406800741263215,
+        "next_token_accuracy": 0.6637362637362637
+      },
+      "student": {
+        "perplexity": 5.053451369910168,
+        "mean_nll": 1.620071449434961,
+        "teacher_kl_nats_per_token": 0.23211127870106724,
+        "next_token_accuracy": 0.6214896214896215,
+        "dense_top1_agreement": 0.8151404151404151
+      }
     }
   ],
   "success_demonstrated": false,
-  "phase": "compiling_stage16",
-  "updated_utc": "2026-10-23T20:02:04.954286+00:00",
-  "child_pid": 2170,
-  "current_log": "/workspace/runs/nec-sparse10-coupled-sequential-full32/compile_stage16.log",
+  "phase": "compiling_stage24",
+  "updated_utc": "2026-10-23T20:15:46.140144+00:00",
+  "child_pid": 2639,
+  "current_log": "/workspace/runs/nec-sparse10-coupled-sequential-full32/compile_stage24.log",
   "completed_layers": [
     0,
     1,
@@ -39,6 +56,14 @@
     4,
     5,
     6,
-    7
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
   ]
 }
