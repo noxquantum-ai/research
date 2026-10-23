@@ -121,18 +121,22 @@ def _semantic_layout(
     *,
     n_heads: int,
     head_dim: int,
+    policy: str,
 ) -> OperatorSchmidtLayout:
-    """Choose the least redundant nontrivial cut from the declared layouts."""
+    """Choose an exact tensor cut for semantic structure or packed bond capacity."""
 
     layouts = candidate_layouts(
         d_out, d_in, projection_name, n_heads=n_heads, head_dim=head_dim,
     )
     if not layouts:
         raise ValueError(f"no exact operator-Schmidt layout for {(d_out, d_in)}")
-    return min(
-        layouts,
-        key=lambda item: min(item.unfolding_shape) * sum(item.unfolding_shape),
-    )
+    if policy == "semantic":
+        key = lambda item: min(item.unfolding_shape) * sum(item.unfolding_shape)
+    elif policy == "packed_efficiency":
+        key = lambda item: sum(item.unfolding_shape)
+    else:
+        raise ValueError(f"unsupported layout policy: {policy!r}")
+    return min(layouts, key=key)
 
 
 def _quantize_dequantize(matrix: torch.Tensor, bits: int, group_size: int) -> torch.Tensor:
@@ -372,6 +376,7 @@ def compile_packed_schmidt(
     *,
     byte_budget: int,
     projection_name: str | None = None,
+    layout_policy: str = "semantic",
     calibration_inputs: torch.Tensor | None = None,
     calibration_targets: torch.Tensor | None = None,
     bits_candidates: Iterable[int] = (2, 3, 4),
@@ -416,6 +421,7 @@ def compile_packed_schmidt(
     d_out, d_in = map(int, source.shape)
     layout = _semantic_layout(
         d_out, d_in, projection_name, n_heads=n_heads, head_dim=head_dim,
+        policy=layout_policy,
     )
     if calibration_inputs is None:
         if calibration_targets is not None:
@@ -563,6 +569,7 @@ def compile_packed_schmidt(
             raise RuntimeError("Schmidt branches exceeded the assigned byte budget")
     diagnostics = {
         "layout": artifact["layout"],
+        "layout_policy": layout_policy,
         "selected_bits": bits,
         "selected_rank": rank,
         "payload_bytes": artifact["payload_bytes"],

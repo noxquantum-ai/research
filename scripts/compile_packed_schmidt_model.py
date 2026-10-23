@@ -165,6 +165,9 @@ def main() -> None:
     parser.add_argument("--layer-multipliers")
     parser.add_argument("--factor-bits", type=int, nargs="+", default=(2, 3))
     parser.add_argument("--group-size", type=int, default=64)
+    parser.add_argument(
+        "--layout-policy", choices=("semantic", "packed_efficiency"), default="semantic",
+    )
     parser.add_argument("--als-sweeps", type=int, default=1)
     parser.add_argument("--activation-alpha", type=float, default=0.5)
     parser.add_argument("--calibration-branch-fraction", type=float, default=0.0)
@@ -323,6 +326,7 @@ def main() -> None:
                 weight,
                 byte_budget=per_operator_budgets[name],
                 projection_name=name,
+                layout_policy=args.layout_policy,
                 calibration_inputs=norm1,
                 calibration_targets=dense_qkv[name],
                 bits_candidates=args.factor_bits,
@@ -353,6 +357,7 @@ def main() -> None:
             o_weight,
             byte_budget=per_operator_budgets[name],
             projection_name=name,
+            layout_policy=args.layout_policy,
             calibration_inputs=compressed_context,
             calibration_targets=dense_attention,
             bits_candidates=args.factor_bits,
@@ -410,6 +415,7 @@ def main() -> None:
                 weight,
                 byte_budget=per_operator_budgets[name],
                 projection_name=name,
+                layout_policy=args.layout_policy,
                 calibration_inputs=norm2,
                 calibration_targets=target_outputs,
                 bits_candidates=args.factor_bits,
@@ -444,6 +450,7 @@ def main() -> None:
             down_weight,
             byte_budget=per_operator_budgets[name],
             projection_name=name,
+            layout_policy=args.layout_policy,
             calibration_inputs=compressed_active,
             calibration_targets=dense_mlp_output,
             bits_candidates=args.factor_bits,
@@ -530,6 +537,7 @@ def main() -> None:
         },
         "factor_bits_candidates": list(args.factor_bits),
         "group_size": args.group_size,
+        "layout_policy": args.layout_policy,
         "activation_alpha": args.activation_alpha,
         "calibration_schmidt_branch": {
             "byte_fraction_per_operator": args.calibration_branch_fraction,
