@@ -120,7 +120,8 @@ def scaled_dot_product_attention_2d(Q, K, V, n_heads=32, n_kv_heads=32, seq_len=
     # backend to avoid a materialized [windows, heads, length, length] score
     # tensor. This matters for representative 2048-token calibration windows.
     context_4d = F.scaled_dot_product_attention(
-        Q_4d, K_4d, V_4d, dropout_p=0.0, is_causal=True,
+        Q_4d.contiguous(), K_4d.contiguous(), V_4d.contiguous(),
+        dropout_p=0.0, is_causal=True,
     )
     context_2d = context_4d.permute(1, 3, 0, 2).reshape(d_model, num_seqs * actual_len)
 
