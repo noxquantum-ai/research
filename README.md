@@ -4,6 +4,13 @@ We have demonstrated aggressive structural reductions, including configuration-d
 
 ## Latest dual-budget NEC result
 
+A newer sparse-excitation hybrid has an **eight-layer** development result
+of PPL **4.379 versus dense 4.083**, KL **0.089**, with all other layers dense.
+The user supplied that evaluation after terminating its pod. Reproduction and
+extension to all 32 layers are in progress; actual whole-model compression
+and final held-out quality for this candidate are not yet established.
+See the [current hybrid trial and live-result instructions](results/nec_sparse_excitation_a40_20261023/README.md).
+
 NEC now tracks actual serialized storage and logical coefficient reduction as
 separate constraints. This corrected an important weakness in the packed
 Schmidt path: its completed 5× byte-target model stores 5.614B total logical

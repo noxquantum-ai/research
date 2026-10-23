@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import time
@@ -54,6 +55,14 @@ def main():
     argv = json.loads(args.compiler_argv.read_text())
     model_dir = argv[argv.index('--model-dir') + 1]
     python = argv[0]
+    activation_dir = Path(argv[argv.index('--activation-dir') + 1])
+    shutil.copy2(activation_dir / 'model_manifest.json', run_dir / 'activation_capture_manifest.json')
+    atomic_json(run_dir / 'run_environment.json', {
+        'compiler_argv': argv,
+        'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        'started_utc': datetime.now(timezone.utc).isoformat(),
+        'checkpoint_directory_is_persistent': str(run_dir).startswith('/workspace/'),
+    })
     state = {'schema': 'nec_unattended_trial_status_v1', 'run_dir': str(run_dir),
              'target': {'layers': 32, 'maximum_ppl': 10, 'minimum_storage_ratio': 5,
                         'minimum_structural_reduction': 2},
@@ -117,10 +126,17 @@ def main():
         measurement = json.loads((run_dir / 'export/package_measurement.json').read_text())
         state['actual_whole_model'] = {k: measurement[k] for k in
                                       ('serialized_bytes', 'compression_ratio', 'structural_reduction', 'acceptance')}
+        execute([python, str(ROOT / 'scripts/verify_packed_nec_package.py'),
+                 '--model-dir', model_dir, '--checkpoint-dir', str(run_dir),
+                 '--package-dir', str(run_dir / 'export/deployable_model'),
+                 '--output', str(run_dir / 'export/parity.json')],
+                run_dir / 'export_parity.log', 'checking_exported_runtime_parity')
+        state['export_parity'] = json.loads((run_dir / 'export/parity.json').read_text())
         # Never turn a development slice into final confirmation.
         state['success_demonstrated'] = (
             'final_heldout_evaluation' in state
             and measurement['acceptance']['status'] == 'FEASIBLE'
+            and state['export_parity']['passed']
         )
         update('finished', child_pid=None)
     except BaseException:

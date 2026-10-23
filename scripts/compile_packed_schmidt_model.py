@@ -69,6 +69,13 @@ def relative_error(reference: torch.Tensor, candidate: torch.Tensor) -> float:
     return float((reference - candidate).norm() / reference.norm().clamp_min(1e-30))
 
 
+def save_checkpoint_atomically(checkpoint, path: Path) -> None:
+    """A pod interruption must not leave a truncated resumable .pt file."""
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    torch.save(checkpoint, temporary)
+    temporary.replace(path)
+
+
 class SafetensorReader:
     def __init__(self, model_dir: Path):
         self.model_dir = model_dir
@@ -796,7 +803,7 @@ def main() -> None:
             initial_path = args.initialization_output / f"compressed_layer_{layer}.pt"
             if initial_path.exists():
                 raise FileExistsError(initial_path)
-            torch.save({
+            save_checkpoint_atomically({
                 "layer_idx": layer,
                 "compressed_artifacts": artifacts,
                 "compression_path": "nec_packed_operator_schmidt_v3",
@@ -832,7 +839,7 @@ def main() -> None:
             "compression_path": "nec_packed_operator_schmidt_v3",
             "post_compression_healing": False,
         }
-        torch.save(checkpoint, output_path)
+        save_checkpoint_atomically(checkpoint, output_path)
         payload = sum(int(item["payload_bytes"]) for item in artifacts.values())
         coefficient_count = sum(
             packed_schmidt_coefficient_count_from_artifact(item)

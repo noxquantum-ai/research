@@ -1,0 +1,30 @@
+{
+  "provenance": "Evaluation JSON supplied by the user from the terminated pod; the new pod must reproduce it before extending the experiment.",
+  "original_checkpoint_directory": "/tmp/nec-sparse10-coupled-sequential-full32",
+  "scope": "All seven projections in layers 0-7 compressed; layers 8-31 dense; original complete model used for inference.",
+  "artifact_availability": "The old pod's /tmp checkpoint directory did not survive termination.",
+  "split": "WikiText-2 raw validation",
+  "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+  "dataset_source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+  "input_token_ids_sha256": "fe5382a2fc3beda9184f9757486195a76dd0480918b77991a2b05916e98469b3",
+  "input_tokens": 4096,
+  "scored_tokens": 4095,
+  "context": 2048,
+  "stride": 512,
+  "teacher": {
+    "perplexity": 4.0828723222002665,
+    "mean_nll": 1.406800741263215,
+    "next_token_accuracy": 0.6637362637362637
+  },
+  "student": {
+    "perplexity": 4.37878654940602,
+    "mean_nll": 1.4767716424901036,
+    "teacher_kl_nats_per_token": 0.08901530611516954,
+    "next_token_accuracy": 0.6507936507936508,
+    "dense_top1_agreement": 0.8903540903540903
+  },
+  "evaluation_seconds": 7.429320771014318,
+  "full32_success_demonstrated": false,
+  "actual_whole_model_storage_ratio": null,
+  "actual_whole_model_structural_reduction": null
+}
