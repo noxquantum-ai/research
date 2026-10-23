@@ -6,6 +6,44 @@ Model: NousResearch Llama-2-7b-hf, revision `8efe6c9b93655b934e27bd9981e3ec13e55
 
 ## Decision
 
+The strict-budget 32-layer follow-up has completed and been exported as a
+deployable package. It passes the 5x byte and 2x coefficient gates but fails
+the quality gate:
+
+| Full-model measurement | Result |
+| --- | ---: |
+| Source serialized bytes | 13,479,247,511 |
+| Complete exported package bytes | **2,144,321,837** |
+| Actual whole-model serialized compression | **6.2860189x** |
+| Total logical model coefficients | **3,331,706,294** |
+| Structural coefficient reduction | **2.0225125x** |
+| Dense transformer layers retained | 0 of 32 |
+| Validation-slice PPL | **320.2343**, dense 4.0829 |
+| Teacher KL | 4.36274 nats/token |
+| Next-token accuracy / dense top-1 agreement | 17.36% / 21.03% |
+| Joint acceptance | **INFEASIBLE for this checkpoint: quality gate fails** |
+
+The complete package contains 91 serialized files, including all dense
+embeddings/head/norms, NEC core and branch artifacts, metadata, tokenizer files,
+and copied reconstruction code. The retained tensor payload is 524,828,672
+bytes, and the NEC checkpoint files total 1,615,658,230 bytes. The exact
+coefficient count is 262,412,288 retained scalars plus 3,069,294,006 NEC
+coefficients. Runtime still reconstructs dense matrices.
+
+Layers 0–7 reuse the independently calibrated 20%-residual checkpoints. The
+remaining 24 layers compiled in **106.30 seconds** on A40 with unchanged global
+budgets. The package is on the persistent network volume at
+`/workspace/runs/nec-structural2-column05-residual20-full32/export/deployable_model`.
+Compact records are in [full32_and_controls.json](full32_and_controls.json).
+The exported package produces **bitwise-identical logits** to injection into
+the original dense architecture on a 128-token deterministic parity probe:
+maximum absolute difference 0, relative logit error 0. Bundled NEC code matches
+the verification source and serialized-file byte totals remain unchanged.
+See [export_parity.json](export_parity.json). This verifies serialization;
+the random parity inputs do not provide a capability score.
+The 5x and 2x requirements are met together; 10x, 3x structural reduction,
+and acceptable quality have not been achieved by this model.
+
 NEC now treats serialized storage and logical coefficient count as independent
 constraints. The existing byte-only packed Schmidt model fails the new
 structural requirement: its completed 32-layer artifacts represent
@@ -71,20 +109,25 @@ package directory.
 Matched replacement ablations on the same development slice use the best
 20% residual checkpoint:
 
-| NEC projections replaced across layers 0–7 | PPL |
-| --- | ---: |
-| None | 4.859 |
-| Q/K | 4.973 |
-| V/O | 6.414 |
-| All attention | 6.792 |
-| Gate/Up | 13.957 |
-| Down | 8.941 |
-| All MLP | 32.731 |
-| All projections | 51.637 |
+| NEC projections replaced | Layers 0–7 PPL | Layers 0–31 PPL |
+| --- | ---: | ---: |
+| None | 4.859 | 4.859 |
+| Q/K | 4.973 | 5.787 |
+| V/O | 6.414 | 21.377 |
+| All attention | 6.792 | 27.927 |
+| Gate/Up | 13.957 | 52.886 |
+| Down | 8.941 | 26.792 |
+| All MLP | 32.731 | 226.105 |
+| All projections | 51.637 | 314.123 |
 
 These interventions localize the largest error to the MLP and demonstrate
 additional attention/MLP interactions. Single-group replacements are
 diagnostics, not candidate compression results with matched total storage.
+The 32-layer test-slice ablation took 118.86 seconds including loading and
+reconstruction; its raw record is
+[full32_projection_ablation.json](full32_projection_ablation.json). The full
+model fails on both the test development slice and the matched validation
+slice; these are separate protocols and their PPL values must not be mixed.
 
 ## Construction and accounting corrections
 
@@ -109,6 +152,7 @@ validation result regresses:
 | Diagonal activation metric | **60.468** | **2.7047** | **33.36%** | **40.00%** |
 | Product covariance metric | 71.438 | 2.8656 | 31.18% | 37.70% |
 | Diagonal metric, MLP-weighted allocation | 63.378 | 2.7573 | 32.04% | 38.61% |
+| Native low-rank MLP control, full input covariance | 57.762 | 2.6588 | 34.92% | 42.15% |
 | Dense teacher | 4.083 | 0 | 66.37% | 100% |
 
 The product metric remains experimental and is not the default. Activation
@@ -124,6 +168,12 @@ and 1.3 for Gate/Up/Down, renormalized under the unchanged global budgets.
 It regresses slightly against uniform role allocation. This rejects that
 particular allocation; it does not establish that all nonuniform allocations
 are worse.
+
+The native low-rank control uses the established output/input SVD bipartition
+for MLPs and full covariance on its single input mode. Attention retains the
+NEC MPO representation. It improves validation PPL only modestly and remains
+a separately labeled diagnostic, not a new tensor-network novelty claim or
+the representation used in the exported full32 package.
 
 ### Accounting fixes
 
@@ -162,7 +212,8 @@ result and is rejected in its current form.
 
 ## Next representation gate
 
-Do not extend the present two-site codec to 32 layers. The next candidate must
+The full32 follow-up establishes actual package size and the failure of the
+combined quality target. The next candidate must
 beat the defect model at the same exact coefficient and byte budgets on held-out
 one-layer and eight-layer tests. Candidate search should jointly choose tensor
 layout, bond profile, precision, and defect allocation under a module-level

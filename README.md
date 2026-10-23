@@ -9,26 +9,36 @@ separate constraints. This corrected an important weakness in the packed
 Schmidt path: its completed 5× byte-target model stores 5.614B total logical
 coefficients and therefore achieves only **1.20× structural reduction**.
 
-The revised compiler enforces a 2× structural budget for its full-model plan
-while retaining the 5–10× storage objective. On an eight-layer Llama-2-7B
-prefix, a balanced Schmidt cut, a 5% coordinate defect and a 20% residual path
-improved PPL from 254.05 to **51.64**. These eight layers achieve **2.10×
-coefficient reduction and 7.96× serialized compression** in their region.
-The evaluated model retains the other 24 layers dense, so its whole-model
-ratios are approximately 1.14× structural and 1.27× storage. Quality and
-whole-model targets remain unmet.
+The revised 32-layer compiler now produces a complete package satisfying
+**6.286× actual serialized compression and 2.023× structural reduction**.
+It compresses attention and MLP in every layer, retains zero transformer
+layers dense, and uses no gradient fine-tuning or healing. Quality still
+fails decisively, so the combined objective is **not achieved**.
 
-| NEC dual-budget checkpoint | Compressed layers | PPL | KL | Projected full-run structural reduction | Projected full-run serialized compression | Status |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| Byte-only packed Schmidt | 32 | 95.27 | 2.981 | 1.200× | 5.002× projected | Fails quality and structural gates |
-| 2× semantic Schmidt | 8 | 481.72 | 4.616 | ≥2.0005× | ≥5.2567× | Fails quality gate |
-| 2× balanced Schmidt | 8 | 254.05 | 3.954 | ≥2.0003× | ≥5.2552× | Fails quality gate |
-| 2× balanced + 5% defect | 8 | 67.13 | 2.652 | ≥2.0036× | ≥5.2566× | Fails PPL ≤ 10 |
-| 2× balanced + 5% defect + 20% residual | 8 | **51.64** | **2.391** | **≥2.0034×** | **≥5.2540×** | Best development pilot; fails quality gate |
+| Full 32-layer result, 2026-10-23 | Dense reference | NEC |
+| --- | ---: | ---: |
+| Complete serialized model | 13,479,247,511 bytes | **2,144,321,837 bytes** |
+| Total stored coefficients, including all factors and scales | 6,738,417,664 | **3,331,706,294** |
+| Whole-model storage compression | 1× | **6.286×** |
+| Whole-model structural reduction | 1× | **2.023×** |
+| Validation-slice PPL, 4,095 scored tokens | 4.083 | **320.234** |
+| Teacher KL, nats/token | 0 | 4.363 |
+| Next-token accuracy | 66.37% | 17.36% |
+| Dense top-1 agreement | 100% | 21.03% |
+| Combined quality / storage / structural acceptance | Reference | **INFEASIBLE: quality fails** |
 
-Partial-run projections reserve budgets for the uncompiled layers; they are
-not achieved compression of the model used for PPL. No complete deployable
-package from this study has passed all quality, storage and structural gates.
+The complete deployable directory includes retained weights, NEC artifacts,
+metadata, tokenizer files and loader code. Its runtime reconstructs dense
+weights; these storage ratios do not imply equivalent runtime memory savings.
+The remaining 24 layers compiled in 106 seconds with eight checkpoints reused.
+
+Eight-layer development improved PPL from 254.05 to 51.64 through an
+activation-sensitive coordinate defect and residual capacity allocation, but
+the full model still accumulates severe errors. In matched 32-layer test-slice
+ablations, attention alone scores PPL 27.93 and MLP alone 226.11. Exported
+logits match checkpoint injection exactly. Full-model
+accuracy preservation at 5–10× storage and 2–3× structural compression remains
+NEC's unresolved objective.
 
 See the [dual storage/structural budget report](results/nec_structural_budget_a40_20261023/README.md).
 

@@ -1,0 +1,16 @@
+{
+  "schema": "nec_exported_package_parity_v1",
+  "package_dir": "/workspace/runs/nec-structural2-column05-residual20-full32/export/deployable_model",
+  "tokens": 128,
+  "input_seed": 71,
+  "maximum_absolute_logit_difference": 0,
+  "relative_logit_l2_error": 0,
+  "logits_bitwise_equal": true,
+  "bundled_nec_source_matches": true,
+  "passed": true,
+  "note": "Serialization parity only; random inputs do not measure capability.",
+  "seconds": 57.65096862800419,
+  "serialized_package_original_files_bytes": 2144321837,
+  "serialized_package_recorded_bytes": 2144321837,
+  "serialized_package_files_unchanged_size": true
+}

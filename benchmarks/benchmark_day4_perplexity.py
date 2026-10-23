@@ -322,7 +322,10 @@ def inject_nox_checkpoints(
     if unknown or not selected_projections:
         raise ValueError(f"Invalid NEC projection selection: {sorted(unknown)}")
 
-    ckpt_files = sorted(glob.glob(os.path.join(checkpoint_dir, "compressed_layer_*.pt")))
+    ckpt_files = sorted(
+        glob.glob(os.path.join(checkpoint_dir, "compressed_layer_*.pt")),
+        key=lambda path: int(Path(path).stem.removeprefix("compressed_layer_")),
+    )
     if not ckpt_files:
         raise FileNotFoundError(f"No 'compressed_layer_*.pt' files found in '{checkpoint_dir}'")
     file_layers = sorted(
@@ -438,7 +441,11 @@ def inject_nox_checkpoints(
             target_layer.forward = forward_with_bridge
 
         injected_layers.append(l_idx)
-        log_step(f"  Layer {l_idx:02d}: Reconstructed and injected ({data.get('total_kb', 0.0):.1f} KB artifact)")
+        checkpoint_kib = Path(ckpt_path).stat().st_size / 1024
+        log_step(
+            f"  Layer {l_idx:02d}: Reconstructed and injected "
+            f"({checkpoint_kib:.1f} KiB serialized checkpoint)"
+        )
 
     if expected_layers is not None and sorted(injected_layers) != list(expected_layers):
         raise RuntimeError(

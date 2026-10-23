@@ -1,0 +1,145 @@
+{
+  "schema": "nec_packed_projection_ablation_v1",
+  "checkpoint_dir": "/workspace/runs/nec-structural2-column05-residual20-full32",
+  "compressed_layers": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "dataset": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "test",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/test-00000-of-00001.parquet",
+    "source_sha256": "5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91",
+    "source_bytes": 732610,
+    "text_sha256": "696cca6b65a171b0a358a4be6732cdfdf2dd6164a32e20fd70e3c13fc4dfae83",
+    "text_bytes": 1296370,
+    "text_join": "double_newline",
+    "rows": 4358,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "protocol": {
+    "max_eval_tokens": 4096,
+    "seq_len": 2048,
+    "stride": 512
+  },
+  "results": {
+    "dense": {
+      "compressed_projections": [],
+      "perplexity": 4.8594092533646585,
+      "mean_nll": 1.5809168777186355,
+      "next_token_accuracy": 0.6283272283272283,
+      "scored_tokens": 4095
+    },
+    "q_k": {
+      "compressed_projections": [
+        "q_proj",
+        "k_proj"
+      ],
+      "perplexity": 5.78720859212938,
+      "mean_nll": 1.7556500668927426,
+      "next_token_accuracy": 0.5987789987789988,
+      "scored_tokens": 4095
+    },
+    "v_o": {
+      "compressed_projections": [
+        "v_proj",
+        "o_proj"
+      ],
+      "perplexity": 21.37681308234003,
+      "mean_nll": 3.062306833791209,
+      "next_token_accuracy": 0.4214896214896215,
+      "scored_tokens": 4095
+    },
+    "attention": {
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj"
+      ],
+      "perplexity": 27.926610247349764,
+      "mean_nll": 3.32958000658196,
+      "next_token_accuracy": 0.3851037851037851,
+      "scored_tokens": 4095
+    },
+    "gate_up": {
+      "compressed_projections": [
+        "gate_proj",
+        "up_proj"
+      ],
+      "perplexity": 52.886066804012074,
+      "mean_nll": 3.968139916723901,
+      "next_token_accuracy": 0.33992673992673994,
+      "scored_tokens": 4095
+    },
+    "down": {
+      "compressed_projections": [
+        "down_proj"
+      ],
+      "perplexity": 26.792045014674883,
+      "mean_nll": 3.2881050156440783,
+      "next_token_accuracy": 0.4146520146520147,
+      "scored_tokens": 4095
+    },
+    "mlp": {
+      "compressed_projections": [
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "perplexity": 226.10545807766496,
+      "mean_nll": 5.4210015190972225,
+      "next_token_accuracy": 0.210989010989011,
+      "scored_tokens": 4095
+    },
+    "all": {
+      "compressed_projections": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "perplexity": 314.12289595688486,
+      "mean_nll": 5.749784297733516,
+      "next_token_accuracy": 0.17216117216117216,
+      "scored_tokens": 4095
+    }
+  },
+  "seconds": 118.86290524801007
+}

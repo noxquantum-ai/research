@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -27,6 +28,9 @@ def main():
 
     config = json.loads((args.model_dir / "config.json").read_text())
     compile_manifest = json.loads((args.checkpoint_dir / "model_manifest.json").read_text())
+    source_config_hash = hashlib.sha256((args.model_dir / "config.json").read_bytes()).hexdigest()
+    if source_config_hash != compile_manifest["model_config_sha256"]:
+        raise ValueError("source model configuration differs from the compiled model")
     layer_count = int(config["num_hidden_layers"])
     layers = tuple(sorted(
         int(path.stem.removeprefix("compressed_layer_"))
@@ -65,6 +69,12 @@ def main():
         args.model_dir, args.checkpoint_dir, args.output, tuple(range(layer_count)),
         layers, (), args.output / "unused_int8", config.get("_commit_hash", "local_source"),
     )
+    expected_coefficients = compile_manifest.get("evaluated_assembly_coefficient_count")
+    if (
+        expected_coefficients is not None
+        and measurement["complete_model_coefficient_count"] != expected_coefficients
+    ):
+        raise ValueError("exported coefficient count disagrees with compile accounting")
     package = Path(measurement["path"])
     if quality is not None:
         (package / "nec_quality_evaluation.json").write_text(
@@ -101,7 +111,11 @@ def main():
         "structure_passed": structure_pass,
         "quality_passed": quality_pass,
         "quality_evaluation_available": quality is not None,
-        "status": "FEASIBLE" if storage_pass and structure_pass and quality_pass else "INFEASIBLE",
+        "status": (
+            "UNVERIFIED" if quality is None
+            else "FEASIBLE" if storage_pass and structure_pass and quality_pass
+            else "INFEASIBLE"
+        ),
     }
     destination = args.output / "package_measurement.json"
     destination.write_text(json.dumps(measurement, indent=2) + "\n")
