@@ -600,6 +600,13 @@ def _fit_calibration_column_branch(
 
 
 def packed_schmidt_payload_bytes_from_artifact(artifact: dict) -> int:
+    if artifact.get("codec_type") == "nec_packed_sector_schmidt_v1":
+        return (
+            packed_schmidt_payload_bytes_from_artifact(artifact["base_artifact"])
+            + codec_payload_bytes(artifact["protected_codec"])
+            + artifact["protected_indices"].numel() * artifact["protected_indices"].element_size()
+            + artifact["bulk_indices"].numel() * artifact["bulk_indices"].element_size()
+        )
     output_scale = artifact.get("output_scale")
     payload = int(
         codec_payload_bytes(artifact["left_codec"])
@@ -635,6 +642,11 @@ def packed_codec_coefficient_count(codec: dict) -> int:
 def packed_schmidt_coefficient_count_from_artifact(artifact: dict) -> int:
     """Exact logical coefficient count, including every learned auxiliary."""
 
+    if artifact.get("codec_type") == "nec_packed_sector_schmidt_v1":
+        return (
+            packed_schmidt_coefficient_count_from_artifact(artifact["base_artifact"])
+            + packed_codec_coefficient_count(artifact["protected_codec"])
+        )
     output_scale = artifact.get("output_scale")
     count = (
         packed_codec_coefficient_count(artifact["left_codec"])
@@ -661,6 +673,9 @@ def reconstruct_packed_schmidt(
     device: str | torch.device = "cpu",
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
+    if artifact.get("codec_type") == "nec_packed_sector_schmidt_v1":
+        from nox.sector_schmidt import reconstruct_sector_schmidt
+        return reconstruct_sector_schmidt(artifact, device=device, dtype=dtype)
     if artifact.get("codec_type") not in (*LEGACY_CODEC_TYPES, CODEC_TYPE):
         raise ValueError(f"unsupported packed Schmidt codec: {artifact.get('codec_type')!r}")
     left = decode_groupwise(artifact["left_codec"], device=device, dtype=torch.float32)

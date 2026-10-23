@@ -407,6 +407,7 @@ def materialize_deployable_allocation_package(
                     "nec_packed_operator_schmidt_v1",
                     "nec_packed_operator_schmidt_v2",
                     "nec_packed_operator_schmidt_v3",
+                    "nec_packed_sector_schmidt_v1",
                 ):
                     replacement_coefficients += (
                         packed_schmidt_coefficient_count_from_artifact(artifact)

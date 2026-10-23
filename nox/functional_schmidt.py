@@ -29,30 +29,46 @@ class SchmidtCoreMap:
 
     def __init__(self, artifact: dict, device):
         self.artifact = artifact
-        self.layout = _layout_from_value(artifact["layout"])
-        self.left = decode_groupwise(artifact["left_codec"], device=device)
-        self.right = decode_groupwise(artifact["right_codec"], device=device)
-        self.input_scale = artifact["input_scale"].to(device=device, dtype=torch.float32)
-        output_scale = artifact.get("output_scale")
+        self.sector = artifact.get("codec_type") == "nec_packed_sector_schmidt_v1"
+        self.base = artifact["base_artifact"] if self.sector else artifact
+        self.bulk_indices = (
+            artifact["bulk_indices"].to(device=device, dtype=torch.long) if self.sector else None
+        )
+        self.layout = _layout_from_value(self.base["layout"])
+        self.left = decode_groupwise(self.base["left_codec"], device=device)
+        self.right = decode_groupwise(self.base["right_codec"], device=device)
+        self.input_scale = self.base["input_scale"].to(device=device, dtype=torch.float32)
+        output_scale = self.base.get("output_scale")
         self.output_scale = (
-            torch.ones(artifact["orig_shape"][0], device=device)
+            torch.ones(self.base["orig_shape"][0], device=device)
             if output_scale is None else output_scale.to(device=device, dtype=torch.float32)
         )
 
     def weight(self, core: torch.Tensor, side: str) -> torch.Tensor:
         unfolding = core.T @ self.right if side == "left" else self.left.T @ core
-        return (
+        dense = (
             _unfolding_to_matrix(unfolding, self.layout)
             * self.output_scale[:, None] / self.input_scale[None, :]
         )
+        if self.sector:
+            full = torch.zeros(self.artifact["orig_shape"], device=dense.device, dtype=dense.dtype)
+            return full.index_copy_(self.artifact["neuron_axis"], self.bulk_indices, dense)
+        return dense
 
     def adjoint(self, dense: torch.Tensor, side: str) -> torch.Tensor:
+        if self.sector:
+            dense = dense.index_select(self.artifact["neuron_axis"], self.bulk_indices)
         unfolding = _matrix_to_unfolding(
             dense * self.output_scale[:, None] / self.input_scale[None, :], self.layout,
         )
         return self.right @ unfolding.T if side == "left" else self.left @ unfolding
 
     def diagonal(self, input_variance, output_sensitivity, side):
+        if self.sector:
+            if self.artifact["neuron_axis"] == 0:
+                output_sensitivity = output_sensitivity.index_select(0, self.bulk_indices)
+            else:
+                input_variance = input_variance.index_select(0, self.bulk_indices)
         entry_metric = (
             (output_sensitivity * self.output_scale.square())[:, None]
             * (input_variance / self.input_scale.square())[None, :]
@@ -62,6 +78,15 @@ class SchmidtCoreMap:
             self.right.square() @ unfolded.T
             if side == "left" else self.left.square() @ unfolded
         ).clamp_min(1e-20)
+
+    def packed_candidate(self, core, side):
+        base = dict(self.base)
+        base[side + "_codec"] = encode_groupwise(
+            core, bits=int(self.base["factor_bits"]), group_size=int(self.base["group_size"]),
+        )
+        if self.sector:
+            return {**self.artifact, "base_artifact": base}
+        return base
 
 
 def _prior_anchored_pcg(normal, rhs, diagonal, *, iterations, tolerance):
@@ -221,12 +246,7 @@ def construct_functional_schmidt_mlp(
                 accepted_weight = None
                 best_fit, best_guard = current_fit, current_guard
                 for fraction in (1.0, 0.5, 0.25):
-                    trial = dict(artifact)
-                    trial[side + "_codec"] = encode_groupwise(
-                        core + fraction * delta,
-                        bits=int(artifact["factor_bits"]),
-                        group_size=int(artifact["group_size"]),
-                    )
+                    trial = mapper.packed_candidate(core + fraction * delta, side)
                     decoded = reconstruct_packed_schmidt(trial, device=inputs.device)
                     candidate_weights = {**weights, role: decoded}
                     fit_error, guard_error = errors(candidate_weights)

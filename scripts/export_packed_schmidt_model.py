@@ -50,7 +50,8 @@ def main():
             raise ValueError(f"layer index mismatch in checkpoint {layer}")
         if set(checkpoint["compressed_artifacts"]) != expected_projection_names:
             raise ValueError(f"checkpoint {layer} must replace all seven projections")
-        if any(not item.get("codec_type", "").startswith("nec_packed_operator_schmidt_")
+        if any(not (item.get("codec_type", "").startswith("nec_packed_operator_schmidt_")
+                    or item.get("codec_type") == "nec_packed_sector_schmidt_v1")
                for item in checkpoint["compressed_artifacts"].values()):
             raise ValueError("this exporter requires packed Schmidt artifacts")
         del checkpoint

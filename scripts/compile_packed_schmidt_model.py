@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from functools import partial
 import hashlib
 import json
 import math
@@ -23,8 +24,11 @@ from nox.block_compiler import ridge_compensated_up_target, scaled_dot_product_a
 from nox.functional_schmidt import construct_functional_schmidt_mlp
 from nox.packed_schmidt import (
     compile_packed_schmidt,
+    packed_matrix_coefficient_count,
     packed_schmidt_coefficient_count_from_artifact,
+    reconstruct_packed_schmidt,
 )
+from nox.sector_schmidt import compile_sector_schmidt, select_swiglu_sectors
 
 
 PROJECTIONS = ("q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj")
@@ -218,6 +222,9 @@ def main() -> None:
     parser.add_argument("--joint-mlp-sweeps", type=int, default=0)
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
+    parser.add_argument("--protected-mlp-coefficient-fraction", type=float, default=0.0)
+    parser.add_argument("--sector-probe-dir", type=Path)
+    parser.add_argument("--sector-factor-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=5)
     parser.add_argument(
         "--initialization-output", type=Path,
         help="Optional separate checkpoint directory for paired construction controls.",
@@ -266,6 +273,10 @@ def main() -> None:
         parser.error("joint MLP sweeps must be nonnegative and CG iterations positive")
     if not math.isfinite(args.joint_mlp_ridge_ratio) or args.joint_mlp_ridge_ratio <= 0:
         parser.error("joint MLP ridge must be finite and positive")
+    if not 0 <= args.protected_mlp_coefficient_fraction < 1:
+        parser.error("protected MLP coefficient fraction must lie in [0,1)")
+    if args.protected_mlp_coefficient_fraction and args.sector_probe_dir is None:
+        parser.error("protected sectors require --sector-probe-dir")
 
     config = json.loads((args.model_dir / "config.json").read_text())
     capture_manifest_path = args.activation_dir / "model_manifest.json"
@@ -550,6 +561,38 @@ def main() -> None:
             name: weights[prefix + f"mlp.{name}.weight"].float() @ dense_norm2
             for name in ("gate_proj", "up_proj")
         }
+        protected_indices = None
+        sector_diagnostics = None
+        if args.protected_mlp_coefficient_fraction:
+            d_model = int(config["hidden_size"])
+            width = int(config["intermediate_size"])
+            share = math.floor(
+                args.protected_mlp_coefficient_fraction
+                * sum(per_operator_coefficient_budgets[name]
+                      for name in ("gate_proj", "up_proj", "down_proj"))
+            )
+            protected_count = min(width - 256, share // (3 * d_model)) // 256 * 256
+            while protected_count > 0 and (
+                2 * packed_matrix_coefficient_count(protected_count, d_model, args.group_size)
+                + packed_matrix_coefficient_count(d_model, protected_count, args.group_size)
+                > share
+            ):
+                protected_count -= 256
+            if protected_count <= 0:
+                raise ValueError("sector allowance is too small for a 256-neuron sector")
+            probe = torch.load(
+                args.sector_probe_dir / f"compressed_layer_{layer}.pt",
+                map_location="cpu", weights_only=True,
+            )["compressed_artifacts"]
+            probe_gate = reconstruct_packed_schmidt(probe["gate_proj"], device=device)
+            probe_up = reconstruct_packed_schmidt(probe["up_proj"], device=device)
+            protected_indices, sector_diagnostics = select_swiglu_sectors(
+                weights[prefix + "mlp.gate_proj.weight"],
+                weights[prefix + "mlp.up_proj.weight"],
+                weights[prefix + "mlp.down_proj.weight"],
+                probe_gate, probe_up, norm2, protected_count,
+            )
+            del probe, probe_gate, probe_up
         for offset, name in enumerate(("gate_proj", "up_proj"), start=4):
             weight = weights[prefix + f"mlp.{name}.weight"]
             target_outputs = dense_gate_up[name]
@@ -571,7 +614,12 @@ def main() -> None:
                     "importance_min": float(compensation_importance.min()),
                     "importance_max": float(compensation_importance.max()),
                 }
-            artifact, decoded, diagnostics = compile_packed_schmidt(
+            mlp_constructor = (
+                compile_packed_schmidt if protected_indices is None else
+                partial(compile_sector_schmidt, protected_indices=protected_indices,
+                        neuron_axis=0, protected_bits=args.sector_factor_bits)
+            )
+            artifact, decoded, diagnostics = mlp_constructor(
                 weight,
                 byte_budget=per_operator_budgets[name],
                 coefficient_budget=per_operator_coefficient_budgets[name],
@@ -613,7 +661,12 @@ def main() -> None:
         down_weight = weights[prefix + "mlp.down_proj.weight"]
         dense_active = F.silu(dense_gate_up["gate_proj"]) * dense_gate_up["up_proj"]
         dense_mlp_output = down_weight.float() @ dense_active
-        artifact, decoded_down, diagnostics = compile_packed_schmidt(
+        down_constructor = (
+            compile_packed_schmidt if protected_indices is None else
+            partial(compile_sector_schmidt, protected_indices=protected_indices,
+                    neuron_axis=1, protected_bits=args.sector_factor_bits)
+        )
+        artifact, decoded_down, diagnostics = down_constructor(
             down_weight,
             byte_budget=per_operator_budgets[name],
             coefficient_budget=per_operator_coefficient_budgets[name],
@@ -698,6 +751,7 @@ def main() -> None:
                 "before_joint_mlp_construction" if args.joint_mlp_sweeps else "final"
             ),
             "joint_mlp_construction": joint_mlp_diagnostics,
+            "nonlinear_feature_sectors": sector_diagnostics,
             "calibration_input": (
                 "compiled_prefix" if uses_compiled_prefix else "dense_trajectory"
             ),
@@ -822,6 +876,11 @@ def main() -> None:
             "cg_iterations": args.joint_mlp_cg_iterations,
             "ridge_ratio": args.joint_mlp_ridge_ratio,
             "target": "clean_whole_block_output_including_residual_stream",
+        },
+        "protected_mlp_sectors": {
+            "coefficient_fraction": args.protected_mlp_coefficient_fraction,
+            "probe_directory": str(args.sector_probe_dir) if args.sector_probe_dir else None,
+            "factor_bits": args.sector_factor_bits,
         },
         "complementary_branch_fraction": args.complementary_branch_fraction,
         "gradient_free_als_sweeps": args.als_sweeps,
