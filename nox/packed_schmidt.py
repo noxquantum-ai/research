@@ -44,6 +44,20 @@ def packed_matrix_payload_bytes(rows: int, columns: int, bits: int, group_size: 
     return code_bytes + scale_bytes
 
 
+def packed_matrix_coefficient_count(rows: int, columns: int, group_size: int) -> int:
+    """Logical stored coefficients for a packed matrix and its group scales.
+
+    Bit packing changes storage, not structural parameter count. Padding codes
+    are deterministic container overhead and are excluded; every logical factor
+    value and every stored group scale is included.
+    """
+
+    if min(rows, columns, group_size) <= 0:
+        raise ValueError("matrix dimensions and group size must be positive")
+    groups_per_row = (columns + group_size - 1) // group_size
+    return rows * columns + rows * groups_per_row
+
+
 def packed_schmidt_payload_bytes(
     layout: OperatorSchmidtLayout,
     rank: int,
@@ -59,6 +73,25 @@ def packed_schmidt_payload_bytes(
         + packed_matrix_payload_bytes(rank, columns, bits, group_size)
         + 2 * int(input_scale_count)
         + 2 * int(output_scale_count)
+    )
+
+
+def packed_schmidt_coefficient_count(
+    layout: OperatorSchmidtLayout,
+    rank: int,
+    group_size: int,
+    *,
+    input_scale_count: int = 0,
+    output_scale_count: int = 0,
+) -> int:
+    """Logical factor and auxiliary coefficient count for a Schmidt operator."""
+
+    rows, columns = layout.unfolding_shape
+    return (
+        packed_matrix_coefficient_count(rank, rows, group_size)
+        + packed_matrix_coefficient_count(rank, columns, group_size)
+        + int(input_scale_count)
+        + int(output_scale_count)
     )
 
 
@@ -89,12 +122,47 @@ def rank_for_payload_budget(
     return low
 
 
+def rank_for_coefficient_budget(
+    layout: OperatorSchmidtLayout,
+    coefficient_budget: int,
+    group_size: int,
+    *,
+    input_scale_count: int = 0,
+    output_scale_count: int = 0,
+) -> int:
+    """Greatest Schmidt rank fitting a logical structural budget."""
+
+    maximum = min(layout.unfolding_shape)
+    low, high = 0, maximum
+    while low < high:
+        middle = (low + high + 1) // 2
+        count = packed_schmidt_coefficient_count(
+            layout, middle, group_size,
+            input_scale_count=input_scale_count,
+            output_scale_count=output_scale_count,
+        )
+        if count <= coefficient_budget:
+            low = middle
+        else:
+            high = middle - 1
+    return low
+
+
 def direct_schmidt_payload_bytes(
     d_out: int, d_in: int, rank: int, bits: int, group_size: int,
 ) -> int:
     return (
         packed_matrix_payload_bytes(rank, d_out, bits, group_size)
         + packed_matrix_payload_bytes(rank, d_in, bits, group_size)
+    )
+
+
+def direct_schmidt_coefficient_count(
+    d_out: int, d_in: int, rank: int, group_size: int,
+) -> int:
+    return (
+        packed_matrix_coefficient_count(rank, d_out, group_size)
+        + packed_matrix_coefficient_count(rank, d_in, group_size)
     )
 
 
@@ -108,6 +176,22 @@ def direct_rank_for_payload_budget(
         if direct_schmidt_payload_bytes(
             d_out, d_in, middle, bits, group_size,
         ) <= byte_budget:
+            low = middle
+        else:
+            high = middle - 1
+    return low
+
+
+def direct_rank_for_coefficient_budget(
+    d_out: int, d_in: int, coefficient_budget: int, group_size: int,
+    *, maximum_rank: int,
+) -> int:
+    low, high = 0, min(d_out, d_in, maximum_rank)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if direct_schmidt_coefficient_count(
+            d_out, d_in, middle, group_size,
+        ) <= coefficient_budget:
             low = middle
         else:
             high = middle - 1
@@ -217,6 +301,7 @@ def _fit_calibration_schmidt_branch(
     calibration_inputs: torch.Tensor,
     *,
     byte_budget: int,
+    coefficient_budget: int | None,
     bits: int,
     group_size: int,
     fit_tokens: int,
@@ -234,6 +319,14 @@ def _fit_calibration_schmidt_branch(
         d_out, d_in, byte_budget, bits, group_size,
         maximum_rank=sample_count,
     )
+    if coefficient_budget is not None:
+        rank = min(
+            rank,
+            direct_rank_for_coefficient_budget(
+                d_out, d_in, coefficient_budget, group_size,
+                maximum_rank=sample_count,
+            ),
+        )
     if rank <= 0:
         return None, None, {"rank": 0, "payload_bytes": 0}
 
@@ -320,6 +413,9 @@ def _fit_calibration_schmidt_branch(
         "rank": rank,
         "factor_bits": bits,
         "payload_bytes": int(payload),
+        "logical_coefficient_count": direct_schmidt_coefficient_count(
+            d_out, d_in, rank, group_size,
+        ),
         "residual_error_after_branch": _relative_frobenius(
             all_residual, predicted_residual,
         ),
@@ -340,6 +436,35 @@ def packed_schmidt_payload_bytes_from_artifact(artifact: dict) -> int:
         payload += codec_payload_bytes(residual["left_codec"])
         payload += codec_payload_bytes(residual["right_codec"])
     return int(payload)
+
+
+def packed_codec_coefficient_count(codec: dict) -> int:
+    """Count logical values represented by a groupwise codec artifact."""
+
+    rows, columns = map(int, codec["shape"])
+    count = rows * columns
+    count += int(codec["group_scales"].numel())
+    column_scales = codec.get("column_scales")
+    if column_scales is not None:
+        count += int(column_scales.numel())
+    return count
+
+
+def packed_schmidt_coefficient_count_from_artifact(artifact: dict) -> int:
+    """Exact logical coefficient count, including every learned auxiliary."""
+
+    output_scale = artifact.get("output_scale")
+    count = (
+        packed_codec_coefficient_count(artifact["left_codec"])
+        + packed_codec_coefficient_count(artifact["right_codec"])
+        + int(artifact["input_scale"].numel())
+        + (0 if output_scale is None else int(output_scale.numel()))
+    )
+    residual = artifact.get("calibration_schmidt_branch")
+    if residual is not None:
+        count += packed_codec_coefficient_count(residual["left_codec"])
+        count += packed_codec_coefficient_count(residual["right_codec"])
+    return int(count)
 
 
 def reconstruct_packed_schmidt(
@@ -375,6 +500,7 @@ def compile_packed_schmidt(
     weight: torch.Tensor,
     *,
     byte_budget: int,
+    coefficient_budget: int | None = None,
     projection_name: str | None = None,
     layout_policy: str = "semantic",
     calibration_inputs: torch.Tensor | None = None,
@@ -400,6 +526,8 @@ def compile_packed_schmidt(
         raise ValueError("weight must be a floating-point matrix")
     if byte_budget <= 0:
         raise ValueError("byte_budget must be positive")
+    if coefficient_budget is not None and coefficient_budget <= 0:
+        raise ValueError("coefficient_budget must be positive")
     if group_size <= 0 or als_sweeps < 0 or ridge_ratio < 0:
         raise ValueError("invalid group size or ALS controls")
     if not 0 <= calibration_branch_fraction < 1:
@@ -449,16 +577,39 @@ def compile_packed_schmidt(
 
     branch_budget = math.floor(byte_budget * calibration_branch_fraction)
     base_budget = byte_budget - branch_budget
+    branch_coefficient_budget = (
+        None
+        if coefficient_budget is None
+        else math.floor(coefficient_budget * calibration_branch_fraction)
+    )
+    base_coefficient_budget = (
+        None
+        if coefficient_budget is None
+        else coefficient_budget - branch_coefficient_budget
+    )
 
-    ranks = {
+    ranks_by_bytes = {
         bits: rank_for_payload_budget(
             layout, base_budget, bits, group_size,
             input_scale_count=d_in, output_scale_count=d_out,
         )
         for bits in bits_values
     }
+    rank_by_coefficients = (
+        None
+        if base_coefficient_budget is None
+        else rank_for_coefficient_budget(
+            layout, base_coefficient_budget, group_size,
+            input_scale_count=d_in, output_scale_count=d_out,
+        )
+    )
+    ranks = {
+        bits: min(rank, rank_by_coefficients)
+        if rank_by_coefficients is not None else rank
+        for bits, rank in ranks_by_bytes.items()
+    }
     if max(ranks.values(), default=0) <= 0:
-        raise ValueError("byte budget cannot store rank one")
+        raise ValueError("byte and coefficient budgets cannot store rank one")
     maximum_rank = max(ranks.values())
     u, values, vh = _truncated_svd(
         unfolding, maximum_rank, oversample=oversample,
@@ -504,6 +655,12 @@ def compile_packed_schmidt(
                 layout, rank, bits, group_size, input_scale_count=d_in,
                 output_scale_count=d_out,
             ),
+            "logical_coefficient_count_planned": packed_schmidt_coefficient_count(
+                layout, rank, group_size, input_scale_count=d_in,
+                output_scale_count=d_out,
+            ),
+            "rank_limit_from_bytes": ranks_by_bytes[bits],
+            "rank_limit_from_coefficients": rank_by_coefficients,
             "relative_conditioned_weight_error": conditioned_objective,
             "relative_calibration_output_error_after_output_leg_scale": calibration_objective,
             "als_history": history,
@@ -533,8 +690,19 @@ def compile_packed_schmidt(
         "input_scale": input_scale.to(device="cpu", dtype=torch.float16),
         "output_scale": output_scale.to(device="cpu", dtype=torch.float16),
         "byte_budget": int(byte_budget),
+        "coefficient_budget": (
+            None if coefficient_budget is None else int(coefficient_budget)
+        ),
         "base_byte_budget": int(base_budget),
+        "base_coefficient_budget": (
+            None if base_coefficient_budget is None else int(base_coefficient_budget)
+        ),
         "calibration_branch_byte_budget": int(branch_budget),
+        "calibration_branch_coefficient_budget": (
+            None
+            if branch_coefficient_budget is None
+            else int(branch_coefficient_budget)
+        ),
         "selection": selected,
         "candidate_frontier": candidates,
         "construction": "byte_bounded_block_sum_schmidt_mpo_with_gradient_free_als",
@@ -543,8 +711,16 @@ def compile_packed_schmidt(
         "sparse_sidecar": False,
     }
     artifact["payload_bytes"] = packed_schmidt_payload_bytes_from_artifact(artifact)
+    artifact["logical_coefficient_count"] = (
+        packed_schmidt_coefficient_count_from_artifact(artifact)
+    )
     if artifact["payload_bytes"] > base_budget:
         raise RuntimeError("serialized tensor payload exceeded the assigned byte budget")
+    if (
+        base_coefficient_budget is not None
+        and artifact["logical_coefficient_count"] > base_coefficient_budget
+    ):
+        raise RuntimeError("artifact exceeded the assigned structural coefficient budget")
     reconstructed = reconstruct_packed_schmidt(
         artifact, device=source.device, dtype=torch.float32,
     )
@@ -555,6 +731,7 @@ def compile_packed_schmidt(
             residual_outputs,
             calibration_inputs,
             byte_budget=branch_budget,
+            coefficient_budget=branch_coefficient_budget,
             bits=calibration_branch_bits,
             group_size=group_size,
             fit_tokens=calibration_branch_fit_tokens,
@@ -565,8 +742,16 @@ def compile_packed_schmidt(
             artifact["calibration_schmidt_branch"] = branch
             reconstructed = reconstructed + correction
         artifact["payload_bytes"] = packed_schmidt_payload_bytes_from_artifact(artifact)
+        artifact["logical_coefficient_count"] = (
+            packed_schmidt_coefficient_count_from_artifact(artifact)
+        )
         if artifact["payload_bytes"] > byte_budget:
             raise RuntimeError("Schmidt branches exceeded the assigned byte budget")
+        if (
+            coefficient_budget is not None
+            and artifact["logical_coefficient_count"] > coefficient_budget
+        ):
+            raise RuntimeError("Schmidt branches exceeded the structural coefficient budget")
     diagnostics = {
         "layout": artifact["layout"],
         "layout_policy": layout_policy,
@@ -574,6 +759,8 @@ def compile_packed_schmidt(
         "selected_rank": rank,
         "payload_bytes": artifact["payload_bytes"],
         "byte_budget": int(byte_budget),
+        "logical_coefficient_count": artifact["logical_coefficient_count"],
+        "coefficient_budget": coefficient_budget,
         "dense_bytes": dense_source_bytes,
         "payload_compression_ratio": dense_source_bytes / artifact["payload_bytes"],
         "relative_weight_error": _relative_frobenius(source, reconstructed),

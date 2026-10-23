@@ -20,7 +20,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from nox.block_compiler import ridge_compensated_up_target, scaled_dot_product_attention_2d
-from nox.packed_schmidt import compile_packed_schmidt
+from nox.packed_schmidt import (
+    compile_packed_schmidt,
+    packed_schmidt_coefficient_count_from_artifact,
+)
 
 
 PROJECTIONS = ("q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj")
@@ -74,6 +77,19 @@ class SafetensorReader:
                 for name in shard_names:
                     result[name] = source.get_tensor(name)
         return result
+
+    def coefficient_count(self) -> int:
+        """Count source tensor scalars without materializing model weights."""
+
+        total = 0
+        by_shard: dict[str, list[str]] = {}
+        for name, shard in self.weight_map.items():
+            by_shard.setdefault(shard, []).append(name)
+        for shard, shard_names in by_shard.items():
+            with safe_open(self.model_dir / shard, framework="pt", device="cpu") as source:
+                for name in shard_names:
+                    total += math.prod(source.get_slice(name).get_shape())
+        return int(total)
 
 
 def layer_tensor_names(layer: int) -> list[str]:
@@ -160,6 +176,13 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--layers", default="0-31")
     parser.add_argument("--target-whole-model-ratio", type=float, default=5.0)
+    parser.add_argument(
+        "--min-structural-reduction", type=float, default=2.0,
+        help=(
+            "Minimum reduction in logical stored coefficients, independent of packing; "
+            "factor values, learned scales, and residual branches all count."
+        ),
+    )
     parser.add_argument("--metadata-reserve-mib", type=float, default=20.0)
     parser.add_argument("--role-multipliers")
     parser.add_argument("--layer-multipliers")
@@ -188,6 +211,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.target_whole_model_ratio < 5:
         parser.error("NEC whole-model target must be at least 5x")
+    if args.min_structural_reduction < 2:
+        parser.error("NEC structural reduction target must be at least 2x")
     if args.calibration_tokens % args.sequence_length:
         parser.error("calibration tokens must be a multiple of sequence length")
     if args.metadata_reserve_mib <= 0:
@@ -228,6 +253,18 @@ def main() -> None:
     artifact_budget = package_cap - fixed_package_bytes - metadata_reserve_bytes
     if artifact_budget <= 0:
         raise RuntimeError("unchanged model bytes consume the requested package budget")
+    dense_model_coefficient_count = reader.coefficient_count()
+    fixed_model_coefficient_count = dense_model_coefficient_count - full_projection_scalars
+    structural_coefficient_cap = math.floor(
+        dense_model_coefficient_count / args.min_structural_reduction
+    )
+    artifact_coefficient_budget = (
+        structural_coefficient_cap - fixed_model_coefficient_count
+    )
+    if artifact_coefficient_budget <= 0:
+        raise RuntimeError(
+            "unchanged model coefficients consume the requested structural budget"
+        )
     weighted_scalars = sum(
         per_layer_multipliers[layer]
         * sum(scalar_by_projection[name] * multipliers[name] for name in PROJECTIONS)
@@ -246,9 +283,26 @@ def main() -> None:
         }
         for layer in range(layer_count)
     }
+    per_layer_operator_coefficient_budgets = {
+        layer: {
+            name: math.floor(
+                artifact_coefficient_budget
+                * scalar_by_projection[name]
+                * multipliers[name]
+                * per_layer_multipliers[layer]
+                / weighted_scalars
+            )
+            for name in PROJECTIONS
+        }
+        for layer in range(layer_count)
+    }
     planned_artifact_budget = sum(
         sum(layer_budgets.values())
         for layer_budgets in per_layer_operator_budgets.values()
+    )
+    planned_artifact_coefficient_budget = sum(
+        sum(layer_budgets.values())
+        for layer_budgets in per_layer_operator_coefficient_budgets.values()
     )
     preflight = {
         "dense_package_bytes": dense_package_bytes,
@@ -260,9 +314,25 @@ def main() -> None:
         "artifact_budget_bytes": artifact_budget,
         "planned_artifact_budget_bytes": planned_artifact_budget,
         "per_layer_operator_byte_budgets": per_layer_operator_budgets,
+        "dense_model_coefficient_count": dense_model_coefficient_count,
+        "minimum_structural_reduction": args.min_structural_reduction,
+        "structural_coefficient_cap": structural_coefficient_cap,
+        "structural_caps": {
+            "2x": math.floor(dense_model_coefficient_count / 2),
+            "3x": math.floor(dense_model_coefficient_count / 3),
+        },
+        "fixed_model_coefficient_count": fixed_model_coefficient_count,
+        "artifact_coefficient_budget": artifact_coefficient_budget,
+        "planned_artifact_coefficient_budget": planned_artifact_coefficient_budget,
+        "per_layer_operator_coefficient_budgets": (
+            per_layer_operator_coefficient_budgets
+        ),
         "role_multipliers": multipliers,
         "layer_multipliers": per_layer_multipliers,
         "mathematically_storage_feasible": planned_artifact_budget <= artifact_budget,
+        "mathematically_structurally_feasible": (
+            planned_artifact_coefficient_budget <= artifact_coefficient_budget
+        ),
     }
     (args.output / "storage_preflight.json").write_text(json.dumps(preflight, indent=2) + "\n")
     print("PREFLIGHT " + json.dumps(preflight), flush=True)
@@ -276,14 +346,22 @@ def main() -> None:
         if args.resume and output_path.is_file():
             checkpoint = torch.load(output_path, map_location="cpu", weights_only=True)
             payload = sum(int(item["payload_bytes"]) for item in checkpoint["compressed_artifacts"].values())
+            coefficient_count = sum(
+                packed_schmidt_coefficient_count_from_artifact(item)
+                for item in checkpoint["compressed_artifacts"].values()
+            )
             layer_records.append({
                 "layer": layer, "resumed": True, "payload_bytes": payload,
+                "logical_coefficient_count": coefficient_count,
                 "serialized_checkpoint_bytes": output_path.stat().st_size,
             })
             print(f"LAYER {layer} resumed", flush=True)
             continue
         layer_started = time.monotonic()
         per_operator_budgets = per_layer_operator_budgets[layer]
+        per_operator_coefficient_budgets = (
+            per_layer_operator_coefficient_budgets[layer]
+        )
         prefix = f"model.layers.{layer}."
         weights = {
             name: tensor.to(device=device)
@@ -325,6 +403,7 @@ def main() -> None:
             artifact, decoded, diagnostics = compile_packed_schmidt(
                 weight,
                 byte_budget=per_operator_budgets[name],
+                coefficient_budget=per_operator_coefficient_budgets[name],
                 projection_name=name,
                 layout_policy=args.layout_policy,
                 calibration_inputs=norm1,
@@ -356,6 +435,7 @@ def main() -> None:
         artifact, decoded_o, diagnostics = compile_packed_schmidt(
             o_weight,
             byte_budget=per_operator_budgets[name],
+            coefficient_budget=per_operator_coefficient_budgets[name],
             projection_name=name,
             layout_policy=args.layout_policy,
             calibration_inputs=compressed_context,
@@ -414,6 +494,7 @@ def main() -> None:
             artifact, decoded, diagnostics = compile_packed_schmidt(
                 weight,
                 byte_budget=per_operator_budgets[name],
+                coefficient_budget=per_operator_coefficient_budgets[name],
                 projection_name=name,
                 layout_policy=args.layout_policy,
                 calibration_inputs=norm2,
@@ -449,6 +530,7 @@ def main() -> None:
         artifact, decoded_down, diagnostics = compile_packed_schmidt(
             down_weight,
             byte_budget=per_operator_budgets[name],
+            coefficient_budget=per_operator_coefficient_budgets[name],
             projection_name=name,
             layout_policy=args.layout_policy,
             calibration_inputs=compressed_active,
@@ -477,10 +559,15 @@ def main() -> None:
         }
         torch.save(checkpoint, output_path)
         payload = sum(int(item["payload_bytes"]) for item in artifacts.values())
+        coefficient_count = sum(
+            packed_schmidt_coefficient_count_from_artifact(item)
+            for item in artifacts.values()
+        )
         record = {
             "layer": layer,
             "resumed": False,
             "payload_bytes": payload,
+            "logical_coefficient_count": coefficient_count,
             "serialized_checkpoint_bytes": output_path.stat().st_size,
             "projection_diagnostics": projection_records,
             "calibration_input": (
@@ -512,11 +599,40 @@ def main() -> None:
         for layer in range(layer_count)
         if layer not in present_layers
     )
+    missing_artifact_coefficient_budget = sum(
+        sum(per_layer_operator_coefficient_budgets[layer].values())
+        for layer in range(layer_count)
+        if layer not in present_layers
+    )
+    recorded_coefficient_counts = {
+        int(record["layer"]): int(record["logical_coefficient_count"])
+        for record in layer_records
+    }
+    present_artifact_coefficient_count = sum(
+        recorded_coefficient_counts[layer]
+        for layer in present_layers
+        if layer in recorded_coefficient_counts
+    )
+    for layer in present_layers - recorded_coefficient_counts.keys():
+        checkpoint = torch.load(
+            args.output / f"compressed_layer_{layer}.pt",
+            map_location="cpu", weights_only=True,
+        )
+        present_artifact_coefficient_count += sum(
+            packed_schmidt_coefficient_count_from_artifact(item)
+            for item in checkpoint["compressed_artifacts"].values()
+        )
+        del checkpoint
     projected_package_upper_bound = (
         fixed_package_bytes
         + checkpoint_bytes
         + missing_artifact_budget
         + metadata_reserve_bytes
+    )
+    projected_model_coefficient_upper_bound = (
+        fixed_model_coefficient_count
+        + present_artifact_coefficient_count
+        + missing_artifact_coefficient_budget
     )
     manifest = {
         "schema": "nec_packed_schmidt_compile_v1",
@@ -549,6 +665,15 @@ def main() -> None:
         "gradient_free_als_sweeps": args.als_sweeps,
         "layers": layer_records,
         "serialized_checkpoint_bytes_present": checkpoint_bytes,
+        "logical_artifact_coefficient_count_present": (
+            present_artifact_coefficient_count
+        ),
+        "projected_complete_model_coefficient_count_upper_bound": (
+            projected_model_coefficient_upper_bound
+        ),
+        "projected_complete_structural_reduction_lower_bound": (
+            dense_model_coefficient_count / projected_model_coefficient_upper_bound
+        ),
         "projected_complete_package_bytes_upper_bound": projected_package_upper_bound,
         "projected_complete_package_ratio_lower_bound": (
             dense_package_bytes / projected_package_upper_bound
