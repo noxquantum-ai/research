@@ -154,6 +154,7 @@ def main() -> None:
     parser.add_argument("--calibration-branch-fraction", type=float, default=0.0)
     parser.add_argument("--calibration-branch-bits", type=int, choices=(2, 3, 4), default=3)
     parser.add_argument("--calibration-branch-fit-tokens", type=int, default=512)
+    parser.add_argument("--swiglu-compensation", action="store_true")
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument(
@@ -352,7 +353,7 @@ def main() -> None:
             weight = weights[prefix + f"mlp.{name}.weight"]
             target_outputs = dense_gate_up[name]
             compensation = None
-            if name == "up_proj":
+            if name == "up_proj" and args.swiglu_compensation:
                 compressed_gate = reconstructed["gate_proj"] @ norm2
                 target_outputs, compensation_ridge, compensation_importance = (
                     ridge_compensated_up_target(
@@ -391,7 +392,9 @@ def main() -> None:
             if compensation is not None:
                 diagnostics["swiglu_compensation"] = compensation
             projection_records[name] = diagnostics
-        del compressed_gate, target_outputs, compensation_importance
+        del target_outputs
+        if args.swiglu_compensation:
+            del compressed_gate, compensation_importance
         compressed_active = (
             F.silu(reconstructed["gate_proj"] @ norm2)
             * (reconstructed["up_proj"] @ norm2)
@@ -487,6 +490,7 @@ def main() -> None:
             "factor_bits": args.calibration_branch_bits,
             "fit_tokens": args.calibration_branch_fit_tokens,
         },
+        "swiglu_compensation": args.swiglu_compensation,
         "gradient_free_als_sweeps": args.als_sweeps,
         "layers": layer_records,
         "serialized_checkpoint_bytes_present": checkpoint_bytes,
