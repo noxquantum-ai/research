@@ -371,6 +371,7 @@ def materialize_deployable_allocation_package(
     """Build and byte-count a mixed HF/NEC package with replaced tensors removed."""
     from safetensors import safe_open
     from safetensors.torch import save_file
+    from nox.packed_schmidt import packed_schmidt_coefficient_count_from_artifact
 
     source_model_dir = Path(source_model_dir)
     package_dir = Path(output_dir) / "deployable_model"
@@ -383,13 +384,50 @@ def materialize_deployable_allocation_package(
     weight_map = source_index["weight_map"]
     replaced_layers = set(compressed_layers) | set(int8_layers)
     replaced_names = set()
+    replacement_coefficients = 0
+    coefficient_count_complete = True
     for layer in replaced_layers:
         prefix = f"model.layers.{layer}."
         for projection in PROJECTIONS:
             module = "self_attn" if projection in PROJECTIONS[:4] else "mlp"
             replaced_names.add(f"{prefix}{module}.{projection}.weight")
-        for norm in NORMS:
-            replaced_names.add(f"{prefix}{norm}.weight")
+        if layer in compressed_layers:
+            checkpoint = torch.load(
+                checkpoint_dir / f"compressed_layer_{layer}.pt",
+                map_location="cpu", weights_only=True,
+            )
+            for norm in NORMS:
+                # Packed Schmidt checkpoints leave normalization in the dense
+                # package. Older NEC checkpoints can carry replacement norms.
+                if checkpoint.get(norm) is not None:
+                    replaced_names.add(f"{prefix}{norm}.weight")
+                    replacement_coefficients += int(checkpoint[norm].numel())
+            for artifact in checkpoint["compressed_artifacts"].values():
+                if artifact.get("codec_type") in (
+                    "nec_packed_operator_schmidt_v1",
+                    "nec_packed_operator_schmidt_v2",
+                    "nec_packed_operator_schmidt_v3",
+                ):
+                    replacement_coefficients += (
+                        packed_schmidt_coefficient_count_from_artifact(artifact)
+                    )
+                else:
+                    coefficient_count_complete = False
+            del checkpoint
+        else:
+            checkpoint = torch.load(
+                int8_artifact_dir / f"int8_layer_{layer}.pt",
+                map_location="cpu", weights_only=True,
+            )
+            for norm in NORMS:
+                replaced_names.add(f"{prefix}{norm}.weight")
+            for item in checkpoint["layer_tensors"].values():
+                if "qweight" in item:
+                    replacement_coefficients += int(item["qweight"].numel())
+                    replacement_coefficients += int(item["scale"].numel())
+                else:
+                    replacement_coefficients += int(item["weight_fp16"].numel())
+            del checkpoint
     missing = replaced_names - set(weight_map)
     if missing:
         raise ValueError(
@@ -399,20 +437,26 @@ def materialize_deployable_allocation_package(
 
     updated_weight_map = {}
     updated_total_size = 0
+    dense_source_coefficient_count = 0
+    retained_coefficient_count = 0
     for shard_name in sorted(set(weight_map.values())):
         source_shard = source_model_dir / shard_name
         destination_shard = package_dir / shard_name
         retained_tensors = {}
         with safe_open(source_shard, framework="pt", device="cpu") as shard:
             for name in shard.keys():
+                dense_source_coefficient_count += math.prod(
+                    shard.get_slice(name).get_shape()
+                )
                 if name in replaced_names:
                     continue
                 tensor = shard.get_tensor(name).contiguous()
                 retained_tensors[name] = tensor
                 updated_weight_map[name] = shard_name
                 updated_total_size += tensor.numel() * tensor.element_size()
+                retained_coefficient_count += int(tensor.numel())
         if not retained_tensors:
-            raise RuntimeError(f"No retained tensors remain in source shard {shard_name}")
+            continue
         save_file(retained_tensors, destination_shard, metadata={"format": "pt"})
         del retained_tensors
 
@@ -552,6 +596,10 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         str(path.relative_to(package_dir)): path.stat().st_size
         for path in package_dir.rglob("*") if path.is_file()
     }
+    complete_coefficient_count = (
+        retained_coefficient_count + replacement_coefficients
+        if coefficient_count_complete else None
+    )
     return {
         "path": str(package_dir),
         "serialized_bytes": sum(file_sizes.values()),
@@ -564,6 +612,22 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
             / sum(file_sizes.values())
         ),
         "repacked_dense_tensor_payload_bytes": updated_total_size,
+        "dense_source_coefficient_count": dense_source_coefficient_count,
+        "retained_dense_coefficient_count": retained_coefficient_count,
+        "replacement_coefficient_count": (
+            replacement_coefficients if coefficient_count_complete else None
+        ),
+        "complete_model_coefficient_count": complete_coefficient_count,
+        "structural_reduction": (
+            dense_source_coefficient_count / complete_coefficient_count
+            if complete_coefficient_count is not None else None
+        ),
+        "coefficient_accounting_complete": coefficient_count_complete,
+        "coefficient_count_includes": (
+            "logical factor values, quantization scales, all correction branches, "
+            "retained dense tensors and normalization replacements; excludes padding "
+            "and integer coordinate metadata"
+        ),
         "file_sizes": file_sizes,
     }
 
