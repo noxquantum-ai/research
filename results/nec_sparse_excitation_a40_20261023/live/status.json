@@ -1,0 +1,44 @@
+{
+  "schema": "nec_unattended_trial_status_v1",
+  "run_dir": "/workspace/runs/nec-sparse10-coupled-sequential-full32",
+  "target": {
+    "layers": 32,
+    "maximum_ppl": 10,
+    "minimum_storage_ratio": 5,
+    "minimum_structural_reduction": 2
+  },
+  "evaluations": [
+    {
+      "compressed_layer_count": 8,
+      "file": "/workspace/runs/nec-sparse10-coupled-sequential-full32/evaluation_stage8_validation_4k.json",
+      "scored_tokens": 4095,
+      "teacher": {
+        "perplexity": 4.0828723222002665,
+        "mean_nll": 1.406800741263215,
+        "next_token_accuracy": 0.6637362637362637
+      },
+      "student": {
+        "perplexity": 4.37878654940602,
+        "mean_nll": 1.4767716424901036,
+        "teacher_kl_nats_per_token": 0.08901530611516954,
+        "next_token_accuracy": 0.6507936507936508,
+        "dense_top1_agreement": 0.8903540903540903
+      }
+    }
+  ],
+  "success_demonstrated": false,
+  "phase": "compiling_stage16",
+  "updated_utc": "2026-10-23T20:02:04.954286+00:00",
+  "child_pid": 2170,
+  "current_log": "/workspace/runs/nec-sparse10-coupled-sequential-full32/compile_stage16.log",
+  "completed_layers": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}
