@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 from nox.functional_schmidt import (
     SchmidtCoreMap, _prior_anchored_pcg, construct_functional_schmidt_mlp,
+    inverse_silu_nearest_branch, readout_projected_gate_targets,
 )
 from nox.packed_schmidt import (
     compile_packed_schmidt, packed_schmidt_coefficient_count_from_artifact,
@@ -13,6 +14,25 @@ from nox.packed_schmidt import (
 
 
 class FunctionalSchmidtTests(unittest.TestCase):
+    def test_inverse_silu_preserves_both_real_branches(self):
+        reference = torch.tensor([-10., -3., -2., -1.27846454, -1., -.1, 0., 1., 10.])
+        values = F.silu(reference)
+        inverse = inverse_silu_nearest_branch(values, reference)
+        torch.testing.assert_close(F.silu(inverse), values, atol=1e-6, rtol=1e-6)
+        torch.testing.assert_close(inverse, reference, atol=1e-3, rtol=1e-4)
+        projected = inverse_silu_nearest_branch(torch.tensor([-2.]), torch.tensor([0.]))
+        torch.testing.assert_close(F.silu(projected), torch.tensor([-.27846454]), atol=1e-6, rtol=1e-6)
+
+    def test_readout_projection_constructs_finite_linear_gate_targets(self):
+        torch.manual_seed(149)
+        gate, up, down = torch.randn(12, 64), torch.randn(12, 64), torch.randn(8, 12)
+        residual = torch.randn(8, 64) * .01
+        target = readout_projected_gate_targets(gate, up, down, residual, ridge_ratio=.05)
+        self.assertTrue(torch.isfinite(target).all())
+        before = residual.square().sum()
+        correction = down @ ((F.silu(target) - F.silu(gate)) * up)
+        self.assertLess((residual - correction).square().sum(), before)
+
     def test_core_adjoint_is_exact_with_input_and_output_scales(self):
         torch.manual_seed(79)
         weight = torch.randn(12, 8)

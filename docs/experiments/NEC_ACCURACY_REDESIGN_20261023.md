@@ -117,3 +117,26 @@ Before GPU scaling, each operator must fit both hard caps including the
 one-bit support mask. Local validation error, end-to-end held-out PPL and
 actual final export measurements are separate gates. A better local fit alone
 does not establish the full-model targets.
+
+## Additional function-preserving construction candidates
+
+`functional_routing.py` treats Query and Key as a coupled bilinear operator.
+With one partner fixed, score reconstruction is linear in the other's MPO
+core or excitation amplitudes. A fixed teacher-probability metric centers
+scores to remove the irrelevant per-query constant. The compiler solves those
+linear systems without softmax derivatives, then requires packed proposals
+to improve actual attention-distribution KL on fit and guard windows. Query
+positions are subsampled, but each includes all causal keys in its original
+2048-token context. This is a screening/construction approximation, not a
+substitute for complete end-to-end evaluation.
+
+The optional `readout_projection` Gate policy alternates two explicit set
+projections instead of differentiating the nonlinear MLP: solve a regularized
+linear Down readout system for a hidden-feature correction; divide through
+fixed Up activations with a ridge; invert SiLU by branch-aware bisection to
+obtain Gate preactivation targets. Values outside SiLU's real range project
+onto its mathematical minimum. Both negative-output inverse branches are
+considered, selecting the closest to the current preactivation. A linear
+Gate core solve then proposes a packed candidate. Exact coupled MLP fit and
+guard acceptance remain mandatory. No coefficient or inference branch is
+added. These are experimental candidates until held-out model results exist.

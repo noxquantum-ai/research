@@ -145,6 +145,52 @@ def _mlp(weights, inputs):
     )
 
 
+def inverse_silu_nearest_branch(values, reference, *, iterations=32):
+    """Invert SiLU without derivatives, choosing the nearest real branch.
+
+    Values below SiLU's mathematical minimum project onto that minimum.
+    Both negative-output roots are considered; positive outputs have one root.
+    This does not clip large genuine activations.
+    """
+    minimum_point = -1.2784645427610738
+    minimum_value = float(F.silu(torch.tensor(minimum_point, dtype=torch.float64)))
+    targets = values.clamp_min(minimum_value)
+    lo = torch.full_like(targets, minimum_point)
+    hi = targets.clamp_min(0) + 1
+    for _ in range(iterations):
+        mid = (lo + hi) * .5
+        below = F.silu(mid) < targets
+        lo, hi = torch.where(below, mid, lo), torch.where(below, hi, mid)
+    right = (lo + hi) * .5
+    negative_targets = targets.clamp_max(-1e-7)
+    lo, hi = torch.full_like(targets, -40), torch.full_like(targets, minimum_point)
+    for _ in range(iterations):
+        mid = (lo + hi) * .5
+        above = F.silu(mid) > negative_targets
+        lo, hi = torch.where(above, mid, lo), torch.where(above, hi, mid)
+    left = (lo + hi) * .5
+    use_left = (targets < -1e-7) & ((left - reference).abs() < (right - reference).abs())
+    return torch.where(use_left, left, right)
+
+
+def readout_projected_gate_targets(gate, up, down, residual, *, ridge_ratio):
+    """Alternating projection onto the linear readout and exact SiLU range.
+
+    The minimum-norm hidden-feature correction solves a linear readout system.
+    A regularized product division and branch-aware inverse SiLU then produce
+    Gate preactivation targets for an ordinary linear core solve. No nonlinear
+    derivative or optimizer is involved; exact nonlinear guard acceptance is
+    still required by the caller.
+    """
+    covariance = down @ down.T
+    ridge = ridge_ratio * covariance.diagonal().mean().clamp_min(1e-20)
+    covariance.diagonal().add_(ridge)
+    correction = down.T @ torch.cholesky_solve(residual, torch.linalg.cholesky(covariance))
+    product_ridge = ridge_ratio * up.square().mean(dim=1, keepdim=True).clamp_min(1e-20)
+    activation_target = F.silu(gate) + correction * up / (up.square() + product_ridge)
+    return inverse_silu_nearest_branch(activation_target, gate)
+
+
 @torch.no_grad()
 def construct_functional_schmidt_mlp(
     artifacts: dict,
@@ -157,6 +203,7 @@ def construct_functional_schmidt_mlp(
     ridge_ratio: float = 0.05,
     guard_fraction: float = 0.25,
     sequence_length: int = 128,
+    gate_target_policy: str = "teacher_preactivation",
 ) -> tuple[dict, dict, dict]:
     """Joint construction with a disjoint guard from calibration data only.
 
@@ -175,6 +222,8 @@ def construct_functional_schmidt_mlp(
         raise ValueError("gate targets must match the gate output and sample dimensions")
     if not 0 < guard_fraction < 1 or ridge_ratio <= 0 or cg_iterations < 1 or sweeps < 1:
         raise ValueError("invalid functional construction controls")
+    if gate_target_policy not in ("teacher_preactivation", "readout_projection"):
+        raise ValueError("unknown Gate construction target policy")
     if sequence_length < 1 or inputs.shape[1] % sequence_length:
         raise ValueError("calibration samples must contain complete sequence windows")
     windows = inputs.shape[1] // sequence_length
@@ -206,7 +255,7 @@ def construct_functional_schmidt_mlp(
         # features; Up and Gate then improve those features jointly through
         # that readout; a final Down solve closes the module construction.
         for role in ("down_proj", "up_proj", "gate_proj", "down_proj"):
-            if role == "gate_proj" and gate_targets is None:
+            if role == "gate_proj" and gate_targets is None and gate_target_policy == "teacher_preactivation":
                 continue
             sides = ("left", "right", "amplitudes") if result[role].get("codec_type") == "nec_sparse_excitation_schmidt_v1" else ("left", "right")
             for side in sides:
@@ -231,6 +280,15 @@ def construct_functional_schmidt_mlp(
                     core_inputs = fit_x
                     channel_multiplier = None
                     output_sensitivity = torch.ones(gate.shape[0], device=inputs.device)
+                gate_solve_target = None
+                if role == "gate_proj":
+                    gate_solve_target = (
+                        gate_targets[:, :split].float() if gate_target_policy == "teacher_preactivation"
+                        else readout_projected_gate_targets(
+                            gate, up, weights["down_proj"], fit_y - weights["down_proj"] @ active,
+                            ridge_ratio=ridge_ratio,
+                        )
+                    )
                 scale = 1 / math.sqrt(split)
 
                 def forward(increment):
@@ -251,7 +309,7 @@ def construct_functional_schmidt_mlp(
                 ridge = ridge_ratio * diagonal.mean().clamp_min(1e-20)
                 normal = lambda increment: adjoint(forward(increment)) + ridge * increment
                 residual = (
-                    (gate_targets[:, :split].float() - gate) * scale
+                    (gate_solve_target - gate) * scale
                     if role == "gate_proj" else
                     (fit_y - weights["down_proj"] @ active) * scale
                 )
@@ -289,7 +347,7 @@ def construct_functional_schmidt_mlp(
                 records.append({
                     "sweep": sweep, "role": role, "core": side,
                     "solve_objective": (
-                        "clean_gate_preactivations" if role == "gate_proj"
+                        gate_target_policy if role == "gate_proj"
                         else "coupled_mlp_output"
                     ),
                     "accepted_fraction": accepted_fraction,
@@ -300,6 +358,7 @@ def construct_functional_schmidt_mlp(
         "objective": "exact_coupled_swiglu_output_with_prior_anchored_core_solves",
         "uses_autograd": False,
         "uses_nonlinear_derivatives": False,
+        "gate_target_policy": gate_target_policy,
         "fit_tokens": split, "guard_tokens": targets.shape[1] - split,
         "initial_fit_relative_mse": initial_errors[0],
         "initial_guard_relative_mse": initial_errors[1],
