@@ -197,6 +197,9 @@ def main() -> None:
     parser.add_argument("--calibration-branch-bits", type=int, choices=(2, 3, 4), default=3)
     parser.add_argument("--calibration-branch-fit-tokens", type=int, default=512)
     parser.add_argument("--calibration-branch-ridge-ratio", type=float, default=1e-4)
+    parser.add_argument("--column-branch-fraction", type=float, default=0.0)
+    parser.add_argument("--column-branch-bits", type=int, choices=(2, 3, 4), default=4)
+    parser.add_argument("--column-branch-ridge-ratio", type=float, default=1e-3)
     parser.add_argument("--swiglu-compensation", action="store_true")
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
@@ -227,6 +230,12 @@ def main() -> None:
         parser.error("--calibration-branch-fraction must be in [0, 1)")
     if args.calibration_branch_ridge_ratio < 0:
         parser.error("--calibration-branch-ridge-ratio must be nonnegative")
+    if not 0 <= args.column_branch_fraction < 1:
+        parser.error("--column-branch-fraction must be in [0, 1)")
+    if args.calibration_branch_fraction + args.column_branch_fraction >= 1:
+        parser.error("combined calibration branch fractions must be below one")
+    if args.column_branch_ridge_ratio < 0:
+        parser.error("--column-branch-ridge-ratio must be nonnegative")
 
     config = json.loads((args.model_dir / "config.json").read_text())
     layer_count = int(config["num_hidden_layers"])
@@ -421,6 +430,9 @@ def main() -> None:
                 calibration_branch_bits=args.calibration_branch_bits,
                 calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
                 calibration_branch_ridge_ratio=args.calibration_branch_ridge_ratio,
+                column_branch_fraction=args.column_branch_fraction,
+                column_branch_bits=args.column_branch_bits,
+                column_branch_ridge_ratio=args.column_branch_ridge_ratio,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -453,6 +465,9 @@ def main() -> None:
             calibration_branch_bits=args.calibration_branch_bits,
             calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
             calibration_branch_ridge_ratio=args.calibration_branch_ridge_ratio,
+            column_branch_fraction=args.column_branch_fraction,
+            column_branch_bits=args.column_branch_bits,
+            column_branch_ridge_ratio=args.column_branch_ridge_ratio,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -512,6 +527,9 @@ def main() -> None:
                 calibration_branch_bits=args.calibration_branch_bits,
                 calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
                 calibration_branch_ridge_ratio=args.calibration_branch_ridge_ratio,
+                column_branch_fraction=args.column_branch_fraction,
+                column_branch_bits=args.column_branch_bits,
+                column_branch_ridge_ratio=args.column_branch_ridge_ratio,
                 als_sweeps=args.als_sweeps,
                 n_heads=n_heads,
                 head_dim=int(config["hidden_size"]) // n_heads,
@@ -548,6 +566,9 @@ def main() -> None:
             calibration_branch_bits=args.calibration_branch_bits,
             calibration_branch_fit_tokens=args.calibration_branch_fit_tokens,
             calibration_branch_ridge_ratio=args.calibration_branch_ridge_ratio,
+            column_branch_fraction=args.column_branch_fraction,
+            column_branch_bits=args.column_branch_bits,
+            column_branch_ridge_ratio=args.column_branch_ridge_ratio,
             als_sweeps=args.als_sweeps,
             n_heads=n_heads,
             head_dim=int(config["hidden_size"]) // n_heads,
@@ -666,6 +687,11 @@ def main() -> None:
             "factor_bits": args.calibration_branch_bits,
             "fit_tokens": args.calibration_branch_fit_tokens,
             "ridge_ratio": args.calibration_branch_ridge_ratio,
+        },
+        "calibration_column_branch": {
+            "coefficient_and_byte_fraction_per_operator": args.column_branch_fraction,
+            "factor_bits": args.column_branch_bits,
+            "ridge_ratio": args.column_branch_ridge_ratio,
         },
         "swiglu_compensation": args.swiglu_compensation,
         "gradient_free_als_sweeps": args.als_sweeps,

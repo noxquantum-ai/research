@@ -53,6 +53,7 @@ class PackedSchmidtStructuralBudgetTests(unittest.TestCase):
         right = encode_groupwise(torch.ones(2, 8), bits=3, group_size=4)
         residual_left = encode_groupwise(torch.ones(1, 6), bits=3, group_size=4)
         residual_right = encode_groupwise(torch.ones(1, 8), bits=3, group_size=4)
+        column_values = encode_groupwise(torch.ones(6, 2), bits=4, group_size=4)
         artifact = {
             "left_codec": left,
             "right_codec": right,
@@ -62,11 +63,15 @@ class PackedSchmidtStructuralBudgetTests(unittest.TestCase):
                 "left_codec": residual_left,
                 "right_codec": residual_right,
             },
+            "calibration_column_branch": {
+                "column_indices": torch.tensor([1, 5], dtype=torch.int32),
+                "value_codec": column_values,
+            },
         }
         expected = sum(
             codec["shape"][0] * codec["shape"][1]
             + codec["group_scales"].numel()
-            for codec in (left, right, residual_left, residual_right)
+            for codec in (left, right, residual_left, residual_right, column_values)
         ) + 8 + 6
         self.assertEqual(
             packed_schmidt_coefficient_count_from_artifact(artifact), expected,
