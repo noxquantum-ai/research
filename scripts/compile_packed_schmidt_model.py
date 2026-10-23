@@ -152,6 +152,12 @@ def main() -> None:
     parser.add_argument("--als-sweeps", type=int, default=1)
     parser.add_argument("--calibration-tokens", type=int, default=4096)
     parser.add_argument("--sequence-length", type=int, default=128)
+    parser.add_argument(
+        "--calibration-trajectory",
+        choices=("compiled_prefix", "dense"),
+        default="compiled_prefix",
+        help="Use the actual compiled prefix or independent dense layer inputs.",
+    )
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
@@ -218,6 +224,8 @@ def main() -> None:
 
     started = time.monotonic()
     layer_records = []
+    compressed_hidden = None
+    previous_layer = None
     for layer in layers:
         output_path = args.output / f"compressed_layer_{layer}.pt"
         if args.resume and output_path.is_file():
@@ -235,36 +243,110 @@ def main() -> None:
             name: tensor.to(device=device)
             for name, tensor in reader.load(layer_tensor_names(layer)).items()
         }
-        hidden = torch.load(
+        dense_hidden = torch.load(
             args.activation_dir / f"calibration_input_layer_{layer}.pt",
             map_location=device, weights_only=True,
         ).float()[:, :args.calibration_tokens].contiguous()
-        inputs = dense_projection_inputs(
-            hidden, weights, layer=layer, sequence_length=args.sequence_length,
-            n_heads=int(config["num_attention_heads"]),
-            n_kv_heads=int(config.get("num_key_value_heads", config["num_attention_heads"])),
-            eps=float(config.get("rms_norm_eps", 1e-6)),
+        uses_compiled_prefix = (
+            args.calibration_trajectory == "compiled_prefix"
+            and compressed_hidden is not None
+            and previous_layer is not None
+            and layer == previous_layer + 1
         )
+        hidden = compressed_hidden if uses_compiled_prefix else dense_hidden
+        n_heads = int(config["num_attention_heads"])
+        n_kv_heads = int(config.get("num_key_value_heads", n_heads))
+        eps = float(config.get("rms_norm_eps", 1e-6))
+        norm1 = rms_norm(hidden, weights[prefix + "input_layernorm.weight"].float(), eps)
         artifacts = {}
         projection_records = {}
-        for offset, name in enumerate(PROJECTIONS):
+
+        reconstructed = {}
+        for offset, name in enumerate(("q_proj", "k_proj", "v_proj")):
             family = "self_attn" if name in ATTENTION else "mlp"
             weight = weights[prefix + f"{family}.{name}.weight"]
-            artifact, _reconstructed, diagnostics = compile_packed_schmidt(
+            artifact, decoded, diagnostics = compile_packed_schmidt(
                 weight,
                 byte_budget=per_operator_budgets[name],
                 projection_name=name,
-                calibration_inputs=inputs[name],
+                calibration_inputs=norm1,
                 bits_candidates=args.factor_bits,
                 group_size=args.group_size,
                 als_sweeps=args.als_sweeps,
-                n_heads=int(config["num_attention_heads"]),
-                head_dim=int(config["hidden_size"]) // int(config["num_attention_heads"]),
+                n_heads=n_heads,
+                head_dim=int(config["hidden_size"]) // n_heads,
                 seed=layer * len(PROJECTIONS) + offset,
             )
             artifacts[name] = artifact
+            reconstructed[name] = decoded
             projection_records[name] = diagnostics
-            del _reconstructed
+        compressed_context = scaled_dot_product_attention_2d(
+            reconstructed["q_proj"] @ norm1,
+            reconstructed["k_proj"] @ norm1,
+            reconstructed["v_proj"] @ norm1,
+            n_heads, n_kv_heads, args.sequence_length,
+        )
+        name = "o_proj"
+        o_weight = weights[prefix + "self_attn.o_proj.weight"]
+        artifact, decoded_o, diagnostics = compile_packed_schmidt(
+            o_weight,
+            byte_budget=per_operator_budgets[name],
+            projection_name=name,
+            calibration_inputs=compressed_context,
+            bits_candidates=args.factor_bits,
+            group_size=args.group_size,
+            als_sweeps=args.als_sweeps,
+            n_heads=n_heads,
+            head_dim=int(config["hidden_size"]) // n_heads,
+            seed=layer * len(PROJECTIONS) + 3,
+        )
+        artifacts[name] = artifact
+        projection_records[name] = diagnostics
+        residual_hidden = hidden + decoded_o @ compressed_context
+        norm2 = rms_norm(
+            residual_hidden,
+            weights[prefix + "post_attention_layernorm.weight"].float(),
+            eps,
+        )
+        for offset, name in enumerate(("gate_proj", "up_proj"), start=4):
+            weight = weights[prefix + f"mlp.{name}.weight"]
+            artifact, decoded, diagnostics = compile_packed_schmidt(
+                weight,
+                byte_budget=per_operator_budgets[name],
+                projection_name=name,
+                calibration_inputs=norm2,
+                bits_candidates=args.factor_bits,
+                group_size=args.group_size,
+                als_sweeps=args.als_sweeps,
+                n_heads=n_heads,
+                head_dim=int(config["hidden_size"]) // n_heads,
+                seed=layer * len(PROJECTIONS) + offset,
+            )
+            artifacts[name] = artifact
+            reconstructed[name] = decoded
+            projection_records[name] = diagnostics
+        compressed_active = (
+            F.silu(reconstructed["gate_proj"] @ norm2)
+            * (reconstructed["up_proj"] @ norm2)
+        )
+        name = "down_proj"
+        down_weight = weights[prefix + "mlp.down_proj.weight"]
+        artifact, decoded_down, diagnostics = compile_packed_schmidt(
+            down_weight,
+            byte_budget=per_operator_budgets[name],
+            projection_name=name,
+            calibration_inputs=compressed_active,
+            bits_candidates=args.factor_bits,
+            group_size=args.group_size,
+            als_sweeps=args.als_sweeps,
+            n_heads=n_heads,
+            head_dim=int(config["hidden_size"]) // n_heads,
+            seed=layer * len(PROJECTIONS) + 6,
+        )
+        artifacts[name] = artifact
+        projection_records[name] = diagnostics
+        compressed_hidden = residual_hidden + decoded_down @ compressed_active
+        previous_layer = layer
         checkpoint = {
             "layer_idx": layer,
             "compressed_artifacts": artifacts,
@@ -279,11 +361,17 @@ def main() -> None:
             "payload_bytes": payload,
             "serialized_checkpoint_bytes": output_path.stat().st_size,
             "projection_diagnostics": projection_records,
+            "calibration_input": (
+                "compiled_prefix" if uses_compiled_prefix else "dense_trajectory"
+            ),
+            "calibration_input_relative_drift": relative_error(dense_hidden, hidden),
             "seconds": time.monotonic() - layer_started,
         }
         layer_records.append(record)
         print("LAYER " + json.dumps(record), flush=True)
-        del inputs, hidden, weights, artifacts, checkpoint
+        del norm1, norm2, compressed_context, compressed_active
+        del residual_hidden, dense_hidden, hidden, reconstructed
+        del decoded_o, decoded_down, weights, artifacts, checkpoint
         if device.type == "cuda":
             torch.cuda.empty_cache()
 
@@ -313,6 +401,7 @@ def main() -> None:
             "tokens_per_layer": args.calibration_tokens,
             "sequence_length": args.sequence_length,
             "activation_directory": str(args.activation_dir.resolve()),
+            "trajectory": args.calibration_trajectory,
         },
         "factor_bits_candidates": list(args.factor_bits),
         "group_size": args.group_size,
