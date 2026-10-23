@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT))
 
 from nox.block_compiler import ridge_compensated_up_target, scaled_dot_product_attention_2d
 from nox.functional_schmidt import construct_functional_schmidt_mlp
+from nox.functional_attention import construct_functional_schmidt_attention
 from nox.packed_schmidt import (
     compile_packed_schmidt,
     packed_matrix_coefficient_count,
@@ -222,6 +223,7 @@ def main() -> None:
     parser.add_argument("--joint-mlp-sweeps", type=int, default=0)
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
+    parser.add_argument("--joint-attention-sweeps", type=int, default=0)
     parser.add_argument("--protected-mlp-coefficient-fraction", type=float, default=0.0)
     parser.add_argument("--sector-probe-dir", type=Path)
     parser.add_argument("--sector-factor-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=5)
@@ -271,6 +273,8 @@ def main() -> None:
         parser.error("--column-branch-ridge-ratio must be nonnegative")
     if args.joint_mlp_sweeps < 0 or args.joint_mlp_cg_iterations < 1:
         parser.error("joint MLP sweeps must be nonnegative and CG iterations positive")
+    if args.joint_attention_sweeps < 0:
+        parser.error("joint attention sweeps must be nonnegative")
     if not math.isfinite(args.joint_mlp_ridge_ratio) or args.joint_mlp_ridge_ratio <= 0:
         parser.error("joint MLP ridge must be finite and positive")
     if not 0 <= args.protected_mlp_coefficient_fraction < 1:
@@ -545,6 +549,29 @@ def main() -> None:
         )
         artifacts[name] = artifact
         projection_records[name] = diagnostics
+        joint_attention_diagnostics = None
+        if args.joint_attention_sweeps:
+            joint_artifacts, joint_weights, joint_attention_diagnostics = (
+                construct_functional_schmidt_attention(
+                    artifacts, norm1, dense_hidden + dense_attention - hidden,
+                    reconstructed["q_proj"] @ norm1, reconstructed["k_proj"] @ norm1,
+                    n_heads=n_heads, n_kv_heads=n_kv_heads,
+                    sequence_length=args.sequence_length,
+                    sweeps=args.joint_attention_sweeps,
+                    cg_iterations=args.joint_mlp_cg_iterations,
+                    ridge_ratio=args.joint_mlp_ridge_ratio,
+                )
+            )
+            artifacts.update(joint_artifacts)
+            reconstructed.update(joint_weights)
+            decoded_o = joint_weights["o_proj"]
+            compressed_context = scaled_dot_product_attention_2d(
+                reconstructed["q_proj"] @ norm1,
+                reconstructed["k_proj"] @ norm1,
+                reconstructed["v_proj"] @ norm1,
+                n_heads, n_kv_heads, args.sequence_length,
+            )
+            del joint_artifacts, joint_weights
         residual_hidden = hidden + decoded_o @ compressed_context
         dense_residual_hidden = dense_hidden + dense_attention
         norm2 = rms_norm(
@@ -751,6 +778,7 @@ def main() -> None:
                 "before_joint_mlp_construction" if args.joint_mlp_sweeps else "final"
             ),
             "joint_mlp_construction": joint_mlp_diagnostics,
+            "joint_attention_construction": joint_attention_diagnostics,
             "nonlinear_feature_sectors": sector_diagnostics,
             "calibration_input": (
                 "compiled_prefix" if uses_compiled_prefix else "dense_trajectory"
@@ -876,6 +904,10 @@ def main() -> None:
             "cg_iterations": args.joint_mlp_cg_iterations,
             "ridge_ratio": args.joint_mlp_ridge_ratio,
             "target": "clean_whole_block_output_including_residual_stream",
+        },
+        "joint_attention_construction": {
+            "sweeps": args.joint_attention_sweeps,
+            "uses_nonlinear_derivatives": False,
         },
         "protected_mlp_sectors": {
             "coefficient_fraction": args.protected_mlp_coefficient_fraction,
