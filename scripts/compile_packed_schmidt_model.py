@@ -138,6 +138,21 @@ def role_multipliers(value: str | None) -> dict[str, float]:
     return result
 
 
+def layer_multipliers(value: str | None, layer_count: int) -> dict[int, float]:
+    result = {layer: 1.0 for layer in range(layer_count)}
+    if value:
+        supplied = json.loads(value)
+        for raw_layer, raw_multiplier in supplied.items():
+            layer = int(raw_layer)
+            multiplier = float(raw_multiplier)
+            if layer < 0 or layer >= layer_count:
+                raise ValueError(f"layer multiplier index {layer} is outside the model")
+            if not math.isfinite(multiplier) or multiplier <= 0:
+                raise ValueError("layer multipliers must be finite and positive")
+            result[layer] = multiplier
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-dir", type=Path, required=True)
@@ -147,6 +162,7 @@ def main() -> None:
     parser.add_argument("--target-whole-model-ratio", type=float, default=5.0)
     parser.add_argument("--metadata-reserve-mib", type=float, default=20.0)
     parser.add_argument("--role-multipliers")
+    parser.add_argument("--layer-multipliers")
     parser.add_argument("--factor-bits", type=int, nargs="+", default=(2, 3))
     parser.add_argument("--group-size", type=int, default=64)
     parser.add_argument("--als-sweeps", type=int, default=1)
@@ -181,6 +197,7 @@ def main() -> None:
     layer_count = int(config["num_hidden_layers"])
     layers = parse_layers(args.layers, layer_count)
     multipliers = role_multipliers(args.role_multipliers)
+    per_layer_multipliers = layer_multipliers(args.layer_multipliers, layer_count)
     device = torch.device(args.device)
     reader = SafetensorReader(args.model_dir)
     args.output.mkdir(parents=True, exist_ok=True)
@@ -205,16 +222,28 @@ def main() -> None:
     artifact_budget = package_cap - fixed_package_bytes - metadata_reserve_bytes
     if artifact_budget <= 0:
         raise RuntimeError("unchanged model bytes consume the requested package budget")
-    weighted_scalars = layer_count * sum(
-        scalar_by_projection[name] * multipliers[name] for name in PROJECTIONS
+    weighted_scalars = sum(
+        per_layer_multipliers[layer]
+        * sum(scalar_by_projection[name] * multipliers[name] for name in PROJECTIONS)
+        for layer in range(layer_count)
     )
-    per_operator_budgets = {
-        name: math.floor(
-            artifact_budget * scalar_by_projection[name] * multipliers[name] / weighted_scalars
-        )
-        for name in PROJECTIONS
+    per_layer_operator_budgets = {
+        layer: {
+            name: math.floor(
+                artifact_budget
+                * scalar_by_projection[name]
+                * multipliers[name]
+                * per_layer_multipliers[layer]
+                / weighted_scalars
+            )
+            for name in PROJECTIONS
+        }
+        for layer in range(layer_count)
     }
-    planned_artifact_budget = layer_count * sum(per_operator_budgets.values())
+    planned_artifact_budget = sum(
+        sum(layer_budgets.values())
+        for layer_budgets in per_layer_operator_budgets.values()
+    )
     preflight = {
         "dense_package_bytes": dense_package_bytes,
         "target_whole_model_ratio": args.target_whole_model_ratio,
@@ -224,8 +253,9 @@ def main() -> None:
         "metadata_reserve_bytes": metadata_reserve_bytes,
         "artifact_budget_bytes": artifact_budget,
         "planned_artifact_budget_bytes": planned_artifact_budget,
-        "per_operator_byte_budgets": per_operator_budgets,
+        "per_layer_operator_byte_budgets": per_layer_operator_budgets,
         "role_multipliers": multipliers,
+        "layer_multipliers": per_layer_multipliers,
         "mathematically_storage_feasible": planned_artifact_budget <= artifact_budget,
     }
     (args.output / "storage_preflight.json").write_text(json.dumps(preflight, indent=2) + "\n")
@@ -247,6 +277,7 @@ def main() -> None:
             print(f"LAYER {layer} resumed", flush=True)
             continue
         layer_started = time.monotonic()
+        per_operator_budgets = per_layer_operator_budgets[layer]
         prefix = f"model.layers.{layer}."
         weights = {
             name: tensor.to(device=device)
@@ -458,11 +489,19 @@ def main() -> None:
         path.stat().st_size for path in args.output.glob("compressed_layer_*.pt")
     )
     present_layer_count = len(list(args.output.glob("compressed_layer_*.pt")))
-    missing_layer_count = layer_count - present_layer_count
+    present_layers = {
+        int(path.stem.removeprefix("compressed_layer_"))
+        for path in args.output.glob("compressed_layer_*.pt")
+    }
+    missing_artifact_budget = sum(
+        sum(per_layer_operator_budgets[layer].values())
+        for layer in range(layer_count)
+        if layer not in present_layers
+    )
     projected_package_upper_bound = (
         fixed_package_bytes
         + checkpoint_bytes
-        + missing_layer_count * sum(per_operator_budgets.values())
+        + missing_artifact_budget
         + metadata_reserve_bytes
     )
     manifest = {
@@ -499,6 +538,7 @@ def main() -> None:
             dense_package_bytes / projected_package_upper_bound
         ),
         "complete_package_is_materialized": present_layer_count == layer_count,
+        "layer_multipliers": per_layer_multipliers,
         "seconds": time.monotonic() - started,
     }
     (args.output / "model_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
