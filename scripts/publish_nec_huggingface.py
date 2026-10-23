@@ -167,7 +167,7 @@ Tested runtime versions are in `requirements.txt`. The loader reconstructs
 dense inference matrices. These storage savings do not imply equivalent
 runtime VRAM or latency reductions. The generic Hub safetensors parameter
 counter may count only the retained tensors; the correct complete stored
-coefficient count includes the NEC files and is **3,323,032,892**.
+coefficient count includes the NEC files and is **{measurement['complete_model_coefficient_count']:,}**.
 
 ## Reproducibility and scope
 
@@ -251,14 +251,16 @@ def main():
         info = api.model_info(args.repo_id, revision=commit.oid, files_metadata=True)
         remote_sizes, verified_lfs = {}, []
         for item in info.siblings:
-            if item.size is None:
+            lfs = item.lfs
+            lfs_size = (lfs.get('size') if isinstance(lfs, dict) else getattr(lfs, 'size', None)) if lfs else None
+            actual_size = lfs_size if lfs_size is not None else item.size
+            if actual_size is None:
                 raise RuntimeError('Hub file-size metadata is incomplete')
-            remote_sizes[item.rfilename] = item.size
+            remote_sizes[item.rfilename] = actual_size
             local = package / item.rfilename
             if local.is_file():
-                if local.stat().st_size != item.size:
+                if local.stat().st_size != actual_size:
                     raise RuntimeError(f'uploaded size mismatch: {item.rfilename}')
-                lfs = item.lfs
                 digest = (lfs.get('sha256') if isinstance(lfs, dict) else getattr(lfs, 'sha256', None)) if lfs else None
                 if digest:
                     if file_sha256(local) != digest:
@@ -293,8 +295,10 @@ def main():
                structural_reduction=report['structural_reduction'],
                three_targets_passed=True)
     except BaseException as error:
-        update('failed', error_type=type(error).__name__, error=str(error).replace(token, '[redacted]'))
-        raise
+        sanitized = str(error).replace(token, '[redacted]')
+        update('failed', error_type=type(error).__name__, error=sanitized)
+        print(type(error).__name__ + ': ' + sanitized, file=sys.stderr)
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':
