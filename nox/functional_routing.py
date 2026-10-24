@@ -13,7 +13,7 @@ import math
 import torch
 
 from nox.block_compiler import compute_llama2_rotary_emb, rotate_half
-from nox.functional_schmidt import SchmidtCoreMap, _prior_anchored_pcg
+from nox.functional_schmidt import SchmidtCoreMap, _prior_anchored_pcg, curvature_anchor
 from nox.packed_schmidt import (
     packed_schmidt_coefficient_count_from_artifact,
     packed_schmidt_payload_bytes_from_artifact, reconstruct_packed_schmidt,
@@ -98,6 +98,7 @@ def construct_functional_schmidt_routing(
     artifacts, inputs, teacher_queries, teacher_keys, *, n_heads, n_kv_heads,
     sequence_length, queries_per_window=64, sweeps=1, cg_iterations=8,
     ridge_ratio=.05, guard_fraction=.25,
+    ridge_metric='mean',
 ):
     if min(queries_per_window, sweeps, cg_iterations) < 1 or ridge_ratio <= 0 or not 0 < guard_fraction < 1:
         raise ValueError("invalid routing construction controls")
@@ -144,7 +145,7 @@ def construct_functional_schmidt_routing(
                     sensitivity = sensitivity.reshape(n_kv_heads, n_heads // n_kv_heads, probe.dim).sum(1)
                 fit_count = fit_queries if role == 'q_proj' else fit_tokens
                 diagonal = mapper.diagonal(core_inputs[:, :fit_count].square().mean(dim=1), sensitivity.flatten(), side)
-                ridge = ridge_ratio * diagonal.mean().clamp_min(1e-20)
+                ridge = curvature_anchor(diagonal, ridge_ratio, ridge_metric)
                 rhs = adjoint(probe.measure(probe.teacher_scores - probe.scores(weights))[:fit_windows] * scale)
                 delta, history = _prior_anchored_pcg(
                     lambda values: adjoint(forward(values)) + ridge * values,
@@ -171,6 +172,7 @@ def construct_functional_schmidt_routing(
                                 'accepted_fraction': chosen_fraction, 'trials': trials, 'cg_history': history})
     return result, weights, {
         'objective': 'paired_teacher_probability_weighted_centered_logit_reconstruction',
+        'ridge_metric': ridge_metric,
         'uses_autograd': False, 'uses_nonlinear_derivatives': False,
         'queries_per_window': probe.query_count, 'fit_windows': fit_windows,
         'guard_windows': probe.windows - fit_windows,

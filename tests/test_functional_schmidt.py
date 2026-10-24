@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from nox.functional_schmidt import (
     SchmidtCoreMap, _prior_anchored_pcg, construct_functional_schmidt_mlp,
     inverse_silu_nearest_branch, readout_projected_gate_targets,
+    curvature_anchor,
 )
 from nox.packed_schmidt import (
     compile_packed_schmidt, packed_schmidt_coefficient_count_from_artifact,
@@ -14,6 +15,17 @@ from nox.packed_schmidt import (
 
 
 class FunctionalSchmidtTests(unittest.TestCase):
+    def test_diagonal_anchoring_is_invariant_to_parameter_units(self):
+        torch.manual_seed(85)
+        a=torch.randn(11,4,dtype=torch.float64)
+        gram=a.T @ a
+        rhs=torch.randn(4,dtype=torch.float64)
+        units=torch.tensor([.01,.3,7.,100.],dtype=torch.float64)
+        solve=lambda g,b:torch.linalg.solve(g+torch.diag(curvature_anchor(g.diagonal(),.05,'diagonal')),b)
+        original=solve(gram,rhs)
+        transformed=solve(units[:,None]*gram*units[None,:],rhs*units)
+        torch.testing.assert_close(transformed*units,original)
+
     def test_inverse_silu_preserves_both_real_branches(self):
         reference = torch.tensor([-10., -3., -2., -1.27846454, -1., -.1, 0., 1., 10.])
         values = F.silu(reference)

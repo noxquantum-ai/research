@@ -234,6 +234,7 @@ def main() -> None:
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
     parser.add_argument("--joint-mlp-output-metric", choices=("energy", "channel_relative"), default="energy")
+    parser.add_argument("--functional-ridge-metric", choices=("mean", "diagonal"), default="mean")
     parser.add_argument("--gate-target-policy", choices=("teacher_preactivation", "readout_projection"), default="teacher_preactivation")
     parser.add_argument("--joint-attention-sweeps", type=int, default=0)
     parser.add_argument("--joint-routing-sweeps", type=int, default=0)
@@ -617,6 +618,7 @@ def main() -> None:
                     sweeps=args.joint_routing_sweeps,
                     cg_iterations=args.joint_mlp_cg_iterations,
                     ridge_ratio=args.joint_mlp_ridge_ratio,
+                    ridge_metric=args.functional_ridge_metric,
                 )
             )
             artifacts.update(joint_artifacts)
@@ -670,6 +672,7 @@ def main() -> None:
                     sweeps=args.joint_attention_sweeps,
                     cg_iterations=args.joint_mlp_cg_iterations,
                     ridge_ratio=args.joint_mlp_ridge_ratio,
+                    ridge_metric=args.functional_ridge_metric,
                 )
             )
             artifacts.update(joint_artifacts)
@@ -854,6 +857,7 @@ def main() -> None:
                     ridge_ratio=args.joint_mlp_ridge_ratio,
                     gate_target_policy=args.gate_target_policy,
                     output_metric=args.joint_mlp_output_metric,
+                    ridge_metric=args.functional_ridge_metric,
                     sequence_length=args.sequence_length,
                 )
             )
@@ -1000,6 +1004,7 @@ def main() -> None:
         "input_metric": args.input_metric,
         "mlp_input_metric": args.mlp_input_metric or args.input_metric,
         "input_metric_ridge_ratio": args.input_metric_ridge_ratio,
+        "functional_ridge_metric": args.functional_ridge_metric,
         "calibration_schmidt_branch": {
             "byte_fraction_per_operator": args.calibration_branch_fraction,
             "factor_bits": args.calibration_branch_bits,

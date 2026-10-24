@@ -76,8 +76,9 @@ class SparseSchmidtTests(unittest.TestCase):
         target = self.weight @ (torch.nn.functional.silu(self.weight @ self.inputs) * (self.weight @ self.inputs))
         result, _, report = construct_functional_schmidt_mlp(
             artifacts, self.inputs, target, gate_targets=self.weight @ self.inputs,
-            cg_iterations=3, sequence_length=16, output_metric='channel_relative')
+            cg_iterations=3, sequence_length=16, output_metric='channel_relative', ridge_metric='diagonal')
         self.assertEqual(report['output_metric'], 'channel_relative')
+        self.assertEqual(report['ridge_metric'], 'diagonal')
         self.assertLessEqual(report['final_guard_relative_mse'], report['initial_guard_relative_mse'])
         for name in artifacts:
             self.assertEqual(packed_schmidt_coefficient_count_from_artifact(result[name]),

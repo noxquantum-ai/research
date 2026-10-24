@@ -24,6 +24,15 @@ from nox.packed_schmidt import (
 from nox.residual_codec import decode_groupwise, encode_groupwise
 
 
+def curvature_anchor(diagonal, ridge_ratio, metric='mean'):
+    """Prior precision in global or coordinate-relative construction units."""
+    if metric == 'mean':
+        return ridge_ratio * diagonal.mean().clamp_min(1e-20)
+    if metric == 'diagonal':
+        return ridge_ratio * diagonal.clamp_min(1e-20)
+    raise ValueError('unknown curvature anchoring metric')
+
+
 class SchmidtCoreMap:
     """Exact linear core-to-weight map and its Frobenius adjoint."""
 
@@ -208,6 +217,7 @@ def construct_functional_schmidt_mlp(
     sequence_length: int = 128,
     gate_target_policy: str = "teacher_preactivation",
     output_metric: str = "energy",
+    ridge_metric: str = "mean",
 ) -> tuple[dict, dict, dict]:
     """Joint construction with a disjoint guard from calibration data only.
 
@@ -335,7 +345,7 @@ def construct_functional_schmidt_mlp(
                 diagonal = mapper.diagonal(
                     core_inputs.square().mean(dim=1), output_sensitivity, side,
                 )
-                ridge = ridge_ratio * diagonal.mean().clamp_min(1e-20)
+                ridge = curvature_anchor(diagonal, ridge_ratio, ridge_metric)
                 normal = lambda increment: adjoint(forward(increment)) + ridge * increment
                 residual = (
                     (gate_solve_target - gate) * scale
@@ -394,6 +404,7 @@ def construct_functional_schmidt_mlp(
         "uses_nonlinear_derivatives": False,
         "gate_target_policy": gate_target_policy,
         "output_metric": output_metric,
+        "ridge_metric": ridge_metric,
         "output_metric_uses_training_only": True,
         "fit_tokens": split, "guard_tokens": targets.shape[1] - split,
         "initial_fit_relative_mse": initial_errors[0],

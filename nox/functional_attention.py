@@ -12,7 +12,7 @@ import math
 import torch
 
 from nox.block_compiler import apply_llama2_rope, compute_llama2_rotary_emb
-from nox.functional_schmidt import SchmidtCoreMap, _prior_anchored_pcg
+from nox.functional_schmidt import SchmidtCoreMap, _prior_anchored_pcg, curvature_anchor
 from nox.packed_schmidt import (
     packed_schmidt_coefficient_count_from_artifact,
     packed_schmidt_payload_bytes_from_artifact, reconstruct_packed_schmidt,
@@ -84,6 +84,7 @@ def construct_functional_schmidt_attention(
     artifacts, inputs, targets, queries, keys, *, n_heads, n_kv_heads,
     sequence_length, sweeps=1, cg_iterations=8, ridge_ratio=0.05,
     guard_fraction=0.25,
+    ridge_metric='mean',
 ):
     """Construct V/O cores jointly, preserving all stored shapes and budgets."""
     if not 0 < guard_fraction < 1 or min(sweeps, cg_iterations) < 1 or ridge_ratio <= 0:
@@ -137,7 +138,7 @@ def construct_functional_schmidt_attention(
                 if role == "v_proj" and n_kv_heads != n_heads:
                     sensitivity = sensitivity.reshape(n_kv_heads, n_heads // n_kv_heads, -1).sum(1).flatten()
                 diagonal = mapper.diagonal(core_inputs.square().mean(1), sensitivity, side)
-                ridge = ridge_ratio * diagonal.mean().clamp_min(1e-20)
+                ridge = curvature_anchor(diagonal, ridge_ratio, ridge_metric)
                 rhs = adjoint((fit_y - weights["o_proj"] @ context) * scale)
                 delta, history = _prior_anchored_pcg(
                     lambda value: adjoint(forward(value)) + ridge * value,
@@ -167,6 +168,7 @@ def construct_functional_schmidt_attention(
                                 "cg_history": history})
     return result, weights, {
         "objective": "exact_fixed_attention_value_readout_core_construction",
+        "ridge_metric": ridge_metric,
         "uses_autograd": False, "uses_nonlinear_derivatives": False,
         "fit_tokens": split, "guard_tokens": inputs.shape[1] - split,
         "initial_fit_relative_mse": initial[0], "initial_guard_relative_mse": initial[1],

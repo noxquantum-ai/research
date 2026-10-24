@@ -146,3 +146,25 @@ A persistent choice recipe references both persistent source constructions.
 The assembled raw files may use pod scratch to conserve network-volume space;
 the recipe can rebuild them exactly without GPU compilation. A deployable final
 package must be saved persistently before release.
+
+The mixed assembly after reconstructing layers 0–7 measured PPL 6.752935,
+KL 0.543935, next-token accuracy 57.0748%, and teacher agreement 71.7617% on
+8,191 validation tokens. The matched original NEC baseline was PPL 6.697377,
+KL 0.535163, accuracy 57.3678%, and agreement 72.0181%. This intermediate
+assembly fails all four quality comparisons and is not promoted. Remaining
+operators are still being reconstructed against the new prefix; the full
+32-layer outcome is pending. See [the raw evaluation](coupled_stage8_validation_8k.json).
+
+The alternative functional solver also supports `--functional-ridge-metric
+diagonal`. It anchors each core coordinate in its own curvature units rather
+than the mean curvature of all coordinates. A closed-form test checks
+invariance to changes in parameter units. This option and the channel-relative
+output metric are tested separately from the ongoing run, which remains frozen
+at core source commit `9a1affd` with the original global-mean anchor and energy
+objective. Thirty-five targeted CPU tests passed for the prepared options.
+
+The [queued selection worker](logit_selection_queue.py) waits for the GPU
+construction/evaluation process to finish, then runs bounded global-logit
+selection. Its status is under `logit_selection/status.json` on the persistent
+run volume. It never marks final success without all strict numerical gates
+and a persistent deployable package.

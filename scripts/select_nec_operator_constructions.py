@@ -54,12 +54,17 @@ def main():
     if args.assembly_dir.exists():raise FileExistsError(args.assembly_dir)
     if args.passes<1:raise ValueError('search passes must be positive')
     config=json.loads((args.model_dir/'config.json').read_text())
+    config_hash=hashlib.sha256((args.model_dir/'config.json').read_bytes()).hexdigest()
     layers=int(config['num_hidden_layers'])
     expected={f'compressed_layer_{i}.pt' for i in range(layers)}
     for directory in (args.baseline_dir,args.alternative_dir):
         if {p.name for p in directory.glob('compressed_layer_*.pt')}!=expected:
             raise ValueError('construction search requires two complete compressed models')
+        if json.loads((directory/'model_manifest.json').read_text())['model_config_sha256']!=config_hash:
+            raise ValueError('construction source model configuration differs')
     capture=json.loads(args.capture_manifest.read_text())
+    if capture['model_config_sha256']!=config_hash:
+        raise ValueError('activation capture uses a different model configuration')
     offsets=capture['records']['train']['window_offsets']
     count=max(1,len(offsets)//4);offsets=offsets[-count:]
     context=int(capture['sequence_length'])
@@ -115,6 +120,8 @@ def main():
             name=f'compressed_layer_{layer}.pt'
             baseline=torch.load(args.baseline_dir/name,map_location='cpu',weights_only=True)
             alternative=torch.load(args.alternative_dir/name,map_location='cpu',weights_only=True)
+            if baseline['layer_idx']!=layer or alternative['layer_idx']!=layer:
+                raise ValueError('source checkpoint layer identity differs')
             target_modules=modules(model,layer)
             for group,roles in GROUPS.items():
                 key=f'{layer}:{group}';was_alternative=state['selected'].get(key,False)
