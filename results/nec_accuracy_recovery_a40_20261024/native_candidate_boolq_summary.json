@@ -1,0 +1,23 @@
+{
+  "task": "boolq",
+  "model_kind": "nec",
+  "full_split": true,
+  "fewshot": 0,
+  "samples": 3270,
+  "sample_counts": {
+    "boolq": {
+      "original": 3270,
+      "effective": 3270
+    }
+  },
+  "primary_metric": "acc,none",
+  "score": 0.4743119266055046,
+  "score_percent": 47.43119266055046,
+  "all_metrics": {
+    "alias": "boolq",
+    "acc,none": 0.4743119266055046,
+    "acc_stderr,none": "N/A"
+  },
+  "seconds": 247.10936312004924,
+  "raw_result_sha256": "fd9eadc50a7bf5a35fc94dd4de3247d28d6e844e89078a2ea6c19550884081a9"
+}

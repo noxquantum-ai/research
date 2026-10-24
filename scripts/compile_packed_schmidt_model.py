@@ -259,7 +259,7 @@ def main() -> None:
     parser.add_argument("--reconstruction-matmul-precision", choices=("highest", "high"), default="highest",
                         help="Temporary statistical solves only; decoding and guard checks retain reference precision.")
     parser.add_argument("--reconstruction-target-policy", choices=("teacher", "regularized_block"), default="teacher")
-    parser.add_argument("--reconstruction-output-metric", choices=("energy", "full_covariance"), default="energy")
+    parser.add_argument("--reconstruction-output-metric", choices=("energy", "full_covariance", "final_readout_fisher"), default="energy")
     parser.add_argument("--global-excitation-projections", nargs="+", choices=("gate_proj", "up_proj"))
     parser.add_argument("--excitation-methods", nargs="+",
                         choices=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical"),
@@ -356,6 +356,11 @@ def main() -> None:
         raise ValueError("compiler sequence length differs from activation capture")
     layer_count = int(config["num_hidden_layers"])
     layers = parse_layers(args.layers, layer_count)
+    if args.reconstruction_output_metric == 'final_readout_fisher':
+        prefix_available = args.resume and all(
+            (args.output / f'compressed_layer_{i}.pt').is_file() for i in range(layer_count - 1))
+        if layers != list(range(layer_count)) or not prefix_available:
+            parser.error('final_readout_fisher requires --layers 0-N --resume with all prior layer checkpoints present, so its actual prefix is replayed')
     multipliers = role_multipliers(args.role_multipliers)
     per_layer_multipliers = layer_multipliers(args.layer_multipliers, layer_count)
     device = torch.device(args.device)
@@ -515,6 +520,17 @@ def main() -> None:
             fit_tokens = (windows - max(1, windows // 4)) * args.sequence_length
             output_precision,metric_diagnostics=block_shrunk_output_precision(
                 dense_residual_hidden+dense_mlp_output,fit_tokens=fit_tokens,sequence_length=args.sequence_length)
+        if args.reconstruction_output_metric == 'final_readout_fisher' and name == 'down_proj':
+            from nox.readout_geometry import teacher_readout_fisher_precision
+            windows = inputs.shape[1] // args.sequence_length
+            fit_tokens = (windows - max(1, windows // 4)) * args.sequence_length
+            teacher_readout = reader.load(['model.norm.weight', 'lm_head.weight'])
+            output_precision,metric_diagnostics=teacher_readout_fisher_precision(
+                dense_residual_hidden+dense_mlp_output,
+                teacher_readout['model.norm.weight'].to(device),
+                teacher_readout['lm_head.weight'].to(device),
+                fit_tokens=fit_tokens,rms_eps=config.get('rms_norm_eps',1e-6))
+            del teacher_readout
         if args.reconstruction_target_policy == 'regularized_block' and name == 'down_proj':
             # Correct the complete residual block, regularizing its clean
             # teacher target toward the source operator on student features.

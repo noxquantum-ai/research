@@ -1,42 +1,49 @@
 {
-  "schema": "nec_native_up_branch_pilot_v1",
+  "schema": "nec_native_up_branch_full32_v1",
   "final_success_demonstrated": false,
-  "changed_layer": 0,
-  "changed_projection": "up_proj",
-  "changed_parameters": [
-    "calibration_left",
-    "calibration_right"
-  ],
-  "gate_down_main_mpo_and_sparse_amplitudes_frozen": true,
-  "phase": "measured",
+  "maximum_serialized_bytes": 2417355138,
+  "maximum_coefficients": 3323032892,
+  "phase": "full_test_measured",
   "child_pid": null,
   "command": [
     "/workspace/venvs/nec-hf/bin/python",
     "/tmp/nec-native-preconditioned-source/scripts/evaluate_packed_teacher_kl.py",
+    "--checkpoint-dir",
+    "/tmp/nec-native-up-branch-selected32",
     "--model-id",
     "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
-    "--checkpoint-dir",
-    "/tmp/nec-native-up-precond-layer0-assembly",
     "--readout-checkpoint",
     "/workspace/runs/nec-accuracy-recovery-20261024/readout_probe_exact/constructed_readout.pt",
     "--split",
-    "validation",
+    "test",
+    "--token-offset",
+    "32768",
     "--max-eval-tokens",
-    "8192",
+    "1000000000",
+    "--batch-size",
+    "1",
     "--output",
-    "/workspace/runs/nec-accuracy-recovery-20261024/native_up_branch_preconditioned/validation_8k.json"
+    "/workspace/runs/nec-accuracy-recovery-20261024/native_up_branch_full32/heldout_test.json"
   ],
-  "quality": {
-    "perplexity": 6.536003101769499,
-    "mean_nll": 1.8773258321245259,
-    "teacher_kl_nats_per_token": 0.5092131785477245,
-    "next_token_accuracy": 0.5767305579294347,
-    "dense_top1_agreement": 0.7290929068489805
-  },
-  "non_degradation": {
+  "gates": {
     "perplexity": true,
     "teacher_kl_nats_per_token": true,
     "next_token_accuracy": true,
-    "dense_top1_agreement": false
-  }
+    "dense_top1_agreement": true
+  },
+  "quality": {
+    "perplexity": 8.118023178538516,
+    "mean_nll": 2.094086673615699,
+    "teacher_kl_nats_per_token": 0.5114078950336103,
+    "next_token_accuracy": 0.5449238743116294,
+    "dense_top1_agreement": 0.7205701328150308
+  },
+  "user_quality_gates": {
+    "ppl": false,
+    "kl": false,
+    "accuracy": true,
+    "agreement": false
+  },
+  "all_user_quality_targets_met": false,
+  "storage_not_yet_measured": true
 }

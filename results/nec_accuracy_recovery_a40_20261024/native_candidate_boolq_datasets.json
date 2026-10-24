@@ -1,0 +1,21 @@
+[
+  {
+    "path": "aps/super_glue",
+    "name": "boolq",
+    "revision": "3de24cf8022e94f4ee4b9d55a6f539891524d646",
+    "splits": {
+      "train": {
+        "rows": 9427,
+        "fingerprint": "b185bde8d81835b3"
+      },
+      "validation": {
+        "rows": 3270,
+        "fingerprint": "3465575e190d308f"
+      },
+      "test": {
+        "rows": 3245,
+        "fingerprint": "395e21f9d993dfe0"
+      }
+    }
+  }
+]

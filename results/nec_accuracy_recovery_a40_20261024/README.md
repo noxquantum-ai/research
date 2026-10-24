@@ -359,3 +359,20 @@ selection; validation and package gates determine promotion.
 The larger hypothesis is to choose Schmidt directions using observable
 MLP-output geometry instead of weight reconstruction alone. This hypothesis
 is not yet a validated solution.
+
+
+## Strongest full-test result and BoolQ check, October 24
+
+The training-guarded full-32 Up-branch construction changed only already-stored
+calibration-branch coefficients; no branch, coefficient, or gradient fit was
+added. On the same 308,700 held-out WikiText-2 test tokens, it reached PPL
+**8.118023**, teacher KL **0.511408**, next-token accuracy **54.4924%**, and
+teacher top-1 agreement **72.0570%**. All four measures are slightly better
+than the prior best on the same tokens (PPL 8.128802, KL 0.512765, accuracy
+54.4775%, agreement 72.0246%). The requested PPL ≤5.867, KL ≤0.5 and agreement
+≥85% are still not met.
+
+A full 8,191-token validation check scored PPL 6.529852, KL 0.508339, accuracy
+57.6853%, and agreement 73.0314%. The complete 3,270-question BoolQ check on
+this exact candidate is running. Its previous full-split score was 48.5015%;
+the new score and whole-package byte count will be added after completion.

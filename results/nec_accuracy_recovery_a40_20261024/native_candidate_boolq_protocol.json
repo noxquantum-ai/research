@@ -1,0 +1,62 @@
+{
+  "schema": "nec_full_capability_protocol_v1",
+  "versions": {
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "datasets": "4.8.5",
+    "lm_eval": "0.4.11",
+    "accelerate": "1.14.0",
+    "safetensors": "0.8.0"
+  },
+  "runner_sha256": "746186a8e025e6a0a60f78966cf00e0a3d387ce383769b95610c5c438bbe1fb3",
+  "model_kind": "nec",
+  "model_dir": "/tmp/nec-boolq-native-ready/deployable_model",
+  "inference": "NEC reconstructed FP16",
+  "model_load_seconds": 25.259906576015055,
+  "gpu": "NVIDIA A40",
+  "batch_size": "auto:4",
+  "max_batch_size": 32,
+  "context": 4096,
+  "apply_chat_template": false,
+  "limit": null,
+  "seeds": {
+    "random": 0,
+    "numpy": 1234,
+    "torch": 1234,
+    "fewshot": 1234
+  },
+  "tasks": [
+    {
+      "task": "boolq",
+      "fewshot": 0,
+      "primary_metric": "acc,none",
+      "expected_samples": 3270
+    },
+    {
+      "task": "hellaswag",
+      "fewshot": 0,
+      "primary_metric": "acc_norm,none",
+      "expected_samples": 10042
+    },
+    {
+      "task": "mmlu",
+      "fewshot": 5,
+      "primary_metric": "acc,none",
+      "expected_samples": 14042
+    },
+    {
+      "task": "triviaqa",
+      "fewshot": 0,
+      "primary_metric": "exact_match,remove_whitespace",
+      "expected_samples": 17944
+    },
+    {
+      "task": "gsm8k",
+      "fewshot": 5,
+      "primary_metric": "exact_match,strict-match",
+      "expected_samples": 1319
+    }
+  ],
+  "external_reference_protocol_match": "not established",
+  "dense_evaluation": false
+}
