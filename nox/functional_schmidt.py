@@ -92,13 +92,14 @@ class SchmidtCoreMap:
             if side == "left" else self.left.square() @ unfolded
         ).clamp_min(1e-20)
 
-    def packed_candidate(self, core, side):
+    def packed_candidate(self, core, side, *, entry_weights=None):
         if side == "amplitudes":
             codec = self.artifact["amplitude_codec"]
             return {**self.artifact, "amplitude_codec": encode_groupwise(
                 core, bits=int(codec["bits"]), group_size=int(codec["group_size"]),
                 scale_policy=codec.get("scale_policy", "maxabs"),
                 quant_grid=codec.get("quant_grid", "symmetric"),
+                entry_weights=entry_weights,
             )}
         base = dict(self.base)
         base[side + "_codec"] = encode_groupwise(
@@ -206,6 +207,7 @@ def construct_functional_schmidt_mlp(
     guard_fraction: float = 0.25,
     sequence_length: int = 128,
     gate_target_policy: str = "teacher_preactivation",
+    output_metric: str = "energy",
 ) -> tuple[dict, dict, dict]:
     """Joint construction with a disjoint guard from calibration data only.
 
@@ -226,6 +228,8 @@ def construct_functional_schmidt_mlp(
         raise ValueError("invalid functional construction controls")
     if gate_target_policy not in ("teacher_preactivation", "readout_projection"):
         raise ValueError("unknown Gate construction target policy")
+    if output_metric not in ("energy", "channel_relative"):
+        raise ValueError("unknown coupled MLP output metric")
     if sequence_length < 1 or inputs.shape[1] % sequence_length:
         raise ValueError("calibration samples must contain complete sequence windows")
     windows = inputs.shape[1] // sequence_length
@@ -240,13 +244,28 @@ def construct_functional_schmidt_mlp(
     }
     fit_x, guard_x = inputs.float()[:, :split], inputs.float()[:, split:]
     fit_y, guard_y = targets.float()[:, :split], targets.float()[:, split:]
-    fit_total = fit_y.square().sum().clamp_min(1e-30)
-    guard_total = guard_y.square().sum().clamp_min(1e-30)
+    def channel_weights(values):
+        energy = values.square().mean(dim=1)
+        floor = energy.median().clamp_min(1e-20) * .01
+        scale = energy.clamp_min(floor).rsqrt()
+        return scale / scale.mean().clamp_min(1e-20)
+
+    # A training-only diagonal output metric prevents a few large residual
+    # channels from defining the entire reconstruction objective. It is a
+    # construction statistic and is not an additional inference parameter.
+    output_weights = channel_weights(fit_y) if output_metric == 'channel_relative' else None
+    gate_weights = None
+    if output_weights is not None:
+        gate_weights = channel_weights(gate_targets[:, :split].float() if gate_targets is not None
+                                       else weights['gate_proj'] @ fit_x)
+    weighted = lambda value: value if output_weights is None else value * output_weights[:, None]
+    fit_total = weighted(fit_y).square().sum().clamp_min(1e-30)
+    guard_total = weighted(guard_y).square().sum().clamp_min(1e-30)
 
     def errors(candidate_weights):
         return (
-            float((_mlp(candidate_weights, fit_x) - fit_y).square().sum() / fit_total),
-            float((_mlp(candidate_weights, guard_x) - guard_y).square().sum() / guard_total),
+            float(weighted(_mlp(candidate_weights, fit_x) - fit_y).square().sum() / fit_total),
+            float(weighted(_mlp(candidate_weights, guard_x) - guard_y).square().sum() / guard_total),
         )
 
     initial_errors = errors(weights)
@@ -270,18 +289,22 @@ def construct_functional_schmidt_mlp(
                 if role == "down_proj":
                     core_inputs = active
                     channel_multiplier = None
-                    output_sensitivity = torch.ones(targets.shape[0], device=inputs.device)
+                    output_sensitivity = (torch.ones(targets.shape[0], device=inputs.device)
+                                          if output_weights is None else output_weights.square())
                 elif role == "up_proj":
                     core_inputs = fit_x
                     channel_multiplier = F.silu(gate)
                     output_sensitivity = (
-                        weights["down_proj"].square().sum(dim=0)
+                        (weights["down_proj"].square().sum(dim=0) if output_weights is None else
+                         (weights["down_proj"].square() * output_weights.square()[:, None]).sum(dim=0))
                         * channel_multiplier.square().mean(dim=1)
                     )
                 else:
                     core_inputs = fit_x
                     channel_multiplier = None
-                    output_sensitivity = torch.ones(gate.shape[0], device=inputs.device)
+                    output_sensitivity = (torch.ones(gate.shape[0], device=inputs.device)
+                                          if gate_weights is None else gate_weights.square())
+                solve_weights = gate_weights if role == 'gate_proj' else output_weights
                 gate_solve_target = None
                 if role == "gate_proj":
                     gate_solve_target = (
@@ -297,9 +320,13 @@ def construct_functional_schmidt_mlp(
                     response = mapper.weight(increment, side) @ core_inputs
                     if channel_multiplier is not None:
                         response = weights["down_proj"] @ (channel_multiplier * response)
+                    if solve_weights is not None:
+                        response = response * solve_weights[:, None]
                     return response * scale
 
                 def adjoint(output):
+                    if solve_weights is not None:
+                        output = output * solve_weights[:, None]
                     if channel_multiplier is not None:
                         output = channel_multiplier * (weights["down_proj"].T @ output)
                     dense = (output @ core_inputs.T) * scale
@@ -315,6 +342,8 @@ def construct_functional_schmidt_mlp(
                     if role == "gate_proj" else
                     (fit_y - weights["down_proj"] @ active) * scale
                 )
+                if solve_weights is not None:
+                    residual = residual * solve_weights[:, None]
                 rhs = adjoint(residual)
                 delta, cg_history = _prior_anchored_pcg(
                     normal, rhs, diagonal + ridge, iterations=cg_iterations, tolerance=1e-3,
@@ -325,7 +354,10 @@ def construct_functional_schmidt_mlp(
                 accepted_weight = None
                 best_fit, best_guard = current_fit, current_guard
                 for fraction in (1.0, 0.5, 0.25):
-                    trial = mapper.packed_candidate(core + fraction * delta, side)
+                    trial = mapper.packed_candidate(
+                        core + fraction * delta, side,
+                        entry_weights=diagonal if output_metric == 'channel_relative' and side == 'amplitudes' else None,
+                    )
                     decoded = reconstruct_packed_schmidt(trial, device=inputs.device)
                     candidate_weights = {**weights, role: decoded}
                     fit_error, guard_error = errors(candidate_weights)
@@ -361,6 +393,8 @@ def construct_functional_schmidt_mlp(
         "uses_autograd": False,
         "uses_nonlinear_derivatives": False,
         "gate_target_policy": gate_target_policy,
+        "output_metric": output_metric,
+        "output_metric_uses_training_only": True,
         "fit_tokens": split, "guard_tokens": targets.shape[1] - split,
         "initial_fit_relative_mse": initial_errors[0],
         "initial_guard_relative_mse": initial_errors[1],

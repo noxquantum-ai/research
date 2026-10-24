@@ -233,6 +233,7 @@ def main() -> None:
     parser.add_argument("--joint-mlp-sweeps", type=int, default=0)
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
+    parser.add_argument("--joint-mlp-output-metric", choices=("energy", "channel_relative"), default="energy")
     parser.add_argument("--gate-target-policy", choices=("teacher_preactivation", "readout_projection"), default="teacher_preactivation")
     parser.add_argument("--joint-attention-sweeps", type=int, default=0)
     parser.add_argument("--joint-routing-sweeps", type=int, default=0)
@@ -852,6 +853,7 @@ def main() -> None:
                     cg_iterations=args.joint_mlp_cg_iterations,
                     ridge_ratio=args.joint_mlp_ridge_ratio,
                     gate_target_policy=args.gate_target_policy,
+                    output_metric=args.joint_mlp_output_metric,
                     sequence_length=args.sequence_length,
                 )
             )
@@ -1015,6 +1017,7 @@ def main() -> None:
             "cg_iterations": args.joint_mlp_cg_iterations,
             "ridge_ratio": args.joint_mlp_ridge_ratio,
             "gate_target_policy": args.gate_target_policy,
+            "output_metric": args.joint_mlp_output_metric,
             "target": "clean_whole_block_output_including_residual_stream",
         },
         "joint_attention_construction": {

@@ -71,6 +71,18 @@ class SparseSchmidtTests(unittest.TestCase):
         self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate), self.artifact['logical_coefficient_count'])
         torch.testing.assert_close(decoded, reconstruct_packed_schmidt(candidate))
 
+    def test_channel_relative_coupled_solve_uses_same_representation(self):
+        artifacts = {name: self.artifact for name in ('gate_proj', 'up_proj', 'down_proj')}
+        target = self.weight @ (torch.nn.functional.silu(self.weight @ self.inputs) * (self.weight @ self.inputs))
+        result, _, report = construct_functional_schmidt_mlp(
+            artifacts, self.inputs, target, gate_targets=self.weight @ self.inputs,
+            cg_iterations=3, sequence_length=16, output_metric='channel_relative')
+        self.assertEqual(report['output_metric'], 'channel_relative')
+        self.assertLessEqual(report['final_guard_relative_mse'], report['initial_guard_relative_mse'])
+        for name in artifacts:
+            self.assertEqual(packed_schmidt_coefficient_count_from_artifact(result[name]),
+                             packed_schmidt_coefficient_count_from_artifact(artifacts[name]))
+
 
 class CovarianceFeedbackTests(unittest.TestCase):
     def test_exact_grid_recovers_all_coordinates_and_undoes_construction_gauge(self):

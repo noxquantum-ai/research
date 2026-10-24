@@ -1,0 +1,11 @@
+{
+  "schema": "nec_lossless_scalar_bitplane_probe_v1",
+  "layer": 0,
+  "codec_count": 35,
+  "raw_original_bytes": 56271250,
+  "raw_repacked_bytes": 56272722,
+  "gzip_original_bytes": 52427541,
+  "gzip_repacked_bytes": 52571543,
+  "integer_level_roundtrip_checked_for_every_codec": true,
+  "seconds": 7.096489007992204
+}

@@ -114,3 +114,16 @@ controls establishes the final dense-level quality target.
 Persistent status:
 `/workspace/runs/nec-accuracy-recovery-20261024/coupled_status.json`.
 Runner: [run_nec_accuracy_reconstruction.py](../../scripts/run_nec_accuracy_reconstruction.py).
+
+An optional `--joint-mlp-output-metric channel_relative` objective is prepared
+for a separate comparison. It derives inverse channel-RMS weights from training
+fit targets only, and applies the same weights to each linear map and its
+adjoint. This tests whether output-energy dominance is suppressing useful
+smaller channels. The current sequential trial uses the original `energy`
+objective. Metric weights are construction statistics, not stored parameters.
+
+A lossless scalar bitplane packing prototype was also rejected: on the first
+reconstructed layer its gzip size increased from 52,427,541 to 52,571,543 bytes.
+Integer levels round-tripped exactly, but it did not satisfy the storage
+objective. The prototype codec was not retained. Its [measurement record](bitplane_layer0_rejected.json)
+is archived to avoid repeating the unsuccessful direction.
