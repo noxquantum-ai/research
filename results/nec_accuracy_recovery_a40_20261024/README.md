@@ -127,3 +127,22 @@ reconstructed layer its gzip size increased from 52,427,541 to 52,571,543 bytes.
 Integer levels round-tripped exactly, but it did not satisfy the storage
 objective. The prototype codec was not retained. Its [measurement record](bitplane_layer0_rejected.json)
 is archived to avoid repeating the unsuccessful direction.
+
+## Model-level construction selection (prepared)
+
+The Q/K control demonstrates that local guard improvement alone is insufficient.
+`select_nec_operator_constructions.py` can compare two completed NEC models
+using actual end-to-end teacher logits on the four training guard windows.
+It switches attention groups (Q/K/V/O) and complete MLP groups (Gate/Up/Down),
+then checks them again in reverse order for conditional refinement. Every
+accepted switch must reduce teacher KL without increasing NLL or reducing
+next-token correctness or teacher agreement on those same calibration tokens.
+No transformer layer becomes dense, no tensor budget changes, and no gradients
+are used. Independent validation and complete serialized-size checks still
+follow selection. This tool is prepared for testing after sequential
+construction completes; no quality gain from it is claimed yet.
+
+A persistent choice recipe references both persistent source constructions.
+The assembled raw files may use pod scratch to conserve network-volume space;
+the recipe can rebuild them exactly without GPU compilation. A deployable final
+package must be saved persistently before release.
