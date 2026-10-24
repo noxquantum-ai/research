@@ -64,6 +64,9 @@ def encode_groupwise(
     alpha: float = 0.0,
     min_scale: float = 0.1,
     max_scale: float = 10.0,
+    scale_policy: str = "maxabs",
+    quant_grid: str = "symmetric",
+    entry_weights: torch.Tensor | None = None,
 ) -> dict:
     """Encode a finite ``[out_features, in_features]`` matrix.
 
@@ -73,6 +76,8 @@ def encode_groupwise(
     caller; this function never inspects validation or test examples.
     """
     _validate_bits(bits)
+    if scale_policy not in ("maxabs", "mse") or quant_grid not in ("symmetric", "nonzero"):
+        raise ValueError("unknown scalar reconstruction grid or scale policy")
     if not torch.is_tensor(matrix) or matrix.ndim != 2 or not matrix.is_floating_point():
         raise ValueError("matrix must be a floating-point [rows, columns] tensor")
     if matrix.shape[0] <= 0 or matrix.shape[1] <= 0:
@@ -110,12 +115,51 @@ def encode_groupwise(
         source = torch.nn.functional.pad(source, (0, padded_columns - columns))
     blocks = source.reshape(rows, groups_per_row, int(group_size))
 
-    qmax = (1 << (int(bits) - 1)) - 1
+    qmax = ((1 << int(bits)) - 1 if quant_grid == "nonzero"
+            else (1 << (int(bits) - 1)) - 1)
     qmin = -qmax
     scale = blocks.abs().amax(dim=-1) / float(qmax)
     safe_scale = torch.where(scale > 0, scale, torch.ones_like(scale))
-    quantized = torch.round(blocks / safe_scale.unsqueeze(-1)).clamp(qmin, qmax).to(torch.int16)
-    codes = (quantized - qmin).to(torch.uint8)
+
+    def codes_and_values(scales):
+        normalized = blocks / scales.unsqueeze(-1).clamp_min(1e-30)
+        if quant_grid == "nonzero":
+            codes = ((normalized - qmin) * .5).round().clamp(0, (1 << bits) - 1)
+            return codes, codes * 2 + qmin
+        values = normalized.round().clamp(qmin, qmax)
+        return values - qmin, values
+
+    if scale_policy == "mse":
+        importance = torch.ones_like(source) if entry_weights is None else entry_weights.detach().float()
+        if entry_weights is not None:
+            if tuple(importance.shape) != (rows, columns) or not torch.isfinite(importance).all() or torch.any(importance < 0):
+                raise ValueError("entry weights must be finite nonnegative matrix weights")
+            if padded_columns != columns:
+                importance = torch.nn.functional.pad(importance, (0, padded_columns - columns))
+        elif padded_columns != columns:
+            importance[:, columns:] = 0
+        importance = importance.reshape_as(blocks)
+        best_error = torch.full_like(scale, float("inf"))
+        best_scale = safe_scale.clone()
+        # Each step is an exact one-dimensional least-squares scale solve with
+        # fixed integer amplitudes. No gradients or extra stored coefficients.
+        for fraction in (.50, .65, .80, .95, 1.0):
+            candidate = safe_scale * fraction
+            for _ in range(3):
+                _, levels = codes_and_values(candidate)
+                numerator = (importance * blocks * levels).sum(dim=-1)
+                denominator = (importance * levels.square()).sum(dim=-1).clamp_min(1e-30)
+                candidate = (numerator / denominator).clamp_min(1e-30)
+            # Selection scores the actual FP16 scale that the decoder stores.
+            candidate = candidate.to(torch.float16).float().clamp_min(torch.finfo(torch.float16).tiny)
+            _, levels = codes_and_values(candidate)
+            error = (importance * (blocks - candidate.unsqueeze(-1) * levels).square()).sum(dim=-1)
+            improved = error < best_error
+            best_scale = torch.where(improved, candidate, best_scale)
+            best_error = torch.minimum(best_error, error)
+        scale = torch.where(scale > 0, best_scale, torch.zeros_like(best_scale))
+    codes, _ = codes_and_values(torch.where(scale > 0, scale, torch.ones_like(scale)))
+    codes = codes.to(torch.uint8)
 
     artifact = {
         "codec_type": CODEC_TYPE,
@@ -131,6 +175,10 @@ def encode_groupwise(
         "rounding": "torch_round_ties_to_even",
         "scale_dtype": "float16",
     }
+    if quant_grid != "symmetric":
+        artifact["quant_grid"] = quant_grid
+    if scale_policy != "maxabs":
+        artifact["scale_policy"] = scale_policy
     artifact["payload_bytes"] = codec_payload_bytes(artifact)
     return artifact
 
@@ -147,6 +195,8 @@ def decode_groupwise(artifact: dict, *, device="cpu", dtype=torch.float32) -> to
     count = rows * groups_per_row * group_size
     codes = _unpack_codes(artifact["packed_codes"].to(device=device), count, bits)
     qmin = int(artifact["qmin"])
+    if artifact.get("quant_grid", "symmetric") == "nonzero":
+        codes = codes * 2
     quantized = (codes + qmin).reshape(rows, groups_per_row, group_size).to(torch.float32)
     scales = artifact["group_scales"].to(device=device, dtype=torch.float32)
     if tuple(scales.shape) != (rows, groups_per_row):

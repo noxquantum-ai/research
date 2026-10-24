@@ -7,8 +7,8 @@ from nox.packed_schmidt import (
     packed_codec_coefficient_count, packed_schmidt_coefficient_count_from_artifact,
     packed_schmidt_payload_bytes_from_artifact, reconstruct_packed_schmidt,
 )
-from nox.residual_codec import codec_payload_bytes
-from nox.sparse_schmidt import compile_sparse_schmidt
+from nox.residual_codec import codec_payload_bytes, decode_groupwise
+from nox.sparse_schmidt import compile_sparse_schmidt, covariance_feedback_excitations
 
 
 class SparseSchmidtTests(unittest.TestCase):
@@ -60,6 +60,31 @@ class SparseSchmidtTests(unittest.TestCase):
         for name in artifacts:
             self.assertEqual(packed_schmidt_coefficient_count_from_artifact(result[name]),
                              packed_schmidt_coefficient_count_from_artifact(artifacts[name]))
+
+
+class CovarianceFeedbackTests(unittest.TestCase):
+    def test_exact_grid_recovers_all_coordinates_and_undoes_construction_gauge(self):
+        torch.manual_seed(77)
+        weight = torch.tensor([[-3., -1., 0., 3., -3., 1., 3.]]).repeat(3, 1)
+        inputs = torch.randn(7, 128) * torch.tensor([.01, .2, 1., 3., 10., 50., 100.])[:, None]
+        indices, codec, _ = covariance_feedback_excitations(
+            weight, inputs, weight @ inputs, kept=7, bits=3, group_size=4,
+            block_size=3, scale_policy='maxabs', fixed_indices=torch.arange(7).repeat(3, 1),
+        )
+        actual = torch.zeros_like(weight).scatter_(1, indices, decode_groupwise(codec))
+        torch.testing.assert_close(actual, weight, atol=1e-6, rtol=1e-6)
+
+    def test_inverse_covariance_support_keeps_exactly_the_requested_count(self):
+        torch.manual_seed(78)
+        weight, inputs = torch.randn(4, 12), torch.randn(12, 80)
+        indices, codec, report = covariance_feedback_excitations(
+            weight, inputs, weight @ inputs, kept=5, bits=3, group_size=4, block_size=3,
+            quant_grid='nonzero',
+        )
+        self.assertEqual(tuple(indices.shape), (4, 5))
+        self.assertTrue(torch.all(indices[:, 1:] > indices[:, :-1]))
+        self.assertTrue(torch.isfinite(decode_groupwise(codec)).all())
+        self.assertEqual(report['stored_covariance_coefficients'], 0)
 
 
 if __name__ == '__main__':

@@ -97,6 +97,8 @@ class SchmidtCoreMap:
             codec = self.artifact["amplitude_codec"]
             return {**self.artifact, "amplitude_codec": encode_groupwise(
                 core, bits=int(codec["bits"]), group_size=int(codec["group_size"]),
+                scale_policy=codec.get("scale_policy", "maxabs"),
+                quant_grid=codec.get("quant_grid", "symmetric"),
             )}
         base = dict(self.base)
         base[side + "_codec"] = encode_groupwise(

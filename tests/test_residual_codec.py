@@ -21,6 +21,25 @@ from scripts.run_residual_codec_pilot import block_error_metrics, load_activatio
 
 
 class PackedResidualCodecTests(unittest.TestCase):
+    def test_nonzero_grid_has_eight_exact_levels_without_extra_payload(self):
+        values = torch.tensor([[-7., -5., -3., -1., 1., 3., 5., 7.]])
+        codec = encode_groupwise(values, bits=3, group_size=8, quant_grid='nonzero')
+        self.assertTrue(torch.equal(values, decode_groupwise(codec)))
+        ordinary = encode_groupwise(values, bits=3, group_size=8)
+        self.assertEqual(codec_payload_bytes(codec), codec_payload_bytes(ordinary))
+        zero = encode_groupwise(torch.zeros(2, 7), bits=3, group_size=4,
+                                quant_grid='nonzero', scale_policy='mse')
+        self.assertTrue(torch.equal(decode_groupwise(zero), torch.zeros(2, 7)))
+
+    def test_mse_scales_reduce_weighted_distortion_at_unchanged_size(self):
+        torch.manual_seed(79)
+        values, importance = torch.randn(7, 93), torch.rand(7, 93) + .1
+        ordinary = encode_groupwise(values, bits=3)
+        optimized = encode_groupwise(values, bits=3, scale_policy='mse', entry_weights=importance)
+        error = lambda codec: ((decode_groupwise(codec) - values).square() * importance).sum()
+        self.assertLessEqual(float(error(optimized)), float(error(ordinary)))
+        self.assertEqual(codec_payload_bytes(ordinary), codec_payload_bytes(optimized))
+
     def test_signed_levels_round_trip_for_all_supported_widths(self):
         for bits in (2, 3, 4, 5, 6, 8):
             qmax = (1 << (bits - 1)) - 1
