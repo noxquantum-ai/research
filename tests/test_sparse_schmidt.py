@@ -8,7 +8,8 @@ from nox.packed_schmidt import (
     packed_schmidt_payload_bytes_from_artifact, reconstruct_packed_schmidt,
 )
 from nox.residual_codec import codec_payload_bytes, decode_groupwise
-from nox.sparse_schmidt import compile_sparse_schmidt, covariance_feedback_excitations
+from nox.sparse_schmidt import (compile_sparse_schmidt, covariance_feedback_excitations,
+                               reconstruct_excitation_operator)
 
 
 class SparseSchmidtTests(unittest.TestCase):
@@ -60,6 +61,15 @@ class SparseSchmidtTests(unittest.TestCase):
         for name in artifacts:
             self.assertEqual(packed_schmidt_coefficient_count_from_artifact(result[name]),
                              packed_schmidt_coefficient_count_from_artifact(artifacts[name]))
+
+    def test_constructor_selection_preserves_budget_and_improves_both_training_partitions(self):
+        candidate, decoded, report = reconstruct_excitation_operator(
+            self.weight, self.artifact, self.inputs, self.weight @ self.inputs, sequence_length=16)
+        self.assertLessEqual(report['final_fit_relative_mse'], report['initial_fit_relative_mse'])
+        self.assertLessEqual(report['final_guard_relative_mse'], report['initial_guard_relative_mse'])
+        self.assertEqual(packed_schmidt_payload_bytes_from_artifact(candidate), self.artifact['payload_bytes'])
+        self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate), self.artifact['logical_coefficient_count'])
+        torch.testing.assert_close(decoded, reconstruct_packed_schmidt(candidate))
 
 
 class CovarianceFeedbackTests(unittest.TestCase):

@@ -21,6 +21,72 @@ CODEC_TYPE = "nec_sparse_excitation_schmidt_v1"
 
 
 @torch.no_grad()
+def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequence_length=2048,
+                                    methods=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero")):
+    """Recompile an existing NEC operator without increasing its tensor budget.
+
+    Only training construction and disjoint training guard windows select the
+    constructor. The MPO and all branch shapes remain unchanged.
+    """
+    from nox.packed_schmidt import (reconstruct_packed_schmidt,
+        packed_schmidt_coefficient_count_from_artifact, packed_schmidt_payload_bytes_from_artifact)
+    windows = inputs.shape[1] // sequence_length
+    if inputs.shape[1] % sequence_length or windows < 2:
+        raise ValueError("operator reconstruction requires complete fit/guard windows")
+    split = (windows - max(1, windows // 4)) * sequence_length
+    x, guard_x = inputs[:, :split].float(), inputs[:, split:].float()
+    y, guard_y = targets[:, :split].float(), targets[:, split:].float()
+    base = reconstruct_packed_schmidt(artifact['base_artifact'], device=inputs.device)
+    residual_y, guard_residual = y - base @ x, guard_y - base @ guard_x
+    indices = excitation_indices(artifact, inputs.device)
+    prior = excitation_values(artifact, inputs.device)
+
+    def scores(support, codec):
+        sparse = torch.zeros_like(base).scatter_(1, support, decode_groupwise(codec, device=inputs.device))
+        return (float((sparse @ x - residual_y).square().sum() / y.square().sum().clamp_min(1e-30)),
+                float((sparse @ guard_x - guard_residual).square().sum() / guard_y.square().sum().clamp_min(1e-30)))
+
+    initial_fit, initial_guard = scores(indices, artifact['amplitude_codec'])
+    best, best_fit, best_guard, selected = artifact, initial_fit, initial_guard, 'baseline'
+    trials = []
+    delta = None
+    if any(m.startswith('pcg_') for m in methods):
+        _, delta, _, _ = refit_sparse_excitations(artifact, inputs, targets, split=split)
+    for method in methods:
+        if method.startswith('pcg_'):
+            grid = 'nonzero' if method == 'pcg_nonzero' else 'symmetric'
+            candidates = [(indices, encode_groupwise(prior + fraction * delta,
+                bits=artifact['amplitude_codec']['bits'], group_size=artifact['amplitude_codec']['group_size'],
+                scale_policy='mse', quant_grid=grid, entry_weights=x.square().mean(dim=1)[indices]),
+                {'fraction': fraction}) for fraction in (.25, .5, 1.)]
+        else:
+            support, codec, details = covariance_feedback_excitations(
+                weight.float() - base, x, residual_y, kept=artifact['amplitudes_per_row'],
+                bits=artifact['amplitude_codec']['bits'], group_size=artifact['amplitude_codec']['group_size'],
+                fixed_indices=indices if method == 'feedback_fixed' else None,
+                quant_grid='nonzero' if method == 'feedback_nonzero' else 'symmetric')
+            candidates = [(support, codec, details)]
+        for support, codec, details in candidates:
+            fit, guard = scores(support, codec)
+            trials.append({'method': method, 'fit_relative_mse': fit, 'guard_relative_mse': guard, **details})
+            if fit < initial_fit and guard < best_guard:
+                mask = torch.zeros_like(base, dtype=torch.bool).scatter_(1, support, True)
+                best = {**artifact, 'support_bits': _pack_codes(mask, 1).cpu(), 'amplitude_codec': codec}
+                best_fit, best_guard, selected = fit, guard, method
+        del candidates
+    if (packed_schmidt_coefficient_count_from_artifact(best) != packed_schmidt_coefficient_count_from_artifact(artifact)
+            or packed_schmidt_payload_bytes_from_artifact(best) != packed_schmidt_payload_bytes_from_artifact(artifact)):
+        raise RuntimeError('excitation reconstruction changed the tensor budget')
+    return best, reconstruct_packed_schmidt(best, device=inputs.device), {
+        'selected': selected, 'initial_fit_relative_mse': initial_fit, 'initial_guard_relative_mse': initial_guard,
+        'final_fit_relative_mse': best_fit, 'final_guard_relative_mse': best_guard,
+        'fit_tokens': split, 'guard_tokens': inputs.shape[1] - split, 'trials': trials,
+        'logical_coefficients_added': 0, 'tensor_payload_bytes_added': 0,
+        'validation_used_for_selection': False, 'uses_autograd': False,
+    }
+
+
+@torch.no_grad()
 def refit_sparse_excitations(artifact, inputs, targets, *, split, scale_policy="mse",
                              quant_grid="symmetric", ridge_ratio=.01, iterations=16):
     """Exact supported normal-equation solve with channel-relative anchoring."""
