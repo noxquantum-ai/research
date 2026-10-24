@@ -1,6 +1,6 @@
 # Full NEC capability benchmark protocol
 
-Evaluate the completed 32-layer NEC hybrid on all five complete splits. The original dense model was run on BoolQ only, as a matched comparison under the same harness and prompts. Remaining dense benchmarks are not requested.
+Benchmarking was stopped at the user’s request. Full NEC BoolQ and HellaSwag and matched dense BoolQ are complete; MMLU, TriviaQA and GSM8K have no complete scores. The original protocol below is retained for reproducibility.
 Model: `Fluxx08/NEC-Llama-2-7B-Hybrid`, private HF revision
 `3b6f1f379048e52bb982754cd7e8e144c54cfbe7`.
 Actual published storage: 2,490,273,288 bytes (5.412758× vs dense FP16).
@@ -49,11 +49,11 @@ and must not be treated as a controlled accuracy-retention comparison.
 
 | Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | Dense, matched harness | NEC 5.413× |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Not run | Pending |
+| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Not run | Stopped |
 | HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Not run | **50.39** |
 | BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | **79.36** | **48.50** |
-| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Not run | Pending |
-| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Not run | Pending |
+| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Not run | Stopped |
+| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Not run | Stopped |
 
 Matched BoolQ used the complete 3,270-question validation split: dense 79.36%,
 NEC 48.50%, a 30.86 percentage-point gap. Raw reports are in

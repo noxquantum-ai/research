@@ -1,6 +1,6 @@
 NEC (Nox Entanglement Compiler) is our post-training, quantum-inspired structural compression system for pretrained language models. It uses tensor networks and related mathematical techniques to reduce the number of independent model parameters without post-compression training.
 
-The latest complete Llama-2-7B package meets our minimum joint gates: **5.413× actual whole-model storage compression, 2.028× structural coefficient reduction, and held-out WikiText-2 PPL 8.349**. NEC compresses attention and MLP in every transformer layer without gradient-based fine-tuning or healing. Accuracy remains below the dense baseline; the five capability benchmarks are pending, and the aspirational 10× storage target remains open.
+The latest complete Llama-2-7B package meets the previous PPL ≤10 joint gates: **5.413× actual whole-model storage compression, 2.028× structural coefficient reduction, and held-out WikiText-2 PPL 8.349**. NEC compresses attention and MLP in every transformer layer without gradient-based fine-tuning or healing. Capability scores show substantial accuracy loss. The current objective is dense-level PPL (at worst +0.5), next-token accuracy within two percentage points of dense and at least 98% teacher top-1 agreement, while maintaining or improving the current storage and structural compression. These tighter quality targets are not met; the aspirational 10× storage target also remains open.
 
 ## Latest complete NEC result
 
@@ -27,17 +27,21 @@ The current loader reconstructs dense matrices for inference. Storage compressio
 
 See the [complete experiment report](results/nec_sparse_excitation_a40_20261023/README.md), [measured final reports](results/nec_sparse_excitation_a40_20261023/final/summary.json), and [staged raw evaluations](results/nec_sparse_excitation_a40_20261023/live/README.md).
 
+## Current accuracy work
+
+[Fixed-budget accuracy reconstruction](results/nec_accuracy_recovery_a40_20261024/README.md) is testing covariance-aware construction of NEC's existing Schmidt/MPO and sparse excitation representation, without gradients or additional stored coefficients. A Q/K-only full-model control slightly improved PPL but reduced next-token accuracy and agreement, so it was rejected under the no-regression rule. Sequential reconstruction of attention and MLP together is underway; the published model remains the baseline.
+
 ## Full capability benchmarks
 
-NEC is being evaluated on all five full benchmarks. Dense Llama-2-7B is being run under the same harness for BoolQ only, to give a matched comparison on that task; the remaining dense runs were omitted. Reference scores below were supplied by the user and appear in [CompactifAI's published comparison](https://arxiv.org/html/2401.14109v2); matching prompts, few-shot settings and scoring protocols have not been established, so these columns are external references rather than matched baselines.
+Benchmarking was stopped at the user’s request after full NEC BoolQ and HellaSwag evaluations and a matched dense BoolQ run. Remaining benchmarks are stopped while NEC accuracy work continues. Reference scores below were supplied by the user and appear in [CompactifAI's published comparison](https://arxiv.org/html/2401.14109v2); matching prompts, few-shot settings and scoring protocols have not been established, so these columns are external references rather than matched baselines.
 
 | Benchmark | Original reference | INT4 reference | CompactifAI 88% | CompactifAI 93% | Dense, matched harness | NEC 5.413× |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Not run | Pending |
+| MMLU | 46.41 | 45.53 | 45.32 | 44.16 | Not run | Stopped |
 | HellaSwag | 80.55 | 79.25 | 77.87 | 76.54 | Not run | **50.39** |
 | BoolQ | 79.76 | 78.19 | 77.90 | 76.77 | **79.36** | **48.50** |
-| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Not run | Pending |
-| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Not run | Pending |
+| TriviaQA | 19.03 | 19.00 | 18.33 | 18.10 | Not run | Stopped |
+| GSM8K | 23.05 | 22.44 | 22.58 | 17.74 | Not run | Stopped |
 
 All entries are percentages; higher is better. Dense and NEC scores will use the same harness for the matched comparison. CompactifAI columns are external references, since the paper does not establish that its prompts and few-shot settings match ours. Full protocols, sample counts and status are in the [benchmark report](results/nec_full_five_benchmarks_a40_20261023/README.md).
 

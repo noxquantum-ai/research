@@ -1,0 +1,45 @@
+{
+  "schema": "nec_accuracy_reconstruction_trial_v1",
+  "phase": "measured",
+  "baseline": "/workspace/runs/nec-sparse10-coupled-sequential-full32",
+  "source_commit": "b8c5a90",
+  "candidate_dir": "/workspace/runs/nec-accuracy-recovery-20261024/qk-full32",
+  "complete_model_architecture": true,
+  "command": [
+    "/workspace/venvs/nec-hf/bin/python",
+    "/workspace/research/scripts/evaluate_packed_teacher_kl.py",
+    "--checkpoint-dir",
+    "/workspace/runs/nec-accuracy-recovery-20261024/qk-full32",
+    "--model-id",
+    "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "--split",
+    "validation",
+    "--max-eval-tokens",
+    "8192",
+    "--output",
+    "/workspace/runs/nec-accuracy-recovery-20261024/qk_validation_8k.json"
+  ],
+  "child_pid": null,
+  "baseline_quality": {
+    "perplexity": 6.697376756031311,
+    "mean_nll": 1.9017159207788978,
+    "teacher_kl_nats_per_token": 0.5351628217741604,
+    "next_token_accuracy": 0.5736784275424246,
+    "dense_top1_agreement": 0.720180686118911
+  },
+  "candidate_quality": {
+    "perplexity": 6.671260825713106,
+    "mean_nll": 1.8978088714060322,
+    "teacher_kl_nats_per_token": 0.5295971873170328,
+    "next_token_accuracy": 0.5718471493102185,
+    "dense_top1_agreement": 0.7199365156879501
+  },
+  "validation_non_degradation": {
+    "perplexity": true,
+    "teacher_kl_nats_per_token": true,
+    "next_token_accuracy": false,
+    "dense_top1_agreement": false
+  },
+  "all_validation_quality_gates": false,
+  "final_success_demonstrated": false
+}

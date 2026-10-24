@@ -72,3 +72,45 @@ also includes fine-tuning; that component is excluded here.
 These ideas are established prior art. Applying them to NEC's existing MPO plus
 coordinate-excitation representation is an experimental design, not a claim of
 novelty or a substitution of conventional quantization for NEC.
+
+## Measured initial controls
+
+Layer-0 constructor selection used training fit/guard tokens only, then reported
+separate validation activations. Exact tensor payloads and coefficient counts
+were unchanged:
+
+| Projection | Baseline validation relative MSE | Selected constructor | New validation relative MSE |
+| --- | ---: | --- | ---: |
+| Query | 0.00554723 | Covariance feedback, nonzero grid | 0.000389999 |
+| Down | 0.0641991 | Relative-anchored PCG, fitted scales | 0.0616066 |
+
+See [local raw probe](layer0_constructor_probe.json). These are local operator
+errors, not full-model quality measurements.
+
+A full 32-layer Q/K-only reconstruction, keeping every other NEC operator fixed,
+failed the no-regression policy on 8,191 matched validation tokens:
+
+| Metric | Current NEC baseline | Q/K control |
+| --- | ---: | ---: |
+| PPL | 6.697377 | 6.671261 |
+| Teacher KL | 0.535163 | 0.529597 |
+| Next-token accuracy | 57.3678% | 57.1847% |
+| Dense top-1 agreement | 72.0181% | 71.9937% |
+
+The control is **not promoted**. Better independent reconstruction did not
+preserve all model-level metrics. See [baseline](baseline_validation_8k.json),
+[control](qk_control_validation_8k.json) and [acceptance record](qk_control_status.json).
+
+The next trial reconstructs all seven operators sequentially against the actual
+mixed-prefix activations and clean teacher targets. It reuses existing MPO
+backbones and all branch shapes, selects excitation construction on training
+guards and applies the existing coupled attention/MLP normal-equation solves.
+The complete model is measured after replacing eight candidate layers and again
+after all 32; other layers in the stage-eight assembly use the previous NEC
+checkpoints. Full test regression, complete-package measurement and bundled
+runtime parity are conditional on validation improvement. None of these local
+controls establishes the final dense-level quality target.
+
+Persistent status:
+`/workspace/runs/nec-accuracy-recovery-20261024/coupled_status.json`.
+Runner: [run_nec_accuracy_reconstruction.py](../../scripts/run_nec_accuracy_reconstruction.py).
