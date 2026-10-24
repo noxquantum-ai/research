@@ -1,0 +1,64 @@
+{
+  "schema": "nec_sequential_accuracy_reconstruction_v1",
+  "source_commit": "9a1affd60343e24fd38fe7e38762d4efa52b667d",
+  "baseline_dir": "/workspace/runs/nec-sparse10-coupled-sequential-full32",
+  "candidate_dir": "/workspace/runs/nec-accuracy-recovery-20261024/coupled-full32",
+  "maximum_complete_serialized_bytes": 2490273288,
+  "maximum_complete_logical_coefficients": 3323032892,
+  "target_ppl_increase": 0,
+  "fallback_maximum_ppl_increase": 0.5,
+  "maximum_accuracy_gap_points": 2,
+  "minimum_teacher_agreement": 0.98,
+  "final_success_demonstrated": false,
+  "phase": "needs_further_reconstruction",
+  "updated_utc": "2026-10-24T02:09:32.370348+00:00",
+  "command": [
+    "/workspace/venvs/nec-hf/bin/python",
+    "/workspace/research/scripts/evaluate_packed_teacher_kl.py",
+    "--checkpoint-dir",
+    "/workspace/runs/nec-accuracy-recovery-20261024/coupled-full32",
+    "--model-id",
+    "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "--split",
+    "validation",
+    "--token-offset",
+    "0",
+    "--max-eval-tokens",
+    "8192",
+    "--output",
+    "/workspace/runs/nec-accuracy-recovery-20261024/coupled_stage32_validation_8k.json"
+  ],
+  "child_pid": null,
+  "stage8_student": {
+    "perplexity": 6.752935232367988,
+    "mean_nll": 1.9099772596046098,
+    "teacher_kl_nats_per_token": 0.5439351716148756,
+    "next_token_accuracy": 0.5707483823708949,
+    "dense_top1_agreement": 0.7176168965938224
+  },
+  "stage8_validation_gates": {
+    "perplexity": false,
+    "teacher_kl_nats_per_token": false,
+    "next_token_accuracy": false,
+    "dense_top1_agreement": false
+  },
+  "stage32_student": {
+    "perplexity": 6.81128507476395,
+    "mean_nll": 1.9185808064359846,
+    "teacher_kl_nats_per_token": 0.5497689310092341,
+    "next_token_accuracy": 0.5670858259064827,
+    "dense_top1_agreement": 0.7139543401294103
+  },
+  "stage32_validation_gates": {
+    "perplexity": false,
+    "teacher_kl_nats_per_token": false,
+    "next_token_accuracy": false,
+    "dense_top1_agreement": false
+  },
+  "validation_non_degradation": {
+    "perplexity": false,
+    "teacher_kl_nats_per_token": false,
+    "next_token_accuracy": false,
+    "dense_top1_agreement": false
+  }
+}

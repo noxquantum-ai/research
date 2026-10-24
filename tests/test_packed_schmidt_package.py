@@ -1,4 +1,5 @@
 import importlib.util
+import itertools
 import json
 import tempfile
 import unittest
@@ -70,11 +71,11 @@ class PackedSchmidtPackageTests(unittest.TestCase):
                 "compiled_layers": [0],
             }))
             counts = []
-            for container in ("plain", "gzip"):
-                with self.subTest(container=container):
+            for container, retained in itertools.product(("plain", "gzip"), repeat=2):
+                with self.subTest(container=container, retained=retained):
                     measurement = materialize_deployable_allocation_package(
-                        source, checkpoints, output / container, (0,), (0,), (), root / "unused", "tiny",
-                        checkpoint_container=container,
+                        source, checkpoints, output / (container + retained), (0,), (0,), (), root / "unused", "tiny",
+                        checkpoint_container=container, retained_container=retained,
                     )
                     package = Path(measurement["path"])
                     index = json.loads((package / "model.safetensors.index.json").read_text())
@@ -100,13 +101,20 @@ class PackedSchmidtPackageTests(unittest.TestCase):
                         path.stat().st_size for path in package.rglob("*") if path.is_file()
                         and "__pycache__" not in path.parts
                     ))
+                    if retained == "gzip":
+                        self.assertFalse(list(package.glob("*.safetensors")))
+                        records = measurement["retained_lossless_container_verification"]
+                        self.assertTrue(records)
+                        for record in records:
+                            self.assertTrue(record["lossless_verified"])
+                            self.assertEqual(record["uncompressed_sha256"], record["roundtrip_sha256"])
                     if container == "gzip":
                         self.assertFalse(list((package / "nec_checkpoints").glob("*.pt")))
                         self.assertEqual(len(list((package / "nec_checkpoints").glob("*.pt.gz"))), 1)
                         record = measurement["lossless_container_verification"][0]
                         self.assertTrue(record["lossless_verified"])
                         self.assertEqual(record["uncompressed_sha256"], record["roundtrip_sha256"])
-            self.assertEqual(counts[0], counts[1])
+            self.assertEqual(len(set(counts)), 1)
 
 
 if __name__ == "__main__":

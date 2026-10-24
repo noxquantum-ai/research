@@ -368,6 +368,7 @@ def storage_summary(
 def materialize_deployable_allocation_package(
     source_model_dir, checkpoint_dir, output_dir, layers, compressed_layers,
     int8_layers, int8_artifact_dir, model_revision, *, checkpoint_container="plain",
+    retained_container="plain",
 ):
     """Build and byte-count a mixed HF/NEC package with replaced tensors removed."""
     from safetensors import safe_open
@@ -376,6 +377,8 @@ def materialize_deployable_allocation_package(
 
     if checkpoint_container not in ("plain", "gzip"):
         raise ValueError("checkpoint container must be plain or gzip")
+    if retained_container not in ("plain", "gzip"):
+        raise ValueError("retained container must be plain or gzip")
     source_model_dir = Path(source_model_dir)
     package_dir = Path(output_dir) / "deployable_model"
     if package_dir.exists():
@@ -527,8 +530,11 @@ def materialize_deployable_allocation_package(
     package_loader = r'''#!/usr/bin/env python3
 """Load the custom mixed NEC/INT8 Llama package in this directory."""
 from pathlib import Path
+from contextlib import contextmanager
 import gzip
 import io
+import shutil
+import tempfile
 import torch
 from transformers import AutoModelForCausalLM
 from nox.compiler import reconstruct_from_artifact
@@ -541,10 +547,27 @@ def _read_checkpoint(path):
     source = io.BytesIO(gzip.decompress(path.read_bytes())) if path.suffix == ".gz" else path
     return torch.load(source, map_location="cpu", weights_only=True)
 
+@contextmanager
+def _retained_model_directory():
+    shards = sorted(ROOT.glob("*.safetensors.gz"))
+    if not shards:
+        yield ROOT
+        return
+    with tempfile.TemporaryDirectory(prefix="nec-retained-") as directory:
+        destination = Path(directory)
+        for path in ROOT.iterdir():
+            if path.is_file() and not path.name.endswith(".safetensors.gz"):
+                (destination / path.name).symlink_to(path)
+        for path in shards:
+            with gzip.open(path, "rb") as source, (destination / path.stem).open("wb") as output:
+                shutil.copyfileobj(source, output)
+        yield destination
+
 def load_model(device_map="auto", torch_dtype=torch.float16):
-    model = AutoModelForCausalLM.from_pretrained(
-        ROOT, device_map=device_map, torch_dtype=torch_dtype, local_files_only=True,
-    ).eval()
+    with _retained_model_directory() as directory:
+        model = AutoModelForCausalLM.from_pretrained(
+            directory, device_map=device_map, torch_dtype=torch_dtype, local_files_only=True,
+        ).eval()
     checkpoints = list((ROOT / "nec_checkpoints").glob("compressed_layer_*.pt"))
     checkpoints += list((ROOT / "nec_checkpoints").glob("compressed_layer_*.pt.gz"))
     for path in sorted(checkpoints):
@@ -602,6 +625,10 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
            "before decoding the unchanged factor and amplitude tensors. Logical "
            "coefficient counts are unchanged by container compression.\n"
            if checkpoint_container == "gzip" else "")
+        + ("Retained FP16 safetensors use lossless gzip. The loader restores them "
+           "in temporary local storage while loading; no weights or coefficients "
+           "are changed. Temporary space equal to their uncompressed size is required.\n"
+           if retained_container == "gzip" else "")
     )
     package_manifest = {
         "model_id": MODEL_ID,
@@ -614,6 +641,7 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         "runtime_loader": "load_nec_package.py",
         "nonstandard_weight_loading_required": True,
         "checkpoint_container": checkpoint_container,
+        "retained_container": retained_container,
         "lossless_container_verification": container_records,
     }
     (package_dir / "nec_allocation_manifest.json").write_text(
@@ -627,6 +655,30 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
             rebuilt_keys.update(shard.keys())
     if rebuilt_keys != set(updated_weight_map):
         raise RuntimeError("Rebuilt safetensors shards do not match their index")
+    retained_container_records = []
+    if retained_container == "gzip":
+        for shard_name in sorted(set(updated_weight_map.values())):
+            path = package_dir / shard_name
+            original = path.read_bytes()
+            compressed = gzip.compress(original, compresslevel=1, mtime=0)
+            restored = gzip.decompress(compressed)
+            if restored != original:
+                raise RuntimeError("lossless retained tensor verification failed")
+            destination = path.with_name(path.name + ".gz")
+            destination.write_bytes(compressed)
+            path.unlink()
+            retained_container_records.append({
+                "file": destination.name,
+                "source_serialized_bytes": len(original),
+                "container_bytes": len(compressed),
+                "uncompressed_sha256": hashlib.sha256(original).hexdigest(),
+                "roundtrip_sha256": hashlib.sha256(restored).hexdigest(),
+                "lossless_verified": True,
+            })
+    package_manifest["retained_lossless_container_verification"] = retained_container_records
+    (package_dir / "nec_allocation_manifest.json").write_text(
+        json.dumps(package_manifest, indent=2) + "\n"
+    )
     file_sizes = {
         str(path.relative_to(package_dir)): path.stat().st_size
         for path in package_dir.rglob("*") if path.is_file()
@@ -659,6 +711,8 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         ),
         "coefficient_accounting_complete": coefficient_count_complete,
         "checkpoint_container": checkpoint_container,
+        "retained_container": retained_container,
+        "retained_lossless_container_verification": retained_container_records,
         "lossless_container_verification": container_records,
         "coefficient_count_includes": (
             "logical factor values, quantization scales, all correction branches, "

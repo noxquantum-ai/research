@@ -54,7 +54,7 @@ def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequen
     base = reconstruct_packed_schmidt(artifact['base_artifact'], device=inputs.device)
     residual_y, guard_residual = y - base @ x, guard_y - base @ guard_x
     indices = excitation_indices(artifact, inputs.device)
-    prior = excitation_values(artifact, inputs.device)
+    prior = excitation_values(artifact, inputs.device, indices=indices)
 
     input_scale=artifact['base_artifact']['input_scale'].to(device=inputs.device,dtype=torch.float32)
 
@@ -117,7 +117,7 @@ def refit_sparse_excitations(artifact, inputs, targets, *, split, scale_policy="
     from nox.packed_schmidt import reconstruct_packed_schmidt
     base = reconstruct_packed_schmidt(artifact["base_artifact"], device=inputs.device)
     indices = excitation_indices(artifact, inputs.device)
-    prior = excitation_values(artifact, inputs.device)
+    prior = excitation_values(artifact, inputs.device, indices=indices)
     x = inputs[:, :split].float()
     y = targets[:, :split].float() - base @ x
     covariance = x @ x.T / split
@@ -247,10 +247,11 @@ def excitation_indices(artifact, device):
     return mask.reshape(rows, columns).bool().nonzero(as_tuple=False)[:, 1].reshape(rows, -1)
 
 
-def excitation_values(artifact, device):
+def excitation_values(artifact, device, *, indices=None):
     values=decode_groupwise(artifact["amplitude_codec"], device=device)
     if artifact.get('codec_type')==CANONICAL_CODEC_TYPE:
-        indices=excitation_indices(artifact,device)
+        if indices is None:
+            indices=excitation_indices(artifact,device)
         values=values*excitation_basis_scale(artifact,indices,device)
     return values
 
@@ -259,7 +260,7 @@ def reconstruct_sparse_schmidt(artifact, *, device="cpu", dtype=torch.float32):
     from nox.packed_schmidt import reconstruct_packed_schmidt
     base = reconstruct_packed_schmidt(artifact["base_artifact"], device=device)
     indices = excitation_indices(artifact, device)
-    return base.scatter_add(1, indices, excitation_values(artifact, device)).to(dtype)
+    return base.scatter_add(1, indices, excitation_values(artifact, device, indices=indices)).to(dtype)
 
 
 @torch.no_grad()

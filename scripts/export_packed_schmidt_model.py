@@ -25,6 +25,7 @@ def main():
     parser.add_argument("--quality-report", type=Path)
     parser.add_argument("--max-ppl", type=float, default=10.0)
     parser.add_argument("--checkpoint-container", choices=("plain", "gzip"), default="plain")
+    parser.add_argument("--retained-container", choices=("plain", "gzip"), default="plain")
     args = parser.parse_args()
 
     config = json.loads((args.model_dir / "config.json").read_text())
@@ -71,6 +72,7 @@ def main():
         args.model_dir, args.checkpoint_dir, args.output, tuple(range(layer_count)),
         layers, (), args.output / "unused_int8", config.get("_commit_hash", "local_source"),
         checkpoint_container=args.checkpoint_container,
+        retained_container=args.retained_container,
     )
     expected_coefficients = compile_manifest.get("evaluated_assembly_coefficient_count")
     if (

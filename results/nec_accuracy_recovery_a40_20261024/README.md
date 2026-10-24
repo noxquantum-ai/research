@@ -101,26 +101,56 @@ The control is **not promoted**. Better independent reconstruction did not
 preserve all model-level metrics. See [baseline](baseline_validation_8k.json),
 [control](qk_control_validation_8k.json) and [acceptance record](qk_control_status.json).
 
-The next trial reconstructs all seven operators sequentially against the actual
-mixed-prefix activations and clean teacher targets. It reuses existing MPO
-backbones and all branch shapes, selects excitation construction on training
-guards and applies the existing coupled attention/MLP normal-equation solves.
-The complete model is measured after replacing eight candidate layers and again
-after all 32; other layers in the stage-eight assembly use the previous NEC
-checkpoints. Full test regression, complete-package measurement and bundled
-runtime parity are conditional on validation improvement. None of these local
-controls establishes the final dense-level quality target.
+The full sequential reconstruction of all seven operators completed. It used
+actual compressed-prefix inputs, clean teacher targets, and fixed existing
+Schmidt/branch shapes. It failed every matched validation quality comparison:
 
-Persistent status:
-`/workspace/runs/nec-accuracy-recovery-20261024/coupled_status.json`.
-Runner: [run_nec_accuracy_reconstruction.py](../../scripts/run_nec_accuracy_reconstruction.py).
+| Validation metric | Protected hybrid | Sequential reconstruction | Teacher-logit selected mixture |
+| --- | ---: | ---: | ---: |
+| PPL | 6.697377 | 6.811285 | 6.655036 |
+| Teacher KL | 0.535163 | 0.549769 | 0.530365 |
+| Next-token accuracy | 57.3678% | 56.7086% | 57.3678% |
+| Dense top-1 agreement | 72.0181% | 71.3954% | 72.1646% |
 
-An optional `--joint-mlp-output-metric channel_relative` objective is prepared
-for a separate comparison. It derives inverse channel-RMS weights from training
-fit targets only, and applies the same weights to each linear map and its
-adjoint. This tests whether output-energy dominance is suppressing useful
-smaller channels. The current sequential trial uses the original `energy`
-objective. Metric weights are construction statistics, not stored parameters.
+The selected mixture used two conditional passes over complete attention and
+MLP groups, accepting eight switches in 130 student evaluations on training
+guard windows only. It retained the exact logical coefficient and tensor
+payload budgets. It was then evaluated on the separate full test regression:
+
+| Full test metric (308,700 scored tokens) | Protected hybrid | Selected mixture |
+| --- | ---: | ---: |
+| PPL | 8.348960 | 8.268307 |
+| Teacher KL | 0.543950 | 0.535477 |
+| Next-token accuracy | 53.9990% | 54.1108% |
+| Dense top-1 agreement | 71.0259% | 71.1775% |
+| Actual complete serialized bytes, NEC gzip only | 2,490,273,288 | 2,492,350,788 |
+| Actual storage ratio | 5.412758341× | 5.408246534× |
+| Logical coefficients | 3,323,032,892 | 3,323,032,892 |
+
+**Neither trial is promoted.** The selected mixture improves all four quality
+metrics slightly but exceeds the byte limit by 2,077,500 bytes. Its exported
+runtime passed bitwise logit parity. It remains far from the dense-quality and
+98% agreement requirements even if lossless packaging fixes its storage.
+See [full sequential evaluation](coupled_stage32_validation_8k.json),
+[selected validation](selected_construction_validation_8k.json),
+[selected full test](selected_construction_heldout_test.json), and
+[actual package measurement](selected_construction_package_measurement.json).
+
+Causal controls, using the original dense counterparts for the other operators,
+localize the larger contribution to the MLP:
+
+| Original hybrid replacement control | Validation PPL | Teacher KL | Teacher agreement |
+| --- | ---: | ---: | ---: |
+| Dense | 3.984860 | 0 | 100% |
+| Attention only compressed | 4.531894 | 0.138856 | 85.3376% |
+| MLP only compressed | 5.701762 | 0.366502 | 77.0968% |
+| All seven compressed | 6.697377 | 0.535163 | 72.0181% |
+
+These controls are diagnostic, not storage-feasible deployment candidates or
+lower bounds on what joint compression can achieve. Both components need
+improvement; independent output MSE is not sufficient to establish quality.
+Raw [attention](baseline_attention_only_validation_8k.json) and
+[MLP](baseline_mlp_only_validation_8k.json) controls are archived.
 
 A lossless scalar bitplane packing prototype was also rejected: on the first
 reconstructed layer its gzip size increased from 52,427,541 to 52,571,543 bytes.
@@ -128,48 +158,7 @@ Integer levels round-tripped exactly, but it did not satisfy the storage
 objective. The prototype codec was not retained. Its [measurement record](bitplane_layer0_rejected.json)
 is archived to avoid repeating the unsuccessful direction.
 
-## Model-level construction selection (prepared)
-
-The Q/K control demonstrates that local guard improvement alone is insufficient.
-`select_nec_operator_constructions.py` can compare two completed NEC models
-using actual end-to-end teacher logits on the four training guard windows.
-It switches attention groups (Q/K/V/O) and complete MLP groups (Gate/Up/Down),
-then checks them again in reverse order for conditional refinement. Every
-accepted switch must reduce teacher KL without increasing NLL or reducing
-next-token correctness or teacher agreement on those same calibration tokens.
-No transformer layer becomes dense, no tensor budget changes, and no gradients
-are used. Independent validation and complete serialized-size checks still
-follow selection. This tool is prepared for testing after sequential
-construction completes; no quality gain from it is claimed yet.
-
-A persistent choice recipe references both persistent source constructions.
-The assembled raw files may use pod scratch to conserve network-volume space;
-the recipe can rebuild them exactly without GPU compilation. A deployable final
-package must be saved persistently before release.
-
-The mixed assembly after reconstructing layers 0–7 measured PPL 6.752935,
-KL 0.543935, next-token accuracy 57.0748%, and teacher agreement 71.7617% on
-8,191 validation tokens. The matched original NEC baseline was PPL 6.697377,
-KL 0.535163, accuracy 57.3678%, and agreement 72.0181%. This intermediate
-assembly fails all four quality comparisons and is not promoted. Remaining
-operators are still being reconstructed against the new prefix; the full
-32-layer outcome is pending. See [the raw evaluation](coupled_stage8_validation_8k.json).
-
-The alternative functional solver also supports `--functional-ridge-metric
-diagonal`. It anchors each core coordinate in its own curvature units rather
-than the mean curvature of all coordinates. A closed-form test checks
-invariance to changes in parameter units. This option and the channel-relative
-output metric are tested separately from the ongoing run, which remains frozen
-at core source commit `9a1affd` with the original global-mean anchor and energy
-objective. Thirty-five targeted CPU tests passed for the prepared options.
-
-The [queued selection worker](logit_selection_queue.py) waits for the GPU
-construction/evaluation process to finish, then runs bounded global-logit
-selection. Its status is under `logit_selection/status.json` on the persistent
-run volume. It never marks final success without all strict numerical gates
-and a persistent deployable package.
-
-## Shared input basis for Schmidt excitations (prepared)
+## Shared input basis for Schmidt excitations
 
 A version-2 sparse excitation artifact can store amplitudes in the existing
 MPO input basis. If the backbone already stores input scales `s[j]`, the
@@ -185,9 +174,31 @@ methods `pcg_canonical` and `feedback_canonical`. Existing version-1 artifacts
 retain their original decoding. Forty-six targeted CPU checks passed, including
 budget accounting, linear adjoints, constructor guards and exact plain/gzip
 package parameter round trips for the new artifact type. These are engineering
-checks; real Llama quality gains have not yet been measured for this mode.
+checks, not evidence of model quality.
 
 This is an input-coordinate preconditioner shared with NEC's tensor-network
 representation, not a claim of a quantum speedup or a newly discovered
 mathematical technique. Full-model quality and complete serialized bytes remain
 required before acceptance.
+
+The layer-0 MLP probe selected the shared basis for Gate, Up and Down on
+training guards and reduced separate validation projection MSE. Nevertheless,
+replacing that complete MLP in the full hybrid worsened validation PPL to
+6.717929, KL to 0.538201, accuracy to 57.1603%, and agreement to 71.9326%.
+This candidate is rejected. See [projection errors](canonical_layer0_probe.json)
+and [model evaluation](canonical_layer0_model_validation_8k.json).
+
+A separate full 32-layer trial is now running with the shared-basis choices,
+training-only inverse channel-RMS MLP weighting, and curvature-relative
+coefficient anchoring. All seven operators, existing coefficient counts,
+three-bit excitation amplitudes and five-bit MPO cores remain fixed. Source is
+frozen separately from the earlier trial. Its persistent status is
+`/workspace/runs/nec-accuracy-recovery-20261024/canonical_relative_status.json`.
+No result from this trial is claimed before its model-level evaluation.
+
+An optional lossless container for retained FP16 safetensors is also being
+measured. It preserves every coefficient and uses temporary disk space while
+loading. A single real retained shard fell from 262,551,408 to 204,062,652 bytes
+with verified byte-identical recovery. Complete-package bytes and runtime
+verification are still required; this is a packaging improvement, not an
+accuracy improvement.

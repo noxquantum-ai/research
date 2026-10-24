@@ -1,0 +1,2091 @@
+{
+  "schema": "nec_excitation_constructor_probe_v1",
+  "layer": 0,
+  "fit_tokens": 24576,
+  "guard_tokens": 8192,
+  "validation_tokens": 8192,
+  "selection_data": "train guard only; validation is reported afterward",
+  "baseline_checkpoint_dir": "/workspace/runs/nec-sparse10-coupled-sequential-full32",
+  "projections": {
+    "gate_proj": {
+      "baseline": {
+        "fit_relative_mse": 0.03847617283463478,
+        "guard_relative_mse": 0.047012731432914734,
+        "validation_relative_mse": 0.047664836049079895
+      },
+      "selected": "pcg_canonical",
+      "selected_scores": {
+        "fit_relative_mse": 0.030163617804646492,
+        "guard_relative_mse": 0.042579811066389084,
+        "validation_relative_mse": 0.04353246092796326
+      },
+      "trials": [
+        {
+          "method": "pcg_mse",
+          "fraction": 0.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03847617283463478,
+          "guard_relative_mse": 0.047012731432914734,
+          "validation_relative_mse": 0.047664836049079895
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 0.25,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03809298947453499,
+          "guard_relative_mse": 0.0466192327439785,
+          "validation_relative_mse": 0.047282472252845764
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 0.5,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03680127486586571,
+          "guard_relative_mse": 0.04576650634407997,
+          "validation_relative_mse": 0.04647549241781235
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 1.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.030267011374235153,
+          "guard_relative_mse": 0.04260491207242012,
+          "validation_relative_mse": 0.0435786172747612
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.044509176164865494,
+          "guard_relative_mse": 0.0525149405002594,
+          "validation_relative_mse": 0.05302189663052559
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.25,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03942357376217842,
+          "guard_relative_mse": 0.04723936691880226,
+          "validation_relative_mse": 0.04742789268493652
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.5,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.035337887704372406,
+          "guard_relative_mse": 0.044647686183452606,
+          "validation_relative_mse": 0.045084305107593536
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 1.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.2794771194458008
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.26143163442611694
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.1919916272163391
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.25737398862838745
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14261578023433685
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1667902171611786
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.16613683104515076
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.1232505738735199
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16040624678134918
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.1158406063914299
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.11691436171531677
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.10803806036710739
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07634017616510391
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.08714234083890915
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07296314090490341
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.07921534031629562
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03222361579537392,
+          "guard_relative_mse": 0.04418801888823509,
+          "validation_relative_mse": 0.04485252499580383
+        },
+        {
+          "method": "pcg_canonical",
+          "selected": "pcg_canonical",
+          "initial_fit_relative_mse": 0.03847617283463478,
+          "initial_guard_relative_mse": 0.047012731432914734,
+          "final_fit_relative_mse": 0.030163617804646492,
+          "final_guard_relative_mse": 0.042579811066389084,
+          "fit_tokens": 24576,
+          "guard_tokens": 8192,
+          "trials": [
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.038877248764038086,
+              "guard_relative_mse": 0.04745270684361458,
+              "fraction": 0.25
+            },
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.03596898540854454,
+              "guard_relative_mse": 0.0452660508453846,
+              "fraction": 0.5
+            },
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.030163617804646492,
+              "guard_relative_mse": 0.042579811066389084,
+              "fraction": 1.0
+            }
+          ],
+          "logical_coefficients_added": 0,
+          "tensor_payload_bytes_added": 0,
+          "validation_used_for_selection": false,
+          "uses_autograd": false,
+          "fit_relative_mse": 0.030163617804646492,
+          "guard_relative_mse": 0.042579811066389084,
+          "validation_relative_mse": 0.04353246092796326
+        },
+        {
+          "method": "feedback_canonical",
+          "selected": "baseline",
+          "initial_fit_relative_mse": 0.03847617283463478,
+          "initial_guard_relative_mse": 0.047012731432914734,
+          "final_fit_relative_mse": 0.03847617283463478,
+          "final_guard_relative_mse": 0.047012731432914734,
+          "fit_tokens": 24576,
+          "guard_tokens": 8192,
+          "trials": [
+            {
+              "method": "feedback_canonical",
+              "fit_relative_mse": 0.043134696781635284,
+              "guard_relative_mse": 0.05107477679848671,
+              "construction_gauge": "unit_rms_input_covariance",
+              "support": "inverse_covariance_saliency",
+              "ridge_ratio": 0.01,
+              "feedback_block_size": 128,
+              "quant_grid": "nonzero",
+              "scale_policy": "mse",
+              "uses_autograd": false,
+              "stored_covariance_coefficients": 0
+            }
+          ],
+          "logical_coefficients_added": 0,
+          "tensor_payload_bytes_added": 0,
+          "validation_used_for_selection": false,
+          "uses_autograd": false,
+          "fit_relative_mse": 0.03847617283463478,
+          "guard_relative_mse": 0.047012731432914734,
+          "validation_relative_mse": 0.047664836049079895
+        }
+      ],
+      "seconds": 8.30491115100449
+    },
+    "up_proj": {
+      "baseline": {
+        "fit_relative_mse": 0.14260928332805634,
+        "guard_relative_mse": 0.18416592478752136,
+        "validation_relative_mse": 0.1884528398513794
+      },
+      "selected": "pcg_canonical",
+      "selected_scores": {
+        "fit_relative_mse": 0.11917996406555176,
+        "guard_relative_mse": 0.17509149014949799,
+        "validation_relative_mse": 0.18032601475715637
+      },
+      "trials": [
+        {
+          "method": "pcg_mse",
+          "fraction": 0.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.14260928332805634,
+          "guard_relative_mse": 0.18416592478752136,
+          "validation_relative_mse": 0.1884528398513794
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 0.25,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.1412470042705536,
+          "guard_relative_mse": 0.18278183043003082,
+          "validation_relative_mse": 0.18710514903068542
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 0.5,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.1338629573583603,
+          "guard_relative_mse": 0.17886251211166382,
+          "validation_relative_mse": 0.1834045797586441
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 1.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.12039792537689209,
+          "guard_relative_mse": 0.17592616379261017,
+          "validation_relative_mse": 0.18106333911418915
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.15198002755641937,
+          "guard_relative_mse": 0.19113147258758545,
+          "validation_relative_mse": 0.1950325220823288
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.25,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.13955816626548767,
+          "guard_relative_mse": 0.18056869506835938,
+          "validation_relative_mse": 0.1844647079706192
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.5,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.1299891322851181,
+          "guard_relative_mse": 0.17623932659626007,
+          "validation_relative_mse": 0.18053963780403137
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 1.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 0.30268168449401855
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 0.290173202753067
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 0.2068321704864502
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 0.2615256607532501
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 0.14466725289821625
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.1726348102092743
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.15948115289211273
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.12947191298007965
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.16304153203964233
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.12241988629102707
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.12471585720777512
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.1223132535815239
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.07799823582172394
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.0973382443189621
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.07611770927906036
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.08733811229467392
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.12395571172237396,
+          "guard_relative_mse": 0.17843413352966309,
+          "validation_relative_mse": 0.18312624096870422
+        },
+        {
+          "method": "pcg_canonical",
+          "selected": "pcg_canonical",
+          "initial_fit_relative_mse": 0.14260928332805634,
+          "initial_guard_relative_mse": 0.18416592478752136,
+          "final_fit_relative_mse": 0.11917997896671295,
+          "final_guard_relative_mse": 0.17509149014949799,
+          "fit_tokens": 24576,
+          "guard_tokens": 8192,
+          "trials": [
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.14120620489120483,
+              "guard_relative_mse": 0.18308384716510773,
+              "fraction": 0.25
+            },
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.13093441724777222,
+              "guard_relative_mse": 0.17710034549236298,
+              "fraction": 0.5
+            },
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.11917997896671295,
+              "guard_relative_mse": 0.17509149014949799,
+              "fraction": 1.0
+            }
+          ],
+          "logical_coefficients_added": 0,
+          "tensor_payload_bytes_added": 0,
+          "validation_used_for_selection": false,
+          "uses_autograd": false,
+          "fit_relative_mse": 0.11917996406555176,
+          "guard_relative_mse": 0.17509149014949799,
+          "validation_relative_mse": 0.18032601475715637
+        },
+        {
+          "method": "feedback_canonical",
+          "selected": "baseline",
+          "initial_fit_relative_mse": 0.14260928332805634,
+          "initial_guard_relative_mse": 0.18416592478752136,
+          "final_fit_relative_mse": 0.14260928332805634,
+          "final_guard_relative_mse": 0.18416592478752136,
+          "fit_tokens": 24576,
+          "guard_tokens": 8192,
+          "trials": [
+            {
+              "method": "feedback_canonical",
+              "fit_relative_mse": 0.14270472526550293,
+              "guard_relative_mse": 0.24402478337287903,
+              "construction_gauge": "unit_rms_input_covariance",
+              "support": "inverse_covariance_saliency",
+              "ridge_ratio": 0.01,
+              "feedback_block_size": 128,
+              "quant_grid": "nonzero",
+              "scale_policy": "mse",
+              "uses_autograd": false,
+              "stored_covariance_coefficients": 0
+            }
+          ],
+          "logical_coefficients_added": 0,
+          "tensor_payload_bytes_added": 0,
+          "validation_used_for_selection": false,
+          "uses_autograd": false,
+          "fit_relative_mse": 0.14260928332805634,
+          "guard_relative_mse": 0.18416592478752136,
+          "validation_relative_mse": 0.1884528398513794
+        }
+      ],
+      "seconds": 7.912601141957566
+    },
+    "down_proj": {
+      "baseline": {
+        "fit_relative_mse": 0.03771156072616577,
+        "guard_relative_mse": 0.06269678473472595,
+        "validation_relative_mse": 0.06419910490512848
+      },
+      "selected": "pcg_canonical",
+      "selected_scores": {
+        "fit_relative_mse": 0.02795037254691124,
+        "guard_relative_mse": 0.05953318253159523,
+        "validation_relative_mse": 0.0612204410135746
+      },
+      "trials": [
+        {
+          "method": "pcg_mse",
+          "fraction": 0.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03771156072616577,
+          "guard_relative_mse": 0.06269678473472595,
+          "validation_relative_mse": 0.06419910490512848
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 0.25,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03717438504099846,
+          "guard_relative_mse": 0.0622953325510025,
+          "validation_relative_mse": 0.06380448490381241
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 0.5,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.03427116945385933,
+          "guard_relative_mse": 0.06108379364013672,
+          "validation_relative_mse": 0.06247380003333092
+        },
+        {
+          "method": "pcg_mse",
+          "fraction": 1.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.02907070331275463,
+          "guard_relative_mse": 0.060032639652490616,
+          "validation_relative_mse": 0.06160658597946167
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.051209695637226105,
+          "guard_relative_mse": 0.07569538056850433,
+          "validation_relative_mse": 0.07720547914505005
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.25,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.04188959673047066,
+          "guard_relative_mse": 0.06730638444423676,
+          "validation_relative_mse": 0.06899609416723251
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 0.5,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.0369800440967083,
+          "guard_relative_mse": 0.06404310464859009,
+          "validation_relative_mse": 0.06562793254852295
+        },
+        {
+          "method": "pcg_nonzero",
+          "fraction": 1.0,
+          "cg_history": [
+            {
+              "iteration": 1,
+              "relative_normal_residual": 1.9764691591262817
+            },
+            {
+              "iteration": 2,
+              "relative_normal_residual": 1.5579814910888672
+            },
+            {
+              "iteration": 3,
+              "relative_normal_residual": 1.2795965671539307
+            },
+            {
+              "iteration": 4,
+              "relative_normal_residual": 1.2904987335205078
+            },
+            {
+              "iteration": 5,
+              "relative_normal_residual": 1.160170316696167
+            },
+            {
+              "iteration": 6,
+              "relative_normal_residual": 0.8502501845359802
+            },
+            {
+              "iteration": 7,
+              "relative_normal_residual": 0.9798782467842102
+            },
+            {
+              "iteration": 8,
+              "relative_normal_residual": 0.8287641406059265
+            },
+            {
+              "iteration": 9,
+              "relative_normal_residual": 0.7311736941337585
+            },
+            {
+              "iteration": 10,
+              "relative_normal_residual": 0.7745144367218018
+            },
+            {
+              "iteration": 11,
+              "relative_normal_residual": 0.646321177482605
+            },
+            {
+              "iteration": 12,
+              "relative_normal_residual": 0.5864589214324951
+            },
+            {
+              "iteration": 13,
+              "relative_normal_residual": 0.5821698307991028
+            },
+            {
+              "iteration": 14,
+              "relative_normal_residual": 0.5947991013526917
+            },
+            {
+              "iteration": 15,
+              "relative_normal_residual": 0.49264129996299744
+            },
+            {
+              "iteration": 16,
+              "relative_normal_residual": 0.5262715816497803
+            }
+          ],
+          "ridge_policy": "channel_relative",
+          "scale_policy": "mse",
+          "quant_grid": "symmetric",
+          "fit_relative_mse": 0.033564627170562744,
+          "guard_relative_mse": 0.06364750862121582,
+          "validation_relative_mse": 0.06523366272449493
+        },
+        {
+          "method": "pcg_canonical",
+          "selected": "pcg_canonical",
+          "initial_fit_relative_mse": 0.03771156072616577,
+          "initial_guard_relative_mse": 0.06269678473472595,
+          "final_fit_relative_mse": 0.02795037254691124,
+          "final_guard_relative_mse": 0.05953318625688553,
+          "fit_tokens": 24576,
+          "guard_tokens": 8192,
+          "trials": [
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.0380764901638031,
+              "guard_relative_mse": 0.0640149787068367,
+              "fraction": 0.25
+            },
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.032703984528779984,
+              "guard_relative_mse": 0.060639239847660065,
+              "fraction": 0.5
+            },
+            {
+              "method": "pcg_canonical",
+              "fit_relative_mse": 0.02795037254691124,
+              "guard_relative_mse": 0.05953318625688553,
+              "fraction": 1.0
+            }
+          ],
+          "logical_coefficients_added": 0,
+          "tensor_payload_bytes_added": 0,
+          "validation_used_for_selection": false,
+          "uses_autograd": false,
+          "fit_relative_mse": 0.02795037254691124,
+          "guard_relative_mse": 0.05953318253159523,
+          "validation_relative_mse": 0.0612204410135746
+        },
+        {
+          "method": "feedback_canonical",
+          "selected": "baseline",
+          "initial_fit_relative_mse": 0.03771156072616577,
+          "initial_guard_relative_mse": 0.06269678473472595,
+          "final_fit_relative_mse": 0.03771156072616577,
+          "final_guard_relative_mse": 0.06269678473472595,
+          "fit_tokens": 24576,
+          "guard_tokens": 8192,
+          "trials": [
+            {
+              "method": "feedback_canonical",
+              "fit_relative_mse": 0.03279814124107361,
+              "guard_relative_mse": 0.06567410379648209,
+              "construction_gauge": "unit_rms_input_covariance",
+              "support": "inverse_covariance_saliency",
+              "ridge_ratio": 0.01,
+              "feedback_block_size": 128,
+              "quant_grid": "nonzero",
+              "scale_policy": "mse",
+              "uses_autograd": false,
+              "stored_covariance_coefficients": 0
+            }
+          ],
+          "logical_coefficients_added": 0,
+          "tensor_payload_bytes_added": 0,
+          "validation_used_for_selection": false,
+          "uses_autograd": false,
+          "fit_relative_mse": 0.03771156072616577,
+          "guard_relative_mse": 0.06269678473472595,
+          "validation_relative_mse": 0.06419910490512848
+        }
+      ],
+      "seconds": 11.970882802037522
+    }
+  },
+  "validation_used_for_selection": false
+}
