@@ -168,3 +168,26 @@ construction/evaluation process to finish, then runs bounded global-logit
 selection. Its status is under `logit_selection/status.json` on the persistent
 run volume. It never marks final success without all strict numerical gates
 and a persistent deployable package.
+
+## Shared input basis for Schmidt excitations (prepared)
+
+A version-2 sparse excitation artifact can store amplitudes in the existing
+MPO input basis. If the backbone already stores input scales `s[j]`, the
+physical sparse entry is `amplitude[i,k] / s[index[i,k]]`. No second scale
+vector is stored. The exact amplitude-to-weight map, adjoint and curvature
+preconditioner all use this same factor. This lets the existing calibration
+preconditioning influence residual rounding as well as the MPO backbone.
+
+The new mode uses the same amplitude count, scale count, support bitmap and
+bit width. It supports both fresh compilation with
+`--sparse-amplitude-basis backbone_input_scale` and guard-selected reconstruction
+methods `pcg_canonical` and `feedback_canonical`. Existing version-1 artifacts
+retain their original decoding. Forty-six targeted CPU checks passed, including
+budget accounting, linear adjoints, constructor guards and exact plain/gzip
+package parameter round trips for the new artifact type. These are engineering
+checks; real Llama quality gains have not yet been measured for this mode.
+
+This is an input-coordinate preconditioner shared with NEC's tensor-network
+representation, not a claim of a quantum speedup or a newly discovered
+mathematical technique. Full-model quality and complete serialized bytes remain
+required before acceptance.

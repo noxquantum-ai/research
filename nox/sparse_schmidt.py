@@ -18,11 +18,23 @@ from nox.residual_codec import _pack_codes, _unpack_codes, decode_groupwise, enc
 
 
 CODEC_TYPE = "nec_sparse_excitation_schmidt_v1"
+CANONICAL_CODEC_TYPE = "nec_sparse_excitation_schmidt_v2"
+
+
+def excitation_basis_scale(artifact, indices, device):
+    if artifact.get('codec_type') != CANONICAL_CODEC_TYPE:
+        return None
+    if artifact.get('amplitude_basis') != 'backbone_input_scale':
+        raise ValueError('unknown canonical excitation basis')
+    scale = artifact['base_artifact']['input_scale'].to(device=device, dtype=torch.float32)
+    if not torch.isfinite(scale).all() or torch.any(scale <= 0):
+        raise ValueError('canonical excitation input scale must be positive and finite')
+    return scale[indices].reciprocal()
 
 
 @torch.no_grad()
 def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequence_length=2048,
-                                    methods=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero")):
+                                    methods=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical")):
     """Recompile an existing NEC operator without increasing its tensor budget.
 
     Only training construction and disjoint training guard windows select the
@@ -30,6 +42,9 @@ def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequen
     """
     from nox.packed_schmidt import (reconstruct_packed_schmidt,
         packed_schmidt_coefficient_count_from_artifact, packed_schmidt_payload_bytes_from_artifact)
+    allowed={'pcg_mse','pcg_nonzero','feedback_fixed','feedback_support','feedback_nonzero','pcg_canonical','feedback_canonical'}
+    if set(methods)-allowed:
+        raise ValueError('unknown excitation construction method')
     windows = inputs.shape[1] // sequence_length
     if inputs.shape[1] % sequence_length or windows < 2:
         raise ValueError("operator reconstruction requires complete fit/guard windows")
@@ -41,37 +56,46 @@ def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequen
     indices = excitation_indices(artifact, inputs.device)
     prior = excitation_values(artifact, inputs.device)
 
-    def scores(support, codec):
-        sparse = torch.zeros_like(base).scatter_(1, support, decode_groupwise(codec, device=inputs.device))
+    input_scale=artifact['base_artifact']['input_scale'].to(device=inputs.device,dtype=torch.float32)
+
+    def scores(support, codec, canonical=False):
+        values=decode_groupwise(codec,device=inputs.device)
+        if canonical: values=values/input_scale[support]
+        sparse = torch.zeros_like(base).scatter_(1, support, values)
         return (float((sparse @ x - residual_y).square().sum() / y.square().sum().clamp_min(1e-30)),
                 float((sparse @ guard_x - guard_residual).square().sum() / guard_y.square().sum().clamp_min(1e-30)))
 
-    initial_fit, initial_guard = scores(indices, artifact['amplitude_codec'])
+    initial_fit, initial_guard = scores(indices, artifact['amplitude_codec'], artifact.get('codec_type')==CANONICAL_CODEC_TYPE)
     best, best_fit, best_guard, selected = artifact, initial_fit, initial_guard, 'baseline'
     trials = []
     delta = None
     if any(m.startswith('pcg_') for m in methods):
         _, delta, _, _ = refit_sparse_excitations(artifact, inputs, targets, split=split)
     for method in methods:
+        canonical=method.endswith('_canonical')
         if method.startswith('pcg_'):
             grid = 'nonzero' if method == 'pcg_nonzero' else 'symmetric'
-            candidates = [(indices, encode_groupwise(prior + fraction * delta,
+            candidates = [(indices, encode_groupwise((prior + fraction * delta)*(input_scale[indices] if canonical else 1.),
                 bits=artifact['amplitude_codec']['bits'], group_size=artifact['amplitude_codec']['group_size'],
-                scale_policy='mse', quant_grid=grid, entry_weights=x.square().mean(dim=1)[indices]),
+                scale_policy='mse', quant_grid=grid, entry_weights=x.square().mean(dim=1)[indices]/(input_scale[indices].square() if canonical else 1.)),
                 {'fraction': fraction}) for fraction in (.25, .5, 1.)]
         else:
             support, codec, details = covariance_feedback_excitations(
                 weight.float() - base, x, residual_y, kept=artifact['amplitudes_per_row'],
                 bits=artifact['amplitude_codec']['bits'], group_size=artifact['amplitude_codec']['group_size'],
                 fixed_indices=indices if method == 'feedback_fixed' else None,
-                quant_grid='nonzero' if method == 'feedback_nonzero' else 'symmetric')
+                quant_grid='nonzero' if method in ('feedback_nonzero','feedback_canonical') else 'symmetric',
+                amplitude_input_scale=input_scale if canonical else None)
             candidates = [(support, codec, details)]
         for support, codec, details in candidates:
-            fit, guard = scores(support, codec)
+            fit, guard = scores(support, codec, canonical)
             trials.append({'method': method, 'fit_relative_mse': fit, 'guard_relative_mse': guard, **details})
             if fit < initial_fit and guard < best_guard:
                 mask = torch.zeros_like(base, dtype=torch.bool).scatter_(1, support, True)
                 best = {**artifact, 'support_bits': _pack_codes(mask, 1).cpu(), 'amplitude_codec': codec}
+                best['codec_type']=CANONICAL_CODEC_TYPE if canonical else CODEC_TYPE
+                if canonical: best['amplitude_basis']='backbone_input_scale'
+                else: best.pop('amplitude_basis',None)
                 best_fit, best_guard, selected = fit, guard, method
         del candidates
     if (packed_schmidt_coefficient_count_from_artifact(best) != packed_schmidt_coefficient_count_from_artifact(artifact)
@@ -118,6 +142,7 @@ def covariance_feedback_excitations(
     reference_residual, fit_inputs, fit_targets, *, kept, bits=3,
     group_size=64, ridge_ratio=.01, block_size=128, quant_grid="symmetric",
     scale_policy="mse", fixed_indices=None,
+    amplitude_input_scale=None,
 ):
     """Construct sparse amplitudes with analytical correlated-error feedback.
 
@@ -158,9 +183,16 @@ def covariance_feedback_excitations(
     mask = torch.zeros_like(work, dtype=torch.bool).scatter_(1, indices, True)
     positions = mask.cumsum(dim=1, dtype=torch.int32).sub_(1).clamp_min_(0)
     initial_values = (work / rms[None, :]).gather(1, indices)
+    importance=rms.square()[indices]
+    if amplitude_input_scale is not None:
+        amplitude_input_scale=amplitude_input_scale.to(device=x.device,dtype=torch.float32)
+        if amplitude_input_scale.shape!=(columns,) or torch.any(amplitude_input_scale<=0) or not torch.isfinite(amplitude_input_scale).all():
+            raise ValueError('amplitude input scale must match the operator input channels')
+        initial_values=initial_values*amplitude_input_scale[indices]
+        importance=importance/amplitude_input_scale[indices].square()
     codec = encode_groupwise(initial_values, bits=bits, group_size=group_size,
                              scale_policy=scale_policy, quant_grid=quant_grid,
-                             entry_weights=rms.square()[indices])
+                             entry_weights=importance)
     scales = codec["group_scales"].to(device=x.device, dtype=torch.float32)
     quantized = torch.empty_like(work)
     qmin, qmax = int(codec["qmin"]), int(codec["qmax"])
@@ -176,11 +208,15 @@ def covariance_feedback_excitations(
             group = torch.div(positions[:, column], group_size, rounding_mode="floor")
             scale = scales.gather(1, group[:, None]).squeeze(1).clamp_min(1e-30)
             original_units = current[:, offset] / rms[column]
+            if amplitude_input_scale is not None:
+                original_units=original_units*amplitude_input_scale[column]
             if quant_grid == "nonzero":
                 codes = ((original_units / scale - qmin) * .5).round().clamp(0, (1 << bits) - 1)
                 values = (codes * 2 + qmin) * scale
             else:
                 values = (original_units / scale).round().clamp(qmin, qmax) * scale
+            if amplitude_input_scale is not None:
+                values=values/amplitude_input_scale[column]
             response = torch.where(mask[:, column], values * rms[column], 0.)
             quantized[:, column] = response / rms[column]
             error = (current[:, offset] - response) / local_upper[offset, offset]
@@ -189,6 +225,8 @@ def covariance_feedback_excitations(
         if end < columns:
             work[:, end:] -= errors @ upper[begin:end, end:]
     values = quantized.gather(1, indices)
+    if amplitude_input_scale is not None:
+        values=values*amplitude_input_scale[indices]
     padded = torch.nn.functional.pad(values, (0, codec["groups_per_row"] * group_size - kept))
     normalized = padded.reshape(rows, -1, group_size) / scales[:, :, None].clamp_min(1e-30)
     codes = (((normalized - qmin) * .5).round().clamp(0, (1 << bits) - 1)
@@ -210,7 +248,11 @@ def excitation_indices(artifact, device):
 
 
 def excitation_values(artifact, device):
-    return decode_groupwise(artifact["amplitude_codec"], device=device)
+    values=decode_groupwise(artifact["amplitude_codec"], device=device)
+    if artifact.get('codec_type')==CANONICAL_CODEC_TYPE:
+        indices=excitation_indices(artifact,device)
+        values=values*excitation_basis_scale(artifact,indices,device)
+    return values
 
 
 def reconstruct_sparse_schmidt(artifact, *, device="cpu", dtype=torch.float32):
@@ -237,6 +279,9 @@ def compile_sparse_schmidt(
         raise ValueError("backbone fraction must lie strictly between zero and one")
     if excitation_cg_iterations < 1 or excitation_ridge_ratio <= 0:
         raise ValueError("invalid sparse amplitude construction controls")
+    amplitude_basis=options.pop('amplitude_basis','native')
+    if amplitude_basis not in ('native','backbone_input_scale'):
+        raise ValueError('unknown sparse amplitude basis')
     rows, columns = weight.shape
     group_size = int(options.get("group_size", 64))
     mask_bytes = math.ceil(rows * columns / 8)
@@ -283,8 +328,15 @@ def compile_sparse_schmidt(
     del score
     mask = torch.zeros_like(weight, dtype=torch.bool).scatter_(1, indices, True)
     prior = reference_residual.gather(1, indices)
-    amplitude_codec = encode_groupwise(prior, bits=amplitude_bits, group_size=group_size)
-    prior = decode_groupwise(amplitude_codec, device=x.device)
+    basis_scale=(base['input_scale'].to(device=x.device,dtype=torch.float32)[indices]
+                 if amplitude_basis=='backbone_input_scale' else None)
+    encode=lambda values:encode_groupwise(values if basis_scale is None else values*basis_scale,
+        bits=amplitude_bits,group_size=group_size,
+        scale_policy='maxabs' if basis_scale is None else 'mse')
+    decode=lambda codec:(decode_groupwise(codec,device=x.device) if basis_scale is None
+                          else decode_groupwise(codec,device=x.device)/basis_scale)
+    amplitude_codec = encode(prior)
+    prior = decode(amplitude_codec)
     residual_target = target - decoded_base @ x
     fit_y, guard_y = residual_target[:, :split], residual_target[:, split:]
     covariance = fit_x @ fit_x.T / split
@@ -309,29 +361,32 @@ def compile_sparse_schmidt(
     accepted_fraction = None
     trials = []
     for fraction in (1., .5, .25):
-        candidate = encode_groupwise(prior + fraction * delta, bits=amplitude_bits, group_size=group_size)
-        candidate_values = decode_groupwise(candidate, device=x.device)
+        candidate = encode(prior + fraction * delta)
+        candidate_values = decode(candidate)
         fit_error, guard_error = errors(candidate_values)
         trials.append({"fraction": fraction, "fit_relative_mse": fit_error, "guard_relative_mse": guard_error})
         if fit_error < initial[0] and guard_error < best_guard:
             amplitude_codec = candidate
             best_fit, best_guard, accepted_fraction = fit_error, guard_error, fraction
     artifact = {
-        "codec_type": CODEC_TYPE, "orig_shape": tuple(weight.shape),
+        "codec_type": CODEC_TYPE if basis_scale is None else CANONICAL_CODEC_TYPE, "orig_shape": tuple(weight.shape),
         "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
         "base_artifact": base, "support_bits": _pack_codes(mask, 1).cpu(),
         "amplitude_codec": amplitude_codec, "amplitudes_per_row": kept,
         "byte_budget": int(byte_budget), "coefficient_budget": int(coefficient_budget),
         "post_compression_healing": False,
     }
+    if basis_scale is not None:
+        artifact['amplitude_basis']='backbone_input_scale'
     artifact["payload_bytes"] = packed_schmidt_payload_bytes_from_artifact(artifact)
     artifact["logical_coefficient_count"] = packed_schmidt_coefficient_count_from_artifact(artifact)
     if artifact["payload_bytes"] > byte_budget or artifact["logical_coefficient_count"] > coefficient_budget:
         raise RuntimeError("sparse excitation representation exceeded its hard budget")
-    decoded = decoded_base + dense(decode_groupwise(amplitude_codec, device=x.device))
+    decoded = decoded_base + dense(decode(amplitude_codec))
     return artifact, decoded, {
         "representation": artifact["representation"], "backbone_fraction": backbone_fraction,
         "sparse_density": kept / columns, "amplitude_bits": amplitude_bits,
+        "amplitude_basis": amplitude_basis,
         "support_mask_bytes": mask_bytes, "payload_bytes": artifact["payload_bytes"],
         "logical_coefficient_count": artifact["logical_coefficient_count"],
         "initial_fit_relative_mse": initial[0], "initial_guard_relative_mse": initial[1],

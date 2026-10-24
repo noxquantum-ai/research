@@ -19,7 +19,7 @@ from scripts.compile_packed_schmidt_model import (
 )
 from nox.block_compiler import scaled_dot_product_attention_2d, ridge_compensated_up_target
 from nox.packed_schmidt import reconstruct_packed_schmidt, packed_schmidt_coefficient_count_from_artifact, packed_schmidt_payload_bytes_from_artifact
-from nox.sparse_schmidt import covariance_feedback_excitations, excitation_indices, refit_sparse_excitations
+from nox.sparse_schmidt import covariance_feedback_excitations, excitation_indices, refit_sparse_excitations, reconstruct_excitation_operator
 from nox.residual_codec import _pack_codes, encode_groupwise
 
 
@@ -96,7 +96,11 @@ def main():
         prior, delta, indices, solve_report = refit_sparse_excitations(artifact, x, y, split=split)
         for method in args.methods:
             candidates = []
-            if method.startswith('pcg_'):
+            if method.endswith('_canonical'):
+                candidate, _, construction = reconstruct_excitation_operator(
+                    source, artifact, x, y, methods=(method,))
+                candidates=[(candidate,construction)]
+            elif method.startswith('pcg_'):
                 grid = 'nonzero' if method == 'pcg_nonzero' else 'symmetric'
                 for fraction in (0., .25, .5, 1.):
                     codec = encode_groupwise(prior + fraction * delta,

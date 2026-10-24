@@ -117,7 +117,7 @@ def construct_functional_schmidt_routing(
     scale = 1 / math.sqrt(fit_queries)
     for sweep in range(sweeps):
         for role in ('q_proj', 'k_proj'):
-            sides = ('left', 'right', 'amplitudes') if result[role].get('codec_type') == 'nec_sparse_excitation_schmidt_v1' else ('left', 'right')
+            sides = ('left', 'right', 'amplitudes') if result[role].get('codec_type') in ('nec_sparse_excitation_schmidt_v1', 'nec_sparse_excitation_schmidt_v2') else ('left', 'right')
             for side in sides:
                 mapper = SchmidtCoreMap(result[role], inputs.device)
                 core = mapper.amplitudes if side == 'amplitudes' else getattr(mapper, side)

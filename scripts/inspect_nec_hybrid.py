@@ -28,7 +28,7 @@ from nox.residual_codec import codec_payload_bytes
 
 
 def component_counts(artifact):
-    if artifact.get('codec_type') != 'nec_sparse_excitation_schmidt_v1':
+    if artifact.get('codec_type') not in ('nec_sparse_excitation_schmidt_v1','nec_sparse_excitation_schmidt_v2'):
         raise ValueError('component breakdown requires the sparse-excitation hybrid')
     base, amplitudes = artifact['base_artifact'], artifact['amplitude_codec']
     sparse_values = int(amplitudes['shape'][0]) * int(amplitudes['shape'][1])
@@ -65,7 +65,7 @@ def component_counts(artifact):
 
 def zero_main_mpo_cores(artifact):
     result = copy.deepcopy(artifact)
-    if result.get('codec_type') != 'nec_sparse_excitation_schmidt_v1':
+    if result.get('codec_type') not in ('nec_sparse_excitation_schmidt_v1','nec_sparse_excitation_schmidt_v2'):
         raise ValueError('MPO-core ablation requires a sparse-excitation hybrid')
     for name in ('left_codec', 'right_codec'):
         result['base_artifact'][name]['group_scales'].zero_()

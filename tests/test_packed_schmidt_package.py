@@ -7,7 +7,10 @@ from pathlib import Path
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 
-from nox.packed_schmidt import compile_packed_schmidt
+from nox.packed_schmidt import (compile_packed_schmidt, reconstruct_packed_schmidt,
+                               packed_schmidt_payload_bytes_from_artifact,
+                               packed_schmidt_coefficient_count_from_artifact)
+from nox.residual_codec import encode_groupwise, _pack_codes
 from scripts.search_nec_layer_allocation import (
     PROJECTIONS, layer_module, materialize_deployable_allocation_package,
 )
@@ -15,6 +18,12 @@ from scripts.search_nec_layer_allocation import (
 
 class PackedSchmidtPackageTests(unittest.TestCase):
     def test_package_preserves_unreplaced_norms_and_matches_injected_model(self):
+        self._check_package_roundtrip(False)
+
+    def test_canonical_excitation_package_matches_injected_model(self):
+        self._check_package_roundtrip(True)
+
+    def _check_package_roundtrip(self, canonical):
         torch.manual_seed(67)
         model = LlamaForCausalLM(LlamaConfig(
             vocab_size=32, hidden_size=8, intermediate_size=16,
@@ -38,6 +47,20 @@ class PackedSchmidtPackageTests(unittest.TestCase):
                     bits_candidates=(4,), group_size=4, als_sweeps=0,
                     n_heads=2, head_dim=4,
                 )
+                if canonical:
+                    rows,columns=module.weight.shape
+                    artifact['input_scale']=torch.linspace(.5,2.,columns).half()
+                    support=torch.zeros(rows,columns,dtype=torch.bool);support[:,:2]=True
+                    artifact={
+                        'codec_type':'nec_sparse_excitation_schmidt_v2',
+                        'orig_shape':tuple(module.weight.shape),'base_artifact':artifact,
+                        'support_bits':_pack_codes(support,1),'amplitude_basis':'backbone_input_scale',
+                        'amplitude_codec':encode_groupwise(torch.randn(rows,2)*.01,bits=3,group_size=4),
+                        'amplitudes_per_row':2,
+                    }
+                    artifact['payload_bytes']=packed_schmidt_payload_bytes_from_artifact(artifact)
+                    artifact['logical_coefficient_count']=packed_schmidt_coefficient_count_from_artifact(artifact)
+                    decoded=reconstruct_packed_schmidt(artifact)
                 artifacts[name] = artifact
                 with torch.no_grad():
                     module.weight.copy_(decoded)

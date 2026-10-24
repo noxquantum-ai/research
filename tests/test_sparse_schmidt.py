@@ -1,6 +1,8 @@
 import unittest
+import copy
 
 import torch
+from nox.compiler import reconstruct_from_artifact
 
 from nox.functional_schmidt import SchmidtCoreMap, construct_functional_schmidt_mlp
 from nox.packed_schmidt import (
@@ -48,6 +50,41 @@ class SparseSchmidtTests(unittest.TestCase):
             candidate = mapper.packed_candidate(parameters, side)
             self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate),
                              packed_schmidt_coefficient_count_from_artifact(self.artifact))
+
+    def test_shared_input_basis_decode_adjoint_and_budget(self):
+        artifact=copy.deepcopy(self.artifact)
+        artifact.update(codec_type='nec_sparse_excitation_schmidt_v2',amplitude_basis='backbone_input_scale')
+        artifact['base_artifact']['input_scale']=torch.logspace(-1,1,64).half()
+        mapper=SchmidtCoreMap(artifact,'cpu')
+        native=mapper.weight(mapper.amplitudes,'amplitudes')
+        base=reconstruct_packed_schmidt(artifact['base_artifact'])
+        torch.testing.assert_close(reconstruct_packed_schmidt(artifact),base+native)
+        torch.testing.assert_close(reconstruct_from_artifact(artifact),base+native)
+        core=torch.randn_like(mapper.amplitudes);matrix=torch.randn_like(self.weight)
+        torch.testing.assert_close((mapper.weight(core,'amplitudes')*matrix).sum(),
+                                   (core*mapper.adjoint(matrix,'amplitudes')).sum(),atol=2e-5,rtol=2e-5)
+        candidate=mapper.packed_candidate(mapper.amplitudes,'amplitudes')
+        self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate),self.artifact['logical_coefficient_count'])
+        self.assertEqual(packed_schmidt_payload_bytes_from_artifact(candidate),self.artifact['payload_bytes'])
+
+    def test_canonical_constructors_keep_guard_and_tensor_budgets(self):
+        candidate,_,report=reconstruct_excitation_operator(self.weight,self.artifact,self.inputs,
+            self.weight@self.inputs,sequence_length=16,methods=('pcg_canonical','feedback_canonical'))
+        self.assertLessEqual(report['final_fit_relative_mse'],report['initial_fit_relative_mse'])
+        self.assertLessEqual(report['final_guard_relative_mse'],report['initial_guard_relative_mse'])
+        self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate),self.artifact['logical_coefficient_count'])
+        self.assertEqual(packed_schmidt_payload_bytes_from_artifact(candidate),self.artifact['payload_bytes'])
+
+    def test_fresh_compilation_can_encode_in_the_existing_backbone_basis(self):
+        artifact,decoded,report=compile_sparse_schmidt(self.weight,byte_budget=1800,
+            coefficient_budget=2048,calibration_inputs=self.inputs,backbone_fraction=.2,
+            bits_candidates=(4,),amplitude_bits=3,group_size=16,als_sweeps=0,
+            excitation_sequence_length=16,amplitude_basis='backbone_input_scale')
+        self.assertEqual(artifact['codec_type'],'nec_sparse_excitation_schmidt_v2')
+        self.assertLessEqual(artifact['payload_bytes'],1800)
+        self.assertLessEqual(artifact['logical_coefficient_count'],2048)
+        torch.testing.assert_close(decoded,reconstruct_from_artifact(artifact))
+        self.assertLessEqual(report['final_guard_relative_mse'],report['initial_guard_relative_mse'])
 
     def test_coupled_solver_can_construct_sparse_amplitudes_without_adding_weights(self):
         artifacts = {name: self.artifact for name in ('gate_proj', 'up_proj', 'down_proj')}

@@ -241,11 +241,12 @@ def main() -> None:
     parser.add_argument("--routing-queries-per-window", type=int, default=64)
     parser.add_argument("--sparse-backbone-fraction", type=float, default=0.0)
     parser.add_argument("--sparse-amplitude-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=3)
+    parser.add_argument("--sparse-amplitude-basis", choices=("native", "backbone_input_scale"), default="native")
     parser.add_argument("--reconstruct-from", type=Path,
                         help="Recompile existing sparse NEC amplitudes at exactly their current tensor budgets.")
     parser.add_argument("--excitation-methods", nargs="+",
-                        choices=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero"),
-                        default=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero"))
+                        choices=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical"),
+                        default=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical"))
     parser.add_argument("--protected-mlp-coefficient-fraction", type=float, default=0.0)
     parser.add_argument("--sector-probe-dir", type=Path)
     parser.add_argument("--sector-factor-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=5)
@@ -311,9 +312,12 @@ def main() -> None:
         parser.error("sparse excitations and protected neuron sectors are separate representations")
     if args.reconstruct_from and (not args.sparse_backbone_fraction or args.reconstruct_from.resolve() == args.output.resolve()):
         parser.error("reconstruction requires sparse NEC and a separate output directory")
+    if args.sparse_amplitude_basis != 'native' and not args.sparse_backbone_fraction:
+        parser.error('canonical excitation coding requires the sparse NEC representation')
     operator_constructor = (
         partial(compile_sparse_schmidt, backbone_fraction=args.sparse_backbone_fraction,
                 amplitude_bits=args.sparse_amplitude_bits,
+                amplitude_basis=args.sparse_amplitude_basis,
                 excitation_cg_iterations=args.joint_mlp_cg_iterations,
                 excitation_sequence_length=args.sequence_length)
         if args.sparse_backbone_fraction else compile_packed_schmidt
@@ -1037,6 +1041,7 @@ def main() -> None:
         "sparse_excitations": {
             "backbone_budget_fraction": args.sparse_backbone_fraction,
             "amplitude_bits": args.sparse_amplitude_bits,
+            "amplitude_basis_policy": 'train_guard_selected' if args.reconstruct_from else args.sparse_amplitude_basis,
             "mask_bytes_counted": True,
             "reconstruction_source": str(args.reconstruct_from) if args.reconstruct_from else None,
             "constructor_methods": list(args.excitation_methods) if args.reconstruct_from else None,
