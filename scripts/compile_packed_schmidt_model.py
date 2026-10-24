@@ -32,7 +32,7 @@ from nox.packed_schmidt import (
 )
 from nox.sector_schmidt import compile_sector_schmidt, select_swiglu_sectors
 from nox.sequential_compiler import forward_transformer_block
-from nox.sparse_schmidt import compile_sparse_schmidt
+from nox.sparse_schmidt import compile_sparse_schmidt, reconstruct_excitation_operator
 
 
 PROJECTIONS = ("q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj")
@@ -239,6 +239,11 @@ def main() -> None:
     parser.add_argument("--routing-queries-per-window", type=int, default=64)
     parser.add_argument("--sparse-backbone-fraction", type=float, default=0.0)
     parser.add_argument("--sparse-amplitude-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=3)
+    parser.add_argument("--reconstruct-from", type=Path,
+                        help="Recompile existing sparse NEC amplitudes at exactly their current tensor budgets.")
+    parser.add_argument("--excitation-methods", nargs="+",
+                        choices=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero"),
+                        default=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero"))
     parser.add_argument("--protected-mlp-coefficient-fraction", type=float, default=0.0)
     parser.add_argument("--sector-probe-dir", type=Path)
     parser.add_argument("--sector-factor-bits", type=int, choices=(2, 3, 4, 5, 6, 8), default=5)
@@ -302,6 +307,8 @@ def main() -> None:
         parser.error("sparse backbone fraction must lie in [0,1)")
     if args.sparse_backbone_fraction and args.protected_mlp_coefficient_fraction:
         parser.error("sparse excitations and protected neuron sectors are separate representations")
+    if args.reconstruct_from and (not args.sparse_backbone_fraction or args.reconstruct_from.resolve() == args.output.resolve()):
+        parser.error("reconstruction requires sparse NEC and a separate output directory")
     operator_constructor = (
         partial(compile_sparse_schmidt, backbone_fraction=args.sparse_backbone_fraction,
                 amplitude_bits=args.sparse_amplitude_bits,
@@ -440,6 +447,27 @@ def main() -> None:
     layer_records = []
     compressed_hidden = None
     previous_layer = None
+    initial_artifacts = None
+    fresh_operator_constructor = operator_constructor
+
+    def operator_constructor(weight, **construction):
+        if args.reconstruct_from is None:
+            return fresh_operator_constructor(weight, **construction)
+        name = construction['projection_name']
+        initial = initial_artifacts[name]
+        if (initial['payload_bytes'] > construction['byte_budget']
+                or packed_schmidt_coefficient_count_from_artifact(initial) > construction['coefficient_budget']):
+            raise ValueError('initial NEC representation exceeds the requested budget')
+        inputs = construction['calibration_inputs']
+        targets = construction.get('calibration_targets')
+        if targets is None:
+            targets = weight.float() @ inputs.float()
+        artifact, decoded, diagnostics = reconstruct_excitation_operator(
+            weight, initial, inputs, targets, sequence_length=args.sequence_length,
+            methods=args.excitation_methods)
+        return artifact, decoded, {'representation': 'fixed_budget_schmidt_excitation_reconstruction',
+                                  'payload_bytes': artifact['payload_bytes'], 'reconstruction': diagnostics}
+
     for layer in layers:
         output_path = args.output / f"compressed_layer_{layer}.pt"
         if args.resume and output_path.is_file():
@@ -500,6 +528,10 @@ def main() -> None:
             print(f"LAYER {layer} resumed", flush=True)
             continue
         layer_started = time.monotonic()
+        if args.reconstruct_from is not None:
+            initial_artifacts = torch.load(
+                args.reconstruct_from / output_path.name, map_location='cpu', weights_only=True,
+            )['compressed_artifacts']
         per_operator_budgets = per_layer_operator_budgets[layer]
         per_operator_coefficient_budgets = (
             per_layer_operator_coefficient_budgets[layer]
@@ -998,6 +1030,8 @@ def main() -> None:
             "backbone_budget_fraction": args.sparse_backbone_fraction,
             "amplitude_bits": args.sparse_amplitude_bits,
             "mask_bytes_counted": True,
+            "reconstruction_source": str(args.reconstruct_from) if args.reconstruct_from else None,
+            "constructor_methods": list(args.excitation_methods) if args.reconstruct_from else None,
         },
         "protected_mlp_sectors": {
             "coefficient_fraction": args.protected_mlp_coefficient_fraction,
