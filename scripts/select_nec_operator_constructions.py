@@ -49,6 +49,7 @@ def main():
     p.add_argument('--report-dir',type=Path,required=True)
     p.add_argument('--assembly-dir',type=Path,required=True)
     p.add_argument('--passes',type=int,default=2)
+    p.add_argument('--initial-construction',choices=('baseline','best_guard'),default='baseline')
     args=p.parse_args()
     args.report_dir.mkdir(parents=True,exist_ok=True)
     if args.assembly_dir.exists():raise FileExistsError(args.assembly_dir)
@@ -111,6 +112,21 @@ def main():
         Path(__file__), args.capture_manifest, args.baseline_dir/'model_manifest.json',
         args.alternative_dir/'model_manifest.json', ROOT/'nox/residual_codec.py', ROOT/'nox/packed_schmidt.py')}
     initial=current
+    if args.initial_construction == 'best_guard':
+        inject_nox_checkpoints(model,args.alternative_dir,expected_layers=list(range(layers)))
+        alternative_score=score()
+        state['actual_model_evaluations']+=1
+        take_alternative=construction_improves(alternative_score,current)
+        state['initial_alternative_probe']={
+            'score':alternative_score,'accepted':take_alternative,
+            'selection_data':'training guard only',
+        }
+        if take_alternative:
+            current=alternative_score
+            state['selected']={f'{layer}:{group}':True for layer in range(layers) for group in GROUPS}
+            state['current']=current
+        else:
+            inject_nox_checkpoints(model,args.baseline_dir,expected_layers=list(range(layers)))
     atomic_json(args.report_dir/'selection.json',state)
     started=time.monotonic()
     for sweep in range(args.passes):
