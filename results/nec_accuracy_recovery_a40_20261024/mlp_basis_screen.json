@@ -1,0 +1,1421 @@
+{
+  "schema": "nec_mlp_basis_screen_v1",
+  "layer": 0,
+  "uses_autograd": false,
+  "fit_tokens": 24576,
+  "external_guard_tokens": 8192,
+  "guard_used_for_construction": false,
+  "baseline": {
+    "fit_relative_mse": 0.02391008473932743,
+    "external_guard_relative_mse": 0.055969733744859695
+  },
+  "candidates": {
+    "identity": {
+      "errors": {
+        "fit_relative_mse": 0.05414919927716255,
+        "external_guard_relative_mse": 0.07563643157482147
+      },
+      "construction": {
+        "gate_proj": {
+          "coefficient_count": 15814654,
+          "maximum_coefficients": 16041504,
+          "tensor_payload_plus_basis_metadata": 12352684,
+          "maximum_tensor_payload": 12499264,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.3125,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12352684,
+            "logical_coefficient_count": 15814654,
+            "initial_fit_relative_mse": 0.2097712755203247,
+            "initial_guard_relative_mse": 0.21182100474834442,
+            "final_fit_relative_mse": 0.11452504247426987,
+            "final_guard_relative_mse": 0.1453206092119217,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.30325451493263245
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.2922002673149109
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.19174166023731232
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.23646555840969086
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.125045508146286
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.13988590240478516
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.1372550129890442
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.09554432332515717
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.11452504247426987,
+                "guard_relative_mse": 0.1453206092119217
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.17818981409072876,
+                "guard_relative_mse": 0.18882380425930023
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.20958085358142853,
+                "guard_relative_mse": 0.21212461590766907
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  43,
+                  256
+                ],
+                "input_factors": [
+                  32,
+                  128
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 85,
+              "payload_bytes": 992428,
+              "byte_budget": 1249926,
+              "logical_coefficient_count": 1504254,
+              "coefficient_budget": 1604150,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 181.7311401935455,
+              "relative_weight_error": 0.9820685982704163,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 1.460343837738037,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 85,
+                  "payload_bytes_planned": 794188,
+                  "logical_coefficient_count_planned": 1197454,
+                  "rank_limit_from_bytes": 100,
+                  "rank_limit_from_coefficients": 85,
+                  "relative_conditioned_weight_error": 0.9749765992164612,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.7928598523139954,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9799749255180359
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.9771801233291626,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9757946133613586,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9749765992164612,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 20,
+                "factor_bits": 5,
+                "payload_bytes": 198240,
+                "logical_coefficient_count": 306800,
+                "residual_error_after_branch": 0.7165594100952148
+              },
+              "relative_calibration_output_error": 0.568128228187561,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        },
+        "up_proj": {
+          "coefficient_count": 15814654,
+          "maximum_coefficients": 16041504,
+          "tensor_payload_plus_basis_metadata": 12352684,
+          "maximum_tensor_payload": 12499264,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.3125,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12352684,
+            "logical_coefficient_count": 15814654,
+            "initial_fit_relative_mse": 0.366534948348999,
+            "initial_guard_relative_mse": 0.3938625156879425,
+            "final_fit_relative_mse": 0.2551884949207306,
+            "final_guard_relative_mse": 0.3412666916847229,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.33271047472953796
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.33474013209342957
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.2266269475221634
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.278565376996994
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.15750165283679962
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.17329171299934387
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.17223696410655975
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.12094411998987198
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.2551884949207306,
+                "guard_relative_mse": 0.3412666916847229
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.3100476562976837,
+                "guard_relative_mse": 0.36137425899505615
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.3638126254081726,
+                "guard_relative_mse": 0.39309149980545044
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  43,
+                  256
+                ],
+                "input_factors": [
+                  32,
+                  128
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 85,
+              "payload_bytes": 992428,
+              "byte_budget": 1249926,
+              "logical_coefficient_count": 1504254,
+              "coefficient_budget": 1604150,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 181.7311401935455,
+              "relative_weight_error": 1.0191895961761475,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 2.1422040462493896,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 85,
+                  "payload_bytes_planned": 794188,
+                  "logical_coefficient_count_planned": 1197454,
+                  "rank_limit_from_bytes": 100,
+                  "rank_limit_from_coefficients": 85,
+                  "relative_conditioned_weight_error": 0.977916955947876,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.9303049445152283,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9819303750991821
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.9797766804695129,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9786282181739807,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.977916955947876,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 20,
+                "factor_bits": 5,
+                "payload_bytes": 198240,
+                "logical_coefficient_count": 306800,
+                "residual_error_after_branch": 0.7623396515846252
+              },
+              "relative_calibration_output_error": 0.7092067003250122,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        },
+        "down_proj": {
+          "coefficient_count": 16370838,
+          "maximum_coefficients": 16374304,
+          "tensor_payload_plus_basis_metadata": 12620188,
+          "maximum_tensor_payload": 12632384,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.32367369186046513,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12620188,
+            "logical_coefficient_count": 16370838,
+            "initial_fit_relative_mse": 0.22187423706054688,
+            "initial_guard_relative_mse": 0.2738373875617981,
+            "final_fit_relative_mse": 0.14151474833488464,
+            "final_guard_relative_mse": 0.2163306623697281,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.4889753758907318
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.37601009011268616
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.3516647219657898
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.3199414908885956
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.28711679577827454
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.2004634588956833
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.22628623247146606
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.17437615990638733
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.14151474833488464,
+                "guard_relative_mse": 0.2163306623697281
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.18938560783863068,
+                "guard_relative_mse": 0.24974676966667175
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.21924370527267456,
+                "guard_relative_mse": 0.27035364508628845
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  32,
+                  128
+                ],
+                "input_factors": [
+                  43,
+                  256
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 87,
+              "payload_bytes": 1020316,
+              "byte_budget": 1263238,
+              "logical_coefficient_count": 1547414,
+              "coefficient_budget": 1637430,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 176.76393587868856,
+              "relative_weight_error": 1.0891646146774292,
+              "output_leg_scale_min": 0.26241397857666016,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 2.800729751586914,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 87,
+                  "payload_bytes_planned": 812164,
+                  "logical_coefficient_count_planned": 1225274,
+                  "rank_limit_from_bytes": 102,
+                  "rank_limit_from_coefficients": 87,
+                  "relative_conditioned_weight_error": 0.9766600728034973,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.7581681609153748,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9809688925743103
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.9795113205909729,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9777106046676636,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9766600728034973,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 21,
+                "factor_bits": 5,
+                "payload_bytes": 208152,
+                "logical_coefficient_count": 322140,
+                "residual_error_after_branch": 0.768521249294281
+              },
+              "relative_calibration_output_error": 0.5826629400253296,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        }
+      },
+      "seconds": 3.9577131029218435
+    },
+    "neuron_spectral": {
+      "errors": {
+        "fit_relative_mse": 0.050279028713703156,
+        "external_guard_relative_mse": 0.07145564258098602
+      },
+      "construction": {
+        "gate_proj": {
+          "coefficient_count": 15814654,
+          "maximum_coefficients": 16041504,
+          "tensor_payload_plus_basis_metadata": 12374700,
+          "maximum_tensor_payload": 12499264,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.3125,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12352684,
+            "logical_coefficient_count": 15814654,
+            "initial_fit_relative_mse": 0.2119612693786621,
+            "initial_guard_relative_mse": 0.21398556232452393,
+            "final_fit_relative_mse": 0.1156899631023407,
+            "final_guard_relative_mse": 0.14698316156864166,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.3029404580593109
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.2938023507595062
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.19443091750144958
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.2365865558385849
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.1249547228217125
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.14225175976753235
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.13929040729999542
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.09651615470647812
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.1156899631023407,
+                "guard_relative_mse": 0.14698316156864166
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.18003781139850616,
+                "guard_relative_mse": 0.19081977009773254
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.2117467224597931,
+                "guard_relative_mse": 0.21426096558570862
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  43,
+                  256
+                ],
+                "input_factors": [
+                  32,
+                  128
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 85,
+              "payload_bytes": 992428,
+              "byte_budget": 1247724,
+              "logical_coefficient_count": 1504254,
+              "coefficient_budget": 1604150,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 181.7311401935455,
+              "relative_weight_error": 0.9820536971092224,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 1.4529114961624146,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 85,
+                  "payload_bytes_planned": 794188,
+                  "logical_coefficient_count_planned": 1197454,
+                  "rank_limit_from_bytes": 100,
+                  "rank_limit_from_coefficients": 85,
+                  "relative_conditioned_weight_error": 0.9738787412643433,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.7810744643211365,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9793119430541992
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.9762729406356812,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9747628569602966,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9738787412643433,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 20,
+                "factor_bits": 5,
+                "payload_bytes": 198240,
+                "logical_coefficient_count": 306800,
+                "residual_error_after_branch": 0.7223979234695435
+              },
+              "relative_calibration_output_error": 0.5642428994178772,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        },
+        "up_proj": {
+          "coefficient_count": 15814654,
+          "maximum_coefficients": 16041504,
+          "tensor_payload_plus_basis_metadata": 12374700,
+          "maximum_tensor_payload": 12499264,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.3125,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12352684,
+            "logical_coefficient_count": 15814654,
+            "initial_fit_relative_mse": 0.36707988381385803,
+            "initial_guard_relative_mse": 0.3954724967479706,
+            "final_fit_relative_mse": 0.2550707757472992,
+            "final_guard_relative_mse": 0.34295934438705444,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.33052027225494385
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.33081772923469543
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.225518599152565
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.2794981300830841
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.15705783665180206
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.17249362170696259
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.17284482717514038
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.12180554866790771
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.2550707757472992,
+                "guard_relative_mse": 0.34295934438705444
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.3107709288597107,
+                "guard_relative_mse": 0.36319223046302795
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.3644704222679138,
+                "guard_relative_mse": 0.39482736587524414
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  43,
+                  256
+                ],
+                "input_factors": [
+                  32,
+                  128
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 85,
+              "payload_bytes": 992428,
+              "byte_budget": 1247724,
+              "logical_coefficient_count": 1504254,
+              "coefficient_budget": 1604150,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 181.7311401935455,
+              "relative_weight_error": 1.0216981172561646,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 2.133132219314575,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 85,
+                  "payload_bytes_planned": 794188,
+                  "logical_coefficient_count_planned": 1197454,
+                  "rank_limit_from_bytes": 100,
+                  "rank_limit_from_coefficients": 85,
+                  "relative_conditioned_weight_error": 0.9777916073799133,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.9227555394172668,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9818531274795532
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.979673445224762,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9785114526748657,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9777916073799133,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 20,
+                "factor_bits": 5,
+                "payload_bytes": 198240,
+                "logical_coefficient_count": 306800,
+                "residual_error_after_branch": 0.7674870491027832
+              },
+              "relative_calibration_output_error": 0.7082014679908752,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        },
+        "down_proj": {
+          "coefficient_count": 16190614,
+          "maximum_coefficients": 16374304,
+          "tensor_payload_plus_basis_metadata": 12535708,
+          "maximum_tensor_payload": 12632384,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.31976744186046513,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12513692,
+            "logical_coefficient_count": 16190614,
+            "initial_fit_relative_mse": 0.22001850605010986,
+            "initial_guard_relative_mse": 0.2757856547832489,
+            "final_fit_relative_mse": 0.13248765468597412,
+            "final_guard_relative_mse": 0.20689621567726135,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.4794657528400421
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.36866500973701477
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.3449525535106659
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.3223395049571991
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.3030702471733093
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.23185580968856812
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.23879218101501465
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.17045438289642334
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.13248765468597412,
+                "guard_relative_mse": 0.20689621567726135
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.18123142421245575,
+                "guard_relative_mse": 0.24368984997272491
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.2126035988330841,
+                "guard_relative_mse": 0.2668309807777405
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  32,
+                  128
+                ],
+                "input_factors": [
+                  43,
+                  256
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 87,
+              "payload_bytes": 1020316,
+              "byte_budget": 1261036,
+              "logical_coefficient_count": 1547414,
+              "coefficient_budget": 1637430,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 176.76393587868856,
+              "relative_weight_error": 1.046584963798523,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 2.3513877391815186,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 87,
+                  "payload_bytes_planned": 812164,
+                  "logical_coefficient_count_planned": 1225274,
+                  "rank_limit_from_bytes": 101,
+                  "rank_limit_from_coefficients": 87,
+                  "relative_conditioned_weight_error": 0.9714418649673462,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.7355513572692871,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9769017696380615
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.9749168157577515,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9726489186286926,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9714418649673462,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 21,
+                "factor_bits": 5,
+                "payload_bytes": 208152,
+                "logical_coefficient_count": 322140,
+                "residual_error_after_branch": 0.7862561941146851
+              },
+              "relative_calibration_output_error": 0.5783297419548035,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        }
+      },
+      "seconds": 3.901889030006714
+    },
+    "signed_hadamard": {
+      "errors": {
+        "fit_relative_mse": 0.06345529854297638,
+        "external_guard_relative_mse": 0.07750808447599411
+      },
+      "construction": {
+        "gate_proj": {
+          "coefficient_count": 15814654,
+          "maximum_coefficients": 16041504,
+          "tensor_payload_plus_basis_metadata": 12352700,
+          "maximum_tensor_payload": 12499264,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.3125,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12352684,
+            "logical_coefficient_count": 15814654,
+            "initial_fit_relative_mse": 0.233310267329216,
+            "initial_guard_relative_mse": 0.23578011989593506,
+            "final_fit_relative_mse": 0.14509810507297516,
+            "final_guard_relative_mse": 0.16444434225559235,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.29628023505210876
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.32202664017677307
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.2757260203361511
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.35799604654312134
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.17444191873073578
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.2808784544467926
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.13388758897781372
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.24999181926250458
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.14509810507297516,
+                "guard_relative_mse": 0.16444434225559235
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.22138969600200653,
+                "guard_relative_mse": 0.22613373398780823
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.2323400378227234,
+                "guard_relative_mse": 0.2350136786699295
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  43,
+                  256
+                ],
+                "input_factors": [
+                  32,
+                  128
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 85,
+              "payload_bytes": 992428,
+              "byte_budget": 1249924,
+              "logical_coefficient_count": 1504254,
+              "coefficient_budget": 1604150,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 181.7311401935455,
+              "relative_weight_error": 0.990705132484436,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 1.7034213542938232,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 85,
+                  "payload_bytes_planned": 794188,
+                  "logical_coefficient_count_planned": 1197454,
+                  "rank_limit_from_bytes": 100,
+                  "rank_limit_from_coefficients": 85,
+                  "relative_conditioned_weight_error": 0.9752827286720276,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.8042059540748596,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9805267453193665
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.977709174156189,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9761981964111328,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9752827286720276,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 20,
+                "factor_bits": 5,
+                "payload_bytes": 198240,
+                "logical_coefficient_count": 306800,
+                "residual_error_after_branch": 0.710321843624115
+              },
+              "relative_calibration_output_error": 0.5712426900863647,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        },
+        "up_proj": {
+          "coefficient_count": 15814654,
+          "maximum_coefficients": 16041504,
+          "tensor_payload_plus_basis_metadata": 12352700,
+          "maximum_tensor_payload": 12499264,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.3125,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12352684,
+            "logical_coefficient_count": 15814654,
+            "initial_fit_relative_mse": 0.40893739461898804,
+            "initial_guard_relative_mse": 0.4236389994621277,
+            "final_fit_relative_mse": 0.30485066771507263,
+            "final_guard_relative_mse": 0.3588920831680298,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.3222399652004242
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.30198079347610474
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.3614504337310791
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.22272655367851257
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.36813727021217346
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.17543888092041016
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.31424638628959656
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.15207986533641815
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.30485066771507263,
+                "guard_relative_mse": 0.3588920831680298
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.3748699426651001,
+                "guard_relative_mse": 0.4002164602279663
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.4076318144798279,
+                "guard_relative_mse": 0.4229278862476349
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  43,
+                  256
+                ],
+                "input_factors": [
+                  32,
+                  128
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 85,
+              "payload_bytes": 992428,
+              "byte_budget": 1249924,
+              "logical_coefficient_count": 1504254,
+              "coefficient_budget": 1604150,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 181.7311401935455,
+              "relative_weight_error": 0.998547375202179,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 1.6472123861312866,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 85,
+                  "payload_bytes_planned": 794188,
+                  "logical_coefficient_count_planned": 1197454,
+                  "rank_limit_from_bytes": 100,
+                  "rank_limit_from_coefficients": 85,
+                  "relative_conditioned_weight_error": 0.97611004114151,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.9387142658233643,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9809760451316833
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.9783934950828552,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9769818186759949,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.97611004114151,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 20,
+                "factor_bits": 5,
+                "payload_bytes": 198240,
+                "logical_coefficient_count": 306800,
+                "residual_error_after_branch": 0.7678090929985046
+              },
+              "relative_calibration_output_error": 0.7207520008087158,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        },
+        "down_proj": {
+          "coefficient_count": 16370838,
+          "maximum_coefficients": 16374304,
+          "tensor_payload_plus_basis_metadata": 12620204,
+          "maximum_tensor_payload": 12632384,
+          "diagnostics": {
+            "representation": "schmidt_mpo_plus_sparse_coordinate_excitations",
+            "backbone_fraction": 0.1,
+            "sparse_density": 0.32367369186046513,
+            "amplitude_bits": 3,
+            "amplitude_basis": "native",
+            "support_mask_bytes": 5636096,
+            "payload_bytes": 12620188,
+            "logical_coefficient_count": 16370838,
+            "initial_fit_relative_mse": 0.2857833802700043,
+            "initial_guard_relative_mse": 0.31932613253593445,
+            "final_fit_relative_mse": 0.16875530779361725,
+            "final_guard_relative_mse": 0.216300830245018,
+            "accepted_fraction": 1.0,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.48931071162223816
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.3455582559108734
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.4027891159057617
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.336408406496048
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.2656548023223877
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.30935072898864746
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.25694096088409424
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.2588368058204651
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.16875530779361725,
+                "guard_relative_mse": 0.216300830245018
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.2555512487888336,
+                "guard_relative_mse": 0.29088106751441956
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.2785048484802246,
+                "guard_relative_mse": 0.3116143047809601
+              }
+            ],
+            "base_construction": {
+              "layout": {
+                "name": "swiglu_neuron_crossed",
+                "output_factors": [
+                  32,
+                  128
+                ],
+                "input_factors": [
+                  43,
+                  256
+                ],
+                "partition_axes": [
+                  0,
+                  3,
+                  1,
+                  2
+                ]
+              },
+              "layout_policy": "packed_efficiency",
+              "input_metric": "diagonal",
+              "selected_bits": 5,
+              "selected_rank": 87,
+              "payload_bytes": 1020316,
+              "byte_budget": 1263236,
+              "logical_coefficient_count": 1547414,
+              "coefficient_budget": 1637430,
+              "dense_bytes": 180355072,
+              "payload_compression_ratio": 176.76393587868856,
+              "relative_weight_error": 0.9961297512054443,
+              "output_leg_scale_min": 0.25,
+              "output_leg_scale_max": 4.0,
+              "output_leg_scale_mean": 1.5630557537078857,
+              "candidate_frontier": [
+                {
+                  "bits": 5,
+                  "rank": 87,
+                  "payload_bytes_planned": 812164,
+                  "logical_coefficient_count_planned": 1225274,
+                  "rank_limit_from_bytes": 102,
+                  "rank_limit_from_coefficients": 87,
+                  "relative_conditioned_weight_error": 0.9760292768478394,
+                  "relative_calibration_output_error_after_output_leg_scale": 0.8192340135574341,
+                  "als_history": [
+                    {
+                      "sweep": 0,
+                      "relative_unfolding_error": 0.9804830551147461
+                    },
+                    {
+                      "sweep": 1,
+                      "relative_unfolding_error": 0.978979766368866,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 2,
+                      "relative_unfolding_error": 0.9771181344985962,
+                      "accepted": true
+                    },
+                    {
+                      "sweep": 3,
+                      "relative_unfolding_error": 0.9760292768478394,
+                      "accepted": true
+                    }
+                  ]
+                }
+              ],
+              "calibration_column_branch": {
+                "column_count": 0,
+                "payload_bytes": 0
+              },
+              "complementary_schmidt_branch": null,
+              "calibration_schmidt_branch": {
+                "rank": 21,
+                "factor_bits": 5,
+                "payload_bytes": 208152,
+                "logical_coefficient_count": 322140,
+                "residual_error_after_branch": 0.7244352102279663
+              },
+              "relative_calibration_output_error": 0.5934740304946899,
+              "calibration_target": "external_clean_teacher_outputs"
+            },
+            "uses_nonlinear_derivatives": false
+          }
+        }
+      },
+      "seconds": 4.381487409002148
+    }
+  },
+  "deployable_package_measured": false,
+  "final_success_demonstrated": false,
+  "seconds": 16.541895019938238
+}

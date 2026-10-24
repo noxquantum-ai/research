@@ -1,0 +1,59 @@
+{
+  "schema": "nec_guarded_accuracy_selection_v1",
+  "final_success_demonstrated": false,
+  "maximum_complete_serialized_bytes": 2490273288,
+  "maximum_complete_coefficients": 3323032892,
+  "construction_status": "/workspace/runs/nec-accuracy-recovery-20261024/canonical_relative_status.json",
+  "arguments": {
+    "model_dir": "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "baseline_dir": "/tmp/nec-selected-construction32",
+    "alternative_dir": "/workspace/runs/nec-accuracy-recovery-20261024/canonical-relative-full32",
+    "capture_manifest": "/workspace/runs/nec-sparse10-coupled-sequential-full32/activation_capture_manifest.json",
+    "baseline_validation": "/workspace/runs/nec-accuracy-recovery-20261024/logit_selection/validation_8k.json",
+    "baseline_test": "/workspace/runs/nec-accuracy-recovery-20261024/logit_selection/heldout_test.json",
+    "report_dir": "/workspace/runs/nec-accuracy-recovery-20261024/canonical_logit_selection",
+    "assembly_dir": "/tmp/nec-canonical-selected32",
+    "export_dir": "/tmp/nec-canonical-selected-export",
+    "wait_status": "/workspace/runs/nec-accuracy-recovery-20261024/canonical_relative_status.json",
+    "wait_phase": "validation_measured",
+    "maximum_bytes": 2490273288,
+    "maximum_coefficients": 3323032892
+  },
+  "phase": "rejected_validation_regression",
+  "updated_utc": "2026-10-24T04:36:11.910784+00:00",
+  "command": [
+    "/workspace/venvs/nec-hf/bin/python",
+    "/tmp/nec-retained-export-source/scripts/evaluate_packed_teacher_kl.py",
+    "--model-id",
+    "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "--checkpoint-dir",
+    "/tmp/nec-canonical-selected32",
+    "--split",
+    "validation",
+    "--token-offset",
+    "0",
+    "--max-eval-tokens",
+    "8192",
+    "--seq-len",
+    "2048",
+    "--stride",
+    "512",
+    "--output",
+    "/workspace/runs/nec-accuracy-recovery-20261024/canonical_logit_selection/validation_8k.json"
+  ],
+  "child_pid": null,
+  "quality": {
+    "perplexity": 6.618507045553158,
+    "mean_nll": 1.8898698226952826,
+    "teacher_kl_nats_per_token": 0.5256889434253086,
+    "next_token_accuracy": 0.5724575753876205,
+    "dense_top1_agreement": 0.7231107312904407
+  },
+  "comparison_reference": "/workspace/runs/nec-accuracy-recovery-20261024/logit_selection/validation_8k.json",
+  "non_degradation": {
+    "perplexity": true,
+    "teacher_kl_nats_per_token": true,
+    "next_token_accuracy": false,
+    "dense_top1_agreement": true
+  }
+}

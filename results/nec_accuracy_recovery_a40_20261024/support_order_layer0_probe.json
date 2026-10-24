@@ -1,0 +1,61 @@
+{
+  "schema": "nec_lossless_support_order_probe_v1",
+  "layer": 0,
+  "weight_change": false,
+  "projections": {
+    "q_proj": {
+      "mask_bytes": 2097152,
+      "row_major_gzip": 1896972,
+      "column_major_gzip": 1515345,
+      "column_bernoulli_entropy_lower_bound_bytes": 1374777.1409542253,
+      "roundtrip_equal": true
+    },
+    "k_proj": {
+      "mask_bytes": 2097152,
+      "row_major_gzip": 1898996,
+      "column_major_gzip": 1519786,
+      "column_bernoulli_entropy_lower_bound_bytes": 1385049.3928464288,
+      "roundtrip_equal": true
+    },
+    "v_proj": {
+      "mask_bytes": 2097152,
+      "row_major_gzip": 1919149,
+      "column_major_gzip": 1782204,
+      "column_bernoulli_entropy_lower_bound_bytes": 1593077.6061322517,
+      "roundtrip_equal": true
+    },
+    "o_proj": {
+      "mask_bytes": 2097152,
+      "row_major_gzip": 1761934,
+      "column_major_gzip": 1492959,
+      "column_bernoulli_entropy_lower_bound_bytes": 1238424.6591442372,
+      "roundtrip_equal": true
+    },
+    "gate_proj": {
+      "mask_bytes": 5636096,
+      "row_major_gzip": 5159103,
+      "column_major_gzip": 5146641,
+      "column_bernoulli_entropy_lower_bound_bytes": 4958920.682396074,
+      "roundtrip_equal": true
+    },
+    "up_proj": {
+      "mask_bytes": 5636096,
+      "row_major_gzip": 5158961,
+      "column_major_gzip": 5148384,
+      "column_bernoulli_entropy_lower_bound_bytes": 4970883.360705996,
+      "roundtrip_equal": true
+    },
+    "down_proj": {
+      "mask_bytes": 5636096,
+      "row_major_gzip": 5197898,
+      "column_major_gzip": 5109288,
+      "column_bernoulli_entropy_lower_bound_bytes": 4614903.099335095,
+      "roundtrip_equal": true
+    }
+  },
+  "original_serialized_bytes": 56271250,
+  "original_gzip_bytes": 52427541,
+  "column_major_serialized_bytes": 56271314,
+  "column_major_gzip_bytes": 51150034,
+  "saved_bytes": 1277507
+}

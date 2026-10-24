@@ -1,0 +1,76 @@
+{
+  "schema": "nec_swiglu_ordering_screen_v1",
+  "layer": 0,
+  "fit_tokens": 8192,
+  "data_split": "construction train fit only",
+  "validation_used_for_selection": false,
+  "uses_autograd": false,
+  "deployable_model_produced": false,
+  "end_to_end_quality_not_measured": true,
+  "graph_eigenvalues": [
+    1.0000005960464478,
+    0.5184286832809448,
+    0.41496434807777405
+  ],
+  "orders": {
+    "identity": {
+      "permutation_sha256": "0aecf6be47f0343fd46c1a5de2e1c66ee9af4f5e46176996f53429284a8dc2f0",
+      "int16_permutation_bytes_if_stored_once": 22016,
+      "dense_function_relative_error": 0.0,
+      "projections": {
+        "gate_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9426773190498352
+        },
+        "up_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9488005638122559
+        },
+        "down_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9462119936943054
+        }
+      }
+    },
+    "functional_spectral": {
+      "permutation_sha256": "b9b07b5c0ec0a601bc4be68d59d0642a850f2a01b6ac13725a30b11a09235920",
+      "int16_permutation_bytes_if_stored_once": 22016,
+      "dense_function_relative_error": 2.659875804056355e-07,
+      "projections": {
+        "gate_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9401638507843018
+        },
+        "up_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9484843015670776
+        },
+        "down_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9350795149803162
+        }
+      }
+    },
+    "random_control": {
+      "permutation_sha256": "ea069c659536b466f04cf9cf040afb7cf915e9386a4de1a64e3c58bc833d2fa5",
+      "int16_permutation_bytes_if_stored_once": 22016,
+      "dense_function_relative_error": 2.6099266392520803e-07,
+      "projections": {
+        "gate_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9424253106117249
+        },
+        "up_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9488583207130432
+        },
+        "down_proj": {
+          "same_schmidt_rank": 98,
+          "weighted_frobenius_relative_squared_error": 0.9460195899009705
+        }
+      }
+    }
+  },
+  "prior_art": "https://arxiv.org/abs/2401.16367; no distillation or training used here",
+  "seconds": 19.614037317980547
+}

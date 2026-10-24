@@ -24,7 +24,10 @@ class PackedSchmidtPackageTests(unittest.TestCase):
     def test_canonical_excitation_package_matches_injected_model(self):
         self._check_package_roundtrip(True)
 
-    def _check_package_roundtrip(self, canonical):
+    def test_reconstructed_readout_preserves_coefficients_and_loads_exactly(self):
+        self._check_package_roundtrip(False, override_readout=True)
+
+    def _check_package_roundtrip(self, canonical, override_readout=False):
         torch.manual_seed(67)
         model = LlamaForCausalLM(LlamaConfig(
             vocab_size=32, hidden_size=8, intermediate_size=16,
@@ -70,12 +73,19 @@ class PackedSchmidtPackageTests(unittest.TestCase):
             (checkpoints / "model_manifest.json").write_text(json.dumps({
                 "compiled_layers": [0],
             }))
+            overrides = None
+            if override_readout:
+                with torch.no_grad():
+                    model.lm_head.weight.mul_(.95)
+                overrides = {'lm_head.weight': model.lm_head.weight.detach().clone()}
             counts = []
             for container, retained in itertools.product(("plain", "gzip"), repeat=2):
                 with self.subTest(container=container, retained=retained):
                     measurement = materialize_deployable_allocation_package(
                         source, checkpoints, output / (container + retained), (0,), (0,), (), root / "unused", "tiny",
                         checkpoint_container=container, retained_container=retained,
+                        retained_weight_overrides=overrides,
+                        excitation_support_layout='column_major' if canonical else 'preserve',
                     )
                     package = Path(measurement["path"])
                     index = json.loads((package / "model.safetensors.index.json").read_text())

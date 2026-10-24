@@ -1,0 +1,113 @@
+{
+  "schema": "nec_transformed_mlp_model_guard_v1",
+  "selection_split": "construction train guard only",
+  "validation_used_for_selection": false,
+  "baseline_training_guard": {
+    "perplexity": 9.005670360116127,
+    "mean_nll": 2.197854418957239,
+    "teacher_kl_nats_per_token": 0.537122310201854,
+    "next_token_correct": 4256,
+    "dense_agreement_correct": 5740,
+    "scored_tokens": 8188,
+    "next_token_accuracy": 0.5197850512945774,
+    "dense_top1_agreement": 0.7010258915486077
+  },
+  "baseline_validation": {
+    "perplexity": 6.580348497299055,
+    "mean_nll": 1.8840877070500874,
+    "teacher_kl_nats_per_token": 0.5155202614524327,
+    "next_token_correct": 4722,
+    "dense_agreement_correct": 5964,
+    "scored_tokens": 8191,
+    "next_token_accuracy": 0.5764863874984739,
+    "dense_top1_agreement": 0.7281162251251373
+  },
+  "trials": [
+    {
+      "candidate": "/tmp/nec-mlp-order-joint-screen/identity_measurement_weights.pt",
+      "sha256": "70b44e0e2d651ba33d78bd2e9c1394d864e3ac087c97e050c42ee79a33af6196",
+      "training_guard": {
+        "perplexity": 9.014828592630899,
+        "mean_nll": 2.1988708429005768,
+        "teacher_kl_nats_per_token": 0.5383126884900308,
+        "next_token_correct": 4257,
+        "dense_agreement_correct": 5741,
+        "scored_tokens": 8188,
+        "next_token_accuracy": 0.5199071812408402,
+        "dense_top1_agreement": 0.7011480214948705
+      },
+      "accepted": false
+    },
+    {
+      "candidate": "/tmp/nec-mlp-order-joint-screen/neuron_spectral_measurement_weights.pt",
+      "sha256": "3de6b004e3a31884054ddc078e7ead1bdbd2dc19fad303d6532118c0aa171187",
+      "training_guard": {
+        "perplexity": 9.012712121376698,
+        "mean_nll": 2.1986360386865687,
+        "teacher_kl_nats_per_token": 0.5372518992710357,
+        "next_token_correct": 4264,
+        "dense_agreement_correct": 5743,
+        "scored_tokens": 8188,
+        "next_token_accuracy": 0.5207620908646801,
+        "dense_top1_agreement": 0.7013922813873962
+      },
+      "accepted": false
+    },
+    {
+      "candidate": "/tmp/nec-mlp-order-readout-screen/identity_measurement_weights.pt",
+      "sha256": "4031e8a1c2e59c5770439f7d759bc2849b622415d2b3aa55a2ff9c4559e24e48",
+      "training_guard": {
+        "perplexity": 9.013439269526456,
+        "mean_nll": 2.1987167157134486,
+        "teacher_kl_nats_per_token": 0.5381727324525054,
+        "next_token_correct": 4260,
+        "dense_agreement_correct": 5741,
+        "scored_tokens": 8188,
+        "next_token_accuracy": 0.5202735710796287,
+        "dense_top1_agreement": 0.7011480214948705
+      },
+      "accepted": false
+    },
+    {
+      "candidate": "/tmp/nec-mlp-order-readout-screen/neuron_spectral_measurement_weights.pt",
+      "sha256": "138cb47dc6dfc349217c16df35fb6f63a157e048a7e8f4d5181a9422f691e417",
+      "training_guard": {
+        "perplexity": 9.016483743277329,
+        "mean_nll": 2.1990544291665395,
+        "teacher_kl_nats_per_token": 0.5373682979596138,
+        "next_token_correct": 4261,
+        "dense_agreement_correct": 5744,
+        "scored_tokens": 8188,
+        "next_token_accuracy": 0.5203957010258915,
+        "dense_top1_agreement": 0.701514411333659
+      },
+      "accepted": false
+    }
+  ],
+  "selected": null,
+  "guard_window_offsets": [
+    2385920,
+    2572288,
+    143360,
+    860160
+  ],
+  "validation_provenance": {
+    "dataset": "wikitext-2-raw-v1",
+    "dataset_repo": "Salesforce/wikitext",
+    "dataset_revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "split": "validation",
+    "source_url": "https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1/validation-00000-of-00001.parquet",
+    "source_sha256": "204929b7ff9d6184953f867dedb860e40aa69c078fc1e54b3baaa8fb28511c4c",
+    "source_bytes": 657209,
+    "text_sha256": "b44fb967f92b525731216a507d1fbc44b97446b7ef0a2b4d1a893f81f1bbc29e",
+    "text_bytes": 1151766,
+    "text_join": "double_newline",
+    "rows": 3760,
+    "literal_unk_count": 0,
+    "fallback": false
+  },
+  "validation_input_ids_sha256": "4f1c8770343a8dffcdba9a5ae0bf31f4b78381bbd649de5c10b1e6d4ab2dcdb5",
+  "deployable_model_not_yet_verified": true,
+  "final_success_demonstrated": false,
+  "validation_improves_all_metrics": false
+}

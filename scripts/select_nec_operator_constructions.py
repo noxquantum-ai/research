@@ -50,6 +50,8 @@ def main():
     p.add_argument('--assembly-dir',type=Path,required=True)
     p.add_argument('--passes',type=int,default=2)
     p.add_argument('--initial-construction',choices=('baseline','best_guard'),default='baseline')
+    p.add_argument('--groups',nargs='+',choices=tuple(GROUPS),default=tuple(GROUPS))
+    p.add_argument('--readout-checkpoint',type=Path)
     args=p.parse_args()
     args.report_dir.mkdir(parents=True,exist_ok=True)
     if args.assembly_dir.exists():raise FileExistsError(args.assembly_dir)
@@ -85,6 +87,13 @@ def main():
     teacher_logp=teacher.log_softmax(-1);teacher_probability=teacher_logp.exp()
     teacher_nll=float(F.nll_loss(teacher_logp.reshape(-1,teacher.shape[-1]),labels.reshape(-1)))
     del teacher
+    if args.readout_checkpoint:
+        replacement=torch.load(args.readout_checkpoint,map_location='cpu',weights_only=True)
+        if set(replacement)!={'lm_head.weight'}:raise ValueError('invalid readout checkpoint')
+        weight=replacement['lm_head.weight']
+        if weight.shape!=model.lm_head.weight.shape or weight.dtype!=model.lm_head.weight.dtype:
+            raise ValueError('readout checkpoint shape or dtype differs')
+        model.lm_head.weight.copy_(weight.cuda())
 
     def score():
         logits=model(ids,use_cache=False).logits[:,:-1].float()
@@ -108,6 +117,9 @@ def main():
            'teacher_model_evaluations':1,
            'validation_used_for_selection':False,'deployable_bytes_not_yet_measured':True,
            'final_success_demonstrated':False}
+    state['search_groups']=args.groups
+    state['readout_checkpoint']=None if args.readout_checkpoint is None else {
+        'path':str(args.readout_checkpoint),'sha256':hashlib.sha256(args.readout_checkpoint.read_bytes()).hexdigest()}
     state['source_sha256']={str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in (
         Path(__file__), args.capture_manifest, args.baseline_dir/'model_manifest.json',
         args.alternative_dir/'model_manifest.json', ROOT/'nox/residual_codec.py', ROOT/'nox/packed_schmidt.py')}
@@ -139,7 +151,8 @@ def main():
             if baseline['layer_idx']!=layer or alternative['layer_idx']!=layer:
                 raise ValueError('source checkpoint layer identity differs')
             target_modules=modules(model,layer)
-            for group,roles in GROUPS.items():
+            for group in args.groups:
+                roles=GROUPS[group]
                 key=f'{layer}:{group}';was_alternative=state['selected'].get(key,False)
                 target=baseline if was_alternative else alternative
                 for role in roles:

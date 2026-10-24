@@ -1,0 +1,408 @@
+{
+  "path": "/tmp/nec-readout-export/deployable_model",
+  "serialized_bytes": 2420734087,
+  "file_count": 97,
+  "source_model_serialized_bytes": 13479247511,
+  "compression_ratio": 5.568247906032812,
+  "repacked_dense_tensor_payload_bytes": 524828672,
+  "dense_source_coefficient_count": 6738417664,
+  "retained_dense_coefficient_count": 262412288,
+  "replacement_coefficient_count": 3060620604,
+  "complete_model_coefficient_count": 3323032892,
+  "structural_reduction": 2.027791443239196,
+  "coefficient_accounting_complete": true,
+  "checkpoint_container": "gzip",
+  "retained_container": "gzip",
+  "retained_lossless_container_verification": [
+    {
+      "file": "model-00001-of-00002.safetensors.gz",
+      "source_serialized_bytes": 262551408,
+      "container_bytes": 204062652,
+      "uncompressed_sha256": "ea2691e2c21b61d85480ce33822c03eecfe2ffef7089457cf107f22ffc0f65b8",
+      "roundtrip_sha256": "ea2691e2c21b61d85480ce33822c03eecfe2ffef7089457cf107f22ffc0f65b8",
+      "lossless_verified": true
+    },
+    {
+      "file": "model-00002-of-00002.safetensors.gz",
+      "source_serialized_bytes": 262288168,
+      "container_bytes": 242438870,
+      "uncompressed_sha256": "0e2db9312a2121d68f7b8418de25f37b7cb3603780fe948a748cd1214eee4226",
+      "roundtrip_sha256": "0e2db9312a2121d68f7b8418de25f37b7cb3603780fe948a748cd1214eee4226",
+      "lossless_verified": true
+    }
+  ],
+  "lossless_container_verification": [
+    {
+      "file": "compressed_layer_0.pt.gz",
+      "source_serialized_bytes": 56272893,
+      "container_bytes": 52428173,
+      "uncompressed_sha256": "c0429007c731d309d53315e4c343fa7e7adbc517062ca9d68e86f0d267a690de",
+      "roundtrip_sha256": "c0429007c731d309d53315e4c343fa7e7adbc517062ca9d68e86f0d267a690de",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_1.pt.gz",
+      "source_serialized_bytes": 66193021,
+      "container_bytes": 61135521,
+      "uncompressed_sha256": "908bafd38287b078252eaee8a22faec5b8964c927dbb7c6c5c79135b054f62be",
+      "roundtrip_sha256": "908bafd38287b078252eaee8a22faec5b8964c927dbb7c6c5c79135b054f62be",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_2.pt.gz",
+      "source_serialized_bytes": 71538237,
+      "container_bytes": 65721821,
+      "uncompressed_sha256": "37e265850f52be3b10a193c27bb65b590658cf834c2894a4fd983363b3ae60b8",
+      "roundtrip_sha256": "37e265850f52be3b10a193c27bb65b590658cf834c2894a4fd983363b3ae60b8",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_3.pt.gz",
+      "source_serialized_bytes": 66196541,
+      "container_bytes": 62628130,
+      "uncompressed_sha256": "0576518ef8992ed829ac8cc43952704cb7f3359de816b8aa7f6d8688dd50269c",
+      "roundtrip_sha256": "0576518ef8992ed829ac8cc43952704cb7f3359de816b8aa7f6d8688dd50269c",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_4.pt.gz",
+      "source_serialized_bytes": 68918269,
+      "container_bytes": 65318712,
+      "uncompressed_sha256": "b84157ec993cfadac75ecb2901b52dba8c724009deab6a4a50fa2755df0185c2",
+      "roundtrip_sha256": "b84157ec993cfadac75ecb2901b52dba8c724009deab6a4a50fa2755df0185c2",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_5.pt.gz",
+      "source_serialized_bytes": 56272445,
+      "container_bytes": 51271342,
+      "uncompressed_sha256": "8b181b0d9b125285a3afbcfb649061c6b511abd2366cad28f5fb2d4d6af76597",
+      "roundtrip_sha256": "8b181b0d9b125285a3afbcfb649061c6b511abd2366cad28f5fb2d4d6af76597",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_6.pt.gz",
+      "source_serialized_bytes": 66196477,
+      "container_bytes": 63667320,
+      "uncompressed_sha256": "e8bb044cbd2df5b02e98628e6ef633f72fbb0a1098f94c58d65c4786ed594f2c",
+      "roundtrip_sha256": "e8bb044cbd2df5b02e98628e6ef633f72fbb0a1098f94c58d65c4786ed594f2c",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_7.pt.gz",
+      "source_serialized_bytes": 73261757,
+      "container_bytes": 67844884,
+      "uncompressed_sha256": "60f7b225074c9e21778d9a50dad28c345ab38383698e3bde35296c42f61caba8",
+      "roundtrip_sha256": "60f7b225074c9e21778d9a50dad28c345ab38383698e3bde35296c42f61caba8",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_8.pt.gz",
+      "source_serialized_bytes": 66193021,
+      "container_bytes": 61879865,
+      "uncompressed_sha256": "8bc7be92382979b1dbb9dccf00273d5ab712dacf8ce37498501b0d24598d09c9",
+      "roundtrip_sha256": "8bc7be92382979b1dbb9dccf00273d5ab712dacf8ce37498501b0d24598d09c9",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_9.pt.gz",
+      "source_serialized_bytes": 66196477,
+      "container_bytes": 63203157,
+      "uncompressed_sha256": "c2b111da70bfcac48e18de432326db96d27ef7cee5d79171bd1f0fbbda69d5f5",
+      "roundtrip_sha256": "c2b111da70bfcac48e18de432326db96d27ef7cee5d79171bd1f0fbbda69d5f5",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_10.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61963510,
+      "uncompressed_sha256": "da372bc3c097b4e9e949214ce85d52f22b4f6a4655d8cc2d44a8b66f54bda14a",
+      "roundtrip_sha256": "da372bc3c097b4e9e949214ce85d52f22b4f6a4655d8cc2d44a8b66f54bda14a",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_11.pt.gz",
+      "source_serialized_bytes": 66196574,
+      "container_bytes": 63566471,
+      "uncompressed_sha256": "71a33e8d1e3902a842c00cac327c8767eea8c0a23c514f5edce187560d859a5f",
+      "roundtrip_sha256": "71a33e8d1e3902a842c00cac327c8767eea8c0a23c514f5edce187560d859a5f",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_12.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61971051,
+      "uncompressed_sha256": "49de98beeb55a81c31930751cfe9dd3e3ea8e9e28d6617c3bf5fe201fffed9bf",
+      "roundtrip_sha256": "49de98beeb55a81c31930751cfe9dd3e3ea8e9e28d6617c3bf5fe201fffed9bf",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_13.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61765864,
+      "uncompressed_sha256": "1e8b5e23b8cf193028b0ec41b73a092e385a7c068a94d16fea1681ffdf8cd3d5",
+      "roundtrip_sha256": "1e8b5e23b8cf193028b0ec41b73a092e385a7c068a94d16fea1681ffdf8cd3d5",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_14.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61799550,
+      "uncompressed_sha256": "94a7a733dfcd45e6e0236634302708ca5acc31ce51d607e1a694a203a0859f98",
+      "roundtrip_sha256": "94a7a733dfcd45e6e0236634302708ca5acc31ce51d607e1a694a203a0859f98",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_15.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61790505,
+      "uncompressed_sha256": "e39218be560b2ac173a81e4fe956fe7ff1f1a9e3ba8dccce99128333e0cd8fba",
+      "roundtrip_sha256": "e39218be560b2ac173a81e4fe956fe7ff1f1a9e3ba8dccce99128333e0cd8fba",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_16.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61633002,
+      "uncompressed_sha256": "3d1bb9a66b1af08be58964165964f5a9acedcc23827e334ffadfbe2ded0dd953",
+      "roundtrip_sha256": "3d1bb9a66b1af08be58964165964f5a9acedcc23827e334ffadfbe2ded0dd953",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_17.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61504981,
+      "uncompressed_sha256": "7d9d00e4ecdd3ec86fd01883f4454dc40cd4cbcba13b346e54634cff5460ed23",
+      "roundtrip_sha256": "7d9d00e4ecdd3ec86fd01883f4454dc40cd4cbcba13b346e54634cff5460ed23",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_18.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61333705,
+      "uncompressed_sha256": "3edfb62fe447e8993c6734a4129609f2d104399e295aea52318d36daed0be62b",
+      "roundtrip_sha256": "3edfb62fe447e8993c6734a4129609f2d104399e295aea52318d36daed0be62b",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_19.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61380701,
+      "uncompressed_sha256": "bcd4d77f4f059518b4189069ea35f68384310c450936e767061a638f5b1ee831",
+      "roundtrip_sha256": "bcd4d77f4f059518b4189069ea35f68384310c450936e767061a638f5b1ee831",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_20.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61325147,
+      "uncompressed_sha256": "fc3e6763c38b2c1ed0bdb69bff892021bf89e81d4bef3566e6879ba9282b5784",
+      "roundtrip_sha256": "fc3e6763c38b2c1ed0bdb69bff892021bf89e81d4bef3566e6879ba9282b5784",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_21.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61304128,
+      "uncompressed_sha256": "0c6d604604d0d2a82594e4b2c1f3a31640934c460d54c5ab984c7550127c5815",
+      "roundtrip_sha256": "0c6d604604d0d2a82594e4b2c1f3a31640934c460d54c5ab984c7550127c5815",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_22.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61365955,
+      "uncompressed_sha256": "3bef9e404ec3bfe6e3f2dba2215c40378d8874741fa27ad0e56f88c1ff925184",
+      "roundtrip_sha256": "3bef9e404ec3bfe6e3f2dba2215c40378d8874741fa27ad0e56f88c1ff925184",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_23.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61380625,
+      "uncompressed_sha256": "36207acaa35693331ef53175f8a4b0844803a3d74c05f4f150bccbe8fe1bcc55",
+      "roundtrip_sha256": "36207acaa35693331ef53175f8a4b0844803a3d74c05f4f150bccbe8fe1bcc55",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_24.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61377257,
+      "uncompressed_sha256": "9763675b0cddf90373130553cfb9bb8992ea3d89e4ab8b3b177c08eea31ee9c8",
+      "roundtrip_sha256": "9763675b0cddf90373130553cfb9bb8992ea3d89e4ab8b3b177c08eea31ee9c8",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_25.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61329251,
+      "uncompressed_sha256": "1536e4270bbc0a0148627747263327324f578b130a6dd4af1013adf63ff72ca6",
+      "roundtrip_sha256": "1536e4270bbc0a0148627747263327324f578b130a6dd4af1013adf63ff72ca6",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_26.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61235786,
+      "uncompressed_sha256": "06291c84bd994dd2275e9fbd68f08e387f640fd11a1762fce9b2b3deafcc778c",
+      "roundtrip_sha256": "06291c84bd994dd2275e9fbd68f08e387f640fd11a1762fce9b2b3deafcc778c",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_27.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61308249,
+      "uncompressed_sha256": "fe55e852da48321f34a3a8e896a55ed33b17e43635aa01d838171b02dbcb5f2f",
+      "roundtrip_sha256": "fe55e852da48321f34a3a8e896a55ed33b17e43635aa01d838171b02dbcb5f2f",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_28.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61347652,
+      "uncompressed_sha256": "35a604df81b3b3263346151abd2323fc739daa0a098415d30493dd86873d163d",
+      "roundtrip_sha256": "35a604df81b3b3263346151abd2323fc739daa0a098415d30493dd86873d163d",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_29.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61387556,
+      "uncompressed_sha256": "ac13216f6bd2403670e3f067a33e06d50a1e9f2fe53781f55453098aa376fd32",
+      "roundtrip_sha256": "ac13216f6bd2403670e3f067a33e06d50a1e9f2fe53781f55453098aa376fd32",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_30.pt.gz",
+      "source_serialized_bytes": 66196638,
+      "container_bytes": 62548653,
+      "uncompressed_sha256": "e106e0902fa49a89a902afaeb793bf9e2d69ba9e3d4eab18f523dda489603b44",
+      "roundtrip_sha256": "e106e0902fa49a89a902afaeb793bf9e2d69ba9e3d4eab18f523dda489603b44",
+      "lossless_verified": true
+    },
+    {
+      "file": "compressed_layer_31.pt.gz",
+      "source_serialized_bytes": 66193118,
+      "container_bytes": 61472459,
+      "uncompressed_sha256": "4c0f1ef83d1613e7e71692c793382fc4b172978d638a366a3d8419ccf7ba1d31",
+      "roundtrip_sha256": "4c0f1ef83d1613e7e71692c793382fc4b172978d638a366a3d8419ccf7ba1d31",
+      "lossless_verified": true
+    }
+  ],
+  "coefficient_count_includes": "logical factor values, quantization scales, all correction branches, retained dense tensors and normalization replacements; excludes padding and integer coordinate metadata",
+  "file_sizes": {
+    "model.safetensors.index.json": 8616,
+    "config.json": 583,
+    "generation_config.json": 200,
+    "special_tokens_map.json": 435,
+    "tokenizer.json": 1842764,
+    "tokenizer.model": 499723,
+    "tokenizer_config.json": 746,
+    "nec_compile_manifest.json": 34720,
+    "load_nec_package.py": 3922,
+    "NEC_PACKAGE_README.md": 727,
+    "nec_allocation_manifest.json": 23079,
+    "model-00001-of-00002.safetensors.gz": 204062652,
+    "model-00002-of-00002.safetensors.gz": 242438870,
+    "nec_quality_evaluation.json": 2516,
+    "nec_checkpoints/compressed_layer_0.pt.gz": 52428173,
+    "nec_checkpoints/compressed_layer_1.pt.gz": 61135521,
+    "nec_checkpoints/compressed_layer_2.pt.gz": 65721821,
+    "nec_checkpoints/compressed_layer_3.pt.gz": 62628130,
+    "nec_checkpoints/compressed_layer_4.pt.gz": 65318712,
+    "nec_checkpoints/compressed_layer_5.pt.gz": 51271342,
+    "nec_checkpoints/compressed_layer_6.pt.gz": 63667320,
+    "nec_checkpoints/compressed_layer_7.pt.gz": 67844884,
+    "nec_checkpoints/compressed_layer_8.pt.gz": 61879865,
+    "nec_checkpoints/compressed_layer_9.pt.gz": 63203157,
+    "nec_checkpoints/compressed_layer_10.pt.gz": 61963510,
+    "nec_checkpoints/compressed_layer_11.pt.gz": 63566471,
+    "nec_checkpoints/compressed_layer_12.pt.gz": 61971051,
+    "nec_checkpoints/compressed_layer_13.pt.gz": 61765864,
+    "nec_checkpoints/compressed_layer_14.pt.gz": 61799550,
+    "nec_checkpoints/compressed_layer_15.pt.gz": 61790505,
+    "nec_checkpoints/compressed_layer_16.pt.gz": 61633002,
+    "nec_checkpoints/compressed_layer_17.pt.gz": 61504981,
+    "nec_checkpoints/compressed_layer_18.pt.gz": 61333705,
+    "nec_checkpoints/compressed_layer_19.pt.gz": 61380701,
+    "nec_checkpoints/compressed_layer_20.pt.gz": 61325147,
+    "nec_checkpoints/compressed_layer_21.pt.gz": 61304128,
+    "nec_checkpoints/compressed_layer_22.pt.gz": 61365955,
+    "nec_checkpoints/compressed_layer_23.pt.gz": 61380625,
+    "nec_checkpoints/compressed_layer_24.pt.gz": 61377257,
+    "nec_checkpoints/compressed_layer_25.pt.gz": 61329251,
+    "nec_checkpoints/compressed_layer_26.pt.gz": 61235786,
+    "nec_checkpoints/compressed_layer_27.pt.gz": 61308249,
+    "nec_checkpoints/compressed_layer_28.pt.gz": 61347652,
+    "nec_checkpoints/compressed_layer_29.pt.gz": 61387556,
+    "nec_checkpoints/compressed_layer_30.pt.gz": 62548653,
+    "nec_checkpoints/compressed_layer_31.pt.gz": 61472459,
+    "nox/__init__.py": 3245,
+    "nox/allocation.py": 1712,
+    "nox/artifacts.py": 1734,
+    "nox/block_compiler.py": 36209,
+    "nox/block_distillation.py": 3648,
+    "nox/calibration.py": 8453,
+    "nox/compiler.py": 72845,
+    "nox/construction_selection.py": 1083,
+    "nox/data.py": 2580,
+    "nox/defect_bridge.py": 9850,
+    "nox/evaluation.py": 30041,
+    "nox/function_aware_attention.py": 6832,
+    "nox/function_aware_benchmarks.py": 18649,
+    "nox/function_aware_tn.py": 24245,
+    "nox/functional_attention.py": 9662,
+    "nox/functional_routing.py": 10848,
+    "nox/functional_schmidt.py": 21416,
+    "nox/gauge.py": 3977,
+    "nox/grouped_swiglu_tn.py": 14742,
+    "nox/hf_subset.py": 1927,
+    "nox/joint_quant_mpo.py": 9003,
+    "nox/joint_swiglu.py": 19834,
+    "nox/layer_allocator.py": 12526,
+    "nox/mlp_gauge.py": 8593,
+    "nox/mmlu.py": 6816,
+    "nox/model_adapter.py": 8608,
+    "nox/native_swiglu.py": 12992,
+    "nox/operator_schmidt.py": 22667,
+    "nox/packed_schmidt.py": 47010,
+    "nox/packing.py": 4299,
+    "nox/pees.py": 11127,
+    "nox/portable_quant.py": 7078,
+    "nox/representation_symmetries.py": 13785,
+    "nox/residual_codec.py": 11307,
+    "nox/schmidt_budget.py": 8906,
+    "nox/schmidt_correction.py": 7133,
+    "nox/sector_schmidt.py": 7558,
+    "nox/sequential_compiler.py": 40624,
+    "nox/sparse_schmidt.py": 22692,
+    "nox/spectra.py": 16845,
+    "nox/swiglu_rank_bound.py": 7636,
+    "nox/swiglu_readout.py": 6519,
+    "nox/tensor_order.py": 3999,
+    "nox/utils.py": 7785,
+    "nox/baselines/__init__.py": 208,
+    "nox/baselines/awt.py": 3367,
+    "nox/baselines/multiverse.py": 2719,
+    "nox/quant/__init__.py": 409,
+    "nox/quant/gptq.py": 3108,
+    "nox/quant/hessian.py": 1656,
+    "nox/quant/incoherence.py": 3044
+  },
+  "whole_deployable_package_measured": true,
+  "runtime_reconstructs_dense_weights": true,
+  "acceptance": {
+    "gates": {
+      "storage": true,
+      "structure": true,
+      "fallback_ppl": false,
+      "accuracy": false,
+      "agreement": false,
+      "runtime_parity": true
+    },
+    "all_numerical_targets_met": false,
+    "maximum_complete_serialized_bytes": 2490273288,
+    "maximum_complete_coefficients": 3323032892,
+    "requires_persistent_copy_before_promotion": true
+  }
+}

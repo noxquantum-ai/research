@@ -9,12 +9,79 @@ from nox.packed_schmidt import (
     packed_codec_coefficient_count, packed_schmidt_coefficient_count_from_artifact,
     packed_schmidt_payload_bytes_from_artifact, reconstruct_packed_schmidt,
 )
-from nox.residual_codec import codec_payload_bytes, decode_groupwise
+from nox.residual_codec import codec_payload_bytes, decode_groupwise, encode_groupwise, _pack_codes
 from nox.sparse_schmidt import (compile_sparse_schmidt, covariance_feedback_excitations,
-                               reconstruct_excitation_operator)
+                               reconstruct_excitation_operator, construction_matmul_precision, regularized_teacher_target,
+                               reconstruct_global_excitations)
+from nox.sparse_schmidt import block_shrunk_output_precision, refit_sparse_excitations
+from nox.sparse_schmidt import reorder_excitation_support
 
 
 class SparseSchmidtTests(unittest.TestCase):
+    def test_output_covariance_uses_fit_only_and_stays_positive_definite(self):
+        torch.manual_seed(251)
+        targets=torch.randn(8,64);targets[1]+=targets[0]*3
+        first,report=block_shrunk_output_precision(targets,fit_tokens=48,sequence_length=8)
+        targets[:,48:]*=100000
+        second,_=block_shrunk_output_precision(targets,fit_tokens=48,sequence_length=8)
+        torch.testing.assert_close(first,second,rtol=0,atol=0)
+        self.assertGreater(float(torch.linalg.eigvalsh(first).min()),0)
+        self.assertFalse(report['guard_used'])
+        torch.testing.assert_close(first.diagonal().mean(),torch.tensor(1.))
+
+    def test_identity_output_geometry_matches_existing_sparse_solve(self):
+        args=(self.artifact,self.inputs,self.weight@self.inputs)
+        first=refit_sparse_excitations(*args,split=192,iterations=5)
+        second=refit_sparse_excitations(*args,split=192,iterations=5,output_precision=torch.eye(64))
+        torch.testing.assert_close(first[1],second[1],rtol=1e-5,atol=1e-6)
+
+    def test_global_excitation_decode_with_unequal_row_support(self):
+        mask=torch.zeros(64,64,dtype=torch.bool)
+        mask[0,:9]=True;mask[1,:3]=True;mask[2,:4]=True
+        values=torch.linspace(-.2,.2,int(mask.sum())).reshape(1,-1)
+        codec=encode_groupwise(values,bits=3,group_size=64)
+        artifact={'codec_type':'nec_global_excitation_schmidt_v1','orig_shape':(64,64),
+                  'base_artifact':self.artifact['base_artifact'],'support_bits':_pack_codes(mask,1),'amplitude_codec':codec}
+        expected=reconstruct_packed_schmidt(artifact['base_artifact']);expected[mask]+=decode_groupwise(codec).reshape(-1)
+        torch.testing.assert_close(reconstruct_from_artifact(artifact),expected,rtol=0,atol=0)
+        changed=reorder_excitation_support(artifact,'column_major')
+        torch.testing.assert_close(reconstruct_from_artifact(changed),expected,rtol=0,atol=0)
+        self.assertEqual(packed_schmidt_coefficient_count_from_artifact(artifact),
+            packed_schmidt_coefficient_count_from_artifact(artifact['base_artifact'])+packed_codec_coefficient_count(codec))
+
+    def test_support_transpose_preserves_native_weights_and_both_budgets(self):
+        for codec_type in ('nec_sparse_excitation_schmidt_v1','nec_sparse_excitation_schmidt_v2'):
+            artifact=copy.deepcopy(self.artifact);artifact['codec_type']=codec_type
+            if codec_type.endswith('v2'):artifact['amplitude_basis']='backbone_input_scale'
+            changed=reorder_excitation_support(artifact,'column_major')
+            torch.testing.assert_close(reconstruct_from_artifact(changed),reconstruct_from_artifact(artifact),rtol=0,atol=0)
+            for count in (packed_schmidt_payload_bytes_from_artifact,packed_schmidt_coefficient_count_from_artifact):
+                self.assertEqual(count(changed),count(artifact))
+
+    def test_global_allocation_obeys_source_coefficient_cap_and_guards(self):
+        artifact,decoded,report=reconstruct_global_excitations(self.weight,self.artifact,self.inputs,
+            self.weight@self.inputs,torch.linspace(.1,3,64),sequence_length=16,minimum_per_row=4)
+        self.assertLessEqual(packed_schmidt_coefficient_count_from_artifact(artifact),self.artifact['logical_coefficient_count'])
+        self.assertFalse(report['guard_used_for_support'])
+        torch.testing.assert_close(reconstruct_from_artifact(artifact),decoded)
+
+    def test_target_regularization_is_closed_form_and_ignores_guard(self):
+        symmetric=torch.zeros(3,16);teacher=torch.ones(3,16);prior=torch.full((3,16),.25)
+        target,report=regularized_teacher_target(symmetric,teacher,prior,fit_tokens=12)
+        self.assertEqual(report['alpha'],.25)
+        teacher[:,12:]=10000
+        _,second=regularized_teacher_target(symmetric,teacher,prior,fit_tokens=12)
+        self.assertEqual(second['alpha'],.25)
+        torch.testing.assert_close(target,prior)
+
+    def test_construction_precision_restores_reference_even_after_failure(self):
+        previous=torch.get_float32_matmul_precision()
+        with self.assertRaises(RuntimeError):
+            with construction_matmul_precision('high'):
+                self.assertEqual(torch.get_float32_matmul_precision(),'high')
+                raise RuntimeError('test failure')
+        self.assertEqual(torch.get_float32_matmul_precision(),previous)
+
     def setUp(self):
         torch.manual_seed(131)
         self.weight = torch.randn(64, 64) * .1
@@ -74,6 +141,16 @@ class SparseSchmidtTests(unittest.TestCase):
         self.assertLessEqual(report['final_guard_relative_mse'],report['initial_guard_relative_mse'])
         self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate),self.artifact['logical_coefficient_count'])
         self.assertEqual(packed_schmidt_payload_bytes_from_artifact(candidate),self.artifact['payload_bytes'])
+
+    def test_explicit_precision_reallocation_never_adds_coefficients(self):
+        candidate,_,report=reconstruct_excitation_operator(self.weight,self.artifact,self.inputs,
+            self.weight@self.inputs,sequence_length=16,methods=('pcg_mse',),output_bits=4)
+        self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate),self.artifact['logical_coefficient_count'])
+        self.assertEqual(report['tensor_payload_bytes_added'],
+            packed_schmidt_payload_bytes_from_artifact(candidate)-self.artifact['payload_bytes'])
+        self.assertTrue(report['explicit_precision_reallocation'])
+        self.assertEqual(candidate['payload_bytes'],packed_schmidt_payload_bytes_from_artifact(candidate))
+        self.assertLessEqual(report['final_guard_relative_mse'],report['initial_guard_relative_mse'])
 
     def test_fresh_compilation_can_encode_in_the_existing_backbone_basis(self):
         artifact,decoded,report=compile_sparse_schmidt(self.weight,byte_budget=1800,

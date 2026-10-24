@@ -10,6 +10,7 @@ amplitude values and scales count toward the structural coefficient cap.
 from __future__ import annotations
 
 import math
+from contextlib import contextmanager
 
 import torch
 
@@ -19,6 +20,142 @@ from nox.residual_codec import _pack_codes, _unpack_codes, decode_groupwise, enc
 
 CODEC_TYPE = "nec_sparse_excitation_schmidt_v1"
 CANONICAL_CODEC_TYPE = "nec_sparse_excitation_schmidt_v2"
+GLOBAL_CODEC_TYPE = "nec_global_excitation_schmidt_v1"
+
+
+@torch.no_grad()
+def reconstruct_global_excitations(weight, artifact, inputs, targets, sensitivity, *,
+                                   sequence_length=2048, minimum_per_row=64):
+    """Allocate coordinate excitations globally using nonlinear output sensitivity.
+
+    The MPO is unchanged. Global groups of 64 values remove per-row padding;
+    every value and scale counts against the old amplitude coefficient cap.
+    Training guards select only packed operators; no gradients are used.
+    """
+    from nox.packed_schmidt import (reconstruct_packed_schmidt, packed_codec_coefficient_count,
+        packed_schmidt_coefficient_count_from_artifact,packed_schmidt_payload_bytes_from_artifact)
+    base=reconstruct_packed_schmidt(artifact['base_artifact'],device=inputs.device)
+    old=reconstruct_packed_schmidt(artifact,device=inputs.device)
+    windows=inputs.shape[1]//sequence_length
+    split=(windows-max(1,windows//4))*sequence_length
+    x,y=inputs[:,:split].float(),targets[:,:split].float();rows,columns=weight.shape
+    cap=packed_codec_coefficient_count(artifact['amplitude_codec'])
+    count=(cap//65)*64
+    minimum=min(minimum_per_row,columns,count//rows)
+    variance=x.square().mean(1).clamp_min(1e-20)
+    impact=(weight.float()-base).square()*variance[None,:]*sensitivity[:,None]
+    mask=torch.zeros_like(weight,dtype=torch.bool)
+    local=impact.topk(minimum,dim=1,sorted=False).indices
+    mask.scatter_(1,local,True);impact.masked_fill_(mask,-1)
+    remaining=count-rows*minimum
+    if remaining:
+        chosen=impact.flatten().topk(remaining,sorted=False).indices
+        mask.flatten()[chosen]=True
+    del impact
+    coordinates=mask.nonzero(as_tuple=False);ri,ci=coordinates[:,0],coordinates[:,1]
+    prior=(weight.float()-base)[ri,ci].reshape(1,-1)
+    dense=lambda values:torch.zeros_like(base).index_put_((ri,ci),values.reshape(-1))
+    with construction_matmul_precision('high'):
+        covariance=x@x.T/split;diagonal=covariance.diagonal().clamp_min(1e-20)
+        rhs=(((y-base@x-dense(prior)@x)@x.T)/split)[ri,ci].reshape_as(prior)
+        ridge=.01*diagonal[ci].reshape_as(prior)
+        normal=lambda values:(dense(values)@covariance)[ri,ci].reshape_as(prior)+ridge*values
+        delta,_=_prior_anchored_pcg(normal,rhs,diagonal[ci].reshape_as(prior)+ridge,iterations=16,tolerance=1e-4)
+    sensitivity=sensitivity.clamp_min(1e-20)
+    def errors(matrix):
+        return tuple(float(((matrix@a-b).square()*sensitivity[:,None]).sum()/
+                           (b.square()*sensitivity[:,None]).sum().clamp_min(1e-30))
+                     for a,b in ((inputs[:,:split],targets[:,:split]),(inputs[:,split:],targets[:,split:])))
+    initial=errors(old);best,decoded=artifact,old;best_guard=initial[1];records=[]
+    for fraction in (0.,.5,1.):
+        codec=encode_groupwise(prior+fraction*delta,bits=artifact['amplitude_codec']['bits'],
+            group_size=64,scale_policy='mse',entry_weights=variance[ci].reshape_as(prior))
+        physical=base+dense(decode_groupwise(codec,device=inputs.device))
+        fit,guard=errors(physical);records.append({'fraction':fraction,'fit_error':fit,'guard_error':guard})
+        if fit<initial[0] and guard<best_guard:
+            best={'codec_type':GLOBAL_CODEC_TYPE,'orig_shape':tuple(weight.shape),
+                  'base_artifact':artifact['base_artifact'],'support_bits':_pack_codes(mask,1).cpu(),
+                  'amplitude_codec':codec,'post_compression_healing':False}
+            best['payload_bytes']=packed_schmidt_payload_bytes_from_artifact(best)
+            best['logical_coefficient_count']=packed_schmidt_coefficient_count_from_artifact(best)
+            if best['logical_coefficient_count']>packed_schmidt_coefficient_count_from_artifact(artifact):
+                raise RuntimeError('global allocation exceeded coefficient cap')
+            decoded=physical;best_guard=guard
+    return best,decoded,{'method':'global_output_sensitive_excitation_allocation','fit_tokens':split,
+        'guard_tokens':inputs.shape[1]-split,'guard_used_for_support':False,'uses_autograd':False,
+        'initial_errors':initial,'selected':best.get('codec_type')==GLOBAL_CODEC_TYPE,
+        'trials':records,'maximum_coefficients':packed_schmidt_coefficient_count_from_artifact(artifact)}
+
+
+def reconstruct_global_sparse_schmidt(artifact,*,device='cpu',dtype=torch.float32):
+    from nox.packed_schmidt import reconstruct_packed_schmidt
+    base=reconstruct_packed_schmidt(artifact['base_artifact'],device=device)
+    mask=excitation_mask(artifact,device)
+    values=decode_groupwise(artifact['amplitude_codec'],device=device).reshape(-1)
+    if int(mask.sum())!=values.numel():raise ValueError('global support and amplitude counts differ')
+    base[mask]+=values
+    return base.to(dtype)
+
+
+def regularized_teacher_target(symmetric_target, teacher_target, prior_prediction, *, fit_tokens, precision=None):
+    """Fit-only closed-form interpolation; arXiv:2602.05902 Proposition 3.2."""
+    if symmetric_target.shape != teacher_target.shape or prior_prediction.shape != teacher_target.shape:
+        raise ValueError('target interpolation shapes differ')
+    if fit_tokens < 1 or fit_tokens > teacher_target.shape[1]:
+        raise ValueError('invalid target interpolation fit range')
+    mismatch=teacher_target-symmetric_target
+    u=mismatch[:,:fit_tokens];e=(symmetric_target-prior_prediction)[:,:fit_tokens]
+    measured=u if precision is None else precision@u
+    denominator=(u*measured).sum(dtype=torch.float64)
+    alpha=0. if denominator<=1e-20 else float((-(e*measured).sum(dtype=torch.float64)/denominator).clamp(0,1))
+    return symmetric_target+alpha*mismatch, {'alpha':alpha,'fit_tokens':fit_tokens,
+        'guard_used_for_target_interpolation':False,'inference_coefficients_added':0,
+        'method':'closed_form_regularized_asymmetric_target','reference':'https://arxiv.org/abs/2602.05902'}
+
+
+@torch.no_grad()
+def block_shrunk_output_precision(targets, *, fit_tokens, sequence_length):
+    """Training-only full output geometry with window-level covariance shrinkage.
+
+    Separate complete windows estimate uncertainty in the covariance, avoiding
+    the assumption that adjacent tokens are independent. No metric is stored
+    in the inference representation.
+    """
+    x=targets[:,:fit_tokens].float()
+    if fit_tokens%sequence_length or fit_tokens//sequence_length<2:
+        raise ValueError('output covariance needs at least two complete fit windows')
+    x=x-x.mean(1,keepdim=True)
+    variance=x.square().mean(1);floor=variance.median().clamp_min(1e-20)*.01
+    scale=variance.clamp_min(floor).rsqrt();z=x*scale[:,None]
+    with construction_matmul_precision('high'):
+        covariance=z@z.T/fit_tokens
+        windows=fit_tokens//sequence_length;uncertainty=torch.zeros((),device=x.device,dtype=torch.float64)
+        for first in range(0,fit_tokens,sequence_length):
+            chunk=z[:,first:first+sequence_length]
+            difference=chunk@chunk.T/sequence_length-covariance
+            uncertainty+=difference.square().sum(dtype=torch.float64)
+        identity=torch.eye(len(scale),device=x.device)
+        distance=(covariance-identity).square().sum(dtype=torch.float64).clamp_min(1e-20)
+        shrinkage=float((uncertainty/(windows*(windows-1))/distance).clamp(1e-4,1))
+        shrunk=(1-shrinkage)*covariance+shrinkage*identity
+        precision=torch.cholesky_inverse(torch.linalg.cholesky(shrunk))
+        precision*=scale[:,None]*scale[None,:]
+        precision/=precision.diagonal().mean().clamp_min(1e-20)
+    return precision,{'shrinkage':shrinkage,'fit_windows':windows,'fit_tokens':fit_tokens,
+                      'guard_used':False,'stored_coefficients_added':0}
+
+
+@contextmanager
+def construction_matmul_precision(precision):
+    """Scope tensor-core arithmetic to construction, never final decoding."""
+    if precision not in ('highest', 'high'):
+        raise ValueError('construction precision must be highest or high')
+    previous = torch.get_float32_matmul_precision()
+    torch.set_float32_matmul_precision(precision)
+    try:
+        yield
+    finally:
+        torch.set_float32_matmul_precision(previous)
 
 
 def excitation_basis_scale(artifact, indices, device):
@@ -34,7 +171,8 @@ def excitation_basis_scale(artifact, indices, device):
 
 @torch.no_grad()
 def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequence_length=2048,
-                                    methods=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical")):
+                                    methods=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical"),
+                                    output_bits=None, matmul_precision='highest', output_precision=None):
     """Recompile an existing NEC operator without increasing its tensor budget.
 
     Only training construction and disjoint training guard windows select the
@@ -45,6 +183,14 @@ def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequen
     allowed={'pcg_mse','pcg_nonzero','feedback_fixed','feedback_support','feedback_nonzero','pcg_canonical','feedback_canonical'}
     if set(methods)-allowed:
         raise ValueError('unknown excitation construction method')
+    if output_bits is None:
+        output_bits = int(artifact['amplitude_codec']['bits'])
+        allow_precision_reallocation = False
+    else:
+        from nox.residual_codec import SUPPORTED_BITS
+        if output_bits not in SUPPORTED_BITS:
+            raise ValueError('unsupported excitation precision')
+        allow_precision_reallocation = True
     windows = inputs.shape[1] // sequence_length
     if inputs.shape[1] % sequence_length or windows < 2:
         raise ValueError("operator reconstruction requires complete fit/guard windows")
@@ -62,60 +208,78 @@ def reconstruct_excitation_operator(weight, artifact, inputs, targets, *, sequen
         values=decode_groupwise(codec,device=inputs.device)
         if canonical: values=values/input_scale[support]
         sparse = torch.zeros_like(base).scatter_(1, support, values)
-        return (float((sparse @ x - residual_y).square().sum() / y.square().sum().clamp_min(1e-30)),
-                float((sparse @ guard_x - guard_residual).square().sum() / guard_y.square().sum().clamp_min(1e-30)))
+        def energy(value):
+            return value.square().sum() if output_precision is None else (value*(output_precision@value)).sum()
+        return (float(energy(sparse @ x - residual_y) / energy(y).clamp_min(1e-30)),
+                float(energy(sparse @ guard_x - guard_residual) / energy(guard_y).clamp_min(1e-30)))
 
     initial_fit, initial_guard = scores(indices, artifact['amplitude_codec'], artifact.get('codec_type')==CANONICAL_CODEC_TYPE)
     best, best_fit, best_guard, selected = artifact, initial_fit, initial_guard, 'baseline'
     trials = []
     delta = None
     if any(m.startswith('pcg_') for m in methods):
-        _, delta, _, _ = refit_sparse_excitations(artifact, inputs, targets, split=split)
+        with construction_matmul_precision(matmul_precision):
+            _, delta, _, _ = refit_sparse_excitations(artifact, inputs, targets, split=split,
+                                                     base_weight=base,output_precision=output_precision)
     for method in methods:
         canonical=method.endswith('_canonical')
         if method.startswith('pcg_'):
             grid = 'nonzero' if method == 'pcg_nonzero' else 'symmetric'
             candidates = [(indices, encode_groupwise((prior + fraction * delta)*(input_scale[indices] if canonical else 1.),
-                bits=artifact['amplitude_codec']['bits'], group_size=artifact['amplitude_codec']['group_size'],
+                bits=output_bits, group_size=artifact['amplitude_codec']['group_size'],
                 scale_policy='mse', quant_grid=grid, entry_weights=x.square().mean(dim=1)[indices]/(input_scale[indices].square() if canonical else 1.)),
                 {'fraction': fraction}) for fraction in (.25, .5, 1.)]
         else:
-            support, codec, details = covariance_feedback_excitations(
-                weight.float() - base, x, residual_y, kept=artifact['amplitudes_per_row'],
-                bits=artifact['amplitude_codec']['bits'], group_size=artifact['amplitude_codec']['group_size'],
-                fixed_indices=indices if method == 'feedback_fixed' else None,
-                quant_grid='nonzero' if method in ('feedback_nonzero','feedback_canonical') else 'symmetric',
-                amplitude_input_scale=input_scale if canonical else None)
+            with construction_matmul_precision(matmul_precision):
+                support, codec, details = covariance_feedback_excitations(
+                    weight.float() - base, x, residual_y, kept=artifact['amplitudes_per_row'],
+                    bits=output_bits, group_size=artifact['amplitude_codec']['group_size'],
+                    fixed_indices=indices if method == 'feedback_fixed' else None,
+                    quant_grid='nonzero' if method in ('feedback_nonzero','feedback_canonical') else 'symmetric',
+                    amplitude_input_scale=input_scale if canonical else None)
             candidates = [(support, codec, details)]
         for support, codec, details in candidates:
             fit, guard = scores(support, codec, canonical)
             trials.append({'method': method, 'fit_relative_mse': fit, 'guard_relative_mse': guard, **details})
             if fit < initial_fit and guard < best_guard:
                 mask = torch.zeros_like(base, dtype=torch.bool).scatter_(1, support, True)
-                best = {**artifact, 'support_bits': _pack_codes(mask, 1).cpu(), 'amplitude_codec': codec}
+                best = {**artifact, 'support_bits': _pack_codes(mask, 1).cpu(), 'amplitude_codec': codec,
+                        'support_layout': 'row_major'}
                 best['codec_type']=CANONICAL_CODEC_TYPE if canonical else CODEC_TYPE
                 if canonical: best['amplitude_basis']='backbone_input_scale'
                 else: best.pop('amplitude_basis',None)
                 best_fit, best_guard, selected = fit, guard, method
         del candidates
+    added_bytes = packed_schmidt_payload_bytes_from_artifact(best) - packed_schmidt_payload_bytes_from_artifact(artifact)
     if (packed_schmidt_coefficient_count_from_artifact(best) != packed_schmidt_coefficient_count_from_artifact(artifact)
-            or packed_schmidt_payload_bytes_from_artifact(best) != packed_schmidt_payload_bytes_from_artifact(artifact)):
+            or (added_bytes != 0 and not allow_precision_reallocation)):
         raise RuntimeError('excitation reconstruction changed the tensor budget')
+    if added_bytes:
+        payload = packed_schmidt_payload_bytes_from_artifact(best)
+        best = {**best, 'payload_bytes': payload,
+                'prior_byte_budget': artifact.get('byte_budget'),
+                'byte_budget': max(int(artifact.get('byte_budget', 0)), payload),
+                'global_storage_reallocation_requires_export': True}
     return best, reconstruct_packed_schmidt(best, device=inputs.device), {
         'selected': selected, 'initial_fit_relative_mse': initial_fit, 'initial_guard_relative_mse': initial_guard,
         'final_fit_relative_mse': best_fit, 'final_guard_relative_mse': best_guard,
         'fit_tokens': split, 'guard_tokens': inputs.shape[1] - split, 'trials': trials,
-        'logical_coefficients_added': 0, 'tensor_payload_bytes_added': 0,
+        'logical_coefficients_added': 0, 'tensor_payload_bytes_added': added_bytes,
+        'explicit_precision_reallocation': allow_precision_reallocation,
+        'temporary_construction_matmul_precision': matmul_precision,
+        'complete_serialized_budget_requires_measurement': bool(added_bytes),
         'validation_used_for_selection': False, 'uses_autograd': False,
     }
 
 
 @torch.no_grad()
 def refit_sparse_excitations(artifact, inputs, targets, *, split, scale_policy="mse",
-                             quant_grid="symmetric", ridge_ratio=.01, iterations=16):
+                             quant_grid="symmetric", ridge_ratio=.01, iterations=16,
+                             base_weight=None, output_precision=None):
     """Exact supported normal-equation solve with channel-relative anchoring."""
     from nox.packed_schmidt import reconstruct_packed_schmidt
-    base = reconstruct_packed_schmidt(artifact["base_artifact"], device=inputs.device)
+    base = (reconstruct_packed_schmidt(artifact["base_artifact"], device=inputs.device)
+            if base_weight is None else base_weight)
     indices = excitation_indices(artifact, inputs.device)
     prior = excitation_values(artifact, inputs.device, indices=indices)
     x = inputs[:, :split].float()
@@ -126,11 +290,14 @@ def refit_sparse_excitations(artifact, inputs, targets, *, split, scale_policy="
     def dense(values):
         return torch.zeros_like(base).scatter_(1, indices, values)
 
-    rhs = ((y - dense(prior) @ x) @ x.T / split).gather(1, indices)
-    anchoring = ridge_ratio * variance[indices]
+    measured=lambda values:values if output_precision is None else output_precision@values
+    rhs = measured((y - dense(prior) @ x) @ x.T / split).gather(1, indices)
+    output_diagonal=1. if output_precision is None else output_precision.diagonal()[:,None]
+    diagonal=variance[indices]*output_diagonal
+    anchoring = ridge_ratio * diagonal
     delta, history = _prior_anchored_pcg(
-        lambda values: (dense(values) @ covariance).gather(1, indices) + anchoring * values,
-        rhs, variance[indices] + anchoring, iterations=iterations, tolerance=1e-4,
+        lambda values: measured(dense(values) @ covariance).gather(1, indices) + anchoring * values,
+        rhs, diagonal + anchoring, iterations=iterations, tolerance=1e-4,
     )
     return prior, delta, indices, {"cg_history": history,
                                  "ridge_policy": "channel_relative",
@@ -241,10 +408,31 @@ def covariance_feedback_excitations(
     }
 
 
-def excitation_indices(artifact, device):
+def excitation_mask(artifact, device):
     rows, columns = artifact["orig_shape"]
     mask = _unpack_codes(artifact["support_bits"].to(device), rows * columns, 1)
-    return mask.reshape(rows, columns).bool().nonzero(as_tuple=False)[:, 1].reshape(rows, -1)
+    layout=artifact.get('support_layout','row_major')
+    if layout=='row_major':return mask.reshape(rows,columns).bool()
+    if layout=='column_major':return mask.reshape(columns,rows).T.bool()
+    raise ValueError('unknown excitation support layout')
+
+
+def reorder_excitation_support(artifact, layout):
+    """Losslessly reorder support bits; amplitudes retain logical row order."""
+    import numpy as np
+    if layout not in ('row_major','column_major'):raise ValueError('unknown support layout')
+    mask=excitation_mask(artifact,'cpu').numpy()
+    flat=mask.reshape(-1) if layout=='row_major' else mask.T.reshape(-1)
+    changed={**artifact,'support_bits':torch.from_numpy(np.packbits(flat,bitorder='little')),
+             'support_layout':layout}
+    if not torch.equal(excitation_mask(changed,'cpu'),torch.from_numpy(mask)):
+        raise RuntimeError('lossless support reorder verification failed')
+    return changed
+
+
+def excitation_indices(artifact, device):
+    rows, _ = artifact['orig_shape']
+    return excitation_mask(artifact,device).nonzero(as_tuple=False)[:,1].reshape(rows,-1)
 
 
 def excitation_values(artifact, device, *, indices=None):

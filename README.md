@@ -1,25 +1,25 @@
 NEC (Nox Entanglement Compiler) is our post-training, quantum-inspired structural compression system for pretrained language models. It uses tensor networks and related mathematical techniques to reduce the number of independent model parameters without post-compression training.
 
-The latest complete Llama-2-7B package meets the previous PPL ≤10 joint gates: **5.413× actual whole-model storage compression, 2.028× structural coefficient reduction, and held-out WikiText-2 PPL 8.349**. NEC compresses attention and MLP in every transformer layer without gradient-based fine-tuning or healing. Capability scores show substantial accuracy loss. The current objective is dense-level PPL (at worst +0.5), next-token accuracy within two percentage points of dense and at least 98% teacher top-1 agreement, while maintaining or improving the current storage and structural compression. These tighter quality targets are not met; the aspirational 10× storage target also remains open.
+The latest measured research package improves the full Llama-2-7B result to **5.568× actual whole-model storage compression, 2.028× structural coefficient reduction, and WikiText-2 test-regression PPL 8.187**. The published baseline remains unchanged at 5.413× and PPL 8.349. The research candidate uses training-guarded NEC operator selection and an explicitly reconstructed FP16 output head from a closed-form solve; it adds no inference coefficients. NEC compresses attention and MLP in every transformer layer without gradient-based fine-tuning or healing. Capability scores show substantial accuracy loss. The current objective is full-model PPL ≤5.867 (updated user gate, October 24), next-token accuracy of 54–62% and at least 85% teacher top-1 agreement (updated user gates), while maintaining or improving the current storage and structural compression. These tighter quality targets are not met; the aspirational 10× storage target also remains open.
 
 ## Latest complete NEC result
 
 The representation combines a Schmidt/MPO tensor-network backbone, sparse residual coordinate amplitudes, and analytical activation-aware construction. It is a hybrid representation; tensor networks, sparsity and reduced-precision serialization all contribute. Every stored core, amplitude and learned scale counts toward structural size. Complete package storage includes retained embeddings, output head, norms, support masks, metadata, tokenizer and decoder code.
 
-| Full 32-layer result, 2026-10-23 | Dense reference | NEC |
-| --- | ---: | ---: |
-| Complete published repository | 13,479,247,511 bytes | **2,490,273,288 bytes** |
-| Total stored weight/factor coefficients | 6,738,417,664 | **3,323,032,892** |
-| Actual whole-model storage compression | 1× | **5.413×** |
-| Structural coefficient reduction | 1× | **2.028×** |
-| Held-out WikiText-2 test PPL | 4.8673 | **8.3490** |
-| Teacher KL, nats/token | 0 | **0.54395** |
-| Next-token accuracy | 62.82% | **54.00%** |
-| Dense top-1 agreement | 100% | **71.03%** |
-| Dense transformer layers retained | 32 | **0** |
-| PPL ≤10, storage ≥5×, structural ≥2× together | Reference | **Passed** |
+| Full 32-layer result | Dense reference | Published NEC | Research candidate, 2026-10-24 |
+| --- | ---: | ---: | ---: |
+| Complete serialized model | 13,479,247,511 bytes | 2,490,273,288 bytes | **2,420,734,087 bytes** |
+| Total stored weight/factor coefficients | 6,738,417,664 | 3,323,032,892 | **3,323,032,892** |
+| Actual whole-model storage compression | 1× | 5.413× | **5.568×** |
+| Structural coefficient reduction | 1× | 2.028× | **2.028×** |
+| WikiText-2 test-regression PPL | 4.8673 | 8.3490 | **8.1873** |
+| Teacher KL, nats/token | 0 | 0.54395 | **0.52083** |
+| Next-token accuracy | 62.82% | 54.00% | **54.40%** |
+| Dense top-1 agreement | 100% | 71.03% | **71.92%** |
+| Dense transformer layers retained | 32 | 0 | **0** |
+| Current dense-quality, accuracy and agreement targets | Reference | Not met | **Not met** |
 
-Quality uses 308,700 scored test tokens after offset 32,768, context 2,048 and stride 512. This is the remaining held-out test range, not the entire test split. Dense and NEC use identical token IDs. The package loader reproduces checkpoint-injection logits bit for bit. This establishes the stated PPL/storage/structural gates, not dense-equivalent capability or deployment speed.
+Quality uses 308,700 scored test tokens after offset 32,768, context 2,048 and stride 512. This is the remaining test range, not the entire test split. It is now a known regression range; candidate selection uses construction-training guards, not these test tokens. Dense and NEC use identical token IDs. The package loader reproduces checkpoint-injection logits bit for bit. This establishes the stated PPL/storage/structural gates, not dense-equivalent capability or deployment speed.
 
 Before lossless container compression, the complete package is 2,641,936,119 bytes (**5.102×**). Lossless gzip containers preserve decoded tensors and coefficients exactly; the published repository is about **151.7 MB smaller** after including publication files. Model weights remain on the GPU pod and the [private Hugging Face repository](https://huggingface.co/Fluxx08/NEC-Llama-2-7B-Hybrid), revision `3b6f1f379048e52bb982754cd7e8e144c54cfbe7`.
 
@@ -29,7 +29,7 @@ See the [complete experiment report](results/nec_sparse_excitation_a40_20261023/
 
 ## Current accuracy work
 
-[Fixed-budget accuracy reconstruction](results/nec_accuracy_recovery_a40_20261024/README.md) is testing covariance-aware construction of NEC's existing Schmidt/MPO and sparse excitation representation, without gradients or additional stored coefficients. A Q/K-only full-model control slightly improved PPL but reduced next-token accuracy and agreement, so it was rejected under the no-regression rule. Sequential reconstruction of attention and MLP together is underway; the published model remains the baseline.
+[Fixed-budget accuracy reconstruction](results/nec_accuracy_recovery_a40_20261024/README.md) is testing covariance-aware construction of NEC's existing Schmidt/MPO and sparse excitation representation, without gradients or additional stored coefficients. A Q/K-only full-model control slightly improved PPL but reduced next-token accuracy and agreement, so it was rejected under the no-regression rule. Two full sequential reconstruction variants failed their quality gates. The latest operator-selected body plus analytical readout reconstruction improves every measured token-quality metric over the published baseline while meeting its storage and coefficient ceilings. Its complete package passed bitwise GPU logit parity and is stored on the network volume. Capability benchmarks have not been rerun, so the older capability scores below do not measure this new candidate. See the linked report for rejected trials and ongoing representation screens.
 
 ## Full capability benchmarks
 

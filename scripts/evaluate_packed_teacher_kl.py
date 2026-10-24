@@ -36,6 +36,7 @@ def main() -> None:
     parser.add_argument("--token-offset", type=int, default=0)
     parser.add_argument("--seq-len", type=int, default=2048)
     parser.add_argument("--stride", type=int, default=512)
+    parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--kl-chunk-tokens", type=int, default=128)
     parser.add_argument(
         "--projections",
@@ -44,10 +45,14 @@ def main() -> None:
     )
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--readout-checkpoint", type=Path,
+                        help="Explicit analytical FP16 output-head reconstruction; teacher stays original.")
     args = parser.parse_args()
 
     if args.kl_chunk_tokens <= 0:
         raise ValueError("--kl-chunk-tokens must be positive")
+    if args.batch_size < 1:
+        raise ValueError("--batch-size must be positive")
     if args.token_offset < 0:
         raise ValueError("--token-offset must be nonnegative")
     dtype = torch.float16 if str(args.device).startswith("cuda") else torch.float32
@@ -74,22 +79,33 @@ def main() -> None:
         stride=args.stride,
         max_eval_tokens=args.max_eval_tokens,
     )
+    groups = []
+    for window in windows:
+        length = window['end'] - window['begin']
+        if (not groups or len(groups[-1]) >= args.batch_size
+                or length != groups[-1][0]['end'] - groups[-1][0]['begin']):
+            groups.append([])
+        groups[-1].append(window)
+
+    def make_batch(group):
+        input_ids = torch.cat([ids[:, w['begin']:w['end']] for w in group]).to(args.device)
+        targets = input_ids.clone()
+        for row, window in enumerate(group):
+            if window['target_length'] < input_ids.shape[1]:
+                targets[row, :-window['target_length']] = -100
+        labels = targets[:, 1:]
+        return input_ids, labels, labels != -100
 
     teacher_parts: list[torch.Tensor] = []
     labels_parts: list[torch.Tensor] = []
     started = time.monotonic()
-    for index, window in enumerate(windows, start=1):
-        input_ids = ids[:, window["begin"]:window["end"]].to(args.device)
-        targets = input_ids.clone()
-        if window["target_length"] < input_ids.shape[1]:
-            targets[:, :-window["target_length"]] = -100
-        labels = targets[:, 1:]
-        mask = labels != -100
+    for index, group in enumerate(groups, start=1):
+        input_ids, labels, mask = make_batch(group)
         logits = model(input_ids, use_cache=False).logits[:, :-1][mask]
         teacher_parts.append(logits.to(device="cpu", dtype=torch.float16))
         labels_parts.append(labels[mask].to(device="cpu", dtype=torch.long))
-        if index == 1 or index % 10 == 0 or index == len(windows):
-            print(f"teacher windows={index}/{len(windows)}", flush=True)
+        if index == 1 or index % 10 == 0 or index == len(groups):
+            print(f"teacher batches={index}/{len(groups)}", flush=True)
 
     projections = tuple(part.strip() for part in args.projections.split(",") if part.strip())
     injected = inject_nox_checkpoints(
@@ -99,22 +115,40 @@ def main() -> None:
         dtype=dtype,
         projections=projections,
     )
+    readout_provenance = None
+    reference_readout = None
+    if args.readout_checkpoint:
+        replacement = torch.load(args.readout_checkpoint, map_location="cpu", weights_only=True)
+        if set(replacement) != {"lm_head.weight"}:
+            raise ValueError("readout checkpoint must contain exactly lm_head.weight")
+        weight = replacement["lm_head.weight"]
+        destination = model.lm_head.weight
+        if weight.shape != destination.shape or weight.dtype != destination.dtype or not torch.isfinite(weight).all():
+            raise ValueError("readout replacement must preserve shape, dtype and finite values")
+        reference_readout = destination.detach().clone()
+        destination.copy_(weight.to(destination.device))
+        readout_provenance = {
+            "path": str(args.readout_checkpoint.resolve()),
+            "sha256": hashlib.sha256(args.readout_checkpoint.read_bytes()).hexdigest(),
+            "gradient_based_healing": False,
+        }
     totals = {"teacher_nll": 0.0, "student_nll": 0.0, "kl": 0.0}
     student_correct = 0
     teacher_correct = 0
     top1_agreement = 0
     scored_tokens = 0
+    reference_totals = {"nll": 0., "kl": 0., "correct": 0, "agreement": 0}
 
-    for index, (window, teacher_cpu, labels_cpu) in enumerate(
-        zip(windows, teacher_parts, labels_parts), start=1,
+    for index, (group, teacher_cpu, labels_cpu) in enumerate(
+        zip(groups, teacher_parts, labels_parts), start=1,
     ):
-        input_ids = ids[:, window["begin"]:window["end"]].to(args.device)
-        targets = input_ids.clone()
-        if window["target_length"] < input_ids.shape[1]:
-            targets[:, :-window["target_length"]] = -100
-        labels = targets[:, 1:]
-        mask = labels != -100
-        student_logits = model(input_ids, use_cache=False).logits[:, :-1][mask].float()
+        input_ids, labels, mask = make_batch(group)
+        if reference_readout is None:
+            student_logits = model(input_ids, use_cache=False).logits[:, :-1][mask].float()
+        else:
+            hidden = model.model(input_ids, use_cache=False).last_hidden_state
+            student_logits = model.lm_head(hidden)[:, :-1][mask].float()
+            reference_logits = F.linear(hidden, reference_readout)[:, :-1][mask].float()
         teacher_logits = teacher_cpu.to(device=args.device, dtype=torch.float32)
         scored_labels = labels_cpu.to(device=args.device)
         if teacher_logits.shape != student_logits.shape:
@@ -138,14 +172,25 @@ def main() -> None:
             teacher_correct += int((teacher_top1 == chunk_labels).sum())
             student_correct += int((student_top1 == chunk_labels).sum())
             top1_agreement += int((student_top1 == teacher_top1).sum())
+            if reference_readout is not None:
+                reference = reference_logits[begin:end]
+                log_reference = reference.log_softmax(dim=-1)
+                reference_top1 = reference.argmax(dim=-1)
+                reference_totals["nll"] += float((-log_reference[rows, chunk_labels]).double().sum())
+                reference_totals["kl"] += float(F.kl_div(
+                    log_reference, log_teacher, reduction="none", log_target=True,
+                ).sum(dim=-1).double().sum())
+                reference_totals["correct"] += int((reference_top1 == chunk_labels).sum())
+                reference_totals["agreement"] += int((reference_top1 == teacher_top1).sum())
         scored_tokens += int(scored_labels.numel())
-        if index == 1 or index % 10 == 0 or index == len(windows):
-            print(f"student windows={index}/{len(windows)}", flush=True)
+        if index == 1 or index % 10 == 0 or index == len(groups):
+            print(f"student batches={index}/{len(groups)}", flush=True)
 
     teacher_nll = totals["teacher_nll"] / scored_tokens
     student_nll = totals["student_nll"] / scored_tokens
     report = {
         "schema": "nec_packed_teacher_kl_v1",
+        "analytical_readout_reconstruction": readout_provenance,
         "model_id": args.model_id,
         "model_revision": args.model_revision,
         "checkpoint_dir": str(args.checkpoint_dir.resolve()),
@@ -160,6 +205,8 @@ def main() -> None:
         "scored_tokens": int(scored_tokens),
         "context": int(args.seq_len),
         "stride": int(args.stride),
+        "batch_size": args.batch_size,
+        "window_count": len(windows),
         "teacher": {
             "perplexity": math.exp(teacher_nll),
             "mean_nll": teacher_nll,
@@ -175,6 +222,14 @@ def main() -> None:
         "seconds": time.monotonic() - started,
     }
     output = args.output or args.checkpoint_dir / "evaluation_teacher_kl.json"
+    if reference_readout is not None:
+        nll = reference_totals["nll"] / scored_tokens
+        report["student_original_readout"] = {
+            "perplexity": math.exp(nll), "mean_nll": nll,
+            "teacher_kl_nats_per_token": reference_totals["kl"] / scored_tokens,
+            "next_token_accuracy": reference_totals["correct"] / scored_tokens,
+            "dense_top1_agreement": reference_totals["agreement"] / scored_tokens,
+        }
     output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2), flush=True)
 

@@ -692,6 +692,7 @@ def reconstruct_from_artifact(artifact, device="cpu", dtype=torch.float32):
         "nec_packed_sector_schmidt_v1",
         "nec_sparse_excitation_schmidt_v1",
         "nec_sparse_excitation_schmidt_v2",
+        "nec_global_excitation_schmidt_v1",
     ):
         from nox.packed_schmidt import reconstruct_packed_schmidt
         return reconstruct_packed_schmidt(artifact, device=device, dtype=dtype)

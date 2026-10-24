@@ -32,7 +32,9 @@ from nox.packed_schmidt import (
 )
 from nox.sector_schmidt import compile_sector_schmidt, select_swiglu_sectors
 from nox.sequential_compiler import forward_transformer_block
-from nox.sparse_schmidt import compile_sparse_schmidt, reconstruct_excitation_operator
+from nox.sparse_schmidt import compile_sparse_schmidt, reconstruct_excitation_operator, regularized_teacher_target, reconstruct_global_excitations
+from nox.packed_schmidt import packed_schmidt_payload_bytes_from_artifact
+from nox.sparse_schmidt import block_shrunk_output_precision
 
 
 PROJECTIONS = ("q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj")
@@ -244,6 +246,15 @@ def main() -> None:
     parser.add_argument("--sparse-amplitude-basis", choices=("native", "backbone_input_scale"), default="native")
     parser.add_argument("--reconstruct-from", type=Path,
                         help="Recompile existing sparse NEC amplitudes at exactly their current tensor budgets.")
+    parser.add_argument("--reconstruction-projections", nargs="+", choices=PROJECTIONS,
+                        help="Reconstruct only these projections; reuse other NEC operators unchanged.")
+    parser.add_argument("--reconstruction-amplitude-bits", type=int, choices=(2, 3, 4, 5, 6, 8),
+                        help="Explicit precision reallocation at unchanged coefficient count; measure complete bytes afterward.")
+    parser.add_argument("--reconstruction-matmul-precision", choices=("highest", "high"), default="highest",
+                        help="Temporary statistical solves only; decoding and guard checks retain reference precision.")
+    parser.add_argument("--reconstruction-target-policy", choices=("teacher", "regularized_block"), default="teacher")
+    parser.add_argument("--reconstruction-output-metric", choices=("energy", "full_covariance"), default="energy")
+    parser.add_argument("--global-excitation-projections", nargs="+", choices=("gate_proj", "up_proj"))
     parser.add_argument("--excitation-methods", nargs="+",
                         choices=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical"),
                         default=("pcg_mse", "pcg_nonzero", "feedback_fixed", "feedback_support", "feedback_nonzero", "pcg_canonical", "feedback_canonical"))
@@ -269,6 +280,10 @@ def main() -> None:
         help="Write and print mathematical byte/coefficient feasibility, then exit.",
     )
     args = parser.parse_args()
+    if (args.reconstruction_projections or args.reconstruction_amplitude_bits is not None) and args.reconstruct_from is None:
+        parser.error("reconstruction precision/projection options require --reconstruct-from")
+    if args.global_excitation_projections and (args.reconstruct_from is None or args.joint_mlp_sweeps):
+        parser.error("experimental global excitations require --reconstruct-from and --joint-mlp-sweeps 0")
     if args.target_whole_model_ratio < 5:
         parser.error("NEC whole-model target must be at least 5x")
     if args.min_structural_reduction < 2:
@@ -464,13 +479,51 @@ def main() -> None:
         if (initial['payload_bytes'] > construction['byte_budget']
                 or packed_schmidt_coefficient_count_from_artifact(initial) > construction['coefficient_budget']):
             raise ValueError('initial NEC representation exceeds the requested budget')
+        if args.reconstruction_projections is not None and name not in args.reconstruction_projections:
+            return initial, reconstruct_packed_schmidt(initial, device=weight.device), {
+                'representation':'unchanged_nec_operator', 'payload_bytes':initial['payload_bytes'],
+            }
         inputs = construction['calibration_inputs']
         targets = construction.get('calibration_targets')
         if targets is None:
             targets = weight.float() @ inputs.float()
+        if args.global_excitation_projections and name in args.global_excitation_projections:
+            fit = inputs.shape[1] - max(1,inputs.shape[1]//args.sequence_length//4)*args.sequence_length
+            gate=dense_gate_up['gate_proj'][:,:fit];up=dense_gate_up['up_proj'][:,:fit]
+            readout=weights[prefix+'mlp.down_proj.weight'].float().square().sum(0)
+            if name=='gate_proj':
+                probability=gate.sigmoid()
+                sensitivity=readout*((probability*(1+gate*(1-probability))*up).square().mean(1))
+            else:sensitivity=readout*F.silu(gate).square().mean(1)
+            artifact,decoded,diagnostics=reconstruct_global_excitations(weight,initial,inputs,targets,sensitivity,
+                                                                      sequence_length=args.sequence_length)
+            diagnostics['uses_nonlinear_derivatives_for_importance_only'] = name == 'gate_proj'
+            return artifact,decoded,{'representation':'global_excitation_allocation','payload_bytes':packed_schmidt_payload_bytes_from_artifact(artifact),'reconstruction':diagnostics}
+        interpolation = None
+        output_precision = None
+        metric_diagnostics = None
+        if args.reconstruction_output_metric == 'full_covariance' and name == 'down_proj':
+            windows = inputs.shape[1] // args.sequence_length
+            fit_tokens = (windows - max(1, windows // 4)) * args.sequence_length
+            output_precision,metric_diagnostics=block_shrunk_output_precision(
+                dense_residual_hidden+dense_mlp_output,fit_tokens=fit_tokens,sequence_length=args.sequence_length)
+        if args.reconstruction_target_policy == 'regularized_block' and name == 'down_proj':
+            # Correct the complete residual block, regularizing its clean
+            # teacher target toward the source operator on student features.
+            desired = targets + dense_residual_hidden - residual_hidden
+            prior = reconstruct_packed_schmidt(initial, device=weight.device) @ inputs
+            symmetric = weight.float() @ inputs.float()
+            windows = inputs.shape[1] // args.sequence_length
+            fit_tokens = (windows - max(1, windows // 4)) * args.sequence_length
+            targets, interpolation = regularized_teacher_target(symmetric, desired, prior, fit_tokens=fit_tokens,precision=output_precision)
         artifact, decoded, diagnostics = reconstruct_excitation_operator(
             weight, initial, inputs, targets, sequence_length=args.sequence_length,
-            methods=args.excitation_methods)
+            methods=args.excitation_methods, output_bits=args.reconstruction_amplitude_bits,
+            matmul_precision=args.reconstruction_matmul_precision,output_precision=output_precision)
+        if interpolation is not None:
+            diagnostics['target_regularization'] = interpolation
+        if metric_diagnostics is not None:
+            diagnostics['output_covariance_metric'] = metric_diagnostics
         return artifact, decoded, {'representation': 'fixed_budget_schmidt_excitation_reconstruction',
                                   'payload_bytes': artifact['payload_bytes'], 'reconstruction': diagnostics}
 

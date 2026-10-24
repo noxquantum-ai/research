@@ -369,6 +369,8 @@ def materialize_deployable_allocation_package(
     source_model_dir, checkpoint_dir, output_dir, layers, compressed_layers,
     int8_layers, int8_artifact_dir, model_revision, *, checkpoint_container="plain",
     retained_container="plain",
+    retained_weight_overrides=None,
+    excitation_support_layout="preserve",
 ):
     """Build and byte-count a mixed HF/NEC package with replaced tensors removed."""
     from safetensors import safe_open
@@ -379,6 +381,8 @@ def materialize_deployable_allocation_package(
         raise ValueError("checkpoint container must be plain or gzip")
     if retained_container not in ("plain", "gzip"):
         raise ValueError("retained container must be plain or gzip")
+    if excitation_support_layout not in ("preserve", "column_major"):
+        raise ValueError("unknown excitation support layout")
     source_model_dir = Path(source_model_dir)
     package_dir = Path(output_dir) / "deployable_model"
     if package_dir.exists():
@@ -388,6 +392,9 @@ def materialize_deployable_allocation_package(
     index_path = source_model_dir / "model.safetensors.index.json"
     source_index = json.loads(index_path.read_text())
     weight_map = source_index["weight_map"]
+    retained_weight_overrides = retained_weight_overrides or {}
+    if set(retained_weight_overrides) - set(weight_map):
+        raise ValueError("retained tensor override is absent from source index")
     replaced_layers = set(compressed_layers) | set(int8_layers)
     replaced_names = set()
     replacement_coefficients = 0
@@ -416,6 +423,7 @@ def materialize_deployable_allocation_package(
                     "nec_packed_sector_schmidt_v1",
                     "nec_sparse_excitation_schmidt_v1",
                     "nec_sparse_excitation_schmidt_v2",
+                    "nec_global_excitation_schmidt_v1",
                 ):
                     replacement_coefficients += (
                         packed_schmidt_coefficient_count_from_artifact(artifact)
@@ -445,6 +453,8 @@ def materialize_deployable_allocation_package(
         )
 
     updated_weight_map = {}
+    if set(retained_weight_overrides) & replaced_names:
+        raise ValueError("retained tensor override conflicts with NEC replacement")
     updated_total_size = 0
     dense_source_coefficient_count = 0
     retained_coefficient_count = 0
@@ -460,6 +470,13 @@ def materialize_deployable_allocation_package(
                 if name in replaced_names:
                     continue
                 tensor = shard.get_tensor(name).contiguous()
+                if name in retained_weight_overrides:
+                    replacement = retained_weight_overrides[name]
+                    if replacement.shape != tensor.shape or replacement.dtype != tensor.dtype:
+                        raise ValueError("retained tensor override changes shape or dtype")
+                    if not torch.isfinite(replacement).all():
+                        raise ValueError("retained tensor override contains non-finite values")
+                    tensor = replacement.detach().cpu().contiguous()
                 retained_tensors[name] = tensor
                 updated_weight_map[name] = shard_name
                 updated_total_size += tensor.numel() * tensor.element_size()
@@ -496,10 +513,25 @@ def materialize_deployable_allocation_package(
     container_records = []
     for layer in sorted(compressed_layers):
         source_checkpoint = checkpoint_dir / f"compressed_layer_{layer}.pt"
-        if checkpoint_container == "plain":
+        original = source_checkpoint.read_bytes()
+        source_sha256 = hashlib.sha256(original).hexdigest()
+        if excitation_support_layout == "column_major":
+            from nox.sparse_schmidt import reorder_excitation_support
+            checkpoint = torch.load(io.BytesIO(original), map_location="cpu", weights_only=True)
+            for name, artifact in checkpoint["compressed_artifacts"].items():
+                if artifact.get("codec_type") in (
+                    "nec_sparse_excitation_schmidt_v1", "nec_sparse_excitation_schmidt_v2",
+                    "nec_global_excitation_schmidt_v1",
+                ):
+                    checkpoint["compressed_artifacts"][name] = reorder_excitation_support(artifact, "column_major")
+            buffer = io.BytesIO()
+            torch.save(checkpoint, buffer)
+            original = buffer.getvalue()
+        if checkpoint_container == "plain" and excitation_support_layout == "preserve":
             shutil.copy2(source_checkpoint, nec_dir / source_checkpoint.name)
+        elif checkpoint_container == "plain":
+            (nec_dir / source_checkpoint.name).write_bytes(original)
         else:
-            original = source_checkpoint.read_bytes()
             compressed = gzip.compress(original, compresslevel=1, mtime=0)
             restored = gzip.decompress(compressed)
             if restored != original:
@@ -512,6 +544,8 @@ def materialize_deployable_allocation_package(
                 "uncompressed_sha256": hashlib.sha256(original).hexdigest(),
                 "roundtrip_sha256": hashlib.sha256(restored).hexdigest(),
                 "lossless_verified": True,
+                "source_checkpoint_sha256": source_sha256,
+                "excitation_support_layout": excitation_support_layout,
             })
     shutil.copy2(checkpoint_dir / "model_manifest.json", package_dir / "nec_compile_manifest.json")
     if int8_layers:
@@ -638,9 +672,11 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         "int8_dense_layers": sorted(int8_layers),
         "fp16_dense_layers": sorted(set(layers) - set(compressed_layers) - set(int8_layers)),
         "replaced_tensor_names": sorted(replaced_names),
+        "analytically_reconstructed_retained_tensors": sorted(retained_weight_overrides),
         "runtime_loader": "load_nec_package.py",
         "nonstandard_weight_loading_required": True,
         "checkpoint_container": checkpoint_container,
+        "excitation_support_layout": excitation_support_layout,
         "retained_container": retained_container,
         "lossless_container_verification": container_records,
     }
@@ -711,6 +747,7 @@ def load_model(device_map="auto", torch_dtype=torch.float16):
         ),
         "coefficient_accounting_complete": coefficient_count_complete,
         "checkpoint_container": checkpoint_container,
+        "excitation_support_layout": excitation_support_layout,
         "retained_container": retained_container,
         "retained_lossless_container_verification": retained_container_records,
         "lossless_container_verification": container_records,

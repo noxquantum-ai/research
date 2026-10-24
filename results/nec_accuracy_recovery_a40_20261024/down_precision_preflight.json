@@ -1,0 +1,12 @@
+{
+  "schema": "nec_down_precision_storage_preflight_v1",
+  "starting_measured_package_bytes": 2382168906,
+  "maximum_complete_bytes": 2490273288,
+  "existing_measured_headroom_bytes": 108104382,
+  "full32_down_added_raw_code_bytes": 77070336,
+  "coefficients_added": 0,
+  "unchanged_down_amplitude_count": 613007360,
+  "headroom_exceeds_raw_code_increment": true,
+  "actual_new_lossless_container_size_requires_measurement": true,
+  "result_claimed_feasible": false
+}

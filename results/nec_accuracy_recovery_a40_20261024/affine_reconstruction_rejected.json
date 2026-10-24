@@ -1,0 +1,61 @@
+{
+  "schema": "nec_affine_fixed_coefficient_probe_v1",
+  "uses_autograd": false,
+  "final_success_demonstrated": false,
+  "phase": "measured",
+  "baseline_training_guard": {
+    "mean_nll": 2.1978154557474543,
+    "perplexity": 9.005319477128442,
+    "teacher_kl_nats_per_token": 0.5370684812014022,
+    "next_token_correct": 4254,
+    "dense_agreement_correct": 5739,
+    "scored_tokens": 8188,
+    "next_token_accuracy": 0.5195407914020518,
+    "dense_top1_agreement": 0.7009037616023449
+  },
+  "baseline_validation": {
+    "mean_nll": 1.8840877145015775,
+    "perplexity": 6.5803485463324565,
+    "teacher_kl_nats_per_token": 0.5155202614524327,
+    "next_token_correct": 4722,
+    "dense_agreement_correct": 5964,
+    "scored_tokens": 8191,
+    "next_token_accuracy": 0.5764863874984739,
+    "dense_top1_agreement": 0.7281162251251373
+  },
+  "released_amplitude_and_scale_coefficients": 131072,
+  "added_bias_coefficients": 131072,
+  "trials": [
+    {
+      "fraction": 1.0,
+      "score": {
+        "mean_nll": 2.2025543197982183,
+        "perplexity": 9.048095737253337,
+        "teacher_kl_nats_per_token": 0.539887822347857,
+        "next_token_correct": 4248,
+        "dense_agreement_correct": 5742,
+        "scored_tokens": 8188,
+        "next_token_accuracy": 0.5188080117244749,
+        "dense_top1_agreement": 0.7012701514411334
+      },
+      "accepted": false
+    },
+    {
+      "fraction": 0.5,
+      "score": {
+        "mean_nll": 2.198797668546482,
+        "perplexity": 9.014168962505657,
+        "teacher_kl_nats_per_token": 0.5369548365509013,
+        "next_token_correct": 4252,
+        "dense_agreement_correct": 5732,
+        "scored_tokens": 8188,
+        "next_token_accuracy": 0.5192965315095261,
+        "dense_top1_agreement": 0.7000488519785051
+      },
+      "accepted": false
+    }
+  ],
+  "seconds": 65.2229441968957,
+  "validation_used_for_selection": false,
+  "deployable_package_not_yet_measured": true
+}

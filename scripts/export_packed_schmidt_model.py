@@ -26,6 +26,8 @@ def main():
     parser.add_argument("--max-ppl", type=float, default=10.0)
     parser.add_argument("--checkpoint-container", choices=("plain", "gzip"), default="plain")
     parser.add_argument("--retained-container", choices=("plain", "gzip"), default="plain")
+    parser.add_argument("--readout-checkpoint", type=Path)
+    parser.add_argument("--excitation-support-layout", choices=("preserve", "column_major"), default="preserve")
     args = parser.parse_args()
 
     config = json.loads((args.model_dir / "config.json").read_text())
@@ -53,12 +55,17 @@ def main():
         if set(checkpoint["compressed_artifacts"]) != expected_projection_names:
             raise ValueError(f"checkpoint {layer} must replace all seven projections")
         if any(not (item.get("codec_type", "").startswith("nec_packed_operator_schmidt_")
-                    or item.get("codec_type") in ("nec_packed_sector_schmidt_v1", "nec_sparse_excitation_schmidt_v1", "nec_sparse_excitation_schmidt_v2"))
+                    or item.get("codec_type") in ("nec_packed_sector_schmidt_v1", "nec_sparse_excitation_schmidt_v1", "nec_sparse_excitation_schmidt_v2", "nec_global_excitation_schmidt_v1"))
                for item in checkpoint["compressed_artifacts"].values()):
             raise ValueError("this exporter requires packed Schmidt artifacts")
         del checkpoint
 
     quality = None
+    overrides = None
+    if args.readout_checkpoint:
+        overrides = torch.load(args.readout_checkpoint, map_location="cpu", weights_only=True)
+        if set(overrides) != {"lm_head.weight"}:
+            raise ValueError("readout checkpoint must contain exactly lm_head.weight")
     if args.quality_report:
         quality = json.loads(args.quality_report.read_text())
         if tuple(quality["compressed_layers"]) != layers:
@@ -67,12 +74,19 @@ def main():
             raise ValueError("quality report must evaluate all exported projections")
         if Path(quality["checkpoint_dir"]).resolve() != args.checkpoint_dir.resolve():
             raise ValueError("quality report refers to a different checkpoint directory")
+        readout = quality.get("analytical_readout_reconstruction")
+        if bool(readout) != bool(args.readout_checkpoint):
+            raise ValueError("quality/export readout constructions differ")
+        if readout and readout['sha256'] != hashlib.sha256(args.readout_checkpoint.read_bytes()).hexdigest():
+            raise ValueError("quality/export readout hashes differ")
 
     measurement = materialize_deployable_allocation_package(
         args.model_dir, args.checkpoint_dir, args.output, tuple(range(layer_count)),
         layers, (), args.output / "unused_int8", config.get("_commit_hash", "local_source"),
         checkpoint_container=args.checkpoint_container,
         retained_container=args.retained_container,
+        retained_weight_overrides=overrides,
+        excitation_support_layout=args.excitation_support_layout,
     )
     expected_coefficients = compile_manifest.get("evaluated_assembly_coefficient_count")
     if (

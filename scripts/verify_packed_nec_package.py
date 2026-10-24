@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--package-dir', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--device', choices=('cpu', 'cuda'), default='cuda')
+    parser.add_argument('--readout-checkpoint', type=Path)
     args = parser.parse_args()
     config = json.loads((args.model_dir / 'config.json').read_text())
     generator = torch.Generator().manual_seed(271828)
@@ -37,6 +38,14 @@ def main():
         args.model_dir, dtype=torch.float16, device_map=device_map, local_files_only=True,
     ).eval()
     injected = inject_nox_checkpoints(model, args.checkpoint_dir, device=args.device, dtype=torch.float16)
+    if args.readout_checkpoint:
+        data = torch.load(args.readout_checkpoint, map_location='cpu', weights_only=True)
+        if set(data) != {'lm_head.weight'}:
+            raise ValueError('readout checkpoint must contain exactly lm_head.weight')
+        weight = data['lm_head.weight']
+        if weight.shape != model.lm_head.weight.shape or weight.dtype != model.lm_head.weight.dtype:
+            raise ValueError('readout must preserve shape and dtype')
+        model.lm_head.weight.copy_(weight.to(args.device))
     reference = model(ids, use_cache=False).logits.cpu()
     del model
     gc.collect()

@@ -1,0 +1,496 @@
+{
+  "schema": "nec_persistent_research_candidate_v1",
+  "persistent_path": "/workspace/runs/nec-accuracy-recovery-20261024/readout_candidate/deployable_model",
+  "serialized_bytes": 2420734087,
+  "all_files_byte_identical": true,
+  "runtime_parity_previously_passed_on_identical_package": true,
+  "final_accuracy_target_met": false,
+  "published_baseline_unchanged": true,
+  "files": [
+    {
+      "file": "NEC_PACKAGE_README.md",
+      "bytes": 727,
+      "sha256": "db6d8296a6cacbec1e12e9e212366772fb1b0cc9c71ad9efd1a4acb7c6395a77"
+    },
+    {
+      "file": "config.json",
+      "bytes": 583,
+      "sha256": "3c66a81e29ce617a74ff2e4055e7fb275b5c9457103864745693fbce59b368a2"
+    },
+    {
+      "file": "generation_config.json",
+      "bytes": 200,
+      "sha256": "7495350e3f00cac9cb72be86f453c25ed10d2eb8a48a27e9d120428df9015c11"
+    },
+    {
+      "file": "load_nec_package.py",
+      "bytes": 3922,
+      "sha256": "d07c4b89f48d23a3a7880ba5ade938af963ca631e972f9588583a1a858d6f407"
+    },
+    {
+      "file": "model-00001-of-00002.safetensors.gz",
+      "bytes": 204062652,
+      "sha256": "7d04b59a6270be63f7644f9e0a171bb4574a736f458a128a46a84b8cbbcabfa7"
+    },
+    {
+      "file": "model-00002-of-00002.safetensors.gz",
+      "bytes": 242438870,
+      "sha256": "1b0662e201fab025e56aee30a0d7f5a3ce8c4f7a389bb2fa6e53b4f2d0eb7144"
+    },
+    {
+      "file": "model.safetensors.index.json",
+      "bytes": 8616,
+      "sha256": "d4c88339e634c23fac66dcd2478ab7aa4ec02dcb72d0505788f539a193bec02d"
+    },
+    {
+      "file": "nec_allocation_manifest.json",
+      "bytes": 23079,
+      "sha256": "56b4450c62d3a5c9d0997a214c1393299b914c38d0710f8ca827f5e5e80e9944"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_0.pt.gz",
+      "bytes": 52428173,
+      "sha256": "41d8a19a630f13eaa55b801ea14562e89de1fcd6ec95ed7e0df94a127f22039c"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_1.pt.gz",
+      "bytes": 61135521,
+      "sha256": "a1c43b07d308e6157eea1b033e48519d4d627fd44898815d11be5a1e2b8ad9bb"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_10.pt.gz",
+      "bytes": 61963510,
+      "sha256": "3c70e71c81060b411eda7a5797cff8e10ed86fb30964daa15a95fe9641959cce"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_11.pt.gz",
+      "bytes": 63566471,
+      "sha256": "bf60da06e5201b17e80a1aa28063be0d500cc0ec87ea355c96eb39c8b5e4143f"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_12.pt.gz",
+      "bytes": 61971051,
+      "sha256": "d4447d90952bc8c599d9dde25fd08a43b5399618fdce57e864d0c61c89f62c07"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_13.pt.gz",
+      "bytes": 61765864,
+      "sha256": "7e0848a37606107b7c3edb8e88f1f3b6f20f40089fd0bc8c682cce794de1ccbf"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_14.pt.gz",
+      "bytes": 61799550,
+      "sha256": "956067c673d46b69d441aaefc3edbc072e51f24d76ab857c97233ca109c31432"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_15.pt.gz",
+      "bytes": 61790505,
+      "sha256": "e39d5b2f26c7df4c56879e05a9b66dcc061783dfc53d459cf2c2db1d4b1a37be"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_16.pt.gz",
+      "bytes": 61633002,
+      "sha256": "8581af0795df7f89e701e2c991076d368a6cc322473a6c0a6331e02a97ba28cd"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_17.pt.gz",
+      "bytes": 61504981,
+      "sha256": "43c0611af89cf41d24db04972acb6af35c106b65501c03c994770a58577af729"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_18.pt.gz",
+      "bytes": 61333705,
+      "sha256": "4ab693ecb4f6a798deb7314de3f91a9f4a88201cfc8df06dbced22fb3f6bfaa3"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_19.pt.gz",
+      "bytes": 61380701,
+      "sha256": "b887973c58e0a813cd8c4ef26abd7c92c0ff3426c87a1c7181374e402615ca7e"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_2.pt.gz",
+      "bytes": 65721821,
+      "sha256": "0c91ff17130dd90f79c29d319289b33b1f457b78cf585dd52a4d8617eadbf4f4"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_20.pt.gz",
+      "bytes": 61325147,
+      "sha256": "7bfe5594f3685e5e34d6ac247d72a61d2b606c40ae0c6a6d6a8c91e9d95e9c33"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_21.pt.gz",
+      "bytes": 61304128,
+      "sha256": "5d65b06786f5d884306db38373b543a9211011af8c0157442d3f7a3d50abb5e0"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_22.pt.gz",
+      "bytes": 61365955,
+      "sha256": "997272b74c822170ee745df9086868a5c89f3773cad2420ff7d244fbacc17382"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_23.pt.gz",
+      "bytes": 61380625,
+      "sha256": "0d8de45e9383365a74e601a05eb709f8f3f19b2fc8afa2ec5643688495ebbad6"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_24.pt.gz",
+      "bytes": 61377257,
+      "sha256": "62463ebc8165ab13224f981b04be6300b0de1a2c123a4d4a9ef82b9a283af791"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_25.pt.gz",
+      "bytes": 61329251,
+      "sha256": "0df9171b1fad19842df24bae301e73452f0841bf760b0b2213a2891e67623cc2"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_26.pt.gz",
+      "bytes": 61235786,
+      "sha256": "cf7b458f8bac6326cfcb9ea8f57815741c3f7ea3319052caf62506f33f751264"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_27.pt.gz",
+      "bytes": 61308249,
+      "sha256": "7cb73e2e8d9ecf1e042187ce5012fc5410a9a66ffbe48502faf755b7d114b899"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_28.pt.gz",
+      "bytes": 61347652,
+      "sha256": "37b68089e1038f5822549bf559bb6f398856a5048c87099a081cb4229432ae2a"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_29.pt.gz",
+      "bytes": 61387556,
+      "sha256": "a963ab15daf8ee487a62462ca4af2bdcfa3aff99e988cf96ae1b4ad2988fc84c"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_3.pt.gz",
+      "bytes": 62628130,
+      "sha256": "6421ad9e5e7eee0638005fd2ad395a75d9d9e97b9a357bb869b724d2b92ea8cc"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_30.pt.gz",
+      "bytes": 62548653,
+      "sha256": "4690389827be42282135682f1e237976b00cb85c5cba255b9ebc3c6a34392b77"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_31.pt.gz",
+      "bytes": 61472459,
+      "sha256": "4e9f405feb9116fca51135a5837c29a29108cff1a48e2082f7472944f08c1372"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_4.pt.gz",
+      "bytes": 65318712,
+      "sha256": "3572ef7d35bbbe9d3a19fa73454c132580b0747565b2833bedb6c1038fc48094"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_5.pt.gz",
+      "bytes": 51271342,
+      "sha256": "50ba5236aaf2bceaf889a88feee43a748acf6790ab3b15d2ce4c34e09520d5b0"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_6.pt.gz",
+      "bytes": 63667320,
+      "sha256": "a756e8e945c1c78b8055e174dd3fd5510b27922cca346622e81d05385fac9915"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_7.pt.gz",
+      "bytes": 67844884,
+      "sha256": "82914c278dde45415716fb00b6a8ae1b238baf1bc541250812212c1ffc419858"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_8.pt.gz",
+      "bytes": 61879865,
+      "sha256": "e988f01b83ef68665bba0b3239d19013d68ef2873e96023702793c8abed98cf1"
+    },
+    {
+      "file": "nec_checkpoints/compressed_layer_9.pt.gz",
+      "bytes": 63203157,
+      "sha256": "d71247f5d4d81b1afb7e68f2e3b52652a7bc462bdc2c511664488935081d7001"
+    },
+    {
+      "file": "nec_compile_manifest.json",
+      "bytes": 34720,
+      "sha256": "e82b0d03e2581c7294e11d4a345d8eff00f021ec4185a8d4ae1d06fe66312467"
+    },
+    {
+      "file": "nec_quality_evaluation.json",
+      "bytes": 2516,
+      "sha256": "aff6035226e5c20696c10e1d34e495669f1c98a1a06310fe243bfec74a116d18"
+    },
+    {
+      "file": "nox/__init__.py",
+      "bytes": 3245,
+      "sha256": "7bf79f0aac56a95ed1c95ac216086868817e1be0245349d6c8b964d213c73310"
+    },
+    {
+      "file": "nox/allocation.py",
+      "bytes": 1712,
+      "sha256": "a0347af520bffd08038cb6b5d312a168b07bd1cdb84d9c0ac4e6b5b3190e8a19"
+    },
+    {
+      "file": "nox/artifacts.py",
+      "bytes": 1734,
+      "sha256": "ef598915e1ca2ca92f3331200d25079a04b38a9ff50e50e05e015a5eefbb88cd"
+    },
+    {
+      "file": "nox/baselines/__init__.py",
+      "bytes": 208,
+      "sha256": "75fc518f0f63ef8062eccfc8f2bb9f2d35045f1a060ab1ff7fb06b5b168f13ae"
+    },
+    {
+      "file": "nox/baselines/awt.py",
+      "bytes": 3367,
+      "sha256": "16ef3f316ceb4e1d05d10f6f0adb661900e9f60a0470caa4111ad8468ff9d69c"
+    },
+    {
+      "file": "nox/baselines/multiverse.py",
+      "bytes": 2719,
+      "sha256": "2cad51f458d7d7106f89f34a484af55c8cf407cc98b1c55b54af72cbfcff6377"
+    },
+    {
+      "file": "nox/block_compiler.py",
+      "bytes": 36209,
+      "sha256": "fda4b94dc8fd5f870c4934c97b791ab03b84ac823772db53d3f1c47c685635c3"
+    },
+    {
+      "file": "nox/block_distillation.py",
+      "bytes": 3648,
+      "sha256": "18cae3709a8318fda1b5cffd06ff471eacb8d780b4b472206303a2743cac12ca"
+    },
+    {
+      "file": "nox/calibration.py",
+      "bytes": 8453,
+      "sha256": "16d1b8100a064f18500945355fd1c695045cd9bf357aaa41de79a0e0bfdb87d3"
+    },
+    {
+      "file": "nox/compiler.py",
+      "bytes": 72845,
+      "sha256": "0994e963f351d587ead2605e86bd2765702576299fb78bf474484d0be9de4513"
+    },
+    {
+      "file": "nox/construction_selection.py",
+      "bytes": 1083,
+      "sha256": "8392f6af6e478dffc046b9e8d4fae9f374166d7164f8522bc542a0c23f60182d"
+    },
+    {
+      "file": "nox/data.py",
+      "bytes": 2580,
+      "sha256": "1511c7e9397224f1f2ef6572296dde1545e992bd9fe7986ed15abbaa0908aa10"
+    },
+    {
+      "file": "nox/defect_bridge.py",
+      "bytes": 9850,
+      "sha256": "83e8b805c345155c2e795496bd5eb7d1e56de87627380816176983da8f006ea1"
+    },
+    {
+      "file": "nox/evaluation.py",
+      "bytes": 30041,
+      "sha256": "fa5ce7e629eb15703e2caee9c8ea71a2f35c0b8319d4c12351037b573239dc03"
+    },
+    {
+      "file": "nox/function_aware_attention.py",
+      "bytes": 6832,
+      "sha256": "17a7c8285fb6c7ee27597d7e9a7a6da421aecd8a43f327facf0b3f3a03558f1d"
+    },
+    {
+      "file": "nox/function_aware_benchmarks.py",
+      "bytes": 18649,
+      "sha256": "9fff00d4925f223cc44aa5f5e3553bd0df491240691ffc06e511f38b963b940b"
+    },
+    {
+      "file": "nox/function_aware_tn.py",
+      "bytes": 24245,
+      "sha256": "87748991cdbd859a44e83270acb17796321cd04af70c5f12bdaa5243996eb3a7"
+    },
+    {
+      "file": "nox/functional_attention.py",
+      "bytes": 9662,
+      "sha256": "b263bfc50f0b640b2706810a5af5f156ca085234b83e39d734854f17328c30f1"
+    },
+    {
+      "file": "nox/functional_routing.py",
+      "bytes": 10848,
+      "sha256": "9f0953bda6915966e6cebb207dd9b86458056b0159d8a31537cc20d2ee1213d9"
+    },
+    {
+      "file": "nox/functional_schmidt.py",
+      "bytes": 21416,
+      "sha256": "5a1595831d584db7c35cb3d38efad7abcc3af07f33bfcdf822494b4259540d9b"
+    },
+    {
+      "file": "nox/gauge.py",
+      "bytes": 3977,
+      "sha256": "1da89bbf64106ec6148f5361c9a524c26595412c62697d6cb593a1b932f417bb"
+    },
+    {
+      "file": "nox/grouped_swiglu_tn.py",
+      "bytes": 14742,
+      "sha256": "1504debbe32593dc22ec964b4ce76d7ebdf60262cde77f10ff70c15475750268"
+    },
+    {
+      "file": "nox/hf_subset.py",
+      "bytes": 1927,
+      "sha256": "ab319826e48ac345cec0db591b5ea2c104f5351e2cb9510a68a21fe35970f137"
+    },
+    {
+      "file": "nox/joint_quant_mpo.py",
+      "bytes": 9003,
+      "sha256": "1306ed50aecc6ebe5dfdccbb445532ba9d49be4208a7c723c4c0529b5eb0968f"
+    },
+    {
+      "file": "nox/joint_swiglu.py",
+      "bytes": 19834,
+      "sha256": "bfbb0fdefbb9a0305e695f59d9f458561acab34ae4c703d42772996da6e8f8af"
+    },
+    {
+      "file": "nox/layer_allocator.py",
+      "bytes": 12526,
+      "sha256": "28f02221b0e548b8feb88f481e4c7528761729bcbaf807c97d1b5c6334e6fbdd"
+    },
+    {
+      "file": "nox/mlp_gauge.py",
+      "bytes": 8593,
+      "sha256": "62c7e40387b9e56dc649e7e2b88a8d2ff3a8993a9b57f943eb872e60e3675ea7"
+    },
+    {
+      "file": "nox/mmlu.py",
+      "bytes": 6816,
+      "sha256": "1f382196612851382defa2d44f20e1be6a2546484ac00f1bc81244559cc4d9f1"
+    },
+    {
+      "file": "nox/model_adapter.py",
+      "bytes": 8608,
+      "sha256": "08531086de356a5fba04cbd2a94a4c2d93b1b89d78f7bc1f693a46bb7ef51a26"
+    },
+    {
+      "file": "nox/native_swiglu.py",
+      "bytes": 12992,
+      "sha256": "c8d2eeedabbec4ae64cd0f48c7be9fa07bf1fbd7f479f74e0d05911d5b77f5bf"
+    },
+    {
+      "file": "nox/operator_schmidt.py",
+      "bytes": 22667,
+      "sha256": "c63eebdef1b962a0584e4c8b9449d2a9bbd658ac790d392ab1e8ab2ca9320d11"
+    },
+    {
+      "file": "nox/packed_schmidt.py",
+      "bytes": 47010,
+      "sha256": "f2f463474a7a8e76e0632935a9c9e424f0068cd6c60d194fe754fa0f563fe243"
+    },
+    {
+      "file": "nox/packing.py",
+      "bytes": 4299,
+      "sha256": "33b94441e293eacbd1dca5c2369ad8af10de03a3ee585b5c7d24030f3bb1266d"
+    },
+    {
+      "file": "nox/pees.py",
+      "bytes": 11127,
+      "sha256": "60458fb103e3d31935f27b0422b9ce2fdf2e2845a1fa5599e80e3fc6d4b48b29"
+    },
+    {
+      "file": "nox/portable_quant.py",
+      "bytes": 7078,
+      "sha256": "e6c2b7e260af432faa8a05bd3f44f17517a6b83eba52ffa20a2269a2df7134bb"
+    },
+    {
+      "file": "nox/quant/__init__.py",
+      "bytes": 409,
+      "sha256": "d6c1bc9972aa1c8b4ddc0afeb93c3fdac4e8fc10433c28626ed4e2a699d2c0ee"
+    },
+    {
+      "file": "nox/quant/gptq.py",
+      "bytes": 3108,
+      "sha256": "23fbec2a46c1e24fd2822100fa9a68cc843ddc154602e34fb4ec9e403c8847b9"
+    },
+    {
+      "file": "nox/quant/hessian.py",
+      "bytes": 1656,
+      "sha256": "62b3ad66edeba5addd127689f56c6a011ef89a4e2e48079b97cd82b87ebab946"
+    },
+    {
+      "file": "nox/quant/incoherence.py",
+      "bytes": 3044,
+      "sha256": "8de5d246329c07a3d8370649981e22bef9a3d1504f5d8678cb7ab7b94e38fc70"
+    },
+    {
+      "file": "nox/representation_symmetries.py",
+      "bytes": 13785,
+      "sha256": "12a921493f0e145e732dad2084179a007ebb4a246f448e378a07898273f1fc93"
+    },
+    {
+      "file": "nox/residual_codec.py",
+      "bytes": 11307,
+      "sha256": "be6f85e8e100319665fd1646813446008c18ec064613491b487023186292115d"
+    },
+    {
+      "file": "nox/schmidt_budget.py",
+      "bytes": 8906,
+      "sha256": "1f52ad74be1a2b9fb267fbc4f38cc2293b9ceb4f5991eb03ec0899f38dbea493"
+    },
+    {
+      "file": "nox/schmidt_correction.py",
+      "bytes": 7133,
+      "sha256": "f518ddd757d5677a13749659ac8a6cad29f2a3448d89a8393f835ca556bad880"
+    },
+    {
+      "file": "nox/sector_schmidt.py",
+      "bytes": 7558,
+      "sha256": "933e39908b2644c22424b524729dcf5268a13f524b2c5a9db3ac2cc2cb98e8b6"
+    },
+    {
+      "file": "nox/sequential_compiler.py",
+      "bytes": 40624,
+      "sha256": "dcf38a17b96995ce55a4f9e92b52e824a8e8f8298f23cc87cb221ee0bb6bab1f"
+    },
+    {
+      "file": "nox/sparse_schmidt.py",
+      "bytes": 22692,
+      "sha256": "677a00fbe54cfc614e503d6050433696c31f1c3926b10eb36d76171e50f6f290"
+    },
+    {
+      "file": "nox/spectra.py",
+      "bytes": 16845,
+      "sha256": "dca7769810b32c4a0389d7b48deff097df1316fa584c1512376e0cf7c130bbb5"
+    },
+    {
+      "file": "nox/swiglu_rank_bound.py",
+      "bytes": 7636,
+      "sha256": "ea786737dfd074799277f15320c192db4b668e3344c741c1865d7906da2a4aab"
+    },
+    {
+      "file": "nox/swiglu_readout.py",
+      "bytes": 6519,
+      "sha256": "b85b8a45d3fb20c293428d6c07462b31a49a82a992c1ba9d418fc77173f75b4c"
+    },
+    {
+      "file": "nox/tensor_order.py",
+      "bytes": 3999,
+      "sha256": "9629bb38d9d05188fb260069b82f93f6710e654fb9f089dff41f1e8b1b97941b"
+    },
+    {
+      "file": "nox/utils.py",
+      "bytes": 7785,
+      "sha256": "3f3ca6bdea7dab364772715a3407ccf39e2578cce980d764fb10d7b32653b274"
+    },
+    {
+      "file": "special_tokens_map.json",
+      "bytes": 435,
+      "sha256": "2ea88203b955648951a454e73a73967ff77ba4e79ae8ceb4400d4ab2cb040777"
+    },
+    {
+      "file": "tokenizer.json",
+      "bytes": 1842764,
+      "sha256": "f7b50bcf6d6672eade5e43514d48e9c1e4e63a56aef7b14acdaca94ce93436f7"
+    },
+    {
+      "file": "tokenizer.model",
+      "bytes": 499723,
+      "sha256": "9e556afd44213b6bd1be2b850ebbbd98f5481437a8021afaf58ee7fb1818d347"
+    },
+    {
+      "file": "tokenizer_config.json",
+      "bytes": 746,
+      "sha256": "37951d5a1e0c6a77f88c61f79972f17e889b62258aadff4c61eacd3fb567fe72"
+    }
+  ]
+}

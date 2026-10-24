@@ -1,0 +1,15 @@
+{
+  "schema": "nec_current_accuracy_requirements_v1",
+  "updated_utc": "2026-10-24T09:25:00Z",
+  "model_scope": "full original Llama-2-7B, 32 layers",
+  "maximum_ppl": 5.867,
+  "maximum_teacher_kl_nats_per_token": 0.5,
+  "minimum_next_token_accuracy": 0.54,
+  "maximum_next_token_accuracy": 0.62,
+  "minimum_dense_top1_agreement": 0.85,
+  "maximum_complete_serialized_bytes": 2420734087,
+  "maximum_complete_coefficients": 3323032892,
+  "gradient_based_healing_allowed": false,
+  "latest_user_experiment_deadline_utc": "2026-10-24T09:34:42Z",
+  "historical_reports_preserve_their_prior_acceptance_policies": true
+}

@@ -1,0 +1,1512 @@
+{
+  "schema": "nec_joint_mlp_ordering_screen_v1",
+  "uses_autograd": false,
+  "fit_tokens": 24576,
+  "external_guard_tokens": 8192,
+  "external_guard_used_in_construction": false,
+  "baseline": {
+    "fit_relative_mse": 0.02391008473932743,
+    "external_guard_relative_mse": 0.055969733744859695
+  },
+  "candidates": {
+    "identity": {
+      "errors": {
+        "fit_relative_mse": 0.037473250180482864,
+        "external_guard_relative_mse": 0.06193728372454643
+      },
+      "seconds": 21.898313676007092,
+      "functional_construction": {
+        "objective": "exact_coupled_swiglu_output_with_prior_anchored_core_solves",
+        "uses_autograd": false,
+        "uses_nonlinear_derivatives": false,
+        "gate_target_policy": "readout_projection",
+        "output_metric": "energy",
+        "ridge_metric": "mean",
+        "output_metric_uses_training_only": true,
+        "fit_tokens": 18432,
+        "guard_tokens": 6144,
+        "initial_fit_relative_mse": 0.04877821356058121,
+        "initial_guard_relative_mse": 0.07010426372289658,
+        "final_fit_relative_mse": 0.03116242215037346,
+        "final_guard_relative_mse": 0.05622204393148422,
+        "stored_coefficients_added": 0,
+        "tensor_payload_bytes_added": 0,
+        "records": [
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "left",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.04007529467344284,
+            "guard_relative_mse": 0.062069207429885864,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.7681771516799927
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.8837048411369324
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.7240760326385498
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.856103777885437
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.4960138499736786
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.46038955450057983
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.40514445304870605
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.3429414629936218
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.04007529467344284,
+                "guard_relative_mse": 0.062069207429885864
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.04241301864385605,
+                "guard_relative_mse": 0.06421221792697906
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.045693282037973404,
+                "guard_relative_mse": 0.06722503900527954
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "right",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03782901167869568,
+            "guard_relative_mse": 0.060469742864370346,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.5269780158996582
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.2020198106765747
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.0868867635726929
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.9827703833580017
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.8046361207962036
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.5902187824249268
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.44235852360725403
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.42652449011802673
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03782901167869568,
+                "guard_relative_mse": 0.060469742864370346
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03851540759205818,
+                "guard_relative_mse": 0.06087451055645943
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03957404941320419,
+                "guard_relative_mse": 0.06167438626289368
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "amplitudes",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": null,
+            "fit_relative_mse": 0.03782901167869568,
+            "guard_relative_mse": 0.060469742864370346,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.7818503379821777
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.25883948802948
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.0455199480056763
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.0666648149490356
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.9314897060394287
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.6674367785453796
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.7399625182151794
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.6435112357139587
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03813454881310463,
+                "guard_relative_mse": 0.06311675906181335
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.04019905999302864,
+                "guard_relative_mse": 0.062135759741067886
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03885285183787346,
+                "guard_relative_mse": 0.061100929975509644
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "up_proj",
+            "core": "left",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.036209654062986374,
+            "guard_relative_mse": 0.05931021645665169,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.5822055339813232
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.5537291765213013
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.181403636932373
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.1281927824020386
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.1333038806915283
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 1.15461003780365
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.157407283782959
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.899590015411377
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.036209654062986374,
+                "guard_relative_mse": 0.05931021645665169
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03672156110405922,
+                "guard_relative_mse": 0.0596754252910614
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.037582237273454666,
+                "guard_relative_mse": 0.06029912456870079
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "up_proj",
+            "core": "right",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03520909696817398,
+            "guard_relative_mse": 0.05849561095237732,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.8998473286628723
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.0469775199890137
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.13028085231781
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.9411148428916931
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.0830473899841309
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 1.0754486322402954
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.1499375104904175
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 1.1749067306518555
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03520909696817398,
+                "guard_relative_mse": 0.05849561095237732
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03554190322756767,
+                "guard_relative_mse": 0.058774471282958984
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03607349097728729,
+                "guard_relative_mse": 0.05920591205358505
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "up_proj",
+            "core": "amplitudes",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03461391478776932,
+            "guard_relative_mse": 0.05739182233810425,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.9963867664337158
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.9599348902702332
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.8946621417999268
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.039670467376709
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.2511811256408691
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 1.4411779642105103
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.335170865058899
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 1.0399643182754517
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03461391478776932,
+                "guard_relative_mse": 0.05739182233810425
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03525937721133232,
+                "guard_relative_mse": 0.05804962292313576
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03519591689109802,
+                "guard_relative_mse": 0.05823654308915138
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "gate_proj",
+            "core": "left",
+            "solve_objective": "readout_projection",
+            "accepted_fraction": 0.5,
+            "fit_relative_mse": 0.03437116742134094,
+            "guard_relative_mse": 0.057266965508461,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.4726980924606323
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.5350157022476196
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.004550576210022
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.9130422472953796
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.6069809794425964
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.5666123628616333
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.38829877972602844
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.4040640890598297
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03431762754917145,
+                "guard_relative_mse": 0.05734210088849068
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03437116742134094,
+                "guard_relative_mse": 0.057266965508461
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.034489165991544724,
+                "guard_relative_mse": 0.05732239782810211
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "gate_proj",
+            "core": "right",
+            "solve_objective": "readout_projection",
+            "accepted_fraction": 0.5,
+            "fit_relative_mse": 0.03410958871245384,
+            "guard_relative_mse": 0.05714593455195427,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.756695032119751
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.669598937034607
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.3716275691986084
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.0569353103637695
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.7832716107368469
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.7574840784072876
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.6210875511169434
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.44019901752471924
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03409537300467491,
+                "guard_relative_mse": 0.0572621114552021
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03410958871245384,
+                "guard_relative_mse": 0.05714593455195427
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03422316908836365,
+                "guard_relative_mse": 0.057188112288713455
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "gate_proj",
+            "core": "amplitudes",
+            "solve_objective": "readout_projection",
+            "accepted_fraction": 0.5,
+            "fit_relative_mse": 0.03251181170344353,
+            "guard_relative_mse": 0.056936826556921005,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 2.7225751876831055
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.5056037902832031
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.4807137250900269
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.098963975906372
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.1576473712921143
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.8135743141174316
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.8881675004959106
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.7694043517112732
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.0314154289662838,
+                "guard_relative_mse": 0.05849863216280937
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03251181170344353,
+                "guard_relative_mse": 0.056936826556921005
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03481898829340935,
+                "guard_relative_mse": 0.05727569758892059
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "left",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03149152174592018,
+            "guard_relative_mse": 0.05639808252453804,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.1259461641311646
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.4244478940963745
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.0329594612121582
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.738526463508606
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.7925817370414734
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.5604879260063171
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.5466026663780212
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.43492215871810913
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03149152174592018,
+                "guard_relative_mse": 0.05639808252453804
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03197726979851723,
+                "guard_relative_mse": 0.056581079959869385
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03246982395648956,
+                "guard_relative_mse": 0.056907203048467636
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "right",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03116242215037346,
+            "guard_relative_mse": 0.05622204393148422,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.6739989519119263
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.0685359239578247
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.0389533042907715
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.7622509598731995
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.7942262291908264
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.6438183784484863
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.4344518184661865
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.3651953339576721
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03116242215037346,
+                "guard_relative_mse": 0.05622204393148422
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.0313868448138237,
+                "guard_relative_mse": 0.056327566504478455
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03148839250206947,
+                "guard_relative_mse": 0.05639607086777687
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "amplitudes",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": null,
+            "fit_relative_mse": 0.03116242215037346,
+            "guard_relative_mse": 0.05622204393148422,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.9190826416015625
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.552237629890442
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.2370022535324097
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.225307822227478
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.0820739269256592
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.7661796808242798
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.8356068134307861
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.7736225128173828
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03145020827651024,
+                "guard_relative_mse": 0.058588191866874695
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03268134593963623,
+                "guard_relative_mse": 0.05746092274785042
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03178936615586281,
+                "guard_relative_mse": 0.05668264627456665
+              }
+            ]
+          }
+        ]
+      },
+      "coefficients": 48000146,
+      "tensor_payload_bytes": 37325556
+    },
+    "neuron_spectral": {
+      "errors": {
+        "fit_relative_mse": 0.03564859926700592,
+        "external_guard_relative_mse": 0.059555698186159134
+      },
+      "seconds": 21.890980476979166,
+      "functional_construction": {
+        "objective": "exact_coupled_swiglu_output_with_prior_anchored_core_solves",
+        "uses_autograd": false,
+        "uses_nonlinear_derivatives": false,
+        "gate_target_policy": "readout_projection",
+        "output_metric": "energy",
+        "ridge_metric": "mean",
+        "output_metric_uses_training_only": true,
+        "fit_tokens": 18432,
+        "guard_tokens": 6144,
+        "initial_fit_relative_mse": 0.045025672763586044,
+        "initial_guard_relative_mse": 0.0658896341919899,
+        "final_fit_relative_mse": 0.02945832349359989,
+        "final_guard_relative_mse": 0.05404055118560791,
+        "stored_coefficients_added": 0,
+        "tensor_payload_bytes_added": 0,
+        "records": [
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "left",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03739320859313011,
+            "guard_relative_mse": 0.05880369991064072,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.9606446027755737
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.7450208067893982
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.6354148387908936
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.5618566870689392
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.47701767086982727
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.41847512125968933
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.3579070270061493
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.31477540731430054
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03739320859313011,
+                "guard_relative_mse": 0.05880369991064072
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03950587287545204,
+                "guard_relative_mse": 0.06074048951268196
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.04248851165175438,
+                "guard_relative_mse": 0.06351489573717117
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "right",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03558864817023277,
+            "guard_relative_mse": 0.05783208832144737,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 2.053379535675049
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.485260248184204
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.9345299005508423
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.1034759283065796
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.851405918598175
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.6622071862220764
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.4729221761226654
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.4628986716270447
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03558864817023277,
+                "guard_relative_mse": 0.05783208832144737
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.036207165569067,
+                "guard_relative_mse": 0.05804147198796272
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03703052178025246,
+                "guard_relative_mse": 0.05855598673224449
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "amplitudes",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": null,
+            "fit_relative_mse": 0.03558864817023277,
+            "guard_relative_mse": 0.05783208832144737,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.7000021934509277
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.3447043895721436
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.0728048086166382
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.1094831228256226
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.0266700983047485
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.6668965816497803
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.8947598934173584
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.5904698967933655
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.035377804189920425,
+                "guard_relative_mse": 0.059350792318582535
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03747442364692688,
+                "guard_relative_mse": 0.058840520679950714
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03636695817112923,
+                "guard_relative_mse": 0.05814447999000549
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "up_proj",
+            "core": "left",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03413190320134163,
+            "guard_relative_mse": 0.05692264437675476,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.5207270383834839
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.3966470956802368
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.1550902128219604
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.313098669052124
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.1521093845367432
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 1.233984112739563
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.1661714315414429
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 1.1160430908203125
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03413190320134163,
+                "guard_relative_mse": 0.05692264437675476
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03460872173309326,
+                "guard_relative_mse": 0.05725475028157234
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03527041897177696,
+                "guard_relative_mse": 0.05767447501420975
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "up_proj",
+            "core": "right",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03327815607190132,
+            "guard_relative_mse": 0.05624902620911598,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.762759268283844
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.7651882767677307
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.1056795120239258
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.0279875993728638
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.126246690750122
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.9460741877555847
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.0927741527557373
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 1.037196159362793
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03327815607190132,
+                "guard_relative_mse": 0.05624902620911598
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.033622510731220245,
+                "guard_relative_mse": 0.05653191730380058
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03406062349677086,
+                "guard_relative_mse": 0.0568699836730957
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "up_proj",
+            "core": "amplitudes",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.03260495513677597,
+            "guard_relative_mse": 0.055035550147295,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.084165334701538
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.467997670173645
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.2130591869354248
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.4022070169448853
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.511482834815979
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 1.63120436668396
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.4756076335906982
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 1.4027167558670044
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03260495513677597,
+                "guard_relative_mse": 0.055035550147295
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03330806642770767,
+                "guard_relative_mse": 0.055709149688482285
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.033251479268074036,
+                "guard_relative_mse": 0.05593728646636009
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "gate_proj",
+            "core": "left",
+            "solve_objective": "readout_projection",
+            "accepted_fraction": 0.5,
+            "fit_relative_mse": 0.032386139035224915,
+            "guard_relative_mse": 0.054955486208200455,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 2.067929267883301
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.472447156906128
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.1287752389907837
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.9658003449440002
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.6704073548316956
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.6894105076789856
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.49351969361305237
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.4329165518283844
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.03233472630381584,
+                "guard_relative_mse": 0.055036261677742004
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.032386139035224915,
+                "guard_relative_mse": 0.054955486208200455
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.032490961253643036,
+                "guard_relative_mse": 0.05498245730996132
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "gate_proj",
+            "core": "right",
+            "solve_objective": "readout_projection",
+            "accepted_fraction": 0.5,
+            "fit_relative_mse": 0.03215349093079567,
+            "guard_relative_mse": 0.05485512688755989,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 2.26194429397583
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 2.2271480560302734
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.9789931774139404
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.3481229543685913
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.0895588397979736
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 1.0097944736480713
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.8226394653320312
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.6781288981437683
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.032137010246515274,
+                "guard_relative_mse": 0.054977212101221085
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.03215349093079567,
+                "guard_relative_mse": 0.05485512688755989
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03225826099514961,
+                "guard_relative_mse": 0.05488521605730057
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "gate_proj",
+            "core": "amplitudes",
+            "solve_objective": "readout_projection",
+            "accepted_fraction": 0.5,
+            "fit_relative_mse": 0.030637307092547417,
+            "guard_relative_mse": 0.05470256507396698,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 2.7635629177093506
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.5676153898239136
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.5979653596878052
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.1328052282333374
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.1931769847869873
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.8687137961387634
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.9037362337112427
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.8160021901130676
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.029777470976114273,
+                "guard_relative_mse": 0.05642472952604294
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.030637307092547417,
+                "guard_relative_mse": 0.05470256507396698
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.032814931124448776,
+                "guard_relative_mse": 0.05488239601254463
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "left",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.029727298766374588,
+            "guard_relative_mse": 0.054187990725040436,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 0.9626976251602173
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 0.8714633584022522
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 0.8608322739601135
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 0.6892813444137573
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.691551685333252
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.5524478554725647
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.4970357120037079
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.4465312957763672
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.029727298766374588,
+                "guard_relative_mse": 0.054187990725040436
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.030147727578878403,
+                "guard_relative_mse": 0.054368846118450165
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.03058975748717785,
+                "guard_relative_mse": 0.05466797202825546
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "right",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": 1.0,
+            "fit_relative_mse": 0.02945832349359989,
+            "guard_relative_mse": 0.05404055118560791,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.5501024723052979
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.257756233215332
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.2288789749145508
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.1367733478546143
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 0.7896680235862732
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.5258896350860596
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 0.37906041741371155
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.45833611488342285
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.02945832349359989,
+                "guard_relative_mse": 0.05404055118560791
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.02963550016283989,
+                "guard_relative_mse": 0.054122816771268845
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.02971661649644375,
+                "guard_relative_mse": 0.05417824164032936
+              }
+            ]
+          },
+          {
+            "sweep": 0,
+            "role": "down_proj",
+            "core": "amplitudes",
+            "solve_objective": "coupled_mlp_output",
+            "accepted_fraction": null,
+            "fit_relative_mse": 0.02945832349359989,
+            "guard_relative_mse": 0.05404055118560791,
+            "cg_history": [
+              {
+                "iteration": 1,
+                "relative_normal_residual": 1.953501582145691
+              },
+              {
+                "iteration": 2,
+                "relative_normal_residual": 1.6252660751342773
+              },
+              {
+                "iteration": 3,
+                "relative_normal_residual": 1.3000385761260986
+              },
+              {
+                "iteration": 4,
+                "relative_normal_residual": 1.3372114896774292
+              },
+              {
+                "iteration": 5,
+                "relative_normal_residual": 1.1454509496688843
+              },
+              {
+                "iteration": 6,
+                "relative_normal_residual": 0.7605236172676086
+              },
+              {
+                "iteration": 7,
+                "relative_normal_residual": 1.0679779052734375
+              },
+              {
+                "iteration": 8,
+                "relative_normal_residual": 0.6735312342643738
+              }
+            ],
+            "trials": [
+              {
+                "fraction": 1.0,
+                "fit_relative_mse": 0.029314756393432617,
+                "guard_relative_mse": 0.05565415695309639
+              },
+              {
+                "fraction": 0.5,
+                "fit_relative_mse": 0.030673565343022346,
+                "guard_relative_mse": 0.054928384721279144
+              },
+              {
+                "fraction": 0.25,
+                "fit_relative_mse": 0.029943687841296196,
+                "guard_relative_mse": 0.05434567853808403
+              }
+            ]
+          }
+        ]
+      },
+      "coefficients": 47819922,
+      "tensor_payload_bytes": 37241076
+    }
+  },
+  "deployable_package_measured": false,
+  "gate_target_policy": "readout_projection",
+  "seconds": 46.24471437803004
+}
