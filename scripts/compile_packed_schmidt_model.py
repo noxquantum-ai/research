@@ -236,6 +236,12 @@ def main() -> None:
     parser.add_argument("--joint-mlp-cg-iterations", type=int, default=8)
     parser.add_argument("--joint-mlp-ridge-ratio", type=float, default=0.05)
     parser.add_argument("--joint-mlp-output-metric", choices=("energy", "channel_relative"), default="energy")
+    parser.add_argument("--functional-mlp-roles", nargs="+", choices=("gate_proj", "up_proj", "down_proj"))
+    parser.add_argument("--functional-mlp-sides", nargs="+", choices=("left", "right", "amplitudes", "calibration_left", "calibration_right"))
+    parser.add_argument("--functional-solve-precision", choices=("highest", "high"))
+    parser.add_argument("--functional-branch-preconditioner", action="store_true")
+    parser.add_argument("--reuse-initial-operators", action="store_true",
+                        help="Reuse initial NEC operators; only explicitly enabled joint construction changes them.")
     parser.add_argument("--functional-ridge-metric", choices=("mean", "diagonal"), default="mean")
     parser.add_argument("--gate-target-policy", choices=("teacher_preactivation", "readout_projection"), default="teacher_preactivation")
     parser.add_argument("--joint-attention-sweeps", type=int, default=0)
@@ -284,6 +290,8 @@ def main() -> None:
         parser.error("reconstruction precision/projection options require --reconstruct-from")
     if args.global_excitation_projections and (args.reconstruct_from is None or args.joint_mlp_sweeps):
         parser.error("experimental global excitations require --reconstruct-from and --joint-mlp-sweeps 0")
+    if args.reuse_initial_operators and args.reconstruct_from is None:
+        parser.error('--reuse-initial-operators requires --reconstruct-from')
     if args.target_whole_model_ratio < 5:
         parser.error("NEC whole-model target must be at least 5x")
     if args.min_structural_reduction < 2:
@@ -479,7 +487,7 @@ def main() -> None:
         if (initial['payload_bytes'] > construction['byte_budget']
                 or packed_schmidt_coefficient_count_from_artifact(initial) > construction['coefficient_budget']):
             raise ValueError('initial NEC representation exceeds the requested budget')
-        if args.reconstruction_projections is not None and name not in args.reconstruction_projections:
+        if args.reuse_initial_operators or (args.reconstruction_projections is not None and name not in args.reconstruction_projections):
             return initial, reconstruct_packed_schmidt(initial, device=weight.device), {
                 'representation':'unchanged_nec_operator', 'payload_bytes':initial['payload_bytes'],
             }
@@ -915,6 +923,10 @@ def main() -> None:
                     gate_target_policy=args.gate_target_policy,
                     output_metric=args.joint_mlp_output_metric,
                     ridge_metric=args.functional_ridge_metric,
+                    role_sequence=tuple(args.functional_mlp_roles) if args.functional_mlp_roles else ('down_proj','up_proj','gate_proj','down_proj'),
+                    parameter_sides=None if args.functional_mlp_sides is None else tuple(args.functional_mlp_sides),
+                    solve_precision=args.functional_solve_precision,
+                    branch_preconditioner=args.functional_branch_preconditioner,
                     sequence_length=args.sequence_length,
                 )
             )

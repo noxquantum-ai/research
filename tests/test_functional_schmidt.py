@@ -7,14 +7,60 @@ from nox.functional_schmidt import (
     SchmidtCoreMap, _prior_anchored_pcg, construct_functional_schmidt_mlp,
     inverse_silu_nearest_branch, readout_projected_gate_targets,
     curvature_anchor,
+    native_up_preconditioner,
 )
 from nox.packed_schmidt import (
     compile_packed_schmidt, packed_schmidt_coefficient_count_from_artifact,
     packed_schmidt_payload_bytes_from_artifact, reconstruct_packed_schmidt,
 )
+from nox.residual_codec import encode_groupwise
 
 
 class FunctionalSchmidtTests(unittest.TestCase):
+    def test_exact_preconditioner_solves_normal_system_in_one_step(self):
+        torch.manual_seed(263)
+        a=torch.randn(6,6,dtype=torch.float64);normal=a.T@a+.1*torch.eye(6,dtype=torch.float64)
+        rhs=torch.randn(6,dtype=torch.float64)
+        solution,history=_prior_anchored_pcg(lambda x:normal@x,rhs,normal.diagonal(),iterations=1,
+            tolerance=1e-10,preconditioner=lambda x:torch.linalg.solve(normal,x))
+        torch.testing.assert_close(solution,torch.linalg.solve(normal,rhs))
+        self.assertLess(history[-1]['relative_normal_residual'],1e-10)
+
+    def test_native_preconditioners_are_positive_and_self_adjoint(self):
+        torch.manual_seed(269)
+        artifact,_,_=compile_packed_schmidt(torch.randn(12,8),byte_budget=4000,
+                                           bits_candidates=(4,),group_size=4,als_sweeps=0)
+        artifact['calibration_schmidt_branch']={
+            'left_codec':encode_groupwise(torch.randn(3,12),bits=4,group_size=4),
+            'right_codec':encode_groupwise(torch.randn(3,8),bits=4,group_size=4)}
+        mapper=SchmidtCoreMap(artifact,'cpu');x=torch.randn(8,64);phi=F.silu(torch.randn(12,64));down=torch.randn(8,12)
+        sensitivity=down.square().sum(0)*phi.square().mean(1)
+        for side in ('calibration_left','calibration_right'):
+            diagonal=mapper.diagonal(x.square().mean(1),sensitivity,side);ridge=.05*diagonal
+            apply,_=native_up_preconditioner(mapper,side,x,phi,down,ridge,diagonal)
+            self.assertIsNotNone(apply)
+            a=torch.randn_like(diagonal);b=torch.randn_like(diagonal)
+            self.assertGreater(float((a*apply(a)).sum()),0)
+            torch.testing.assert_close((a*apply(b)).sum(),(b*apply(a)).sum(),atol=1e-4,rtol=1e-4)
+
+    def test_native_calibration_branch_maps_and_budget_are_exact(self):
+        torch.manual_seed(257)
+        artifact,_,_=compile_packed_schmidt(torch.randn(12,8),byte_budget=4000,
+                                           bits_candidates=(4,),group_size=4,als_sweeps=0)
+        artifact['calibration_schmidt_branch']={
+            'left_codec':encode_groupwise(torch.randn(3,12),bits=4,group_size=4),
+            'right_codec':encode_groupwise(torch.randn(3,8),bits=4,group_size=4)}
+        mapper=SchmidtCoreMap(artifact,'cpu');inputs=torch.randn(8,17);output=torch.randn(12,17)
+        for side in ('calibration_left','calibration_right'):
+            core=torch.randn_like(getattr(mapper,side));dense=torch.randn(12,8)
+            torch.testing.assert_close((mapper.weight(core,side)*dense).sum(),(core*mapper.adjoint(dense,side)).sum(),atol=2e-5,rtol=2e-5)
+            torch.testing.assert_close(mapper.apply(core,inputs,side),mapper.weight(core,side)@inputs,atol=2e-5,rtol=2e-5)
+            torch.testing.assert_close((mapper.apply(core,inputs,side)*output).sum(),
+                                       (core*mapper.apply_adjoint(output,inputs,side)).sum(),atol=2e-5,rtol=2e-5)
+            candidate=mapper.packed_candidate(core,side)
+            self.assertEqual(packed_schmidt_coefficient_count_from_artifact(candidate),packed_schmidt_coefficient_count_from_artifact(artifact))
+            self.assertEqual(packed_schmidt_payload_bytes_from_artifact(candidate),packed_schmidt_payload_bytes_from_artifact(artifact))
+
     def test_diagonal_anchoring_is_invariant_to_parameter_units(self):
         torch.manual_seed(85)
         a=torch.randn(11,4,dtype=torch.float64)

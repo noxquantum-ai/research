@@ -1,0 +1,42 @@
+{
+  "schema": "nec_output_geometry_trial_v1",
+  "final_success_demonstrated": false,
+  "deadline_utc": "2026-10-24T10:01:40Z",
+  "maximum_serialized_bytes": 2420734087,
+  "maximum_coefficients": 3323032892,
+  "phase": "rejected_or_no_validation_gain",
+  "child_pid": null,
+  "command": [
+    "/workspace/venvs/nec-hf/bin/python",
+    "/tmp/nec-output-geometry-source/scripts/evaluate_packed_teacher_kl.py",
+    "--checkpoint-dir",
+    "/tmp/nec-output-geometry-selected32",
+    "--model-id",
+    "/workspace/.cache/huggingface/hub/models--NousResearch--Llama-2-7b-hf/snapshots/8efe6c9b93655b934e27bd9981e3ec13e55aee9d",
+    "--readout-checkpoint",
+    "/workspace/runs/nec-accuracy-recovery-20261024/readout_probe_exact/constructed_readout.pt",
+    "--split",
+    "validation",
+    "--token-offset",
+    "0",
+    "--max-eval-tokens",
+    "8192",
+    "--batch-size",
+    "1",
+    "--output",
+    "/workspace/runs/nec-accuracy-recovery-20261024/output_geometry/validation_8k.json"
+  ],
+  "gates": {
+    "perplexity": true,
+    "teacher_kl_nats_per_token": true,
+    "next_token_accuracy": false,
+    "dense_top1_agreement": false
+  },
+  "quality": {
+    "perplexity": 6.524380874338467,
+    "mean_nll": 1.8755460635480201,
+    "teacher_kl_nats_per_token": 0.5074788576666082,
+    "next_token_accuracy": 0.5756317909901111,
+    "dense_top1_agreement": 0.7270174581858136
+  }
+}

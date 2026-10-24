@@ -280,7 +280,7 @@ shift as a sufficient repair. See [the rejected trial](affine_reconstruction_rej
 The current full-32-layer Down trial uses a closed-form regularized asymmetric
 target motivated by [regularized calibration](https://arxiv.org/html/2602.05902v1).
 Its bounded operator search selected five groups and passed validation at PPL
-6.538154; full test is running. Those validation tokens are a development
+6.538154; its completed full-test and package checks are recorded below. Those validation tokens are a development
 regression set, not proof that full-test PPL is near dense.
 
 An explicit experimental allocator also redistributes existing coordinate
@@ -288,15 +288,22 @@ excitations across Gate/Up neurons using their nonlinear Down-weighted output
 sensitivities. A global amplitude stream counts every value and scale,
 retains the original MPO, and stays within each original coefficient ceiling.
 It addresses the old uniform-per-row allocation rather than increasing the
-model size. Its full-32-layer quality remains unverified.
+model size. Its full-32-layer trial was rejected, as recorded below.
 
 ## Latest full test and failed global allocation
 
 The regularized Down construction plus training-logit selection measured
 full-test PPL **8.128802**, KL **0.512765**, next-token accuracy **54.4775%**,
 and teacher agreement **72.0246%**. It improves all four token metrics over
-the saved 8.187282 candidate, but actual complete-package bytes are still
-unmeasured. It is not yet a fully verified replacement. See
+the saved 8.187282 candidate. Its complete serialized package measures
+**2,417,355,138 bytes (5.576031134×)**, with the same **3,323,032,892**
+coefficients (**2.027791443×** structural reduction). Lossless column-major
+support serialization and gzip preserve decoded tensors. A fresh CUDA
+process passed bitwise logit parity, and a hash-verified copy is saved on the
+network volume; the published baseline remains unchanged. The quality targets
+are still unmet. See [actual package accounting](regularized_down_column_package_measurement.json),
+[CUDA parity](regularized_down_column_runtime_parity.json),
+[persistent copy verification](regularized_down_persistent_copy_verification.json),
 [full test](regularized_down_heldout_test.json) and
 [validation](regularized_down_validation_8k.json).
 
@@ -312,3 +319,43 @@ The user’s requested time window did not produce PPL ≤5.867 / KL ≤0.5 /
 accuracy 54–62% / agreement ≥85% together. These targets remain unmet.
 The [Strata review](STRATA_REVIEW.md) records primary sources and boundaries
 for applying its ideas to NEC.
+
+
+## Fundamental construction audit: native branch and solver coverage
+
+The original joint MLP routine updated main MPO cores and sparse amplitudes,
+but omitted the already-stored native calibration Schmidt branch, initialized
+from 512 sampled input tokens. The main packed decomposition chooses its
+layout for packing efficiency and fits a weight unfolding; that initialization
+is not the coupled SwiGLU-output objective. These are implementation findings,
+not proof of the cause of the remaining quality gap.
+
+Opt-in construction now exposes the existing native branch cores to exact
+coupled MLP linear solves. No branches or coefficients are added. With Gate
+and Down fixed, the Up-core objective is linear through the actual nonlinear
+Gate activations and Down readout. Per-neuron covariance blocks and an
+input/observable Kronecker preconditioner improve conditioning; they are
+construction-only statistics. The separable curvature is an approximation
+used only for preconditioning; the normal operator remains exact. This uses
+the matrix-factorization idea in [K-FAC](https://proceedings.mlr.press/v37/martens15.html),
+without gradient-based healing. Defaults preserve previous behavior.
+
+A layer-0 Up-branch pilot improved fit/guard MLP reconstruction. Eight
+diagonal-preconditioned steps ended at relative normal residuals 0.812/0.723.
+The structured solve after 32 steps reached 0.0287/0.00383 (left/right);
+neither reached the requested 0.001 tolerance. Both the preconditioner and
+iteration budget changed, so the total gain cannot be attributed to
+preconditioning alone. Nine focused functional-construction tests pass.
+
+Full-model validation of this one changed layer measured PPL **6.536003**,
+KL **0.509213**, accuracy **57.6731%**, and agreement **72.9093%**. Compared
+with the saved candidate, PPL/KL improved slightly and accuracy tied, but
+agreement lost one of 8,191 tokens. It is **not promoted**. See
+[pilot evaluation](native_up_branch_preconditioned_validation_8k.json) and
+[non-degradation gates](native_up_branch_preconditioned_status.json).
+A full-32 existing-branch construction is running with training-only group
+selection; validation and package gates determine promotion.
+
+The larger hypothesis is to choose Schmidt directions using observable
+MLP-output geometry instead of weight reconstruction alone. This hypothesis
+is not yet a validated solution.

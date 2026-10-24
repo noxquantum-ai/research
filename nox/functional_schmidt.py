@@ -11,6 +11,7 @@ or inference branches are added.
 from __future__ import annotations
 
 import math
+from contextlib import nullcontext
 
 import torch
 import torch.nn.functional as F
@@ -21,7 +22,7 @@ from nox.packed_schmidt import (
     packed_schmidt_payload_bytes_from_artifact,
     reconstruct_packed_schmidt,
 )
-from nox.residual_codec import decode_groupwise, encode_groupwise
+from nox.residual_codec import decode_groupwise, encode_groupwise, codec_payload_bytes
 
 
 def curvature_anchor(diagonal, ridge_ratio, metric='mean'):
@@ -52,6 +53,10 @@ class SchmidtCoreMap:
         self.layout = _layout_from_value(self.base["layout"])
         self.left = decode_groupwise(self.base["left_codec"], device=device)
         self.right = decode_groupwise(self.base["right_codec"], device=device)
+        branch=self.base.get('calibration_schmidt_branch')
+        if branch is not None:
+            self.calibration_left=decode_groupwise(branch['left_codec'],device=device)
+            self.calibration_right=decode_groupwise(branch['right_codec'],device=device)
         self.input_scale = self.base["input_scale"].to(device=device, dtype=torch.float32)
         output_scale = self.base.get("output_scale")
         self.output_scale = (
@@ -65,6 +70,12 @@ class SchmidtCoreMap:
             return torch.zeros(self.artifact["orig_shape"], device=core.device, dtype=core.dtype).scatter_(
                 1, self.excitation_indices, values,
             )
+        if side in ('calibration_left','calibration_right'):
+            dense=core.T@self.calibration_right if side=='calibration_left' else self.calibration_left.T@core
+            if self.sector:
+                full=torch.zeros(self.artifact['orig_shape'],device=dense.device,dtype=dense.dtype)
+                return full.index_copy_(self.artifact['neuron_axis'],self.bulk_indices,dense)
+            return dense
         unfolding = core.T @ self.right if side == "left" else self.left.T @ core
         dense = (
             _unfolding_to_matrix(unfolding, self.layout)
@@ -81,10 +92,26 @@ class SchmidtCoreMap:
             return values if self.excitation_scale is None else values*self.excitation_scale
         if self.sector:
             dense = dense.index_select(self.artifact["neuron_axis"], self.bulk_indices)
+        if side in ('calibration_left','calibration_right'):
+            return self.calibration_right@dense.T if side=='calibration_left' else self.calibration_left@dense
         unfolding = _matrix_to_unfolding(
             dense * self.output_scale[:, None] / self.input_scale[None, :], self.layout,
         )
         return self.right @ unfolding.T if side == "left" else self.left @ unfolding
+
+    def apply(self, core, inputs, side):
+        if not self.sector and side=='calibration_left':
+            return core.T@(self.calibration_right@inputs)
+        if not self.sector and side=='calibration_right':
+            return self.calibration_left.T@(core@inputs)
+        return self.weight(core,side)@inputs
+
+    def apply_adjoint(self, output, inputs, side):
+        if not self.sector and side=='calibration_left':
+            return (self.calibration_right@inputs)@output.T
+        if not self.sector and side=='calibration_right':
+            return (self.calibration_left@output)@inputs.T
+        return self.adjoint(output@inputs.T,side)
 
     def diagonal(self, input_variance, output_sensitivity, side):
         if side == "amplitudes":
@@ -95,6 +122,10 @@ class SchmidtCoreMap:
                 output_sensitivity = output_sensitivity.index_select(0, self.bulk_indices)
             else:
                 input_variance = input_variance.index_select(0, self.bulk_indices)
+        if side=='calibration_left':
+            return ((self.calibration_right.square()@input_variance)[:,None]*output_sensitivity[None,:]).clamp_min(1e-20)
+        if side=='calibration_right':
+            return ((self.calibration_left.square()@output_sensitivity)[:,None]*input_variance[None,:]).clamp_min(1e-20)
         entry_metric = (
             (output_sensitivity * self.output_scale.square())[:, None]
             * (input_variance / self.input_scale.square())[None, :]
@@ -115,6 +146,15 @@ class SchmidtCoreMap:
                 entry_weights=entry_weights,
             )}
         base = dict(self.base)
+        if side in ('calibration_left','calibration_right'):
+            branch=dict(base['calibration_schmidt_branch'])
+            name=side.removeprefix('calibration_')+'_codec';codec=branch[name]
+            branch[name]=encode_groupwise(core,bits=int(codec['bits']),group_size=int(codec['group_size']),
+                scale_policy=codec.get('scale_policy','maxabs'),quant_grid=codec.get('quant_grid','symmetric'),
+                entry_weights=entry_weights)
+            branch['payload_bytes']=codec_payload_bytes(branch['left_codec'])+codec_payload_bytes(branch['right_codec'])
+            base['calibration_schmidt_branch']=branch
+            return {**self.artifact,'base_artifact':base} if self.sector or self.sparse else base
         base[side + "_codec"] = encode_groupwise(
             core, bits=int(self.base["factor_bits"]), group_size=int(self.base["group_size"]),
         )
@@ -123,12 +163,13 @@ class SchmidtCoreMap:
         return base
 
 
-def _prior_anchored_pcg(normal, rhs, diagonal, *, iterations, tolerance):
+def _prior_anchored_pcg(normal, rhs, diagonal, *, iterations, tolerance, preconditioner=None):
     """Solve a core increment; callers include the anchoring term in normal."""
 
     delta = torch.zeros_like(rhs)
     residual = rhs.clone()
-    preconditioned = residual / diagonal
+    apply_preconditioner=(lambda value:value/diagonal) if preconditioner is None else preconditioner
+    preconditioned = apply_preconditioner(residual)
     direction = preconditioned.clone()
     dot = lambda a, b: (a * b).sum(dtype=torch.float64)
     rz = dot(residual, preconditioned)
@@ -147,12 +188,56 @@ def _prior_anchored_pcg(normal, rhs, diagonal, *, iterations, tolerance):
         history.append({"iteration": iteration + 1, "relative_normal_residual": relative})
         if relative <= tolerance:
             break
-        preconditioned = residual / diagonal
+        preconditioned = apply_preconditioner(residual)
         rz_new = dot(residual, preconditioned)
         beta = (rz_new / rz.clamp_min(1e-30)).to(rhs.dtype)
         direction = preconditioned + beta * direction
         rz = rz_new
     return delta, history
+
+
+def native_up_preconditioner(mapper, side, inputs, phi, down, ridge, parameter_diagonal):
+    """Structured construction-only preconditioners; the objective stays exact.
+
+    Left cores use exact per-neuron latent covariance blocks. Right cores use
+    the separable input/observable covariance including the current ridge.
+    Neither covariance nor any eigensystem is stored for inference.
+    """
+    samples=inputs.shape[1]
+    if side=='calibration_left':
+        features=mapper.calibration_right@inputs;rank=len(features)
+        pairs=(features[:,None,:]*features[None,:,:]).reshape(rank*rank,samples)
+        blocks=(phi.square()@pairs.T/samples).reshape(phi.shape[0],rank,rank)
+        blocks*=down.square().sum(0)[:,None,None]
+        diagonal_ridge=(torch.ones_like(parameter_diagonal)*ridge if ridge.ndim==0 else ridge).T
+        blocks.diagonal(dim1=-2,dim2=-1).add_(diagonal_ridge)
+        jitter=blocks.diagonal(dim1=-2,dim2=-1).mean(-1).clamp_min(1e-20)*1e-6
+        blocks.diagonal(dim1=-2,dim2=-1).add_(jitter[:,None])
+        chol,info=torch.linalg.cholesky_ex(blocks)
+        if torch.any(info):
+            return None,{'type':'diagonal_fallback','failed_covariance_blocks':int((info!=0).sum())}
+        return (lambda value:torch.cholesky_solve(value.T[:,:,None],chol).squeeze(-1).T),{'type':'exact_latent_neuron_blocks'}
+    if side=='calibration_right':
+        a=inputs@inputs.T/samples
+        environment=(down.T@down)*(phi@phi.T/samples)
+        b=mapper.calibration_left@environment@mapper.calibration_left.T
+        del environment
+        if ridge.ndim==0:
+            sa=torch.ones_like(a.diagonal());sb=torch.ones_like(b.diagonal());damping=ridge
+        else:
+            avar=a.diagonal().clamp_min(1e-20)
+            bproxy=(parameter_diagonal/avar[None,:]).mean(1).clamp_min(1e-20)
+            sa=avar.rsqrt();sb=bproxy.rsqrt()
+            damping=(ridge/parameter_diagonal.clamp_min(1e-20)).mean()
+        ca=a*sa[:,None]*sa[None,:];cb=b*sb[:,None]*sb[None,:]
+        va,ua=torch.linalg.eigh((ca+ca.T)*.5);vb,ub=torch.linalg.eigh((cb+cb.T)*.5)
+        denominators=vb.clamp_min(0)[:,None]*va.clamp_min(0)[None,:]+damping.clamp_min(1e-20)
+        def apply(value):
+            transformed=ub.T@(value*sb[:,None]*sa[None,:])@ua
+            return (ub@(transformed/denominators)@ua.T)*sb[:,None]*sa[None,:]
+        return apply,{'type':'observable_input_kronecker','smallest_input_eigenvalue':float(va.min()),
+                     'largest_input_eigenvalue':float(va.max()),'smallest_observable_eigenvalue':float(vb.min())}
+    return None,{'type':'diagonal'}
 
 
 def _mlp(weights, inputs):
@@ -222,6 +307,10 @@ def construct_functional_schmidt_mlp(
     gate_target_policy: str = "teacher_preactivation",
     output_metric: str = "energy",
     ridge_metric: str = "mean",
+    role_sequence: tuple[str, ...] = ("down_proj", "up_proj", "gate_proj", "down_proj"),
+    parameter_sides: tuple[str, ...] | None = None,
+    solve_precision: str | None = None,
+    branch_preconditioner: bool = False,
 ) -> tuple[dict, dict, dict]:
     """Joint construction with a disjoint guard from calibration data only.
 
@@ -244,6 +333,12 @@ def construct_functional_schmidt_mlp(
         raise ValueError("unknown Gate construction target policy")
     if output_metric not in ("energy", "channel_relative"):
         raise ValueError("unknown coupled MLP output metric")
+    if not role_sequence or set(role_sequence)-{'gate_proj','up_proj','down_proj'}:
+        raise ValueError('unknown or empty functional role sequence')
+    if parameter_sides is not None and (not parameter_sides or set(parameter_sides)-{'left','right','amplitudes','calibration_left','calibration_right'}):
+        raise ValueError('unknown or empty functional parameter sides')
+    if solve_precision not in (None,'highest','high'):
+        raise ValueError('unknown functional solve precision')
     if sequence_length < 1 or inputs.shape[1] % sequence_length:
         raise ValueError("calibration samples must contain complete sequence windows")
     windows = inputs.shape[1] // sequence_length
@@ -289,14 +384,15 @@ def construct_functional_schmidt_mlp(
         # Down first exposes the best readout of the current nonlinear
         # features; Up and Gate then improve those features jointly through
         # that readout; a final Down solve closes the module construction.
-        for role in ("down_proj", "up_proj", "gate_proj", "down_proj"):
+        for role in role_sequence:
             if role == "gate_proj" and gate_targets is None and gate_target_policy == "teacher_preactivation":
                 continue
-            sides = ("left", "right", "amplitudes") if result[role].get("codec_type") in ("nec_sparse_excitation_schmidt_v1", "nec_sparse_excitation_schmidt_v2") else ("left", "right")
+            sides = parameter_sides or (("left", "right", "amplitudes") if result[role].get("codec_type") in ("nec_sparse_excitation_schmidt_v1", "nec_sparse_excitation_schmidt_v2") else ("left", "right"))
             for side in sides:
                 artifact = result[role]
                 mapper = SchmidtCoreMap(artifact, inputs.device)
-                core = getattr(mapper, side) if side == "amplitudes" else (mapper.left if side == "left" else mapper.right)
+                if not hasattr(mapper,side):raise ValueError(f'{role} has no {side} parameters')
+                core = getattr(mapper,side)
                 gate = weights["gate_proj"] @ fit_x
                 up = weights["up_proj"] @ fit_x
                 active = F.silu(gate) * up
@@ -331,7 +427,7 @@ def construct_functional_schmidt_mlp(
                 scale = 1 / math.sqrt(split)
 
                 def forward(increment):
-                    response = mapper.weight(increment, side) @ core_inputs
+                    response = mapper.apply(increment,core_inputs,side)
                     if channel_multiplier is not None:
                         response = weights["down_proj"] @ (channel_multiplier * response)
                     if solve_weights is not None:
@@ -343,6 +439,8 @@ def construct_functional_schmidt_mlp(
                         output = output * solve_weights[:, None]
                     if channel_multiplier is not None:
                         output = channel_multiplier * (weights["down_proj"].T @ output)
+                    if side in ('calibration_left','calibration_right'):
+                        return mapper.apply_adjoint(output,core_inputs,side)*scale
                     dense = (output @ core_inputs.T) * scale
                     return mapper.adjoint(dense, side)
 
@@ -358,10 +456,21 @@ def construct_functional_schmidt_mlp(
                 )
                 if solve_weights is not None:
                     residual = residual * solve_weights[:, None]
-                rhs = adjoint(residual)
-                delta, cg_history = _prior_anchored_pcg(
-                    normal, rhs, diagonal + ridge, iterations=cg_iterations, tolerance=1e-3,
-                )
+                context=nullcontext()
+                if solve_precision is not None:
+                    from nox.sparse_schmidt import construction_matmul_precision as scoped_precision
+                    context=scoped_precision(solve_precision)
+                with context:
+                    preconditioner=None;preconditioner_info={'type':'diagonal'}
+                    if branch_preconditioner and role=='up_proj' and side in ('calibration_left','calibration_right'):
+                        effective_down=weights['down_proj'] if output_weights is None else weights['down_proj']*output_weights[:,None]
+                        preconditioner,preconditioner_info=native_up_preconditioner(
+                            mapper,side,core_inputs,channel_multiplier,effective_down,ridge,diagonal)
+                    rhs = adjoint(residual)
+                    delta, cg_history = _prior_anchored_pcg(
+                        normal, rhs, diagonal + ridge, iterations=cg_iterations, tolerance=1e-3,
+                        preconditioner=preconditioner,
+                    )
                 trial_scores = []
                 accepted_fraction = None
                 accepted_artifact = None
@@ -401,6 +510,7 @@ def construct_functional_schmidt_mlp(
                     "accepted_fraction": accepted_fraction,
                     "fit_relative_mse": current_fit, "guard_relative_mse": current_guard,
                     "cg_history": cg_history, "trials": trial_scores,
+                    "preconditioner": preconditioner_info,
                 })
     return result, weights, {
         "objective": "exact_coupled_swiglu_output_with_prior_anchored_core_solves",
@@ -409,6 +519,9 @@ def construct_functional_schmidt_mlp(
         "gate_target_policy": gate_target_policy,
         "output_metric": output_metric,
         "ridge_metric": ridge_metric,
+        "role_sequence": list(role_sequence),
+        "parameter_sides": None if parameter_sides is None else list(parameter_sides),
+        "solve_precision": solve_precision,
         "output_metric_uses_training_only": True,
         "fit_tokens": split, "guard_tokens": targets.shape[1] - split,
         "initial_fit_relative_mse": initial_errors[0],
